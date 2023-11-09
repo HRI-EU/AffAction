@@ -1,0 +1,600 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph>
+
+    <!-- table -->
+    <Body name="table" prev="lab" rigid_body_joints="0.58 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+        <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
+               distance="true"/>
+    </Body>
+    
+    <!-- 
+        ***********************************************************************
+
+        row centers
+
+        ***********************************************************************
+    -->
+
+    <!-- bottom row - closest to robot -->
+    <Body name="table_c1" prev="table" transform="-0.3 0 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="BLUE" />
+    </Body>
+    <Body name="table_c2" prev="table" transform="-0.2 0 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_c3" prev="table" transform="-0.1 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <!-- center -->
+    <Body name="table_c4" prev="table" transform="0 0 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="RED" />
+    </Body>
+    <Body name="table_c5" prev="table" transform="0.1 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_c6" prev="table" transform="0.2 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <!-- top row - furthest from robot -->
+    <Body name="table_c7" prev="table" transform="0.3 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="GREEN" />
+    </Body>
+
+    <!-- 
+        ***********************************************************************
+
+        left side
+
+        ***********************************************************************
+    -->
+
+    <!-- row 1 -->
+    <Body name="table_l1_1" prev="table" transform="-0.3 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_2" prev="table" transform="-0.3 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_3" prev="table" transform="-0.3 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_4" prev="table" transform="-0.3 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_5" prev="table" transform="-0.3 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_6" prev="table" transform="-0.3 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_7" prev="table" transform="-0.3 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l1_8" prev="table" transform="-0.3 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 2 -->
+    <Body name="table_l2_1" prev="table" transform="-0.2 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_2" prev="table" transform="-0.2 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_3" prev="table" transform="-0.2 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_4" prev="table" transform="-0.2 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_5" prev="table" transform="-0.2 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_6" prev="table" transform="-0.2 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_7" prev="table" transform="-0.2 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l2_8" prev="table" transform="-0.2 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 3 -->
+    <Body name="table_l3_1" prev="table" transform="-0.1 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_2" prev="table" transform="-0.1 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_3" prev="table" transform="-0.1 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_4" prev="table" transform="-0.1 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_5" prev="table" transform="-0.1 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_6" prev="table" transform="-0.1 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_7" prev="table" transform="-0.1 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l3_8" prev="table" transform="-0.1 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 4 -->
+    <Body name="table_l4_1" prev="table" transform="0 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_2" prev="table" transform="0 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_3" prev="table" transform="0 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_4" prev="table" transform="0 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_5" prev="table" transform="0 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_6" prev="table" transform="0 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_7" prev="table" transform="0 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l4_8" prev="table" transform="0 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 5 -->
+    <Body name="table_l5_1" prev="table" transform="0.1 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_2" prev="table" transform="0.1 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_3" prev="table" transform="0.1 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_4" prev="table" transform="0.1 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_5" prev="table" transform="0.1 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_6" prev="table" transform="0.1 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_7" prev="table" transform="0.1 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l5_8" prev="table" transform="0.1 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 6 -->
+    <Body name="table_l6_1" prev="table" transform="0.2 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_2" prev="table" transform="0.2 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_3" prev="table" transform="0.2 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_4" prev="table" transform="0.2 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_5" prev="table" transform="0.2 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_6" prev="table" transform="0.2 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_7" prev="table" transform="0.2 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l6_8" prev="table" transform="0.2 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 7 -->
+    <Body name="table_l7_1" prev="table" transform="0.3 0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_2" prev="table" transform="0.3 0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_3" prev="table" transform="0.3 0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_4" prev="table" transform="0.3 0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_5" prev="table" transform="0.3 0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_6" prev="table" transform="0.3 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_7" prev="table" transform="0.3 0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_l7_8" prev="table" transform="0.3 0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- 
+        ***********************************************************************
+
+        right side
+
+        ***********************************************************************
+    -->
+
+    <!-- row 1 -->
+    <Body name="table_r1_1" prev="table" transform="-0.3 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_2" prev="table" transform="-0.3 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_3" prev="table" transform="-0.3 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_4" prev="table" transform="-0.3 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_5" prev="table" transform="-0.3 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_6" prev="table" transform="-0.3 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_7" prev="table" transform="-0.3 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r1_8" prev="table" transform="-0.3 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 2 -->
+    <Body name="table_r2_1" prev="table" transform="-0.2 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_2" prev="table" transform="-0.2 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_3" prev="table" transform="-0.2 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_4" prev="table" transform="-0.2 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_5" prev="table" transform="-0.2 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_6" prev="table" transform="-0.2 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_7" prev="table" transform="-0.2 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r2_8" prev="table" transform="-0.2 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 3 -->
+    <Body name="table_r3_1" prev="table" transform="-0.1 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_2" prev="table" transform="-0.1 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_3" prev="table" transform="-0.1 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_4" prev="table" transform="-0.1 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_5" prev="table" transform="-0.1 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_6" prev="table" transform="-0.1 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_7" prev="table" transform="-0.1 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r3_8" prev="table" transform="-0.1 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 4 -->
+    <Body name="table_r4_1" prev="table" transform="0 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_2" prev="table" transform="0 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_3" prev="table" transform="0 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_4" prev="table" transform="0 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_5" prev="table" transform="0 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_6" prev="table" transform="0 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_7" prev="table" transform="0 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r4_8" prev="table" transform="0 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 5 -->
+    <Body name="table_r5_1" prev="table" transform="0.1 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_2" prev="table" transform="0.1 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_3" prev="table" transform="0.1 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_4" prev="table" transform="0.1 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_5" prev="table" transform="0.1 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_6" prev="table" transform="0.1 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_7" prev="table" transform="0.1 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r5_8" prev="table" transform="0.1 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 6 -->
+    <Body name="table_r6_1" prev="table" transform="0.2 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_2" prev="table" transform="0.2 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_3" prev="table" transform="0.2 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_4" prev="table" transform="0.2 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_5" prev="table" transform="0.2 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_6" prev="table" transform="0.2 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_7" prev="table" transform="0.2 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r6_8" prev="table" transform="0.2 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- row 7 -->
+    <Body name="table_r7_1" prev="table" transform="0.3 -0.1 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_2" prev="table" transform="0.3 -0.2 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_3" prev="table" transform="0.3 -0.3 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_4" prev="table" transform="0.3 -0.4 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_5" prev="table" transform="0.3 -0.5 0 0 0 0" >
+        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_6" prev="table" transform="0.3 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_7" prev="table" transform="0.3 -0.7 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_r7_8" prev="table" transform="0.3 -0.8 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <!-- 
+        ***********************************************************************
+
+        table affordance model
+
+        ***********************************************************************
+    -->
+
+    <AffordanceModel body="table" type="furniture">
+        <!-- centers -->
+        <Supportable frame="table" />
+        <Supportable frame="table_c1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_c7" extentsX="0.1" extentsY="0.1" />
+
+        <!-- left side -->
+        <Supportable frame="table_l1_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_3" extentsX="0.1" extentsY="0.1" /> 
+        <Supportable frame="table_l1_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l1_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l2_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l2_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l3_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l3_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l4_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l4_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l5_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l5_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l6_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l6_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_l7_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_l7_8" extentsX="0.1" extentsY="0.1" />
+        
+        <!-- right side -->
+        <Supportable frame="table_r1_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_3" extentsX="0.1" extentsY="0.1" /> 
+        <Supportable frame="table_r1_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r1_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r2_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r2_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r3_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r3_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r4_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r4_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r5_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r5_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r6_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r6_8" extentsX="0.1" extentsY="0.1" />
+
+        <Supportable frame="table_r7_1" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_2" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_3" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_4" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_5" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_6" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_7" extentsX="0.1" extentsY="0.1" />
+        <Supportable frame="table_r7_8" extentsX="0.1" extentsY="0.1" />
+        
+    </AffordanceModel>
+
+</Graph>

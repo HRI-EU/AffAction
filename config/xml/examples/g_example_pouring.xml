@@ -1,0 +1,184 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
+       name="JacoDefaultPoseArmsHigh"
+       usage="
+&#xA;  Configuration file to load the Affordance Action scenario. To change the
+&#xA;  robot configuration from low arm mount to shoulder arm mount, just
+&#xA;  change the included xml file from g_robot_arms_low.xml to g_robot_arms_high.xml,
+&#xA;  and adjust the model state from JacoDefaultPoseArmsLow to JacoDefaultPoseArmsHigh.
+&#xA;
+&#xA;  Forward kinematics:
+&#xA;  bin\Release\Rcs -m 2 -dir config\xml\SmileActions -f g_summerparty.xml 
+&#xA;
+&#xA;  With simulated robot and real perception:
+&#xA;  bin\Release\ExampleRunnerAll -m 2 -c Actions -e Summerparty -noLimits -notrajcheck -tts
+&#xA;
+&#xA;  Full fleshed with robot and perception:
+&#xA;  bin\Release\ExampleRunnerAll -m 2 -c Actions -e Summerparty -jacoShm7l -jacoShm7r -tts
+&#xA;  "
+>
+
+    <ActionSequence name="1" text="double_get cola_bottle_1 glass_2; pour cola_bottle_1 glass_2; double_put cola_bottle_1 glass_2" />
+    <ActionSequence name="2" text="get cola_bottle_1; pour cola_bottle_1 glass_2; put cola_bottle_1" />
+
+    <!-- The Aruco markers are 1cm away from the borders of the table. -->
+
+    <!-- The Aruco markers are 1cm away from the borders of the table. -->
+    <Body name="aruco_base" rigid_body_joints="0 0 0.8 0 0 0" color="PEWTER">
+        <!-- This shown frame corresponds to the RCS_world, i.e. the origin of RCS. -->
+        <Shape type="FRAME" scale="0.5" transform="0 0 -0.8 0 0 0" />
+
+        <Shape type="BOX" extents="0.14 0.14 0.001" graphics="true" textureFile="aruco/4x4marker_0.jpg" transform="0 0.32 0 0 0 0"/>
+        <Shape type="FRAME" marker="true" markerName="aruco_0" extents="0.14 0.14 0" transform="0 0.32 0 0 0 0" scale="0.2"/>
+    </Body>
+
+    <Body name="lab" prev="aruco_base" physics="kinematic" transform="-0.8 0 -0.8 0 0 0">
+        <Shape type="BOX" extents="6.0 6.0 0.04" transform="0 0 -0.02 0 0 0" textureFile="white-hardwood-floor.jpg"
+               graphics="true" physics="true" distance="true"/>
+        <Shape type="FRAME" scale="0.5"/>
+    </Body>
+
+    <!-- <xi:include href="g_robot_arms_low.xml"/> -->
+    <xi:include href="g_robot_arms_high.xml" />
+
+    <!-- Robot hands including affordances -->
+    <xi:include href="g_hand_left.xml"/>
+    <xi:include href="g_hand_right.xml"/>
+
+<!-- 
+    <Body name="robot_los" prev="head_kinect_rgb_link" color="LIGHTGRAY_TRANS">
+        <Shape type="SSL" length="2" radius="0.004" graphics="true"/>
+    </Body>
+
+    <Body name="gaze_point" prev="lab" rigid_body_joints="1.4 0 1.4 0 0 0" color="LIGHTGRAY_TRANS">
+        <Shape type="SPHERE" radius="0.025" graphics="true"/>
+    </Body>
+ -->
+ 
+    <!-- z: forward, x: right, y: down 
+    <Body name="camera" prev="center_post_link" physics="kinematic" transform="0.06 0 .6 0 90 -90" >
+      <Shape type="BOX" extents="0.08 0.03 0.02"  transform="0 0 -0.01 0 0 0" graphics="true" color="BLACK_RUBBER" />
+      <Shape type="FRAME" scale="0.25" />
+    </Body>-->
+	
+    <!-- Face mesh is parenting camera
+    <Body name="face" prev="camera" rigid_body_joints="0 0 1.5 180 0 0" >
+        <Shape type="MESH" meshFile="FaceMesh-holes-468.obj" scale="0.01" resizeable="true" color="RED" />
+        <Shape type="FRAME" scale="0.2"/>
+    </Body> -->
+
+
+
+<!-- 
+    <Group prev="lab" transform="0.58 0.8 0.7 0 0 0">
+        <xi:include href="g_table_1.xml"/>
+    </Group>
+	-->
+		
+	<Body name="table_1" prev="lab" rigid_body_joints="0.58 0 0.8 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+        <Shape type="FRAME" scale="0.2"/>
+        <Shape type="BOX" extents="0.6 0.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
+               distance="true" textureFile="wood-ikea-birch.jpg"/>
+    </Body>
+
+    <AffordanceModel body="table_1" id="id_6328686182f50bb1672483c3">
+        <Supportable frame="table_1" extentsX="0.6" extentsY="0.8" />
+    </AffordanceModel>
+
+	
+	
+    <Group prev="table_1" rigid_body_joints="0 -0.2 0 0 0 90">
+        <xi:include href="g_cola_bottle_1.xml"/>
+    </Group>
+    <Group prev="table_1" rigid_body_joints="0 0.2 0 0 0 90">
+        <xi:include href="g_glass_2.xml"/>
+    </Group>
+	<!-- 
+    <Group prev="table_1" rigid_body_joints="0 -0.45 0 0 0 90">
+        <xi:include href="g_cereal_box_1.xml"/>
+    </Group>
+	-->
+
+    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="">
+        <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+        <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+        <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+        <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+        <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+    <model_state model="JacoDefaultPoseArmsHigh_mod" time_stamp="">
+        <joint_state joint="j2s7s300_joint_1_right" position="-60"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="220" />
+        <joint_state joint="j2s7s300_joint_3_right" position="-50" />
+        <joint_state joint="j2s7s300_joint_4_right" position="100" />
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="60"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="140" />
+        <joint_state joint="j2s7s300_joint_3_left" position="50" />
+        <joint_state joint="j2s7s300_joint_4_left" position="260" />
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+    <BroadPhase DistanceThreshold="0.0">
+        <Tree root="upperarm_left" />
+        <Tree root="upperarm_right" />
+    </BroadPhase>
+
+</Graph>

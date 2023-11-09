@@ -1,0 +1,94 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
+       name="JacoDefaultPoseArmsHigh">
+
+    <Group prev="lab">
+
+        <xi:include href="g_scitos_base.xml"/>
+
+        <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" was_transform="-0.115 0 1.155 0 0 0">
+            <Shape type="FRAME" scale="0.3"/>
+            <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+        </Body>
+
+
+        <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+            <noShape type="FRAME" scale="0.1"/>
+        </Body>
+
+        <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
+            <noShape type="FRAME" scale="0.2"/>
+        </Body>
+
+        <Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
+            <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+        </Group>
+
+        <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+            <noShape type="FRAME" scale="0.1"/>
+        </Body>
+
+        <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
+            <noShape type="FRAME" scale="0.2"/>
+        </Body>
+
+        <Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >
+            <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+        </Group>
+
+    </Group>
+
+    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
+        <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+        <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+        <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+        <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+        <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+</Graph>

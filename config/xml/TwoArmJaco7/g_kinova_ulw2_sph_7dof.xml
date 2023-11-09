@@ -1,0 +1,185 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="Default" >
+
+    <Body name="jaco_mount_base">
+        <!-- <Shape type="FRAME" scale="0.2"/> -->
+    </Body>
+
+    <Body name="jaco_mount_link" prev="jaco_mount_base" transform="0 0 0.035 0 0 90">
+        <Shape type="BOX" extents="0.04 0.04 0.07" distance="false" physics="false" graphics="true"/>
+        <!-- <Shape type="FRAME" scale="0.2"/> -->
+    </Body>
+
+    <Body name="shoulder_blade" prev="jaco_mount_link" not_physics="kinematic" mass="0.46784"
+          inertia="0.000951271 0 0 -0 0.000951271 0 -0 -0 0.000374272">
+        <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/base.STL"/>
+    </Body>
+
+    <Body name="shoulder" prev="shoulder_blade" not_physics="dynamic" mass="0.7477"
+          inertia="0.00152032 0 0 -0 0.00152032 0 -0 -0 0.00059816">
+        <Joint name="j2s7s300_joint_1" range="-720 0 720" type="RotZ" transform="0 0 0.15675 180 0 180" torqueLimit="40"
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2"/>
+        <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/shoulder.STL"
+               color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" graphics="true"
+               meshFile="kinova_description/meshes/ring_big.STL"/>
+    </Body>
+
+    <Body name="upperarm" prev="shoulder" not_physics="dynamic" mass="0.8447"
+          inertia="0.00247074 0 0 -0 0.000380115 0 -0 -0 0.00247074">
+        <Joint name="j2s7s300_joint_2" range="30 180 330" type="RotZ" transform="0 0.0016 -0.11875 90 0 -180"
+               torqueLimit="80" speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2" />
+        <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/arm_half_1.STL"
+               color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_big.STL"/>
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.05" length="0.42"
+               transform="0 0 0 90 0 0" color="RED"/>
+    </Body>
+
+    <Body name="elbow" prev="upperarm" not_physics="dynamic" mass="0.8447"
+          inertia="0.00247074 0 0 -0 0.00247074 0 -0 -0 0.000380115">
+        <Joint name="j2s7s300_joint_3" range="-360 0 360" type="RotZ" transform="0 -0.205 0 -90 0 0" torqueLimit="40"
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="4" constraint="false"/>
+        <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/arm_half_2.STL"
+               color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_big.STL"/>
+    </Body>
+
+    <Body name="forearm" prev="elbow" not_physics="dynamic" mass="0.6763"
+          inertia="0.00142022 0 0 -0 0.000304335 0 -0 -0 0.00142022">
+        <Joint name="j2s7s300_joint_4" range="30 180 330" type="RotZ" transform="0 0 -0.205 -90 0 -180" torqueLimit="40"
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25"/>
+        <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/forearm.STL"
+               color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_small.STL"/>
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.05" length="0.25"
+               transform="0 0 0 -90 0 0" color="RED"/>
+    </Body>
+
+    <Body name="lower_forearm" prev="forearm" not_physics="dynamic" mass="0.463"
+          inertia="0.000432132 0 0 -0 0.000432132 0 -0 -0 9.26e-05">
+        <Joint name="j2s7s300_joint_5" range="-720 0 720" type="RotZ" transform="0 0.2073 -0.0114 90 0 -180"
+               torqueLimit="20" speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25"
+               weightJL="4"/>
+        <Shape type="MESH" distance="false" not_physics="true"
+               meshFile="kinova_description/meshes/wrist_spherical_1.STL" color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_small.STL"/>
+    </Body>
+
+    <Body name="wrist" prev="lower_forearm" not_physics="dynamic" mass="0.463"
+          inertia="0.000432132 0 0 -0 9.26e-05 0 -0 -0 0.000432132">
+        <Joint name="j2s7s300_joint_6" range="50 180 310" type="RotZ" transform="0 0 -0.10375 -90 0 -180"
+               torqueLimit="20" speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.5"
+               weightJL="1"/>
+        <Shape type="MESH" distance="false" not_physics="true"
+               meshFile="kinova_description/meshes/wrist_spherical_2.STL" color="#cad1edff"/>
+        <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_small.STL"/>
+        <!-- <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.04" length="0.05" transform="0 0 0 180 0 0" color="RED" /> -->
+    </Body>
+
+    <Body name="hand_base" prev="wrist" physics="kinematic" mass="0.99"
+          not_inertia="0.000345324 0 0 -0 0.000345324 0 -0 -0 0.0005816">
+        <Joint name="j2s7s300_joint_7" range="-720 0 720" type="RotZ" transform="0 0.10375 0 90 0 -180" torqueLimit="20"
+               speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="1"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/hand_3finger.STL"
+               color="#cad1edff"/>
+        <Shape type="MESH" distance="false" physics="false" meshFile="kinova_description/meshes/ring_small.STL"/>
+        <!-- <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16" -->
+        <!--        transform="0 0 0.1 180 0 0" color="RED"/> -->
+        <!-- <Shape type="FRAME" scale="0.175" transform="0 0.09 -0.180 180 0 0" /> -->
+    </Body>
+
+    <Body name="thumb" prev="hand_base" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_1" range="-1 43.258314 86.516627" type="RotZ"
+               transform="0.00279 0.03126 -0.11467 -90 -77.9 55" torqueLimit="2" speedLimit="57.29578" weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_proximal.STL"
+               color="#cad1edff"/>
+        <Shape type="SSL" length="0.075" radius="0.014" distance="true" physics="false" graphics="false" transform="-0.000782 -0.007646 0.000068 89.666212 86.855325 90.333285" color="RANDOM" />
+        <!-- <Shape type="FRAME" scale="0.1" /> -->
+    </Body>
+
+    <Body name="thumb_tip" prev="thumb" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_tip_1" range="-1 0 114.591559" type="RotZ" transform="0.044 -0.003 0 0 0 0"
+               torqueLimit="2" speedLimit="57.29578" constraint="true" weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_distal.STL"
+               color="#cad1edff"/>
+        <xxShape type="SSL" length="0.028519" radius="0.014861" distance="false" physics="false" graphics="false" transform="0.001989 -0.005256 -0.000023 -87.453707 85.331835 -92.537857" color="RANDOM" />
+        <!-- <Shape type="FRAME" scale="0.1" /> -->
+    </Body>
+
+    <Body name="second_finger" prev="hand_base" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_2" range="-1 43.258314 86.516627" type="RotZ"
+               transform="0.02226 -0.02707 -0.11482 -90 79.42 55" torqueLimit="2" speedLimit="57.29578" weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_proximal.STL"
+               color="#cad1edff"/>
+        <!-- <Shape type="SSL" length="0.03" radius="0.017093" distance="false" physics="false" graphics="false" transform="-0.000782 -0.007646 0.000068 89.666212 86.855325 90.333285" color="RANDOM" /> -->
+        <Shape type="SSL" length="0.075" radius="0.014" distance="true" physics="false" graphics="false" transform="-0.000782 -0.007646 0.000068 89.666212 86.855325 90.333285" color="RANDOM" />
+    </Body>
+
+    <Body name="second_finger_tip" prev="second_finger" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_tip_2" range="-1 0 114.591559" type="RotZ" transform="0.044 -0.003 0 0 0 0"
+               torqueLimit="2" speedLimit="57.29578" constraint="true" weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_distal.STL"
+               color="#cad1edff"/>
+        <xxShape type="SSL" length="0.028519" radius="0.014861" distance="false" physics="false" graphics="false" transform="0.001989 -0.005256 -0.000023 -87.453707 85.331835 -92.537857" color="RANDOM" />
+    </Body>
+
+    <Body name="third_finger" prev="hand_base" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_3" range="-1 43.258314 86.516627" type="RotZ"
+               transform="-0.02226 -0.02707 -0.11482 90 79.42 -125" torqueLimit="2" speedLimit="57.29578"
+               weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_proximal.STL"
+               color="#cad1edff"/>
+        <!-- <Shape type="SSL" length="0.03" radius="0.017093" distance="false" physics="false" graphics="false" transform="-0.000782 -0.007646 0.000068 89.666212 86.855325 90.333285" color="RANDOM" /> -->
+        <Shape type="SSL" length="0.075" radius="0.014" distance="true" physics="false" graphics="false" transform="-0.000782 -0.007646 0.000068 89.666212 86.855325 90.333285" color="RANDOM" />
+    </Body>
+
+    <Body name="third_finger_tip" prev="third_finger" physics="dynamic" mass="0.1"
+          not_inertia="7.89997e-07 0 0 -0 7.89997e-07 0 -0 -0 8e-08">
+        <Joint name="j2s7s300_joint_finger_tip_3" range="-1 0 114.591559" type="RotZ" transform="0.044 -0.003 0 0 0 0"
+               torqueLimit="2" speedLimit="57.29578" constraint="true" weightJL="0"/>
+        <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/finger_distal.STL"
+               color="#cad1edff"/>
+        <xxShape type="SSL" length="0.028519" radius="0.014861" distance="false" physics="false" graphics="false" transform="0.001989 -0.005256 -0.000023 -87.453707 85.331835 -92.537857" color="RANDOM" />
+    </Body>
+
+ <model_state model="Default" time_stamp="0">
+  <joint_state joint="j2s7s300_joint_finger_1" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_2" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_3" position="0" />
+</model_state>
+
+</Graph>

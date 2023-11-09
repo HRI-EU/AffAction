@@ -1,0 +1,174 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph >
+  <!-- The glass mesh has a diameter of 8.8cm. The real glass is just 8.4cm. -->
+  <Body name="glass_1"  color="GREEN">
+        <Shape type="MESH" meshFile="object_models/glass_1/glass_1.stl" scale="1" transform="0 0 0 0 0 0"/>
+        <Shape type="CYLINDER" length="0.121" radius="0.044" graphics="false" distance="true"
+               transform="0 0 0.0605 0 0 0"/>
+        <Shape type="FRAME" marker="true" markerName="aruco_4" extents="0.05 0.05 0" scale="0.1"
+               transform="0.044 0 0.089 0 90 0"/>
+        <Shape type="BOX" extents="0.05 0.05 0.0001" graphics="true" distance="false" textureFile="aruco/4x4marker_4.jpg" transform="0.044 0 0.089 0 90 0" />
+  </Body>
+
+
+  <Body name="glass_1_grip" prev="glass_1" transform="0 0 0.1 0 0 0" >
+    <Shape type="FRAME" scale="0.1" />
+  </Body>
+
+  <Body name="glass_1_tip" prev="glass_1" transform="0 0 0.135 0 0 0">
+      <Shape type="FRAME" scale="0.1"/>
+  </Body>
+
+  <Body name="glass_1_inside" prev="glass_1" transform="0 0 0.05 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+  <Body name="glass_1_push_1" prev="glass_1" transform="0 0.044 0.1 0 0 -90" >
+    <!-- <Shape type="FRAME" scale="0.1" /> -->
+  </Body>
+
+  <Body name="glass_1_push_2" prev="glass_1" transform="0 -0.044 0.1 0 0 90">
+    <!-- <Shape type="FRAME" scale="0.1" /> -->
+  </Body>
+
+  <Body name="glass_1_push_3" prev="glass_1" transform="0.044 0.0 0.1 0 0 180">
+    <!-- <Shape type="FRAME" scale="0.1" /> -->
+  </Body>
+
+  <Body name="glass_1_push_4" prev="glass_1" transform="-0.044 0.0 0.1 0 0 0">
+    <!-- <Shape type="FRAME" scale="0.1" /> -->
+  </Body>
+
+
+  <AffordanceModel body="glass_1" id="id_6332b31ef325ac88b0b6f706">
+    <PowerGraspable name="glass_1" frame="cola_bottle_1_grip" />
+    <Pourable name="glass_1_tip" frame="glass_1_tip" />
+    <Containable name="glass_1_inside" frame="glass_1_inside" />
+    <Containable name="glass_1_inside2" frame="glass_1_inside2" />
+    <Supportable name="glass_1_bottom" frame="glass_1_bottom" />
+  </AffordanceModel>
+
+
+
+
+
+
+
+
+
+
+
+    <Body name="cola_bottle_1" color="BLACK_RUBBER">
+        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" />
+        <Shape type="CYLINDER" length="0.16" radius="0.0325" graphics="false" transform="0 0 0.08 0 0 0"/>
+        <Shape type="CYLINDER" length="0.08" radius="0.015" graphics="false" distance="true"
+               transform="0 0 0.1875 0 0 0"/>
+
+        <Shape type="FRAME" marker="true" markerName="aruco_3" extents="0.0415 0.0415 0" scale="0.1"
+               transform="0.0325 0 0.118 0 90 0"/>
+        <Shape type="BOX" extents="0.0415 0.0415 0.0001" graphics="true" distance="false"
+               textureFile="aruco/4x4marker_3.jpg" transform="0.0325 0 0.118 0 90 0"/>
+    </Body>
+
+    <Body name="cola_bottle_1_tip" prev="cola_bottle_1" transform="0 0 0.227 180 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="cola_bottle_1_grip" prev="cola_bottle_1" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+
+  <AffordanceModel body="cola_bottle_1" id="id_6332b31ef325ac88b0b6f706">
+    <PowerGraspable frame="cola_bottle_1_grip" />
+    <PincerGraspable name="bottle_1" frame="cola_bottle_1_grip" />
+    <Twistable name="bottle_1" frame="cola_bottle_1_grip" />
+    <Pourable name="bottle_1_tip" frame="cola_bottle_1_grip" />
+    <Containable name="bottle_1_inside" frame="cola_bottle_1_grip" />
+    <Supportable name="cola_bottle_1_surf" frame="cola_bottle_1_surf" />
+    <Stackable name="cola_bottle_1" frame="cola_bottle_1" />
+  </AffordanceModel>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <Body name="hand_left_powergrasp" prev="hand_left" transform="0 -0.02 -0.14 0 -90 180">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_left_palmgrasp" prev="hand_left" transform="0 0 -0.12 0 -90 180">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_left_pincergrasp" prev="hand_left" transform="0 0 -0.19 0 -90 180">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_left_finger_tip_1" prev="thumb_tip_left" transform="0.045 -0.005 0 180 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_left_finger_tip_2" prev="second_finger_tip_left" transform="0.045 -0.005 0 180 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_left_finger_tip_3" prev="third_finger_tip_left" transform="0.045 -0.005 0 180 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+  <Manipulator name="hand_left" id="id_635a7122a1ae9f128d1b7b45" type="hand">
+    <Joints names="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left"/>
+    <PowergraspCapability frame="hand_left_powergrasp" />
+    <PalmgraspCapability frame="hand_left_palmgrasp" />
+    <PincergraspCapability frame="hand_left_pincergrasp" />
+    <!-- <TwistgraspCapability frame="hand_left_pincergrasp" /> -->
+    <FingerpushCapability frame="hand_left_finger_tip_3" />
+    </Manipulator>
+
+
+
+</Graph>

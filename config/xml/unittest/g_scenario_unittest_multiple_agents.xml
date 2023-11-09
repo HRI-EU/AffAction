@@ -1,0 +1,259 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
+       name="JacoDefaultPoseArmsHigh"
+       usage="
+&#xA;  Configuration file to load the unit testing scenario.
+&#xA;  "
+>
+    <!-- Robot with hands including affordances -->
+    <xi:include href="../../Affaction/TwoArmJaco7/g_robo.xml"/>
+
+    <!-- table with few supportables -->
+    <xi:include href="./resources/g_table_few.xml"/>
+
+    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
+        <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+        <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+        <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+        <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+        <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+    <BroadPhase DistanceThreshold="0.001">
+        <Tree root="upperarm_left" />
+        <Tree root="upperarm_right" />
+    </BroadPhase>
+
+    <Body name="camera" prev="aruco_base" color="BLACK_RUBBER" rigid_body_joints="-0.961 0.048 1.729  178.750 55.668 91.893" >
+        <Shape type="FRAME" scale="0.2" graphics="true"/>
+        <Shape type="BOX" extents="0.1 0.05 0.02" graphics="true"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.02" graphics="true" transform="0 0 0.01 0 0 0"/>
+    </Body>
+
+    <!--
+        ***********************************************************************
+
+        Scene setup
+
+        ***********************************************************************
+    -->
+
+    <!-- block_1 -->
+    
+    <Body name="block_1" prev="table_c" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="RED">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_1_top" prev="block_1" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_1_grip" prev="block_1" transform="0 0 0.05 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <AffordanceModel name="block" body="block_1" type="bowl">
+        <Stackable frame="block_1"/>
+        <Supportable frame="block_1_top"/>
+        <PowerGraspable frame="block_1_grip"/>
+    </AffordanceModel>
+
+    <Manipulator name="head_kinect_link" id="id_123456" type="head">
+        <GazeCapability frame="head_kinect_rgb_link" />
+    </Manipulator>
+
+
+    <!--
+        ***********************************************************************
+
+        Bob
+
+        `./bin/TestLLM': ./bin/TestLLMSim 
+        -dir config/xml/Affaction/examples/ 
+        -f g_aruco.xml 
+        -tracking 
+        -jsonFile config/xml/Affaction/data/skeleton.json
+
+        ***********************************************************************
+    -->
+
+    <Body name="bob" prev="lab" rigid_body_joints="0 0 0 0 0 0">
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+               transform="0 0 0.1 180 0 0" color="RED"/>
+    </Body>
+
+    <Body name="bob_hand_left" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="bob_hand_right" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="bob_head" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Manipulator name="bob_hand_left" id="id_123456" type="left_hand">
+    </Manipulator>
+
+    <Manipulator name="bob_hand_right" id="id_123456" type="right_hand">
+    </Manipulator>
+
+    <Manipulator name="bob_head" id="id_123456" type="head">
+    </Manipulator>
+
+    <!--
+    ***********************************************************************
+
+    Dave
+
+    ***********************************************************************
+    -->
+
+    <Body name="dave" prev="lab" rigid_body_joints="0 0 0 0 0 0">
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+               transform="0 0 0.1 180 0 0" color="RED"/>
+    </Body>
+
+    <Body name="dave_hand_left" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="dave_hand_right" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="dave_head" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Manipulator name="dave_hand_left" id="id_123456" type="left_hand">
+    </Manipulator>
+
+    <Manipulator name="dave_hand_right" id="id_123456" type="right_hand">
+    </Manipulator>
+
+    <Manipulator name="dave_head" id="id_123456" type="head">
+    </Manipulator>
+
+
+    <!--
+        ***********************************************************************
+
+        Agent defintion
+
+        Old:
+        <Component manipulator="hand_left" type="hand_left"> 
+        
+        Todo:
+        +++ add tracker type (azure/bodysuit/stereolabs etc)
+        +++ keep type abstract (call it azure_tracker)
+        +++ replace `type=...` with `tracker=azure_kinect`
+
+        ***********************************************************************
+    -->
+
+    <Agent type="robot" name="Robot" tracker="azure_kinect" body="block_1" id="0">
+        <Component manipulator="hand_left"/> <!-- affaction/config/xml/TwoArmJaco7/g_hand_left.xml -->
+        <Component manipulator="hand_right"/> <!-- affaction/config/xml/TwoArmJaco7/g_hand_right.xml -->
+        <Component manipulator="head_kinect_link"/> <!-- affaction/config/xml/TwoArmJaco7/g_scitos_base.xml -->
+    </Agent>
+
+    <Agent type="human" name="Bob" body="bob" tracker="azure_kinect" id="1" defaultPos="0 1 0.5" defaultRadius="0.5">
+        <Component manipulator="bob_hand_left"/>
+        <Component manipulator="bob_hand_right"/>
+        <Component manipulator="bob_head"/>
+    </Agent>
+
+    <Agent type="human" name="Dave" body="dave" tracker="azure_kinect" id="1" defaultPos="0 1 0.5" defaultRadius="0.5">
+        <Component manipulator="dave_hand_left"/>
+        <Component manipulator="dave_hand_right"/>
+        <Component manipulator="dave_head"/>
+    </Agent>
+    
+    <!--
+    <Agent type="human" name="Dave" body="block_1" id="3">
+        <Component manipulator="other_undefined_hand" type="hand"/>
+    </Agent> -->
+
+    <!-- 
+        block_1
+        block 2
+           .
+           .   
+           .
+    -->
+
+    <!--
+        ***********************************************************************
+
+        Test cases
+
+        ***********************************************************************
+    -->
+
+    <ActionSequence name="test_example_1" text="gaze block; get block; put block table"/>
+
+    <!-- 
+        <ActionSequence name="test_1" text="gaze block_1; get block_1;"/>
+        <ActionSequence name="test_1" text="gaze block_2; get block_2"/>
+           .
+           .   
+           .
+    -->
+
+</Graph>

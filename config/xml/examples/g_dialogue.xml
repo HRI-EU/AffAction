@@ -1,0 +1,147 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
+       name="Default">
+
+    <!-- The Aruco markers are 1cm away from the borders of the table. -->
+    <Body name="aruco_base" rigid_body_joints="true" color="PEWTER">
+        <!-- This shown frame corresponds to the RCS_world, i.e. the origin of RCS. -->
+        <Shape type="BOX" extents="0.14 0.14 0.001" graphics="true" textureFile="aruco/4x4marker_0.jpg"
+	       transform="0.22 0.32 0.7 0 0 0" />
+        <Shape type="FRAME" marker="true" markerName="aruco_0" extents="0.145 0.145 0" scale="0.2"
+	       transform="0.22 0.32 0.7 0 0 0" />
+        <Shape type="FRAME" scale="0.5" />
+    </Body>
+
+    <Body name="floor" prev="aruco_base" physics="kinematic" color="PEWTER" >
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+        <Shape type="BOX" extents="2 4 0.1" transform="0 0 -0.05 0 0 0" graphics="true" physics="true" distance="true" />
+    </Body>
+
+
+
+    
+    <!-- Robot with hands including affordances -->
+    <Group prev="floor" >
+      <xi:include href="../TwoArmJaco7/g_robot_arms_high.xml" />
+    </Group>
+
+    <!-- Robot hands including affordances -->
+    <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+    <xi:include href="../TwoArmJaco7/g_hand_right.xml"/>
+
+
+
+
+    
+    <Body name="camera" prev="aruco_base" color="BLACK_RUBBER" rigid_body_joints="-0.982 0.329 1.910  156.865 46.544 115.820" >
+        <Shape type="FRAME" scale="0.2" graphics="true"/>
+        <Shape type="BOX" extents="0.1 0.05 0.02" graphics="true"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.02" graphics="true" transform="0 0 0.01 0 0 0"/>
+    </Body>
+
+    <Body name="table" prev="aruco_base" rigid_body_joints="0 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+        <Shape type="BOX" extents="0.6 0.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
+               distance="true" textureFile="textures/table.jpg"/>
+    </Body>
+    
+    <Body name="tomato_sauce_bottle" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
+        <Shape type="BOX" extents="0.06 0.06 0.14" graphics="true" distance="false" physics="true" transform="0 0 0.07 0 0 0" />
+        <Shape type="FRAME" marker="true" markerName="aruco_15" extents="0.04 0.04 0" scale="0.1"
+               transform="0.03 0 0.0275 0 90 90"/>
+        <Shape type="BOX" extents="0.04 0.04 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_15.jpg" transform="0.03 0 0.0275 0 90 90"/>
+    </Body>
+
+
+
+    <Manipulator name="head_kinect_link" type="head">
+    </Manipulator>
+
+    <Agent type="robot" name="Robo">
+      <Component manipulator="head_kinect_link" type="head"/> 
+    </Agent>
+
+
+
+
+
+
+
+
+
+
+    <xi:include href="g_agent_09.xml"/>
+    <xi:include href="g_agent_12.xml"/>
+    <xi:include href="g_agent_15.xml"/>
+
+
+
+
+
+
+    <model_state model="Default" time_stamp="0">
+        <joint_state joint="DofBaseX" position="-0.75"/>
+        <joint_state joint="ptu_tilt_joint" position="0"/>
+
+        <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+        <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+        <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+        <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+        <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+
+    
+    <BroadPhase DistanceThreshold="0.001">
+    </BroadPhase>
+
+    
+</Graph>
+

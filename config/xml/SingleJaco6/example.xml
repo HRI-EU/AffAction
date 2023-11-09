@@ -1,0 +1,199 @@
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="JacoDefaultPose" >
+
+
+
+  <ActionSequence name="0" text="get Cylinder1 hand duration 10; put Cylinder1 Cylinder2; get Cylinder3 human_hand duration 2; put Cylinder3 Cylinder1 duration 2; get Cylinder1 hand duration 12"/>
+
+
+
+  
+  <Body name="Lab Frame" physics="kinematic" >
+    <Shape type="BOX" extents="6.0 6.0 0.04" transform="0 0 -0.02 0 0 0"
+           color="PEWTER" graphics="true" physics="true" distance="true"/>
+    <Shape type="FRAME" scale="1.0" />
+  </Body>
+
+  <Body name="table" prev="Lab Frame" rigid_body_joints="0 0 0.8 0 0 0" >
+    <Shape type="BOX" extents="0.8 1.6 0.020" transform="0 0 -0.02 0 0 0" graphics="true" />
+  </Body>
+
+  <Body name="table_pos1" prev="table" transform="0.2 0.5 0 0 0 0" >
+    <Shape type="BOX" extents="0.3 0.4 0.001" graphics="true" wireframe="true" distance="false" />
+  </Body>
+
+  <Body name="table_pos2" prev="table" transform="-0.2 0.5 0 0 0 0" >
+    <Shape type="BOX" extents="0.3 0.4 0.001" graphics="true" wireframe="true" distance="false" />
+  </Body>
+
+  <Body name="table_pos3" prev="table" transform="-0.2 -0.5 0 0 0 0" >
+    <Shape type="BOX" extents="0.3 0.4 0.001" graphics="true" wireframe="true" distance="false" />
+  </Body>
+
+  <Body name="table_pos4" prev="table" transform="0.2 -0.5 0 0 0 0" >
+    <Shape type="BOX" extents="0.3 0.4 0.001" graphics="true" wireframe="true" distance="false" />
+  </Body>
+
+    <AffordanceModel body="table" type="furniture">
+        <Supportable frame="table" extentsX="0.7" extentsY="1.5" />
+        <Supportable frame="table_pos1" extentsX="0.3" extentsY="0.4" />
+        <Supportable frame="table_pos2" extentsX="0.3" extentsY="0.4" />
+        <Supportable frame="table_pos3" extentsX="0.3" extentsY="0.4" />
+        <Supportable frame="table_pos4" extentsX="0.3" extentsY="0.4" />
+    </AffordanceModel>
+  
+  
+  <Group prev="table" transform="0.3 0 0 0 0 180" >
+    <xi:include href="kinova_ulw2_6dof.xml" />
+  </Group >
+    
+
+
+
+
+
+
+    <!-- Robot hand -->
+     <Body name="hand" prev="hand_base" >
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+               transform="0 0 0.1 180 0 0" color="RED"/>
+    </Body>
+
+    <Body name="hand_powergrasp" prev="hand" transform="0 -0.02 -0.14  0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+
+  <Manipulator name="hand" type="hand">
+    <Joints names="j2s7s300_joint_finger_1 j2s7s300_joint_finger_2 j2s7s300_joint_finger_3"/>
+    <PowergraspCapability frame="hand_powergrasp" />
+  </Manipulator>
+
+
+    
+
+
+
+
+
+
+    <!-- Magic human hand -->
+  <Body name="human_hand" prev="Lab Frame" physics="kinematic" mass="1" >
+    <Joint name="plx" type="TransX" weightJL="0" range="-3 -0.4 3"  />
+    <Joint name="ply" type="TransY" weightJL="0" range="-2 0 2"    />
+    <Joint name="plz" type="TransZ" weightJL="0" range="-2 1 2"  />
+    <Joint name="pla" type="RotX"   weightJL="0" range="-400 0 400" />
+    <Joint name="plb" type="RotY"   weightJL="0" range="-400 0 400" />
+    <Joint name="plc" type="RotZ"   weightJL="0" range="-400 0 400"  />
+    <Joint name="pla2" type="RotX"   weightJL="0" range="-400 0  400" />
+    <Joint name="plb2" type="RotY"   weightJL="0" range="-400 0  400" />
+    <Joint name="plc2" type="RotZ"   weightJL="0" range="-400 0  400"  />
+    <Shape type="FRAME" scale="0.25" />
+  </Body>
+
+  <Body name="human_hand_powergrasp" prev="human_hand" physics="kinematic" mass="1" color="ORANGE" >
+    <Shape type="BOX" extents="0.2 0.02 0.1" transform="-0.1 0 0 0 0 0" graphics="true" physics="true" distance="false" />
+    <Shape type="FRAME" scale="0.25" />
+  </Body>
+
+
+  <Manipulator name="human_hand" type="hand">
+    <PowergraspCapability frame="human_hand_powergrasp" />
+  </Manipulator>
+
+
+   
+    <!-- Cylinder1 -->
+    <Body name="Cylinder1" prev="table" rigid_body_joints="-0.3 0.5 0 0 0 0" color="RED" physics="dynamic" mass="1" >
+        <Shape type="CYLINDER" length="0.16" radius="0.0325" distance="true" physics="true" graphics="true" transform="0 0 0.08 0 0 0" />
+    </Body>
+
+    <Body name="Cylinder1_grip" prev="Cylinder1" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="Cylinder1_tip" prev="Cylinder1" transform="0 0 0.161 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="Cylinder1" type="bottle">
+      <Stackable frame="Cylinder1"/>
+      <Supportable frame="Cylinder1_tip"/>
+      <PowerGraspable frame="Cylinder1_grip" />
+    </AffordanceModel>
+
+   
+    <!-- Cylinder2 -->
+    <Body name="Cylinder2" prev="table" rigid_body_joints="-0.3 0.25 0 0 0 0" color="CYAN" physics="dynamic" mass="1" >
+        <Shape type="CYLINDER" length="0.16" radius="0.0325" distance="true" physics="true" graphics="true" transform="0 0 0.08 0 0 0" />
+    </Body>
+
+    <Body name="Cylinder2_grip" prev="Cylinder2" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="Cylinder2_tip" prev="Cylinder2" transform="0 0 0.161 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="Cylinder2" type="bottle">
+      <Stackable frame="Cylinder2"/>
+      <Supportable frame="Cylinder2_tip"/>
+      <PowerGraspable frame="Cylinder2_grip" />
+    </AffordanceModel>
+
+   
+    <!-- Cylinder3 -->
+    <Body name="Cylinder3" prev="table" rigid_body_joints="-0.3 0 0 0 0 0" color="BLUE" physics="dynamic" mass="1" >
+        <Shape type="CYLINDER" length="0.16" radius="0.0325" distance="true" physics="true" graphics="true" transform="0 0 0.08 0 0 0" />
+    </Body>
+
+    <Body name="Cylinder3_grip" prev="Cylinder3" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="Cylinder3_tip" prev="Cylinder3" transform="0 0 0.161 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="Cylinder3" type="bottle">
+      <Stackable frame="Cylinder3"/>
+      <Supportable frame="Cylinder3_tip"/>
+      <PowerGraspable frame="Cylinder3_grip" />
+    </AffordanceModel>
+
+
+  
+
+  
+  <model_state model="InitialPose" time_stamp="">	
+    <joint_state joint="j2n6s300_joint_finger_1" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_2" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_3" position="10" />
+    <joint_state joint="j2n6s300_joint_1" position="0" />
+    <joint_state joint="j2n6s300_joint_2" position="200" />
+    <joint_state joint="j2n6s300_joint_3" position="80" />
+    <joint_state joint="j2n6s300_joint_4" position="0" />
+    <joint_state joint="j2n6s300_joint_5" position="0"  />
+    <joint_state joint="j2n6s300_joint_6" position="0" />
+  </model_state>
+
+  
+  <model_state model="JacoDefaultPose" time_stamp="">	
+    <joint_state joint="j2n6s300_joint_finger_1" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_2" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_3" position="10" />
+    <joint_state joint="j2n6s300_joint_1" position="275.5" />
+    <joint_state joint="j2n6s300_joint_2" position="167.5" />
+    <joint_state joint="j2n6s300_joint_3" position="57.5" />
+    <joint_state joint="j2n6s300_joint_4" position="240.8" />
+    <joint_state joint="j2n6s300_joint_5" position="82.8"  />
+    <joint_state joint="j2n6s300_joint_6" position="75.8" />
+  </model_state>
+
+
+    <BroadPhase DistanceThreshold="0.001">
+        <Tree root="j2n6s300_link_base" />
+    </BroadPhase>
+
+
+</Graph>

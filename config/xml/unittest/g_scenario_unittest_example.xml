@@ -1,0 +1,127 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
+       name="JacoDefaultPoseArmsHigh"
+       usage="
+&#xA;  Configuration file to load the unit testing scenario.
+&#xA;  "
+>
+    <!-- Robot with hands including affordances -->
+    <xi:include href="../g_robo.xml"/>
+
+    <!-- table with few supportables -->
+    <xi:include href="./resources/g_table_few.xml"/>
+
+    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
+        <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+        <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+        <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+        <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+        <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+        <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+
+        <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+        <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+        <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+        <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+        <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+        <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+        <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+        <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    </model_state>
+
+    <BroadPhase DistanceThreshold="0.001">
+        <Tree root="upperarm_left" />
+        <Tree root="upperarm_right" />
+    </BroadPhase>
+
+    <!--
+        ***********************************************************************
+
+        Scene setup
+
+        ***********************************************************************
+    -->
+
+    <!-- block_1 -->
+    <Body name="block_1" prev="table_c" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="RED">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_1_top" prev="block_1" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_1_grip" prev="block_1" transform="0 0 0.05 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <AffordanceModel name="block" body="block_1" type="bowl">
+        <Stackable frame="block_1"/>
+        <Supportable frame="block_1_top"/>
+        <PowerGraspable frame="block_1_grip"/>
+    </AffordanceModel>
+
+    <!-- 
+        block_1
+        block 2
+           .
+           .   
+           .
+    -->
+
+    <!--
+        ***********************************************************************
+
+        Test cases
+
+        ***********************************************************************
+    -->
+
+    <ActionSequence name="test_example_1" text="gaze block; get block; put block table"/>
+
+    <!-- 
+        <ActionSequence name="test_1" text="gaze block_1; get block_1;"/>
+        <ActionSequence name="test_1" text="gaze block_2; get block_2"/>
+           .
+           .   
+           .
+    -->
+
+</Graph>

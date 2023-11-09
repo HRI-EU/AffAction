@@ -1,0 +1,72 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+
+    
+    <Body name="Frank" prev="aruco_base" rigid_body_joints="0.7 0 0.5 0 0 0" physics="kinematic" color="GREEN" >
+       <Shape type="SPHERE" radius="0.1" graphics="true" physics="false" distance="false" />
+    </Body>
+    
+    <Body name="Frank_head" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="GREEN" >
+       <Shape type="BOX" extents="0.2 0.15 0.25" graphics="true" physics="false" distance="false" />
+       <Shape type="SSL" length="2" radius="0.015" graphics="true" physics="false" distance="false"
+	      transform="0 0 0 -90 0 0" />
+       <Shape type="FRAME" />
+    </Body>
+    
+    <Body name="Frank_handLeft" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="GREEN" >
+       <Shape type="BOX" extents="0.1 0.025 0.05" graphics="true" physics="false" distance="false" />
+        <Shape type="FRAME" />
+    </Body>
+    
+    <Body name="Frank_handRight" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="GREEN" >
+       <Shape type="BOX" extents="0.1 0.025 0.05" graphics="true" physics="false" distance="false" />
+       <Shape type="FRAME" />
+    </Body>
+
+    <Manipulator name="Frank_head" type="head">
+    </Manipulator>
+
+    <Manipulator name="Frank_handLeft" type="left_hand">
+    </Manipulator>
+
+    <Manipulator name="Frank_handRight" type="right_hand">
+    </Manipulator>
+
+    <Agent type="human" name="Frank" body="Frank" tracker="azure_kinect" id="1"
+	   defaultPosition="0.7 0 0.5" defaultRadius="0.5">
+       <Component manipulator="Frank_head" />
+       <Component manipulator="Frank_handLeft" />
+       <Component manipulator="Frank_handRight" />
+    </Agent>
+
+    
+</Graph>
+
