@@ -64,22 +64,63 @@ ActionGaze::ActionGaze(const ActionScene& scene,
                           " objects to gaze at the same time. SUGGESTION: Specify only one object to gaze at. DEVELOPER: Number of passed strings is not 1", ActionException::ParamInvalid);
   }
 
+
+
   std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(params[0]);
 
-  if (ntts.empty())
+  if (!ntts.empty())
   {
-    throw ActionException("ERROR REASON:: The " + params[0] + " is unknown. SUGGESTION: Use an object name that is defined in the environment", ActionException::ParamNotFound);
-  }
-  // \todo(MG): Improve this for cases where they are far apart
-  // else if (ntts.size()!=1)
-  // {
-  //   throw ActionException("ERROR REASON: Found several object with the name " +
-  //                         params[0] + " to gaze at, but can only gaze at one of them. SUGGESTION: Specify the object more uniquely or gaze at something that is close to it.",
-  //                         ActionException::ParamInvalid);
-  // }
+    // \todo(MG): Improve this for cases where they are far apart
+    // if (ntts.size()!=1)
+    // {
+    //   throw ActionException("ERROR REASON: Found several object with the name " +
+    //                         params[0] + " to gaze at, but can only gaze at one of them. SUGGESTION: Specify the object more uniquely or gaze at something that is close to it.",
+    //                         ActionException::ParamInvalid);
+    // }
 
-  gazeTargetInstance = ntts[0]->bdyName;
-  gazeTarget = ntts[0]->name;
+    gazeTargetInstance = ntts[0]->bdyName;
+    gazeTarget = ntts[0]->name;
+  }
+  else
+  {
+    const Agent* agent = scene.getAgent(params[0]);
+
+    if (!agent)
+    {
+      throw ActionException("ERROR REASON:: The agent or object " + params[0] + " is unknown. SUGGESTION: Use an object or agent name that is defined in the environment", ActionException::ParamNotFound);
+    }
+
+    // From here on, we have a valid agent. We look at its head
+    for (const auto& manipulatorName : agent->manipulators)
+    {
+      const Manipulator* manipulator = scene.getManipulator(manipulatorName);
+
+      if (manipulator && manipulator->type=="head")
+      {
+        gazeTargetInstance = manipulator->name;
+        gazeTarget = manipulator->name;
+        break;
+      }
+
+    }
+
+    if (gazeTarget.empty())
+    {
+      throw ActionException("ERROR REASON:: The agent has no gazing capability. SUGGESTION: Use an agent that can do this", ActionException::ParamNotFound);
+    }
+
+    // else
+    // {
+    //   gazeTargetInstance = manipulator->name;
+    //   gazeTarget = manipulator->name;
+    // }
+
+  }
+
+
+
+
+
 
   // // Retrieve camera body \todo(MG): no explicit naming here
   // cameraFrame = "head_kinect_rgb_link";
@@ -95,7 +136,7 @@ ActionGaze::ActionGaze(const ActionScene& scene,
 
   for (const auto h : headsInScene)
   {
-    cameraFrame = h->getGazingFrame(graph);
+    cameraFrame = h->getGazingFrame();
 
     // BAD: using the first available `head` with `GazeCapability` in the scene atm. OK with only 1 robot in the scene.
     if (!cameraFrame.empty())
@@ -119,7 +160,10 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   }
 
   // Determine if object to be looked at has been grasped
-  isGazeTargetInHand = scene.getGraspingHand(graph, ntts[0]) ? true : false;
+  if (!ntts.empty())
+  {
+    isGazeTargetInHand = scene.getGraspingHand(graph, ntts[0]) ? true : false;
+  }
 
 
   // Task naming

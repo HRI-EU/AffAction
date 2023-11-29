@@ -1,0 +1,12 @@
+<Controller graph="g_scenario_pizza.xml" >
+
+  <Task name="Left finger 2 pos"   controlVariable="XYZ"   effector="hand_left_finger_tip_2" />
+  <Task name="Left finger 2 ori"   controlVariable="ABC"   effector="hand_left_finger_tip_2" />
+  <Task name="Right finger 3 pos"   controlVariable="XYZ"   effector="hand_right_finger_tip_3" />
+  <Task name="Right finger 3 ori"   controlVariable="ABC"   effector="hand_right_finger_tip_3" />
+
+  <Task name="Left fingers"   controlVariable="Joints"   jnts="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left" />
+  <Task name="Right fingers"   controlVariable="Joints"   jnts="j2s7s300_joint_finger_1_right j2s7s300_joint_finger_2_right j2s7s300_joint_finger_3_right" />
+
+
+</Controller>

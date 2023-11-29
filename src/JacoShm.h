@@ -100,6 +100,9 @@ const char* buildPath2ShmPath()
 }
 
 
+namespace aff
+{
+
 class JacoShm
 {
 public:
@@ -173,6 +176,6 @@ private:
 };
 
 
-
+}   // namespace
 
 #endif   // AFF_JACOSHM_H

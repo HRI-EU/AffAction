@@ -136,15 +136,14 @@ public:
   LandmarkZmqComponent(EntityBase* parent, std::string connection="tcp://localhost:5555"):
     ComponentBase(parent), LandmarkBase(),
     connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
-    readDataFromFile(false), frozen(false), socketTimeoutInMsec(3000), frameRate(0.0),
-    logging(false)
+    readDataFromFile(false), socketTimeoutInMsec(3000), frameRate(0.0), logging(false)
   {
     readDataFromFile = File_exists(connection.c_str());
 
     subscribe("Start", &LandmarkZmqComponent::startZmqThread);
     subscribe("Stop", &LandmarkZmqComponent::stopZmqThread);
     subscribe("PostUpdateGraph", &LandmarkZmqComponent::onPostUpdateGraph);
-    subscribe("FreezePerception", &LandmarkZmqComponent::onFreezePerception);
+    subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
     subscribe("EstimateCameraPose", &LandmarkZmqComponent::onEstimateCameraPose);
     subscribe("ToggleJsonLogging", &LandmarkZmqComponent::onToggleJsonLogging);
   }
@@ -178,7 +177,6 @@ public:
     RLOG(0, "New AzureSkeletonTracker with %zu skeletons", numSkeletons);
     
     auto tracker = new AzureSkeletonTracker(numSkeletons);
-    tracker->lmc = this;
     tracker->setScene(scene);
     addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
     
@@ -215,33 +213,17 @@ public:
     addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   }
 
+  // Same as in LandmarkBase with the addition of the time being handled
+  // differently when data comes from a file.
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   {
-    if (readDataFromFile)
-    {
-      for (const auto& tracker : trackers)
-      {
-        tracker->setCurrentTime(0.0);
-      }
-    }
-    else
-    {
-      const double wallClockTime = getWallclockTime();
+    const double wallClockTime = readDataFromFile ? 0.0 : getWallclockTime();
       for (const auto& tracker : trackers)
       {
         tracker->setCurrentTime(wallClockTime);
       }
-    }
-
 
     updateGraph(desired);
-  }
-
-  void onFreezePerception(bool freeze)
-  {
-    this->frozen = freeze;
-    std::string bgColor = freeze ? "BLACK" : "";
-    getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", bgColor);
   }
 
   void onEstimateCameraPose(int numFrames)
@@ -294,7 +276,7 @@ public:
       {
         if (!frozen)
         {
-          updateFromJson(json);
+          setJsonInput(json);
         }
         Timer_waitDT(0.2);
 
@@ -359,7 +341,7 @@ public:
       if (!frozen)
       {
         nlohmann::json json = nlohmann::json::parse(reply_str);
-        updateFromJson(json);
+        setJsonInput(json);
       }
 
       // Timing statistics
@@ -433,16 +415,6 @@ public:
     RLOG(0, "onStop() completed");
   }
 
-  void freeze(bool frozen_)
-  {
-    this->frozen = frozen_;
-  }
-
-  bool isFrozen() const
-  {
-    return this->frozen;
-  }
-
 
 private:
 
@@ -450,7 +422,7 @@ private:
   bool threadRunning;
   bool threadFunctionCompleted;
   bool readDataFromFile;
-  bool frozen;
+  // bool frozen;
   bool logging;
 
 

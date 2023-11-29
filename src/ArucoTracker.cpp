@@ -37,6 +37,7 @@
 #include <Rcs_math.h>
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
+#include <Rcs_body.h>
 #include <Rcs_shape.h>
 #include <Rcs_quaternion.h>
 
@@ -218,7 +219,7 @@ computeDofsFromAruco(const RcsGraph* graph,
     std::vector<std::string> MARKER_NAMES;
     size_t nMarkers = computeBodyDofsFromAruco(q_rbj, graph, BODY, T_camI, markerMap, MARKER_NAMES);
 
-    if (nMarkers>0)
+    if (nMarkers>0 && !RcsBody_isArticulated(graph, BODY))
     {
       RCHECK_MSG(BODY->rigid_body_joints, "Body \"%s\" is expected to have rigid body joints",
                  BODY->name);

@@ -31,7 +31,6 @@
 *******************************************************************************/
 
 #include "ActionScene.h"
-#include "SceneJsonHelpers.h"
 
 #include <Rcs_typedef.h>
 #include <Rcs_shape.h>
@@ -567,13 +566,6 @@ std::tuple<const Manipulator*,const AffordanceEntity*> ActionScene::getGraspingH
   }
 
   return std::tuple<const Manipulator*,const AffordanceEntity*>(NULL, NULL);
-}
-
-std::string ActionScene::getState(const RcsGraph* graph) const
-{
-  nlohmann::json stateJson;
-  getSceneState(stateJson, this, graph);
-  return stateJson.dump();
 }
 
 const Agent* ActionScene::getAgent(const std::string& name) const

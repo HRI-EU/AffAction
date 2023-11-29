@@ -213,13 +213,14 @@ OPTION(USE_AFFACTION_ROS "Enable ROS for the retro project" OFF)
 
 IF(USE_AFFACTION_ROS)
   LIST(APPEND CMAKE_PREFIX_PATH /opt/ros/noetic) #$ENV{ROS_DISTRO})
+  SET(SMILE_WS_PATH "$ENV{SMILE_WORKSPACE_PATH}" CACHE STRING "Path to smile ROS workspace")
   FIND_PACKAGE(roscpp QUIET)
   IF(NOT roscpp_FOUND)
     MESSAGE(STATUS "Couldn't find roscpp, so not building ROS-specific functionality. Did you source the ROS setup.sh file?")
   ELSE()
     MESSAGE(STATUS "Found roscpp installed at ${roscpp_DIR}, so building ROS-specific functionality.")
   ENDIF()
-  #FIND_PACKAGE(geometry_msgs REQUIRED)
+  FIND_PACKAGE(actionlib REQUIRED)
 ENDIF(USE_AFFACTION_ROS)
 
 ###############################################################################
@@ -256,6 +257,7 @@ src/ArucoTracker.cpp
 src/ArucoMultiCamTracker.cpp
 src/AzureSkeletonTracker.cpp
 src/LandmarkBase.cpp
+src/ConcurrentExecutor.cpp
 )
 
 SET(ECS_SRCS
@@ -268,18 +270,24 @@ src/EventGui.cpp
 src/TaskGuiComponent.cpp
 src/TextEditComponent.cpp
 src/ActionComponent.cpp
-src/ConcurrentExecutor.cpp
+src/HardwareComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
 examples/ExampleLLMSim.cpp
 src/JacoShmComponent.cpp
-src/RespeakerComponent.cpp
 src/TTSComponent.cpp
 )
 
-ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS})
+SET(ROS_SRCS
+src/PtuComponent.cpp
+src/PtuActionComponent.cpp
+src/RespeakerComponent.cpp
+src/NuanceTTSComponent.cpp
+)
+
+ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
 
 TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -324,7 +332,9 @@ IF (USE_AFFACTION_ROS)
   TARGET_LINK_LIBRARIES(AffAction ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES})
   TARGET_INCLUDE_DIRECTORIES(AffAction SYSTEM PUBLIC ${roscpp_INCLUDE_DIRS})
   TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DUSE_ROS)
-  TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC /home/mgienger/localdisk/smile_ros_ws/devel/include)
+  TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC ${SMILE_WS_PATH}/devel/include)
+  TARGET_LINK_DIRECTORIES(AffAction PUBLIC /opt/ros/noetic/lib)
+  TARGET_LINK_LIBRARIES(AffAction actionlib)
 ENDIF(USE_AFFACTION_ROS)
 
 ################################################################################
@@ -351,8 +361,10 @@ IF (UNIX)
   TARGET_LINK_LIBRARIES(TestLLMSim X11)
 ENDIF()
 
-#ADD_EXECUTABLE(TestRespeaker examples/TestRespeaker.cpp)
-#TARGET_LINK_LIBRARIES(TestRespeaker AffAction)
+IF (USE_AFFACTION_ROS)
+  ADD_EXECUTABLE(PtuActionClient src/PtuActionClient.cpp)
+  TARGET_LINK_LIBRARIES(PtuActionClient AffAction)
+ENDIF(USE_AFFACTION_ROS)
 
 ################################################################################
 # Python module with pybind11

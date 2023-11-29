@@ -32,7 +32,6 @@
 
 #include "ExampleLLMSim.h"
 #include "ActionFactory.h"
-#include "JacoShmComponent.h"
 #include "SceneJsonHelpers.h"
 
 #include <ExampleFactory.h>
@@ -44,8 +43,6 @@
 #include <Rcs_math.h>
 #include <Rcs_shape.h>
 #include <Rcs_timer.h>
-
-#include "json.hpp"
 
 #include <unordered_set>
 
@@ -114,7 +111,7 @@ bool ExampleLLMSim::initGraphics()
     viewer->setKeyCallback('l', [this](char k)
     {
       RLOG(0, "Toggle talk flag");
-      entity.publish("ToggleTalkFlag");
+      entity.publish("ToggleASR");
 
     }, "Toggle talk flag");
 
@@ -123,7 +120,7 @@ bool ExampleLLMSim::initGraphics()
   viewer->setKeyCallback('a', [this](char k)
   {
     RLOG(0, "Test pan tilt angle calculation");
-    Agent* robo_ = actionC->getDomain()->getAgent("Robo");
+    Agent* robo_ = getScene()->getAgent("Robo");
     RCHECK(robo_);
 
     double panTilt[2], err[2];
@@ -203,13 +200,8 @@ bool ExampleLLMSim::initAlgo()
     this->server.start_accept();
   }
 
-  // Initialize robot components from command line
-  this->hwc = getHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
-
-  if (!hwc.empty())
-  {
-    setEnableRobot(true);
-  }
+  // Create static graph copies at this point
+  collectFeedback();
 
   return true;
 }
@@ -232,8 +224,6 @@ bool ExampleLLMSim::parseArgs(Rcs::CmdLineParser* parser)
 {
   parser->getArgument("-port", &port, "Websocket port (default: %d)", port);
   parser->getArgument("-useWebsocket", &useWebsocket, "Use websocket (default: %s)", useWebsocket ? "true" : "false");
-  const bool dryRun = true;
-  getHardwareComponents(entity, NULL, NULL, dryRun);
   bool res = ExampleActionsECS::parseArgs(parser);
 
   if (parser->hasArgument("-h"))
@@ -297,11 +287,29 @@ void ExampleLLMSim::onActionResult(bool success, double quality, std::string res
   RMSG_CPP(resMsg);
   entity.publish("SetTextLine", resMsg, 1);
 
+  // This needs to be done independent of failure or success
+  if (!actionStack.empty())
+  {
+    addToCompletedActionStack(actionStack[0], resMsg);
+    printCompletedActionStack();
+    actionStack.erase(actionStack.begin());
+  }
+
   if (!success)
   {
     numFailedActions++;
     actionStack.clear();
     RLOG_CPP(0, "Clearing action stack, number of failed actions: " << numFailedActions);
+  }
+
+  // After the last action command of a sequence has been finished (the
+  // trajectory has ended), or we face a failure, we "unfreeze" the perception
+  // and accept updates from the perceived scene.
+  if (actionStack.empty())
+  {
+    RLOG(0, "ActionStack is empty, unfreezing perception");
+    entity.publish("FreezePerception", false);
+    entity.publish<std::string, std::string>("RenderCommand", "BackgroundColor", "");
   }
 
   // In valgrind mode, we only perform one action, since this might run with valgrind
@@ -345,14 +353,15 @@ void ExampleLLMSim::onActionResultUnittest(bool success, double quality, std::st
   failCount = numFailedActions;
 }
 
+// This only handles the "get_state" keyword
 void ExampleLLMSim::onTextCommand(std::string text)
 {
+  RMSG_CPP("ExampleLLMSim::onTextCommand RECEIVED: " << text);
   if (text=="get_state")
   {
     std::thread feedbackThread([this]()
     {
-      //std::string fb = collectFeedback(actionC->getDomain(), controller->getGraph());
-      std::string fb = actionC->getDomain()->getState(controller->getGraph());
+      std::string fb = collectFeedback();
       if (connected && useWebsocket)
       {
         this->server.send(hdl, fb, websocketpp::frame::opcode::TEXT);
@@ -379,7 +388,7 @@ size_t ExampleLLMSim::getNumFailedActions() const
 std::string ExampleLLMSim::getSceneEntities() const
 {
   std::string res = "These entities are in the scene: ";
-  const ActionScene* scene = actionC->getDomain();
+  const ActionScene* scene = getScene();
 
   // Only add each item once in case of duplicate names.
   std::unordered_set<std::string> ntts;
@@ -399,9 +408,44 @@ std::string ExampleLLMSim::getSceneEntities() const
 
 std::string ExampleLLMSim::collectFeedback() const
 {
-  return actionC->getDomain()->getState(controller->getGraph());
+
+  double t0 = Timer_getSystemTime();
+  static RcsGraph* staticGraph = NULL;
+  static ActionScene staticScene;
+
+  stepMtx.lock();
+  if (!staticGraph)
+  {
+    staticGraph = RcsGraph_clone(controller->getGraph());
+}
+  else
+  {
+    RcsGraph_copy(staticGraph, controller->getGraph());
+  }
+  double t1 = Timer_getSystemTime();
+
+  staticScene = *getScene();
+  double t2 = Timer_getSystemTime();
+  stepMtx.unlock();
+
+  NLOG(1, "get_state took %.3f  %.3f msec (graph, actions)",
+       (t1-t0)*1.0e3, (t2-t1)*1.0e3);
+
+  nlohmann::json stateJson;
+  getSceneState(stateJson, &staticScene, staticGraph);
+
+  return stateJson.dump();
 }
 
+void ExampleLLMSim::setUseWebsocket(bool enable)
+{
+  useWebsocket = enable;
+}
+
+bool ExampleLLMSim::getUseWebsocket() const
+{
+  return useWebsocket;
+}
 
 
 }   // namespace aff

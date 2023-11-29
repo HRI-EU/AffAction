@@ -68,7 +68,7 @@ AffordanceEntity::AffordanceEntity()
 
 AffordanceEntity& AffordanceEntity::operator= (const AffordanceEntity& copyFromMe)
 {
-  RLOG(0, "**** Calling ASSIGNMENT of AffordanceEntity");
+  //  RLOG(0, "**** Calling ASSIGNMENT of AffordanceEntity");
   if (this == &copyFromMe)
   {
     return *this;
@@ -232,7 +232,9 @@ bool AffordanceEntity::check(const RcsGraph* graph) const
 {
   bool success = true;
 
-  if (!RcsGraph_getBodyByName(graph, bdyName.c_str()))
+  const RcsBody* ntt = RcsGraph_getBodyByName(graph, bdyName.c_str());
+
+  if (!ntt)
   {
     RLOG(1, "No graph body with name '%s' was found", bdyName.c_str());
     success = false;
@@ -241,6 +243,26 @@ bool AffordanceEntity::check(const RcsGraph* graph) const
   for (auto a : affordances)
   {
     success = a->check(graph) && success;
+
+    // We enforce that the affordance frames are children of the entity or the
+    // entity itself
+    const RcsBody* affordanceFrm = RcsGraph_getBodyByName(graph, a->frame.c_str());
+
+    if (!affordanceFrm)
+    {
+      success = false;
+    }
+    else
+    {
+      if (//(affordanceFrm->parentId!=ntt->id) &&
+        (affordanceFrm->id!=ntt->id) &&
+        (!RcsBody_isChild(graph, affordanceFrm, ntt)))
+      {
+        RLOG(1, "Affordance frame '%s' is not a child of or '%s'",
+             affordanceFrm->name, ntt->name);
+        success=false;
+      }
+    }
   }
 
   return success;

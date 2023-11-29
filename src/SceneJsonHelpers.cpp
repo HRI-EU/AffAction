@@ -36,6 +36,9 @@
 #include <Rcs_math.h>
 #include <Rcs_typedef.h>
 #include <Rcs_shape.h>
+#include <Rcs_timer.h>
+
+#include <mutex>
 
 
 
@@ -127,7 +130,7 @@ void getSceneState(nlohmann::json& stateJson,
     nlohmann::json shapeJson;
     RCSBODY_TRAVERSE_SHAPES(bdy)
     {
-      if (!RcsShape_isOfComputeType(SHAPE, RCSSHAPE_COMPUTE_DISTANCE))
+      if (!RcsShape_isOfComputeType(SHAPE, RCSSHAPE_COMPUTE_PHYSICS))
       {
         continue;
       }

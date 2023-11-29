@@ -41,6 +41,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <audio_msgs/TalkFlag.h>
 #include <mutex>
 #endif
 
@@ -54,22 +55,25 @@ public:
 
   RespeakerComponent(EntityBase* parent, const ActionScene* scene);
 
-#if defined (USE_ROS)
   virtual ~RespeakerComponent();
+
+  void setPublishDialogueWithRaisedHandOnly(bool enable);
+  bool getPublishDialogueWithRaisedHandOnly() const;
+  void setGazeAtSpeaker(bool enable);
+  bool getGazeAtSpeaker() const;
+  void setSpeakOutSpeakerListenerText(bool enable);
+  bool getSpeakOutSpeakerListenerText() const;
 
 private:
 
-  void isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg);
-  void asrRosCallback(const std_msgs::String::ConstPtr& msg);
-  void soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
   void onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* current);
   void onPostUpdateGraphGaze(RcsGraph* desired, RcsGraph* current);
   void onStart();
   void onStop();
-  void setTalkFlag(bool enable);
-  bool getTalkFlag() const;
-  void toggleTalkFlag();
+  void enableASR(bool enable);
+  void enableSoundDirectionEstimation(bool enable);
+  void toggleASR();
   const HumanAgent* getSpeaker(const double micPosition[3],
                                const double soundDir[3]) const;
   std::string getListenerName(const double micPosition[3],
@@ -77,19 +81,35 @@ private:
   void updateSoundDirection(RcsGraph* graph, const std::string& spoken,
                             double micPos[3], double soundDir[3]);
 
+#if defined (USE_ROS)
+
+  void isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg);
+  void talkFlagRosCallback(const audio_msgs::TalkFlag::ConstPtr& msg);
+  void asrRosCallback(const std_msgs::String::ConstPtr& msg);
+  void soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+
   ros::Subscriber asrSubscriber;
   ros::Subscriber soundLocalizationSubscriber;
   ros::Subscriber isSpeakingSubscriber;
+  ros::Subscriber talkFlagSubscriber;
   ros::Publisher talk_flag_pub;
   ros::Publisher dialogue_pub;
   std::unique_ptr<ros::NodeHandle> nh;
+
+#endif
+
   const ActionScene* scene;
   std::string receivedTextJson;
   std::string respeakerBdyName;
   std::mutex textLock;
-  bool talkFlag;
+  bool isASREnabled;
+  bool isSoundDirectionEstimationEnabled;
+  bool isSomebodySpeaking;
+  bool isAnyHandRaised;
+  bool publishDialogueWithRaisedHandOnly;
+  bool gazeAtSpeaker;
+  bool speakOutSpeakerListenerText;
   std::vector<double> soundDirection, soundDirectionFilt;
-#endif
 };
 
 }   // namespace

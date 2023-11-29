@@ -32,7 +32,7 @@
 
 #ifndef AFF_PTUCOMPONENT_H
 #define AFF_PTUCOMPONENT_H
-
+#if 0
 #include <Rcs_macros.h>
 
 
@@ -328,4 +328,5 @@ void initROS(double rosDt)
 
 #endif   // defined USE_ROS
 
+#endif   // 0
 #endif   // AFF_PTUCOMPONENT_H

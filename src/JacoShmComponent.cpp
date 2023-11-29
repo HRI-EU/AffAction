@@ -32,22 +32,9 @@
 *******************************************************************************/
 
 #include "JacoShmComponent.h"
-#include "PtuComponent.hpp"
-#include "RespeakerComponent.h"
 
-#if defined (_MSC_VER)
-namespace aff
-{
-std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
-                                                  const RcsGraph* graph,
-                                                  const ActionScene* scene,
-                                                  bool dryRun)
-{
-  return std::vector<ComponentBase*>();
-}
-}
+#if !defined (_MSC_VER)
 
-#else
 #include "JacoShm.h"
 
 #include <Rcs_typedef.h>
@@ -70,77 +57,8 @@ std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
 
 
 
-namespace Rcs
+namespace aff
 {
-class JacoShmComponent
-{
-public:
-
-  enum JacoType
-  {
-    Jaco6 = 0,
-    Jaco7_left,
-    Jaco7_right
-  };
-
-  JacoShmComponent(const RcsGraph* graph, JacoType roboType);
-  virtual ~JacoShmComponent();
-  void updateSensors(RcsGraph* graph);
-  void setCommand(const MatNd* q);
-
-protected:
-
-  void enableCommands();
-
-private:
-
-  struct JointData
-  {
-    JointData() : q_curr(0.0), q0(0.0), qd_curr(0.0), jointIdx(-1), arrayIdx(-1)
-    {
-    }
-
-    JointData(int arrayIdx_) : q_curr(0.0), qd_curr(0.0),
-      jointIdx(-1), arrayIdx(arrayIdx_), limitlessJoint(false)
-    {
-    }
-
-    void setCurrent(double qNew, double qdNew)
-    {
-      q_curr = qNew;
-      qd_curr = qdNew;
-    }
-
-    double getCurrentJointAngle() const
-    {
-      return q_curr;
-    }
-
-    double getCurrentJointVelocity() const
-    {
-      return qd_curr;
-    }
-
-    double q_curr;
-    double q0;
-    double qd_curr;
-    int jointIdx;
-    int arrayIdx;
-    bool limitlessJoint;
-  };
-
-  JacoShmComponent& operator = (const JacoShmComponent&);
-  JacoShmComponent(const JacoShmComponent& other);
-
-  std::map<std::string,JointData> jntMap;
-  std::vector<std::string> jntNames;
-  std::vector<double> jntOffset;
-  JacoType jType;
-  JacoShm* shm;
-};
-
-
-
 
 
 
@@ -384,13 +302,9 @@ void JacoShmComponent::setCommand(const MatNd* q_des)
 
 }
 
-}   // namespace Rcs
 
 
 
-
-namespace aff
-{
 
 
 
@@ -410,121 +324,68 @@ namespace aff
 
 
  ******************************************************************************/
-class RoboJacoShmComponent : public ComponentBase, public Rcs::JacoShmComponent
+RoboJacoShmComponent* RoboJacoShmComponent::create(EntityBase* parent,
+                                                   const RcsGraph* graph,
+                                                   JacoShmComponent::JacoType jt)
 {
-public:
+  RCHECK(graph);
+  return new RoboJacoShmComponent(parent, graph, jt);
+}
 
-  static RoboJacoShmComponent* create(EntityBase* parent,
-                                      const RcsGraph* graph,
-                                      Rcs::JacoShmComponent::JacoType jt)
-  {
-    return new RoboJacoShmComponent(parent, graph, jt);
-  }
-
-  RoboJacoShmComponent(EntityBase* parent,
-                       const RcsGraph* graph,
-                       Rcs::JacoShmComponent::JacoType jt) :
-    ComponentBase(parent), Rcs::JacoShmComponent(graph, jt), eStop(false), enableCommands(false)
-  {
-    RLOG(0, "Creating RoboJacoShmComponent");
-    subscribe("UpdateGraph", &RoboJacoShmComponent::onUpdateGraph);
-    subscribe("SetJointCommand", &RoboJacoShmComponent::onSetJointPosition);
-    subscribe("InitFromState", &RoboJacoShmComponent::onInitFromState);
-    subscribe("EmergencyStop", &RoboJacoShmComponent::onEmergencyStop);
-    subscribe("EmergencyRecover", &RoboJacoShmComponent::onEmergencyRecover);
-    subscribe("EnableCommands", &RoboJacoShmComponent::onEnableCommands);
-  }
-
-private:
-
-  void onInitFromState(const RcsGraph* target)
-  {
-    RLOG(0, "RoboJacoComponent::onInitFromState()");
-    onSetJointPosition(target->q);
-  }
-
-  void onEmergencyStop()
-  {
-    if (this->eStop == false)
-    {
-      RLOG(0, "RoboJacoComponent::EmergencyStop");
-    }
-
-    this->eStop = true;
-    enableCommands = false;
-  }
-
-  void onEmergencyRecover()
-  {
-    RLOG(0, "RoboJacoComponent::EmergencyRecover");
-    this->eStop = false;
-    enableCommands = true;
-  }
-
-  void onSetJointPosition(const MatNd* q_des)
-  {
-    if ((enableCommands) && (!eStop))
-    {
-      Rcs::JacoShmComponent::setCommand(q_des);
-    }
-  }
-
-  void onUpdateGraph(RcsGraph* graph)
-  {
-    Rcs::JacoShmComponent::updateSensors(graph);
-  }
-
-  void onEnableCommands()
-  {
-    enableCommands = true;
-  }
-
-  bool eStop;
-  bool enableCommands;
-};
-
-
-/*******************************************************************************
- *
- ******************************************************************************/
-std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
-                                                  const RcsGraph* graph,
-                                                  const ActionScene* scene,
-                                                  bool dryRun)
+RoboJacoShmComponent::RoboJacoShmComponent(EntityBase* parent,
+                                           const RcsGraph* graph,
+                                           JacoShmComponent::JacoType jt) :
+  ComponentBase(parent), JacoShmComponent(graph, jt), eStop(false), enableCommands(false)
 {
-  Rcs::CmdLineParser argP;
-  std::vector<ComponentBase*> hwc;
+  RLOG(0, "Creating RoboJacoShmComponent");
+  subscribe("UpdateGraph", &RoboJacoShmComponent::onUpdateGraph);
+  subscribe("SetJointCommand", &RoboJacoShmComponent::onSetJointPosition);
+  subscribe("InitFromState", &RoboJacoShmComponent::onInitFromState);
+  subscribe("EmergencyStop", &RoboJacoShmComponent::onEmergencyStop);
+  subscribe("EmergencyRecover", &RoboJacoShmComponent::onEmergencyRecover);
+  subscribe("EnableCommands", &RoboJacoShmComponent::onEnableCommands);
+}
 
-  if (argP.hasArgument("-jacoShm7r", "Start with Jaco7 Shm right") && (!dryRun))
+void RoboJacoShmComponent::onInitFromState(const RcsGraph* target)
+{
+  RLOG(0, "RoboJacoComponent::onInitFromState()");
+  onSetJointPosition(target->q);
+}
+
+void RoboJacoShmComponent::onEmergencyStop()
+{
+  if (this->eStop == false)
   {
-    hwc.push_back(RoboJacoShmComponent::create(&entity, graph, Rcs::JacoShmComponent::Jaco7_right));
+    RLOG(0, "RoboJacoComponent::EmergencyStop");
   }
 
-  if (argP.hasArgument("-jacoShm7l", "Start with Jaco7 Shm left") && (!dryRun))
-  {
-    hwc.push_back(RoboJacoShmComponent::create(&entity, graph, Rcs::JacoShmComponent::Jaco7_left));
-  }
+  this->eStop = true;
+  enableCommands = false;
+}
 
-  if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
-  {
-    const double rosDt = 0.02;  // 20 msec = 50Hz
-    initROS(rosDt);
-    hwc.push_back(new PtuComponent(&entity, rosDt));
-  }
+void RoboJacoShmComponent::onEmergencyRecover()
+{
+  RLOG(0, "RoboJacoComponent::EmergencyRecover");
+  this->eStop = false;
+  enableCommands = true;
+}
 
-  if (argP.hasArgument("-respeaker", "Start with Respeaker") && (!dryRun))
+void RoboJacoShmComponent::onSetJointPosition(const MatNd* q_des)
+{
+  if ((enableCommands) && (!eStop))
   {
-    const double rosDt = 0.02;  // 20 msec = 50Hz
-    initROS(rosDt);
-    hwc.push_back(new RespeakerComponent(&entity, scene));
+    JacoShmComponent::setCommand(q_des);
   }
+}
 
-  for (size_t i=0; i<hwc.size(); ++i)
-  {
-    RCHECK_MSG(hwc[i], "Found NULL hardware component at index %zu", i);
-  }
+void RoboJacoShmComponent::onUpdateGraph(RcsGraph* graph)
+{
+  JacoShmComponent::updateSensors(graph);
+}
 
-  return hwc;
+void RoboJacoShmComponent::onEnableCommands()
+{
+  enableCommands = true;
 }
 
 
@@ -532,4 +393,4 @@ std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
 
 }   // namespace aff
 
-#endif
+#endif   //  !defined (_MSC_VER)

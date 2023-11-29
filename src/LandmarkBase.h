@@ -46,13 +46,11 @@ class LandmarkBase
 public:
 
   LandmarkBase();
-  LandmarkBase(const std::string& configFile);
 
   virtual ~LandmarkBase();
 
-  void updateFromJson(const nlohmann::json& json);
-  void updateScene(double currentTime);
-  std::string getState() const;
+  void setJsonInput(const nlohmann::json& json);
+  std::string getTrackerState() const;
 
   void updateGraph(RcsGraph* graph);
   void addTracker(std::unique_ptr<TrackerBase> tracker);
@@ -60,6 +58,7 @@ public:
   void addArucoTracker(const std::string& camera="camera",
                        const std::string& baseMarker="aruco_base");
   TrackerBase* addSkeletonTracker(size_t numSkeletons);
+  int addSkeletonTrackerForAgents(double defaultRadius);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 
@@ -67,14 +66,19 @@ public:
   bool isCalibrating(const std::string& camera) const;
   void setScenePtr(RcsGraph* graph, ActionScene* scene);
 
-  //protected:
+  void onFreezePerception(bool freeze);
+  bool isFrozen() const;
+  const RcsGraph* getGraph() const;
+  const ActionScene* getScene() const;
+  virtual void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
+  std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
 
-  void jsonFromSkeletons(nlohmann::json& json, TrackerBase* skeletonTracker) const;
+protected:
 
   std::vector<std::unique_ptr<TrackerBase>> trackers;
   ActionScene* scene;
   RcsGraph* graph;
-  bool ownsScene;
+  bool frozen;
 };
 
 }   // namespace

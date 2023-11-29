@@ -64,6 +64,7 @@ public:
   Manipulator();
   Manipulator(const xmlNodePtr node);
   Manipulator(const Manipulator& other);
+  Manipulator& operator = (const Manipulator&);
   virtual ~Manipulator();
   void print() const;
   virtual bool check(const RcsGraph* graph) const;
@@ -122,7 +123,7 @@ public:
                                                     const RcsGraph* graph,
                                                     bool useInstanceName) const;
 
-   std::string getGazingFrame(const RcsGraph* graph) const;
+  std::string getGazingFrame() const;
 };
 
 } // namespace aff

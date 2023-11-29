@@ -130,13 +130,42 @@ Manipulator::Manipulator(const xmlNodePtr node)
 Manipulator::Manipulator(const Manipulator& other) :
   name(other.name), id(other.id), type(other.type), fingerJoints(other.fingerJoints)
 {
+  RLOG(0, "Copying manipulator");
+
   for (size_t i=0; i<other.capabilities.size(); ++i)
   {
     Capability* ci = other.capabilities[i]->clone();
-    NLOG(0, "ci is of type %s", ci->type.c_str());
     capabilities.push_back(ci);
   }
 
+}
+
+Manipulator& Manipulator::operator= (const Manipulator& copyFromMe)
+{
+  //RLOG(0, "**** Calling ASSIGNMENT of Manipulator");
+  if (this == &copyFromMe)
+  {
+    return *this;
+  }
+
+  name = copyFromMe.name;
+  id = copyFromMe.id;
+  agent = copyFromMe.agent;
+  type = copyFromMe.type;
+  fingerJoints = copyFromMe.fingerJoints;
+
+  for (size_t i=0; i<capabilities.size(); ++i)
+  {
+    delete capabilities[i];
+  }
+  capabilities.clear();
+
+  for (size_t i=0; i<copyFromMe.capabilities.size(); ++i)
+  {
+    capabilities.push_back(copyFromMe.capabilities[i]->clone());
+  }
+
+  return *this;
 }
 
 Manipulator::~Manipulator()
@@ -381,11 +410,11 @@ std::string Manipulator::getGraspingFrame(const RcsGraph* graph,
   return c ? c->frame : std::string();
 }
 
-std::string Manipulator::getGazingFrame(const RcsGraph* graph) const
+std::string Manipulator::getGazingFrame() const
 {
   for (auto c : capabilities)
   {
-    c->print();
+    //c->print();
     if (dynamic_cast<GazeCapability*>(c))
     {
       return c->frame;

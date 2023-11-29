@@ -43,6 +43,9 @@ namespace py = pybind11;
 #include <AzureSkeletonTracker.h>
 #include <ExampleLLMSim.h>
 #include <ActionFactory.h>
+#include <HardwareComponent.h>
+#include <RespeakerComponent.h>
+
 #include <ControllerBase.h>
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -101,17 +104,12 @@ void define_AffordanceTypes(py::module& m)
 
 PYBIND11_MODULE(pyAffaction, m)
 {
-
   define_AffordanceTypes(m);
 
-
-
-
-
-
-
+  //////////////////////////////////////////////////////////////////////////////
+  // LlmSim
+  //////////////////////////////////////////////////////////////////////////////
   py::class_<aff::ExampleLLMSim>(m, "LlmSim")
-  //.def(py::init<>())
   .def(py::init<>([]()
   {
 #if !defined(_MSC_VER)// Avoid crashes when running remotely.
@@ -138,6 +136,13 @@ PYBIND11_MODULE(pyAffaction, m)
       ex.entity.process();
     }
 
+    ex.viewer->setKeyCallback('l', [&ex](char k)
+    {
+      RLOG(0, "Toggle talk flag");
+      ex.entity.publish("ToggleASR");
+
+    }, "Toggle talk flag");
+
     std::string starLine(80, '*');
     std::cerr << "\n\n" + starLine;
     if (success)
@@ -151,8 +156,12 @@ PYBIND11_MODULE(pyAffaction, m)
     std::cerr << starLine << "\n";
 
     return success;
-  })
-  .def("run", &aff::ExampleLLMSim::startThreaded, py::call_guard<py::gil_scoped_release>())
+  }, "Initializes algorithm, guis and graphics")
+  .def("initHardwareComponents", [](aff::ExampleLLMSim& ex)
+  {
+    ex.entity.initialize(ex.graphC->getGraph());
+  }, "Initializes hardware components")
+  .def("run", &aff::ExampleLLMSim::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
   .def("run", [](aff::ExampleLLMSim& ex, std::string actionCommand)
   {
     double t_calc = Timer_getSystemTime();
@@ -176,6 +185,10 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("render", [](aff::ExampleLLMSim& ex)
   {
     ex.entity.publish("Render");
+    ex.entity.process();
+  })
+  .def("process", [](aff::ExampleLLMSim& ex)
+  {
     ex.entity.process();
   })
   .def("showGraphicsWindow", [](aff::ExampleLLMSim& ex)
@@ -207,12 +220,68 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("step", &aff::ExampleActionsECS::step)
   .def("stop", &aff::ExampleActionsECS::stop)
   .def("isRunning", &aff::ExampleActionsECS::isRunning)
+  .def("setActionSequence", &aff::ExampleActionsECS::onActionSequence)
   .def("getRobotCapabilities", [](aff::ExampleLLMSim& ex)
   {
     return aff::ActionFactory::printToString();
   })
+  .def("addRespeaker", [](aff::ExampleLLMSim& ex,
+                          bool listenWitHandRaisedOnly,
+                          bool gazeAtSpeaker,
+                          bool speakOut)
+  {
+    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding Respeaker");
+    aff::initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    aff::RespeakerComponent* respeaker = new aff::RespeakerComponent(&ex.entity, ex.getScene());
+    respeaker->setPublishDialogueWithRaisedHandOnly(listenWitHandRaisedOnly);
+    respeaker->setGazeAtSpeaker(gazeAtSpeaker);
+    respeaker->setSpeakOutSpeakerListenerText(speakOut);
+    ex.addComponent(respeaker);
+  })
+  .def("addPTU", [](aff::ExampleLLMSim& ex)
+  {
+    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
+    aff::ComponentBase* c = getComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-ptu");
+    if (c)
+    {
+      ex.addHardwareComponent(c);
+    }
+  })
+  .def("addTTS", [](aff::ExampleLLMSim& ex, std::string type)
+  {
+    if (type == "nuance")
+    {
+      auto c = getComponent(ex.entity, ex.controller->getGraph(),
+                            ex.getScene(), "-nuance_tts");
+      ex.addComponent(c);
+      return c ? true : false;
+    }
+    else if (type == "native")
+    {
+      auto c = getComponent(ex.entity, ex.controller->getGraph(),
+                            ex.getScene(), "-tts");
+      ex.addComponent(c);
+      return c ? true : false;
+    }
 
-  .def_readwrite("useWebsocket", &aff::ExampleLLMSim::useWebsocket)
+    return false;
+  })
+  .def("addJacoLeft", [](aff::ExampleLLMSim& ex)
+  {
+    auto c = aff::getComponent(ex.entity, ex.controller->getGraph(),
+                               ex.getScene(), "-jacoShm7l");
+    ex.addHardwareComponent(c);
+    return c ? true : false;
+  })
+  .def("addJacoRight", [](aff::ExampleLLMSim& ex)
+  {
+    auto c = aff::getComponent(ex.entity, ex.controller->getGraph(),
+                               ex.getScene(), "-jacoShm7r");
+    ex.addHardwareComponent(c);
+    return c ? true : false;
+  })
+  .def("getCompletedActionStack", &aff::ExampleActionsECS::getCompletedActionStack)
+  .def_property("useWebsocket", &aff::ExampleLLMSim::getUseWebsocket, &aff::ExampleLLMSim::setUseWebsocket)
   .def_readwrite("unittest", &aff::ExampleLLMSim::unittest)
   .def_readwrite("noTextGui", &aff::ExampleLLMSim::noTextGui)
   .def_readwrite("sequenceCommand", &aff::ExampleLLMSim::sequenceCommand)
@@ -222,29 +291,18 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("noTrajCheck", &aff::ExampleLLMSim::noTrajCheck)
   ;
 
-  // TrackerBase class wrapper
-  py::class_<TrackerBase>(m, "TrackerBase")
-  .def("addAgent", [](TrackerBase& t, std::string agentName)
-  {
-    aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(&t);
-    if (st)
-    {
-      st->addAgent(agentName);
-    }
-  })
-  .def("addAgents", [](TrackerBase& t)
-  {
-    aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(&t);
-    if (st)
-    {
-      st->addAgents();
-    }
-  });
 
+
+
+
+
+
+
+  //////////////////////////////////////////////////////////////////////////////
   // LandmarkBase perception class wrapper
+  //////////////////////////////////////////////////////////////////////////////
   py::class_<aff::LandmarkBase>(m, "LandmarkBase")
   .def(py::init<>())
-  .def(py::init<std::string>())
   .def(py::init<>([](py::object obj)
   {
     aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
@@ -252,33 +310,23 @@ PYBIND11_MODULE(pyAffaction, m)
     auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
     lm->setScenePtr(sim->controller->getGraph(), sim->actionC->getDomain());
 
-    // Add skeleton graphics
-    for (const auto& tracker : lm->trackers)
-    {
-      aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
-      if (st)
-      {
-        st->initGraphics(sim->viewer.get());
-      }
-    }
+    sim->entity.subscribe("PostUpdateGraph", &aff::LandmarkBase::onPostUpdateGraph, lm.get());
+    sim->entity.subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
 
     return std::move(lm);
   }))
   .def("addArucoTracker", &aff::LandmarkBase::addArucoTracker)
-  .def("addSkeletonTracker", static_cast<TrackerBase* (aff::LandmarkBase::*)(size_t)>(&aff::LandmarkBase::addSkeletonTracker))
-  .def("setSkeletonTrackerDefaultRadius", &aff::LandmarkBase::setSkeletonTrackerDefaultRadius)
-  .def("setSkeletonTrackerDefaultPosition", &aff::LandmarkBase::setSkeletonTrackerDefaultPosition)
-  .def("setJsonInput", &aff::LandmarkBase::updateFromJson)
-  .def("updateScene", &aff::LandmarkBase::updateScene)
-  .def("getState", &aff::LandmarkBase::getState)
+  .def("addSkeletonTrackerForAgents", &aff::LandmarkBase::addSkeletonTrackerForAgents)
+  .def("setJsonInput", &aff::LandmarkBase::setJsonInput)
+  .def("getTrackerState", &aff::LandmarkBase::getTrackerState)
   .def("startCalibration", &aff::LandmarkBase::startCalibration)
   .def("isCalibrating", &aff::LandmarkBase::isCalibrating)
-  .def("setSim", [](aff::LandmarkBase& lm, py::object obj)
+  .def("enableDebugGraphics", [](aff::LandmarkBase& lm, py::object obj)
   {
     aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
 
     // Add skeleton graphics
-    for (const auto& tracker : lm.trackers)
+    for (auto& tracker : lm.getTrackers())
     {
       aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
       if (st)
@@ -290,7 +338,7 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
   {
-    const RcsBody* cam = RcsGraph_getBodyByName(lm.graph, cameraName.c_str());
+    const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
     lm.setCameraTransform(&cam->A_BI);
   })
   .def("getAffordanceFrame", [](aff::LandmarkBase& lm, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
@@ -298,7 +346,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::vector<std::string> frames;
     nlohmann::json data;
 
-    const aff::AffordanceEntity* entity = lm.scene->getAffordanceEntity(bodyName);
+    const aff::AffordanceEntity* entity = lm.getScene()->getAffordanceEntity(bodyName);
 
     if (entity)
     {
@@ -312,12 +360,12 @@ PYBIND11_MODULE(pyAffaction, m)
     }
     else
     {
-      RLOG(0, "Entity `%s` found in scene!", bodyName.c_str());
+      NLOG(0, "Entity `%s` found in scene!", bodyName.c_str());
     }
 
     for (auto f : frames)
     {
-      const RcsBody* b = RcsGraph_getBodyByName(lm.graph, f.c_str());
+      const RcsBody* b = RcsGraph_getBodyByName(lm.getGraph(), f.c_str());
 
       data[f] = {};
       data[f]["position"] = b->A_BI.org;
@@ -332,7 +380,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("getPanTilt", [](aff::LandmarkBase& lm, std::string roboAgent, std::string gazeTarget)
   {
     RLOG(0, "Pan tilt angle calculation");
-    aff::Agent* robo_ = lm.scene->getAgent(roboAgent);
+    const aff::Agent* robo_ = lm.getScene()->getAgent(roboAgent);
     if (!robo_)
     {
       RLOG(0, "Robo agent '%s' not found", roboAgent.c_str());
@@ -344,10 +392,10 @@ PYBIND11_MODULE(pyAffaction, m)
     double panTilt[2], err[2];
     size_t maxIter = 100;
     double eps = 1.0e-8;
-    aff::RobotAgent* robo = dynamic_cast<aff::RobotAgent*>(robo_);
+    const aff::RobotAgent* robo = dynamic_cast<const aff::RobotAgent*>(robo_);
 
     double t_calc = Timer_getSystemTime();
-    int iter = robo->getPanTilt(lm.graph, gazeTarget.c_str(), panTilt, maxIter, eps, err);
+    int iter = robo->getPanTilt(lm.getGraph(), gazeTarget.c_str(), panTilt, maxIter, eps, err);
 
     if (iter==-1)
     {
@@ -373,7 +421,9 @@ PYBIND11_MODULE(pyAffaction, m)
 
 
 
-  // Wrap controllerBase class
+  //////////////////////////////////////////////////////////////////////////////
+  // Rcs function wrappers
+  //////////////////////////////////////////////////////////////////////////////
   py::class_<Rcs::ControllerBase>(m, "ControllerBase")
   .def(py::init<std::string>())
   .def("print", &Rcs::ControllerBase::print)

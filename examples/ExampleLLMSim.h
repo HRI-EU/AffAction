@@ -56,28 +56,31 @@ class ExampleLLMSim : public ExampleActionsECS
 {
 public:
 
-
   ExampleLLMSim();
   ExampleLLMSim(int argc, char** argv);
   virtual ~ExampleLLMSim();
   virtual void onStartWebSocket();
   virtual void onStopWebSocket();
+  virtual std::string collectFeedback() const;
+  virtual std::string getSceneEntities() const;
+  virtual std::string help();
+  virtual bool initParameters();
+  virtual bool initAlgo();
+  virtual bool initGraphics();
   size_t getNumFailedActions() const;
+  void setUseWebsocket(bool enable);
+  bool getUseWebsocket() const;
 
 private:
 public:
 
-  virtual std::string collectFeedback() const;
   virtual bool parseArgs(Rcs::CmdLineParser* parser);
-  virtual bool initParameters();
-  virtual bool initAlgo();
-  virtual bool initGraphics();
-  virtual std::string help();
   virtual void onActionResult(bool success, double quality, std::string resMsg);
   virtual void onActionResultUnittest(bool success, double quality, std::string resMsg);
   virtual void onTextCommand(std::string text);
   virtual void process();
-  virtual std::string getSceneEntities() const;
+
+  void runThread(double freq);
 
   WebsocketServer server;
   websocketpp::connection_hdl hdl; /// TODO: Support multiple connections?
@@ -87,12 +90,7 @@ public:
   unsigned int port = 35000;
   size_t numFailedActions = 0;
   std::thread bgThread;
-  std::vector<ComponentBase*> hwc;
   std::string lastResultMsg;
-
-  void runThread(double freq);
-
-
 };
 
 }   // namespace aff

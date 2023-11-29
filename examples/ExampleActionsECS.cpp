@@ -33,6 +33,7 @@
 #include "ExampleActionsECS.h"
 #include "ActionFactory.h"
 #include "ActionSequence.h"
+#include "HardwareComponent.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -229,6 +230,16 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
 
 ExampleActionsECS::~ExampleActionsECS()
 {
+  for (size_t i = 0; i < hwc.size(); ++i)
+  {
+    delete hwc[i];
+  }
+
+  for (size_t i = 0; i < components.size(); ++i)
+  {
+    delete components[i];
+  }
+
   Rcs_removeResourcePath(config_directory.c_str());
   RcsGraph_destroy(graphToInitializeWith);
 }
@@ -270,6 +281,12 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
+
+  // This is just for pupulating the parsed command line arguments for the help
+  // functions / help window.
+  const bool dryRun = true;
+  getHardwareComponents(entity, NULL, NULL, dryRun);
+  getComponents(entity, NULL, NULL, dryRun);
 
   return true;
 }
@@ -385,6 +402,15 @@ bool ExampleActionsECS::initAlgo()
 
   // Remember the state for re-initialization
   graphToInitializeWith = RcsGraph_clone(controller->getGraph());
+
+  // Initialize robot components from command line
+  this->hwc = getHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
+  this->components = getComponents(entity, controller->getGraph(), actionC->getDomain(), false);
+
+  if (!hwc.empty())
+  {
+    setEnableRobot(true);
+  }
 
   // Initialization sequence to initialize all graphs from the sensory state
   entity.initialize(graphC->getGraph());
@@ -700,6 +726,8 @@ void ExampleActionsECS::run()
 void ExampleActionsECS::step()
 {
   dtProcess = Timer_getSystemTime();
+
+  stepMtx.lock();
   updateGraph->call(graphC->getGraph());
   computeKinematics->call(graphC->getGraph());
   postUpdateGraph->call(ikc->getGraph(), graphC->getGraph());
@@ -716,6 +744,7 @@ void ExampleActionsECS::step()
 
   entity.process();
   entity.stepTime();
+  stepMtx.unlock();
 
   dtProcess = Timer_getSystemTime() - dtProcess;
 
@@ -771,6 +800,7 @@ void ExampleActionsECS::onQuit()
 void ExampleActionsECS::onActionSequence(std::string text)
 {
   RMSG_CPP("RECEIVED: " << text);
+  clearCompletedActionStack();
 
   // Early exit in case we receive an empty string
   if (text.empty())
@@ -900,7 +930,6 @@ void ExampleActionsECS::onActionSequence(std::string text)
   }
 
   entity.publish("TextCommand", actionStack[0]);
-  actionStack.erase(actionStack.begin());
 }
 
 void ExampleActionsECS::onPrint()
@@ -925,12 +954,6 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
   // We unfreeze the scene after the last action has finished
   if (actionStack.empty())
   {
-    // After the last action command of a sequence has been finished (the
-    // trajectory has ended), we "unfreeze" the perception and accept
-    // updates from the perceived scene.
-    RLOG(0, "ActionStack is empty, unfreezing perception");
-    entity.publish("FreezePerception", false);
-
     // In valgrind test mode (no Guis, for memory leak checking), we quit
     // the run loop after the first sequence has ended, since we don't have
     // control over keyboard and mouse.
@@ -949,11 +972,16 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
     RLOG_CPP(0, "Still " << actionStack.size()
              << " actions to go - publishing next text command: "
              << actionStack[0]);
-    entity.publish("TextCommand", actionStack[0]);
-    actionStack.erase(actionStack.begin());
+
+    if (actionStack.size()>1)
+    {
+      entity.publish("TextCommand", actionStack[1]);
+    }
+
   }
 }
 
+// This only handles the "reset" keyword
 void ExampleActionsECS::onTextCommand(std::string text)
 {
   if (getRobotEnabled())
@@ -962,7 +990,6 @@ void ExampleActionsECS::onTextCommand(std::string text)
     return;
   }
 
-  //if (text=="reset")
   if (STRNEQ(text.c_str(), "reset", 5))
   {
     if (viewer)
@@ -971,6 +998,8 @@ void ExampleActionsECS::onTextCommand(std::string text)
     }
     std::vector<std::string> resetCmd = Rcs::String_split(text, " ");
 
+    // Reset from a file. This currently only works if the graph of the file
+    // has the same size / topology(?) as the current one.
     if (resetCmd.size()==2)
     {
       RLOG_CPP(0, "Resetting with file " << resetCmd[1]);
@@ -1007,14 +1036,14 @@ void ExampleActionsECS::onTextCommand(std::string text)
     entity.publish("ActionResult", true, 0.0, std::string("SUCCESS DEVELOPER: Reset succeeded ") +
                    std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
 
-    // \todo (MG): The ActionScene should be reloaded, since otherwise fill
-    //             levels etc. remain as they are. Requires some copy
-    //             constructors to be implemented.
+    // The ActionScene is reloaded, since otherwise fill levels etc. remain as
+    // they are.
+    RLOG(0, "Reloading scene from %s", controller->getGraph()->cfgFile);
+    actionC->getDomain()->reload(controller->getGraph()->cfgFile);
 
-    if (!actionStack.empty())
+    if (actionStack.size()>1)
     {
-      entity.publish("TextCommand", actionStack[0]);
-      actionStack.erase(actionStack.begin());
+      entity.publish("TextCommand", actionStack[1]);
     }
 
     if (viewer)
@@ -1024,6 +1053,7 @@ void ExampleActionsECS::onTextCommand(std::string text)
 
     return;
   }
+
 }
 
 void ExampleActionsECS::setEnableRobot(bool enable)
@@ -1033,9 +1063,36 @@ void ExampleActionsECS::setEnableRobot(bool enable)
   withRobot = enable;
 }
 
+void ExampleActionsECS::addComponent(ComponentBase* component)
+{
+  if (component)
+  {
+    components.push_back(component);
+  }
+}
+
+void ExampleActionsECS::addHardwareComponent(ComponentBase* component)
+{
+  if (component)
+  {
+    hwc.push_back(component);
+    setEnableRobot(true);
+  }
+}
+
 bool ExampleActionsECS::getRobotEnabled() const
 {
   return withRobot;
+}
+
+ActionScene* ExampleActionsECS::getScene()
+{
+  return actionC ? actionC->getDomain() : nullptr;
+}
+
+const ActionScene* ExampleActionsECS::getScene() const
+{
+  return actionC ? actionC->getDomain() : nullptr;
 }
 
 void ExampleActionsECS::startThreaded()
@@ -1047,6 +1104,37 @@ void ExampleActionsECS::startThreaded()
     RLOG(0, "ExampleActionsECS thread says good bye");
   });
   t1.detach();
+}
+
+
+std::vector<std::pair<std::string,std::string>> ExampleActionsECS::getCompletedActionStack() const
+{
+  std::lock_guard<std::mutex> lock(actionStackMtx);
+  return completedActionStack;
+}
+
+void ExampleActionsECS::clearCompletedActionStack()
+{
+  std::lock_guard<std::mutex> lock(actionStackMtx);
+  completedActionStack.clear();
+}
+
+void ExampleActionsECS::addToCompletedActionStack(std::string action, std::string result)
+{
+  std::lock_guard<std::mutex> lock(actionStackMtx);
+  completedActionStack.push_back(std::make_pair(action, result));
+}
+
+void ExampleActionsECS::printCompletedActionStack() const
+{
+  std::lock_guard<std::mutex> lock(actionStackMtx);
+
+  RMSG("completedActionStack has %zu entries", completedActionStack.size());
+  for (size_t i=0; i<completedActionStack.size(); ++i)
+  {
+    RMSG("completedActionStack[%zu]: Action='%s' result='%s'",
+         i, completedActionStack[i].first.c_str(), completedActionStack[i].second.c_str());
+  }
 }
 
 /*******************************************************************************

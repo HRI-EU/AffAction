@@ -29,9 +29,9 @@
 <Graph>
 
     <!-- table -->
-    <Body name="table" prev="lab" rigid_body_joints="0.58 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
+    <Body name="table" prev="lab" rigid_body_joints="0.65 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
         <Shape type="FRAME" scale="0.3" graphics="false"/>
-        <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
+        <Shape type="BOX" extents="0.8 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true" textureFile="textures/table.jpg"/>
     </Body>
     <Body name="table_left" prev="table" transform="-0.2 0.3 0 0 0 0" >

@@ -46,25 +46,26 @@ namespace aff
 {
 
 
-LandmarkBase::LandmarkBase() : graph(NULL), ownsScene(false)
+static double getWallclockTime()
 {
+  // Get the current time point
+  auto currentTime = std::chrono::system_clock::now();
+
+  // Convert the time point to a duration since the epoch
+  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
+
+  // Convert the duration to seconds as a floating-point number
+  double seconds = durationSinceEpoch.count();
+
+  return seconds;
 }
 
-LandmarkBase::LandmarkBase(const std::string& configFile) : graph(NULL), ownsScene(true)
+LandmarkBase::LandmarkBase() : scene(NULL), graph(NULL), frozen(false)
 {
-  graph = RcsGraph_create(configFile.c_str());
-  RCHECK(graph);
-  scene = new aff::ActionScene(graph->cfgFile);
-  RCHECK(scene);
 }
 
 LandmarkBase::~LandmarkBase()
 {
-  if (ownsScene)
-  {
-    delete graph;
-    delete scene;
-  }
 }
 
 void LandmarkBase::setScenePtr(RcsGraph* graph_, ActionScene* scene_)
@@ -81,88 +82,7 @@ void LandmarkBase::updateGraph(RcsGraph* g)
   }
 }
 
-void LandmarkBase::updateScene(double currentTime)
-{
-  if (!graph)
-  {
-    RLOG(1, "Can't update scene - no scene has been added");
-    return;
-  }
-
-  for (const auto& tracker : trackers)
-  {
-    tracker->setCurrentTime(currentTime);
-  }
-
-  updateGraph(graph);
-}
-
-/* Json format for (skeleton) agents
-
-"agent":
-{
-  { 1,
-    {"type" : "human",
-    "visible" : true / false,
-    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                ...
-                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
-    }
-  },
-  { 2,
-    {"type" : "human",
-    "visible" : true / false,
-    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                ...
-                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
-    }
-  }
-
-}
-
-*/
-void LandmarkBase::jsonFromSkeletons(nlohmann::json& json, TrackerBase* skeletonTracker) const
-{
-  AzureSkeletonTracker* st = dynamic_cast<AzureSkeletonTracker*>(skeletonTracker);
-  RCHECK(st);
-
-  // Here we have a valid skeleton tracker
-  size_t skeletonId = 0;
-
-  for (const auto& skeleton : st->skeletons)
-  {
-    nlohmann::json skeletonJson;
-    skeletonJson["skeleton_id"] = skeletonId;
-    skeletonJson["type"] = "human";
-    skeletonJson["visible"] = skeleton->isVisible ? true : false;
-
-    size_t linkId = 0;
-
-    for (auto& link : skeleton->markers)
-    {
-      double ea[3];
-      Mat3d_toEulerAngles(ea, link.rot);
-
-      nlohmann::json linkJson =
-      {
-        {"link_id", linkId},
-        {"position", std::vector<double>(link.org, link.org+3)},
-        {"euler_xyzr", std::vector<double>(ea, ea+3)}
-      };
-      skeletonJson["links"] += linkJson;
-      linkId++;
-    }   // for (const auto& link : skeleton->markers)
-
-    //RLOG_CPP(0, "skeletonJson: '" << skeletonJson.dump() << "'");
-    json["agent"][skeletonId] = skeletonJson;
-    skeletonId++;
-  }   // for (const auto& skeleton : st->skeletons)
-
-}
-
-std::string LandmarkBase::getState() const
+std::string LandmarkBase::getTrackerState() const
 {
   if ((!graph) || (!scene))
   {
@@ -171,7 +91,7 @@ std::string LandmarkBase::getState() const
   }
 
   nlohmann::json json;
-  getSceneState(json, scene, graph);
+  // getSceneState(json, scene, graph);
 
   // Add skeleton information
   for (const auto& tracker : trackers)
@@ -179,7 +99,8 @@ std::string LandmarkBase::getState() const
     AzureSkeletonTracker* st = dynamic_cast<AzureSkeletonTracker*>(tracker.get());
     if (st)
     {
-      jsonFromSkeletons(json, st);
+      //jsonFromSkeletons(json, st);
+      st->jsonFromSkeletons(json);
     }
   }
 
@@ -191,11 +112,8 @@ void LandmarkBase::addTracker(std::unique_ptr<TrackerBase> tracker)
   trackers.push_back(std::move(tracker));
 }
 
-void LandmarkBase::updateFromJson(const nlohmann::json& json)
+void LandmarkBase::setJsonInput(const nlohmann::json& json)
 {
-  // RLOG_CPP(0, "\nHeader: " << json["header"]["timestamp"]);
-  // RLOG_CPP(0, "\nHeader: " << typeid(json["header"]["timestamp"]).name());
-
   const double time = json["header"]["timestamp"];
   std::string cameraFrame = json["header"]["frame_id"];
 
@@ -235,12 +153,43 @@ void LandmarkBase::addArucoTracker(const std::string& camera, const std::string&
   addTracker(std::unique_ptr<ArucoTracker>(tracker));
 }
 
-TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons=3)
+TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
 {
   auto tracker = new AzureSkeletonTracker(numSkeletons);
-  tracker->lmc = this;
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   return tracker;
+}
+
+int LandmarkBase::addSkeletonTrackerForAgents(double r)
+{
+  if (!scene)
+  {
+    RLOG(0, "Can't add skeleton tracker for agents - scene has not been set");
+    return 0;
+  }
+
+  size_t numHumanAgents = 0;
+  for (const auto& agent : scene->agents)
+  {
+    if (dynamic_cast<HumanAgent*>(agent))
+    {
+      numHumanAgents++;
+    }
+  }
+
+  if (numHumanAgents==0)
+  {
+    RLOG(0, "Can't add skeleton tracker for agents - no human agent found");
+    return 0;
+  }
+
+  auto tracker = new AzureSkeletonTracker(numHumanAgents);
+  tracker->setScene(this->scene);
+  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
+  tracker->addAgents();
+  tracker->setSkeletonDefaultPositionRadius(r);
+
+  return numHumanAgents;
 }
 
 void LandmarkBase::setSkeletonTrackerDefaultRadius(double r)
@@ -297,6 +246,45 @@ bool LandmarkBase::isCalibrating(const std::string& camera) const
   RLOG_CPP(0, "Couldn't find camera with name '" << camera << "'");
 
   return false;
+}
+
+void LandmarkBase::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
+{
+  const double wallClockTime = getWallclockTime();
+  for (const auto& tracker : trackers)
+  {
+    tracker->setCurrentTime(wallClockTime);
+  }
+
+  if (!frozen)
+  {
+    updateGraph(desired);
+  }
+}
+
+bool LandmarkBase::isFrozen() const
+{
+  return this->frozen;
+}
+
+void LandmarkBase::onFreezePerception(bool freeze)
+{
+  this->frozen = freeze;
+}
+
+const RcsGraph* LandmarkBase::getGraph() const
+{
+  return this->graph;
+}
+
+const ActionScene* LandmarkBase::getScene() const
+{
+  return this->scene;
+}
+
+std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
+{
+  return this->trackers;
 }
 
 }   // namespace

@@ -323,6 +323,43 @@ void ActionComponent::actionThread(std::string text)
   }
 #endif
 
+
+
+  // \todo(MG): HACK for foveated objects. We currently do this here, since the
+  // actions only receive const references to the affordance models ans scenes.
+  // For multi-agent settings, we also should consider several foveated items etc.
+  ActionGaze* aGaze = dynamic_cast<ActionGaze*>(action.get());
+  if (aGaze)
+  {
+    // We ignore the action request if no valid prediction was found. We don't
+    // necessarily need to do this here, since there is a final check in the
+    // TrajectoryComponent. This is a bit more accessible, since we can "see"
+    // the trajectory with the 'd' key.
+    if (predictions.empty() || (!predictions[0].success))
+    {
+      std::string errMsg;
+      if (predictions.empty())
+      {
+        errMsg = "Gaze action could not find solution";
+      }
+      else
+      {
+        errMsg = predictions[0].message;
+      }
+
+      getEntity()->publish("ActionResult", false, 0.0, errMsg);
+      return;
+    }
+
+    domain.foveatedEntity = aGaze->getGazeTarget();
+    RLOG_CPP(0, "Now gazing at " << domain.foveatedEntity);
+    getEntity()->publish("PtuLookAtCommand", domain.foveatedEntity);
+    return;
+  }
+
+
+
+
   std::vector<std::string> taskVec = action->createTasksXML();
 
   if (taskVec.empty())
@@ -341,34 +378,9 @@ void ActionComponent::actionThread(std::string text)
 
   // From here on, the action will start going.
   getEntity()->publish("FreezePerception", true);
+  getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", "BLACK");
   getEntity()->publish("ChangeTaskVector", taskVec, action->getManipulators());
   getEntity()->publish("CheckAndSetTrajectory", tSet);
-  getEntity()->publish("Speak", action->explain());
-
-  REXEC(1)
-  {
-    std::ofstream writer("action_sequence.txt", std::ios::app);
-
-    if (!writer.good())
-    {
-      RLOG_CPP(1, "Error opening file action_sequence.txt");
-    }
-    else
-    {
-      writer << text << std::endl;
-      writer.close();
-    }
-  }
-
-  // \todo(MG): HACK for foveated objects. We currently do this here, since the
-  // actions only receive const references to the affordance models ans scenes.
-  // For multi-agent settings, we also should consider several foveated items etc.
-  ActionGaze* aGaze = dynamic_cast<ActionGaze*>(action.get());
-  if (aGaze)
-  {
-    domain.foveatedEntity = aGaze->getGazeTarget();
-    RLOG_CPP(0, "Now gazing at " << domain.foveatedEntity);
-  }
 }
 
 const ActionScene* ActionComponent::getDomain() const

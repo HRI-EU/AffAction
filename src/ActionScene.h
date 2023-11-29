@@ -88,7 +88,6 @@ public:
                                      const AffordanceEntity* entity) const;
   std::tuple<const Manipulator*,const AffordanceEntity*> getGraspingHand(const RcsGraph* graph,
       std::vector<const AffordanceEntity*> entities) const;
-  std::string getState(const RcsGraph* graph) const;
 
   void initAgents();
   Agent* getAgent(const std::string& agentName);

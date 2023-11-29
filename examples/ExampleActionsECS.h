@@ -58,6 +58,7 @@
 #include <ActionBase.h>
 
 
+
 extern "C" {
   void AffActionExampleInfo();
 }
@@ -120,6 +121,24 @@ public:
   void onTextCommand(std::string text);
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;
+  ActionScene* getScene();
+  const ActionScene* getScene() const;
+  void addComponent(ComponentBase* component);
+  void addHardwareComponent(ComponentBase* component);
+
+  std::vector<std::pair<std::string,std::string>> getCompletedActionStack() const;
+
+protected:
+
+  void clearCompletedActionStack();
+  void addToCompletedActionStack(std::string action, std::string result);
+  void printCompletedActionStack() const;
+  std::vector<std::pair<std::string,std::string>> completedActionStack;
+  mutable std::mutex actionStackMtx;
+  mutable std::mutex stepMtx;
+
+  std::vector<ComponentBase*> hwc;
+  std::vector<ComponentBase*> components;
 };
 
 void replaceFirst(std::string& str, const std::string& from, const std::string& to);

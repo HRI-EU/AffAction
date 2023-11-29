@@ -35,6 +35,7 @@
 #include <ArucoTracker.h>
 #include <AzureSkeletonTracker.h>
 #include <LandmarkZmqComponent.hpp>
+#include <NuanceTTSComponent.h>
 #include <TTSComponent.h>
 #include <Rcs_macros.h>
 #include <Rcs_resourcePath.h>
@@ -50,7 +51,7 @@
 #include <csignal>
 #include <fstream>
 
-#define INIT_AGENTS 3
+#define INIT_AGENTS 4
 
 RCS_INSTALL_ERRORHANDLERS
 
@@ -187,6 +188,21 @@ int main(int argc, char** argv)
     // Initialize the graphics for the skeletons.
     sTracker->initGraphics(ex.viewer.get());
 
+#elif INIT_AGENTS == 4   // Same as python interface
+
+    // Add skeleton tracker and ALL agents in the scene
+    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
+    for (auto& tracker : lmc->getTrackers())
+    {
+      aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
+      if (st)
+      {
+        st->initGraphics(ex.viewer.get());
+      }
+    }
+
+    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
+
 #endif
 
     // Initialize all tracker camera transforms from the xml file
@@ -197,11 +213,24 @@ int main(int argc, char** argv)
     RLOG(0, "Done adding trackers");
   }
 
-  std::unique_ptr<aff::TTSComponent> tts;
-  if (argP.hasArgument("-tts"))
-  {
-    tts = std::make_unique<aff::TTSComponent>(&ex.entity);
-  }
+  //std::unique_ptr<aff::TTSComponent> tts;
+  //if (argP.hasArgument("-tts"))
+  //{
+  //  tts = std::make_unique<aff::TTSComponent>(&ex.entity);
+  //}
+
+  //std::unique_ptr<aff::NuanceTTSComponent> nuanceTTS;
+  //if (argP.hasArgument("-nuance_tts"))
+  //{
+  //  if (tts)
+  //  {
+  //    RLOG(0, "TTS already running - nuance ignored");
+  //  }
+  //  else
+  //  {
+  //    nuanceTTS = std::make_unique<aff::NuanceTTSComponent>(&ex.entity);
+  //  }
+  //}
 
   if (success)
   {
@@ -215,19 +244,4 @@ int main(int argc, char** argv)
   xmlCleanupParser();
 
   return ex.getNumFailedActions();
-}
-
-int main_test(int argc, char** argv)
-{
-  // aff::EntityBase ntt;
-  // aff::LandmarkZmqComponent lmc(&ntt);
-
-  // lmc.addTracker(std::make_unique<aff::AzureSkeletonTracker>(5));
-
-  // std::ifstream t("config/xml/Affaction/50_landmarks.json");
-  // std::stringstream buffer;
-  // buffer << t.rdbuf();
-  // lmc.updateFromJson(buffer.str());
-
-  return 0;
 }

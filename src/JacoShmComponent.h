@@ -31,11 +31,11 @@
 
 *******************************************************************************/
 
-#ifndef RCS_JACOSHMCOMPONENT_H
-#define RCS_JACOSHMCOMPONENT_H
+#ifndef AFF_JACOSHMCOMPONENT_H
+#define AFF_JACOSHMCOMPONENT_H
 
 #include "ComponentBase.h"
-#include "ActionScene.h"
+
 #include <Rcs_graph.h>
 
 
@@ -43,10 +43,109 @@
 namespace aff
 {
 
-std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
-                                                  const RcsGraph* graph,
-                                                  const ActionScene* scene,
-                                                  bool dryRun);
+class JacoShm;
+
+class JacoShmComponent
+{
+public:
+
+  enum JacoType
+  {
+    Jaco6 = 0,
+    Jaco7_left,
+    Jaco7_right
+  };
+
+  JacoShmComponent(const RcsGraph* graph, JacoType roboType);
+  virtual ~JacoShmComponent();
+  void updateSensors(RcsGraph* graph);
+  void setCommand(const MatNd* q);
+
+protected:
+
+  void enableCommands();
+
+private:
+
+  struct JointData
+  {
+    JointData() : q_curr(0.0), q0(0.0), qd_curr(0.0), jointIdx(-1), arrayIdx(-1)
+    {
+    }
+
+    JointData(int arrayIdx_) : q_curr(0.0), qd_curr(0.0),
+      jointIdx(-1), arrayIdx(arrayIdx_), limitlessJoint(false)
+    {
+    }
+
+    void setCurrent(double qNew, double qdNew)
+    {
+      q_curr = qNew;
+      qd_curr = qdNew;
+    }
+
+    double getCurrentJointAngle() const
+    {
+      return q_curr;
+    }
+
+    double getCurrentJointVelocity() const
+    {
+      return qd_curr;
+    }
+
+    double q_curr;
+    double q0;
+    double qd_curr;
+    int jointIdx;
+    int arrayIdx;
+    bool limitlessJoint;
+  };
+
+  JacoShmComponent& operator = (const JacoShmComponent&);
+  JacoShmComponent(const JacoShmComponent& other);
+
+  std::map<std::string,JointData> jntMap;
+  std::vector<std::string> jntNames;
+  std::vector<double> jntOffset;
+  JacoType jType;
+  JacoShm* shm;
+};
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class RoboJacoShmComponent : public ComponentBase, public JacoShmComponent
+{
+public:
+
+  static RoboJacoShmComponent* create(EntityBase* parent,
+                                      const RcsGraph* graph,
+                                      JacoType jt);
+  RoboJacoShmComponent(EntityBase* parent,
+                       const RcsGraph* graph,
+                       JacoType jt);
+
+private:
+
+  void onInitFromState(const RcsGraph* target);
+  void onEmergencyStop();
+  void onEmergencyRecover();
+  void onSetJointPosition(const MatNd* q_des);
+  void onUpdateGraph(RcsGraph* graph);
+  void onEnableCommands();
+
+  bool eStop;
+  bool enableCommands;
+};
+
+
+
+
+
+
 }
 
-#endif   // RCS_JACOSHMCOMPONENT_H
+#endif   // AFF_JACOSHMCOMPONENT_H

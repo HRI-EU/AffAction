@@ -31,76 +31,36 @@
 
 *******************************************************************************/
 
-#ifndef AZURESKELETONTRACKER_H
-#define AZURESKELETONTRACKER_H
+#ifndef RCS_HARDWARECOMPONENT_H
+#define RCS_HARDWARECOMPONENT_H
 
-#include "TrackerBase.h"
+#include "ComponentBase.h"
 #include "ActionScene.h"
+#include <Rcs_graph.h>
 
-#include <Rcs_HTr.h>
-#include <RcsViewer.h>
 
-#include <map>
-#include <memory>
-
+#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 
 
 namespace aff
 {
 
-struct Skeleton;
+void initROS(double rosDt);
 
-class AzureSkeletonTracker : public TrackerBase
-{
-public:
+std::vector<ComponentBase*> getComponents(EntityBase& entity,
+                                          const RcsGraph* graph,
+                                          const ActionScene* scene,
+                                          bool dryRun);
 
-  AzureSkeletonTracker(size_t numSkeletons);
+std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
+                                                  const RcsGraph* graph,
+                                                  const ActionScene* scene,
+                                                  bool dryRun);
 
-  virtual ~AzureSkeletonTracker();
+ComponentBase* getComponent(EntityBase& entity,
+                            const RcsGraph* graph,
+                            const ActionScene* scene,
+                            const std::string& componentName);
+}
 
-  void initGraphics(Rcs::Viewer* viewer);
-
-  // Process aruco frames. Called from control loop (100Hz or so)
-  void updateGraph(RcsGraph* graph);
-
-  std::string getRequestKeyword() const;
-
-  void setCameraTransform(const HTr* A_CI);
-
-  bool isSkeletonVisible(size_t idx) const;
-
-  void setSkeletonDefaultPosition(size_t skeletonIdx, double x, double y, double z);
-
-  void setSkeletonDefaultPositionRadius(double r);
-
-  void setSkeletonName(size_t skeletonIdx, const std::string& name);
-
-  void addAgent(const std::string& agentName);
-
-  void addAgents();
-
-  void setScene(aff::ActionScene* scene);
-
-  void jsonFromSkeletons(nlohmann::json& json) const;
-
-private:
-
-  // Process aruco frames. Called from perception thread (30Hz or so)
-  void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
-
-  void updateAgents(RcsGraph* graph);
-
-  void updateSkeletons(RcsGraph* graph);
-
-  std::vector<int> findCorrespondences(std::map<int, std::vector<HTr>> markerMap) const;
-  std::vector<std::unique_ptr<Skeleton>> skeletons;
-  bool newAzureUpdate;
-  double defaultPosRadius;
-  HTr A_CI;
-  size_t skeletonIndex = 0;
-  ActionScene* scene;
-};
-
-} // namespace aff
-
-#endif // AZURESKELETONTRACKER_H
+#endif   // RCS_HARDWARECOMPONENT_H

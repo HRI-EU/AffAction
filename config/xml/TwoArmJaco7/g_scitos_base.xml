@@ -162,6 +162,9 @@
         <xxxShape type="FRAME" scale="0.2"/>
     </Body>
 
+    <Body name="head_kinect_lens" prev="head_kinect_link"  physics="none">
+    </Body>
+
     <Body name="respeaker" prev="head_kinect_link" transform="0 -0.1 0 90 0 0" physics="none">
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="CYLINDER" radius="0.05" length="0.01" distance="false" graphics="true" physics="false" color="BLACK_RUBBER" />

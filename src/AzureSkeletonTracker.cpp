@@ -42,6 +42,10 @@
 #include <Rcs_quaternion.h>
 #include <Rcs_body.h>
 
+#include <SphereNode.h>
+#include <VertexArrayNode.h>
+#include <COSNode.h>
+
 #include <tuple>
 #include <chrono>
 
@@ -224,6 +228,36 @@ static std::vector<std::pair<int,int>> readConnectionData()
   return idx;
 }
 
+struct Skeleton
+{
+  Skeleton();
+  ~Skeleton();
+  void initGraphics(Rcs::Viewer* viewer, const std::string& color);
+  void updateGraphics();
+  void setExpectedInitialPose(const HTr* pose);
+  void setAgent(Agent* a);
+  int trackerId;
+  double lastUpdate;
+  double maxAge;
+  bool wasVisible;
+  bool isVisible;
+  bool becameVisible;
+  bool becameInvisible;
+  bool hasAgent;
+  std::vector<HTr> markers;
+  HTr expectedInitialPose;
+  Agent* agent;
+  std::string name;
+
+  // Only graphics from here
+  osg::ref_ptr<osg::Switch> sw;
+  osg::ref_ptr<Rcs::VertexArrayNode> lmConnectionsNode;
+  std::vector<std::pair<int, int>> connection_idx;
+  MatNd* lmConnections;
+};
+
+
+
 Skeleton::Skeleton() : trackerId(-1), lastUpdate(0.0), maxAge(DEFAULT_MAX_AGE),
   wasVisible(false), isVisible(false),
   becameVisible(false), becameInvisible(false),
@@ -256,14 +290,15 @@ void Skeleton::setAgent(Agent* a)
   hasAgent = true;
 }
 
-void Skeleton::initGraphics(Rcs::Viewer* viewer,
-                            const std::string& color)
+void Skeleton::initGraphics(Rcs::Viewer* viewer, const std::string& color)
 {
   if (sw.valid())
   {
-    RLOG(1, "Skeleton graphics already initialized");
+    RLOG(0, "Skeleton graphics already initialized");
     return;
   }
+
+  RLOG(0, "Initializing skeleton with color %s", color.c_str());
 
   this->sw = new osg::Switch();
   sw->setAllChildrenOff();
@@ -376,7 +411,13 @@ void AzureSkeletonTracker::setScene(aff::ActionScene* scene_)
   this->scene = scene_;
 }
 
-void AzureSkeletonTracker::updateScene(RcsGraph* graph)
+void AzureSkeletonTracker::updateGraph(RcsGraph* graph)
+{
+  updateSkeletons(graph);
+  updateAgents(graph);
+}
+
+void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
 {
   if (!this->scene)
   {
@@ -426,7 +467,7 @@ void AzureSkeletonTracker::updateScene(RcsGraph* graph)
         if (m->type == "head")
         {
           bdy = RcsGraph_getBodyByName(graph, m->name.c_str());
-          int jidx = RcsBody_getJointIndex(graph, bdy);
+          const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
             double* q_rbj = &graph->q->ele[jidx];
@@ -452,7 +493,7 @@ void AzureSkeletonTracker::updateScene(RcsGraph* graph)
         else if (m->type == "right_hand")
         {
           bdy = RcsGraph_getBodyByName(graph, m->name.c_str());
-          int jidx = RcsBody_getJointIndex(graph, bdy);
+          const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
             lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_RIGHT], tmc);
@@ -467,7 +508,7 @@ void AzureSkeletonTracker::updateScene(RcsGraph* graph)
 }
 
 // Process aruco frames. Called from control loop (100Hz or so)
-void AzureSkeletonTracker::updateGraph(RcsGraph* graph)
+void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
 {
   const double currTime = getCurrentTime();
 
@@ -495,8 +536,6 @@ void AzureSkeletonTracker::updateGraph(RcsGraph* graph)
     }
 
   }
-
-  updateScene(graph);
 
 }
 
@@ -743,7 +782,7 @@ void AzureSkeletonTracker::addAgent(const std::string& agentName)
 
   if (!agentName.empty())
   {
-    for (auto agent : lmc->scene->agents)
+    for (auto agent : scene->agents)
     {
       if (agent->name == agentName)
       {
@@ -783,15 +822,73 @@ void AzureSkeletonTracker::addAgent(const std::string& agentName)
 // Map ALL agents (defined in the config) to available skeletons
 void AzureSkeletonTracker::addAgents()
 {
-  for (size_t i = 0; i < lmc->scene->agents.size(); i++)
+  for (size_t i = 0; i < scene->agents.size(); i++)
   {
-    addAgent(lmc->scene->agents[i]->name);
+    addAgent(scene->agents[i]->name);
   }
 }
 
-const Skeleton* AzureSkeletonTracker::getSkeleton(size_t idx) const
+/* Json format for (skeleton) agents
+
+"agent":
 {
-  return (idx < skeletons.size()) ? skeletons[idx].get() : NULL;
+  { 1,
+    {"type" : "human",
+    "visible" : true / false,
+    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
+                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
+                ...
+                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
+    }
+  },
+  { 2,
+    {"type" : "human",
+    "visible" : true / false,
+    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
+                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
+                ...
+                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
+    }
+  }
+
+}
+
+*/
+void AzureSkeletonTracker::jsonFromSkeletons(nlohmann::json& json) const
+{
+  // Here we have a valid skeleton tracker
+  size_t skeletonId = 0;
+
+  for (const auto& skeleton : skeletons)
+  {
+    nlohmann::json skeletonJson;
+    skeletonJson["skeleton_id"] = skeletonId;
+    skeletonJson["type"] = "human";
+    skeletonJson["name"] = skeleton->agent->name;
+    skeletonJson["visible"] = skeleton->isVisible ? true : false;
+
+    size_t linkId = 0;
+
+    for (auto& link : skeleton->markers)
+    {
+      double ea[3];
+      Mat3d_toEulerAngles(ea, link.rot);
+
+      nlohmann::json linkJson =
+      {
+        {"link_id", linkId},
+        {"position", std::vector<double>(link.org, link.org+3)},
+        {"euler_xyzr", std::vector<double>(ea, ea+3)}
+      };
+      skeletonJson["links"] += linkJson;
+      linkId++;
+    }   // for (const auto& link : skeleton->markers)
+
+    //RLOG_CPP(0, "skeletonJson: '" << skeletonJson.dump() << "'");
+    json["agent"][skeletonId] = skeletonJson;
+    skeletonId++;
+  }   // for (const auto& skeleton : st->skeletons)
+
 }
 
 } // namespace aff

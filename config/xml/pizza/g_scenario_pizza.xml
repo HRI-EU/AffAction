@@ -36,7 +36,7 @@
 &#xA;  "
 >
     <ActionSequence name="a" text="get tomato_sauce_bottle"/>
-    <ActionSequence name="0" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf"/>
+    <ActionSequence name="0" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf; reset;get tomato_sauce_bottle"/>
     <ActionSequence name="1" text="get black_olives; put black_olives pizza_dough"/>
     <ActionSequence name="2" text="get black_olives; put black_olives pizza_dough; get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf"/>
     <ActionSequence name="3" text="get black_olives1; put black_olives1 pizza_dough"/>
@@ -235,6 +235,29 @@ put goat_cheese pizza_dough;" />
   <joint_state joint="j2s7s300_joint_finger_1_left" position="10" />
   <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
   <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+</model_state>
+
+    <model_state model="TableCalibration_140" time_stamp="0">
+  <joint_state joint="j2s7s300_joint_1_right" position="39.950832" />
+  <joint_state joint="j2s7s300_joint_2_right" position="219.972306" />
+  <joint_state joint="j2s7s300_joint_3_right" position="-88.550723" />
+  <joint_state joint="j2s7s300_joint_4_right" position="95.440704" />
+  <joint_state joint="j2s7s300_joint_5_right" position="-34.815626" />
+  <joint_state joint="j2s7s300_joint_6_right" position="182.694777" />
+  <joint_state joint="j2s7s300_joint_7_right" position="-130.154601" />
+  <joint_state joint="j2s7s300_joint_finger_1_right" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_2_right" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_3_right" position="0" />
+  <joint_state joint="j2s7s300_joint_1_left" position="-39.848285" />
+  <joint_state joint="j2s7s300_joint_2_left" position="138.095356" />
+  <joint_state joint="j2s7s300_joint_3_left" position="91.216579" />
+  <joint_state joint="j2s7s300_joint_4_left" position="264.559658" />
+  <joint_state joint="j2s7s300_joint_5_left" position="-26.915878" />
+  <joint_state joint="j2s7s300_joint_6_left" position="177.589587" />
+  <joint_state joint="j2s7s300_joint_7_left" position="189.750884" />
+  <joint_state joint="j2s7s300_joint_finger_1_left" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_2_left" position="0" />
+  <joint_state joint="j2s7s300_joint_finger_3_left" position="0" />
 </model_state>
 
 
