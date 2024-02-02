@@ -37,6 +37,8 @@
 #include "TrackerBase.h"
 #include "ActionScene.h"
 
+#include <RcsViewer.h>
+
 
 namespace aff
 {
@@ -52,6 +54,7 @@ public:
   void setJsonInput(const nlohmann::json& json);
   std::string getTrackerState() const;
 
+  void enableDebugGraphics(Rcs::Viewer* viewer);
   void updateGraph(RcsGraph* graph);
   void addTracker(std::unique_ptr<TrackerBase> tracker);
   void setCameraTransform(const HTr* A_CI);
@@ -68,6 +71,10 @@ public:
 
   void onFreezePerception(bool freeze);
   bool isFrozen() const;
+
+  void setSyncInputWithWallclock(bool freeze);
+  bool getSyncInputWithWallclock() const;
+
   const RcsGraph* getGraph() const;
   const ActionScene* getScene() const;
   virtual void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
@@ -79,6 +86,7 @@ protected:
   ActionScene* scene;
   RcsGraph* graph;
   bool frozen;
+  bool syncInputJsonWithWallclockTime;
 };
 
 }   // namespace

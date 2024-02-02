@@ -57,42 +57,48 @@ public:
 
   virtual ~RespeakerComponent();
 
+  /*! \brief Currently these parameters can be set:
+   *         - PublishDialogueWithRaisedHandOnly (default is true)
+   *         - GazeAtSpeaker                     (default is true)
+   *         - SpeakOutSpeakerListenerText       (default is false)
+   */
+  bool setParameter(const std::string& parameterName, bool flag);
+
+private:
+
   void setPublishDialogueWithRaisedHandOnly(bool enable);
   bool getPublishDialogueWithRaisedHandOnly() const;
   void setGazeAtSpeaker(bool enable);
   bool getGazeAtSpeaker() const;
   void setSpeakOutSpeakerListenerText(bool enable);
   bool getSpeakOutSpeakerListenerText() const;
-
-private:
-
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
-  void onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* current);
-  void onPostUpdateGraphGaze(RcsGraph* desired, RcsGraph* current);
   void onStart();
   void onStop();
+  void onResetLLM();
+  void onReplayLog();
   void enableASR(bool enable);
   void enableSoundDirectionEstimation(bool enable);
   void toggleASR();
+  void toggleHandRaised();
   const HumanAgent* getSpeaker(const double micPosition[3],
                                const double soundDir[3]) const;
-  std::string getListenerName(const double micPosition[3],
-                              const HumanAgent* speaker);
+  const Agent* getListener(const double micPosition[3],
+                           const HumanAgent* speaker);
   void updateSoundDirection(RcsGraph* graph, const std::string& spoken,
                             double micPos[3], double soundDir[3]);
 
 #if defined (USE_ROS)
 
   void isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg);
-  void talkFlagRosCallback(const audio_msgs::TalkFlag::ConstPtr& msg);
   void asrRosCallback(const std_msgs::String::ConstPtr& msg);
   void soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
 
   ros::Subscriber asrSubscriber;
   ros::Subscriber soundLocalizationSubscriber;
   ros::Subscriber isSpeakingSubscriber;
-  ros::Subscriber talkFlagSubscriber;
-  ros::Publisher talk_flag_pub;
+  ros::Publisher reset_llm_pub;
+  ros::Publisher robot_should_listen_pub;
   ros::Publisher dialogue_pub;
   std::unique_ptr<ros::NodeHandle> nh;
 
@@ -106,6 +112,7 @@ private:
   bool isSoundDirectionEstimationEnabled;
   bool isSomebodySpeaking;
   bool isAnyHandRaised;
+  bool isAnyHandRaisedOverride;
   bool publishDialogueWithRaisedHandOnly;
   bool gazeAtSpeaker;
   bool speakOutSpeakerListenerText;

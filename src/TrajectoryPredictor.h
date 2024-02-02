@@ -75,6 +75,11 @@ public:
 
     void print(int verbosityLevel=1) const
     {
+      if (verbosityLevel<0)
+      {
+        return;
+      }
+
       std::cout << "[" << __FILE__ << ": " << __FUNCTION__ << "("  << __LINE__ << ")]: ";
       std::cout << "PredictionResult " << std::to_string(idx) << ": ";
 
@@ -121,6 +126,9 @@ public:
     std::vector<double> jMask;
     std::vector<double> optimizationParameters;
     std::vector<double> bodyTransforms;
+    std::vector<std::string> taskVec;
+    std::string actionText;
+    RcsGraph* graph;   // Will be passed to PredictionTreeNode and deleted there. \todo(MG)
   };
 
   /*! \brief Constructs class with TrajectoryController instance cloned from

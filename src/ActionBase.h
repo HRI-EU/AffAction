@@ -63,9 +63,20 @@ public:
     UnknownError
   };
 
-  ActionException(const char* message, ActionError e) : error(e)
+  ActionException(ActionError e,
+                  std::string reasonMsg_,
+                  std::string suggestionMsg_=std::string(),
+                  std::string developerMsg_=std::string()) :
+    error(e), errorMsg(err2str(e)), reasonMsg(reasonMsg_), suggestionMsg(suggestionMsg_), developerMsg(developerMsg_)
   {
-    msg = err2str(e) + std::string(message);
+
+    // Create legacy message
+    msg = (e==NoError) ? "SUCCESS" : "ERROR";
+    msg += " REASON: " + reasonMsg + " SUGGESTION: " + suggestionMsg;
+    if (!developerMsg.empty())
+    {
+      msg += " DEVELEOPER: " + developerMsg;
+    }
   }
 
   ActionException(const std::string& message, ActionError e) : msg(message), error(e)
@@ -117,6 +128,11 @@ public:
 protected:
 
   std::string msg;
+  std::string errorMsg;
+  std::string reasonMsg;
+  std::string suggestionMsg;
+  std::string developerMsg;
+
   ActionError error;
 };
 
@@ -139,7 +155,17 @@ public:
   void setName(const std::string& name);
   std::string getName() const;
   void setActionParams(const std::vector<std::string>& params);
-  std::string getActionCommand() const;
+  virtual std::string getActionCommand() const;
+  void print() const;
+
+  static std::vector<std::string> planActionSequence(ActionScene& domain,
+                                                     RcsGraph* graph,
+                                                     const RcsBroadPhase* bp,
+                                                     std::vector<std::string> actions,
+                                                     size_t numStepsToPlan,
+                                                     size_t maxNumThreads,
+                                                     double dt,
+                                                     std::string& errMsg);
 
   // Interface for prediction
   virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);

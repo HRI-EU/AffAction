@@ -60,4 +60,15 @@
     <xi:include href="g_hand_left.xml"/>
     <xi:include href="g_hand_right.xml"/>
 
+
+  <Manipulator body="head_kinect_link" types="head">
+    <GazeCapability frame="head_kinect_lens" />
+  </Manipulator>
+
+    <Agent types="robot" name="Johnnie" >
+       <Component manipulator="hand_left" />
+       <Component manipulator="hand_left" />
+       <Component manipulator="head" />
+    </Agent>
+
 </Graph>

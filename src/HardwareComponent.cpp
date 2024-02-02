@@ -32,10 +32,14 @@
 
 #include "HardwareComponent.h"
 #include "JacoShmComponent.h"
-#include "PtuActionComponent.h"
-#include "RespeakerComponent.h"
-#include "NuanceTTSComponent.h"
 #include "TTSComponent.h"
+
+#if defined USE_ROS
+#include "ros/PtuActionComponent.h"
+#include "ros/RespeakerComponent.h"
+#include "ros/NuanceTTSComponent.h"
+#include "ros/LandmarkROSComponent.hpp"
+#endif
 
 #include <Rcs_typedef.h>
 #include <Rcs_cmdLine.h>
@@ -45,8 +49,62 @@
 #include <thread>
 
 
+#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
+
+
+
 namespace aff
 {
+
+static void initROS(double rosDt)
+{
+#if defined USE_ROS
+  static std::mutex rosInitMtx;
+  static bool rosInitialized = false;
+
+  rosInitMtx.lock();
+
+  if (rosInitialized)
+  {
+    RLOG(1, "ROS already initialized - doing nothing");
+    rosInitMtx.unlock();
+    return;
+  }
+
+  rosInitialized = true;
+  rosInitMtx.unlock();
+
+  Rcs::CmdLineParser argP;
+  int argc = 0;
+  char** argv = NULL;
+
+  argc = argP.getArgs(&argv);
+
+  if (argc==0)
+  {
+    RCHECK(argv == NULL);
+  }
+
+  RMSG("Calling ros::init()");
+  ros::init(argc, argv, "RcsROS", ros::init_options::NoSigintHandler);
+
+  std::thread t1([rosDt]
+  {
+    while (ros::ok())
+    {
+      //RLOG(1, "ros::spinOnce(): %.3f sec", rosDt);
+      ros::spinOnce();
+      Timer_waitDT(rosDt);
+    }
+
+    RLOG(0, "ROS says good bye");
+  });
+
+  t1.detach();
+#else
+  RMSG("You are trying to initialize ROS, but it has not been compiled in");
+#endif
+}
 
 std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
                                                   const RcsGraph* graph,
@@ -102,6 +160,11 @@ std::vector<ComponentBase*> getComponents(EntityBase& entity,
     components.push_back(getComponent(entity, graph, scene, "-nuance_tts"));
   }
 
+  if (argP.hasArgument("-landmarks_ros", "Start with ROS landmarks component") && (!dryRun))
+  {
+    components.push_back(getComponent(entity, graph, scene, "-landmarks_ros"));
+  }
+
   for (size_t i = 0; i < components.size(); ++i)
   {
     RCHECK_MSG(components[i], "Found NULL component at index %zu", i);
@@ -138,6 +201,26 @@ ComponentBase* getComponent(EntityBase& entity,
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
     return new NuanceTTSComponent(&entity);
   }
+  else if (componentName == "-landmarks_ros")
+  {
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    LandmarkROSComponent* lmc = new LandmarkROSComponent(&entity);
+    lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
+
+    const RcsBody* cam = RcsGraph_getBodyByName(graph, "camera");
+    RCHECK(cam);
+    lmc->addArucoTracker(cam->name, "aruco_base");
+
+    // Add skeleton tracker and ALL agents in the scene
+    double r_agent = DBL_MAX;
+    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
+    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
+
+    // Initialize all tracker camera transforms from the xml file
+    lmc->setCameraTransform(&cam->A_BI);
+
+    return lmc;
+  }
 #endif   // USE_ROS
 
 #if !defined (_MSC_VER)
@@ -154,56 +237,6 @@ ComponentBase* getComponent(EntityBase& entity,
 #endif   // _MSC_VER
 
   return nullptr;
-}
-
-void initROS(double rosDt)
-{
-#if defined USE_ROS
-  static std::mutex rosInitMtx;
-  static bool rosInitialized = false;
-
-  rosInitMtx.lock();
-
-  if (rosInitialized)
-  {
-    RLOG(1, "ROS already initialized - doing nothing");
-    rosInitMtx.unlock();
-    return;
-  }
-
-  rosInitialized = true;
-  rosInitMtx.unlock();
-
-  Rcs::CmdLineParser argP;
-  int argc = 0;
-  char** argv = NULL;
-
-  argc = argP.getArgs(&argv);
-
-  if (argc==0)
-  {
-    RCHECK(argv == NULL);
-  }
-
-  RMSG("Calling ros::init()");
-  ros::init(argc, argv, "RcsROS", ros::init_options::NoSigintHandler);
-
-  std::thread t1([rosDt]
-  {
-    while (ros::ok())
-    {
-      //RLOG(1, "ros::spinOnce(): %.3f sec", rosDt);
-      ros::spinOnce();
-      Timer_waitDT(rosDt);
-    }
-
-    RLOG(0, "ROS says good bye");
-  });
-
-  t1.detach();
-#else
-  RMSG("You are trying to initialize ROS, but it has not been compiled in");
-#endif
 }
 
 }   // namespace

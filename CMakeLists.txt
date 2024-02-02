@@ -30,7 +30,7 @@
 #
 ################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
-SET(BST_INSTALL_CATEGORY Libraries) 
+SET(BST_INSTALL_CATEGORY Libraries)
 OPTION(AFFACTION_WITH_OPTIM "Build with optimization" OFF)
 
 ################################################################################
@@ -65,7 +65,7 @@ MACRO(COPY_CONFIG_DIR CFG_FROM CFG_TO_BASEDIR CFG_TO_SUBDIRNAME)
     IF (NOT EXISTS ${CFG_TO_BASEDIR})
       FILE(MAKE_DIRECTORY ${CFG_TO_BASEDIR})
     ENDIF()
-  
+
     IF(UNIX)
       SET(CONFIGDIR_COPY_COMMAND create_symlink)
       MESSAGE(STATUS "Linking config directory from ${CFG_FROM} to ${CFG_TO}")
@@ -130,7 +130,7 @@ ELSE()
 ENDIF()
 
 ADD_DEFINITIONS(-DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
- 
+
 
 ################################################################################
 # Compile settings
@@ -168,7 +168,7 @@ IF(UNIX)
     SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -rdynamic")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
   ENDIF()
-  
+
   IF(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     # setting march to core2 to enable valgrind debugging (also good for Xeon)
     # Low level optimization for debug mode, flag for checking stack corruption, flag for debug output
@@ -180,7 +180,7 @@ IF(UNIX)
     SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=native -ggdb")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ggdb")
   ENDIF()
-  
+
 ENDIF()
 
 ################################################################################
@@ -232,11 +232,13 @@ SET(CMAKE_AUTOMOC ON)
 SET(ACTION_SRCS
 src/ActionBase.cpp
 src/ActionGet.cpp
+src/ActionPass.cpp
 src/ActionPush.cpp
 src/ActionPut.cpp
 src/ActionPour.cpp
 src/ActionPose.cpp
 src/ActionGaze.cpp
+src/ActionPanTilt.cpp
 src/ActionDoor.cpp
 src/ActionDrop.cpp
 src/ActionWait.cpp
@@ -253,11 +255,14 @@ src/ActionScene.cpp
 src/SceneJsonHelpers.cpp
 src/ActionFactory.cpp
 src/TrajectoryPredictor.cpp
+src/TrackerBase.cpp
+src/PredictionTree.cpp
 src/ArucoTracker.cpp
 src/ArucoMultiCamTracker.cpp
 src/AzureSkeletonTracker.cpp
 src/LandmarkBase.cpp
 src/ConcurrentExecutor.cpp
+src/ConcurrentSceneQuery.cpp
 )
 
 SET(ECS_SRCS
@@ -280,12 +285,14 @@ src/JacoShmComponent.cpp
 src/TTSComponent.cpp
 )
 
-SET(ROS_SRCS
-src/PtuComponent.cpp
-src/PtuActionComponent.cpp
-src/RespeakerComponent.cpp
-src/NuanceTTSComponent.cpp
+IF (USE_AFFACTION_ROS)
+  SET(ROS_SRCS
+  src/ros/PtuComponent.cpp
+  src/ros/PtuActionComponent.cpp
+  src/ros/RespeakerComponent.cpp
+  src/ros/NuanceTTSComponent.cpp
 )
+ENDIF(USE_AFFACTION_ROS)
 
 ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
 
@@ -309,7 +316,7 @@ ELSE()
 ENDIF()
 
 # We add this option to force the linker to export the symbols. This
-# solves the issue that it will not be exposed, since all initialization 
+# solves the issue that it will not be exposed, since all initialization
 # happens inside statically. Under Unix, we can use -Wl,--no-as-needed
 IF (WIN32)
   TARGET_LINK_OPTIONS(AffAction PUBLIC /INCLUDE:AffActionExampleInfo)
@@ -331,7 +338,7 @@ ENDIF()
 IF (USE_AFFACTION_ROS)
   TARGET_LINK_LIBRARIES(AffAction ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES})
   TARGET_INCLUDE_DIRECTORIES(AffAction SYSTEM PUBLIC ${roscpp_INCLUDE_DIRS})
-  TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DUSE_ROS)
+  TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DUSE_ROS)  
   TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC ${SMILE_WS_PATH}/devel/include)
   TARGET_LINK_DIRECTORIES(AffAction PUBLIC /opt/ros/noetic/lib)
   TARGET_LINK_LIBRARIES(AffAction actionlib)
@@ -386,7 +393,7 @@ INSTALL(TARGETS TestLLMSim TestAffordance RUNTIME DESTINATION bin LIBRARY DESTIN
 # Install the headers
 ###############################################################################
 INSTALL(
- DIRECTORY src/ 
+ DIRECTORY src/
  DESTINATION include
  FILES_MATCHING PATTERN "*.h"
 )

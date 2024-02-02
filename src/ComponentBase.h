@@ -82,6 +82,20 @@ public:
     unsubscribe();
   }
 
+  /*! \brief Derieved classes can overwrte this to set flags through the base class.
+   */
+  virtual bool setParameter(const std::string& parameterName, bool flag)
+  {
+    return false;
+  }
+
+  /*! \brief Derieved classes can overwrte this to set pointer through the base class.
+   */
+  virtual bool setParameter(const std::string& parameterName, void* ptr)
+  {
+    return false;
+  }
+
 protected:
 
   /*! \brief Simplified member function subsciption. It also keeps track of all

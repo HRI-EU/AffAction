@@ -29,7 +29,7 @@
 
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
-       resourcePath="${SIT}/Data/RobotMeshes/1.0/data config/xml/Affaction config/object_models"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data config/xml/Affaction config/object_models ${HOME}/smilesimulator/Meshes/object_models"
        name="Default"
        usage="
 &#xA;  Configuration file to load the pizza scenario.
@@ -37,18 +37,18 @@
 >
     <ActionSequence name="a" text="get tomato_sauce_bottle"/>
     <ActionSequence name="0" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf; reset;get tomato_sauce_bottle"/>
-    <ActionSequence name="1" text="get black_olives; put black_olives pizza_dough"/>
-    <ActionSequence name="2" text="get black_olives; put black_olives pizza_dough; get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf"/>
-    <ActionSequence name="3" text="get black_olives1; put black_olives1 pizza_dough"/>
-    <ActionSequence name="4" text="get fresh_tomatoes_1; put fresh_tomatoes_1 pizza_dough"/>
+    <ActionSequence name="1" text="get black_olive; put black_olive pizza_dough"/>
+    <ActionSequence name="2" text="get black_olive; put black_olive pizza_dough; get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf"/>
+    <ActionSequence name="3" text="get black_olive_1; put black_olive_1 pizza_dough"/>
+    <ActionSequence name="4" text="get fresh_tomato_1; put fresh_tomato_1 pizza_dough"/>
     <ActionSequence name="5" text="get mozzarella_cheese_1; put mozzarella_cheese_1 pizza_dough"/>
     <ActionSequence name="6" text="gaze tomato_sauce_bottle; get tomato_sauce_bottle; gaze tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough 10.3; put tomato_sauce_bottle shelf"/>
     <ActionSequence name="7" text="gaze olive_oil_bottle; get olive_oil_bottle; gaze olive_oil_bottle; pour olive_oil_bottle pizza_dough; put olive_oil_bottle shelf"/>
     <ActionSequence name="8" text="gaze salt_bottle; get salt_bottle; gaze salt_bottle; pour salt_bottle pizza_dough; put salt_bottle shelf"/>
     <ActionSequence name="9" text="gaze pesto_sauce_bottle; get pesto_sauce_bottle; gaze pesto_sauce_bottle; pour pesto_sauce_bottle pizza_dough; put pesto_sauce_bottle shelf"/>
     <ActionSequence name="10" text="gaze peppers_bottle; get peppers_bottle; gaze peppers_bottle; pour peppers_bottle pizza_dough; put peppers_bottle shelf"/>
-    <ActionSequence name="11" text="get fresh_tomatoes_1; put fresh_tomatoes_1 mozzarella_cheese_bowl"/>
-    <ActionSequence name="12" text="get fresh_tomatoes_1; put fresh_tomatoes_1 table"/>
+    <ActionSequence name="11" text="get fresh_tomato_1; put fresh_tomato_1 mozzarella_cheese_bowl"/>
+    <ActionSequence name="12" text="get fresh_tomato_1; put fresh_tomato_1 table"/>
     <ActionSequence name="13" text="get mozzarella_cheese_1; put mozzarella_cheese_1 table frame table_left;pose JacoDefaultPoseArmsHigh;get mozzarella_cheese_1; put mozzarella_cheese_1 tray frame tray_pos4;get mozzarella_cheese_1; put mozzarella_cheese_1 tray frame tray_pos2;get mozzarella_cheese_1; put mozzarella_cheese_1 tray frame tray_pos3;get mozzarella_cheese_1; put mozzarella_cheese_1 tray frame tray_pos1"/>
     <ActionSequence name="14" text="get pizza_dough_big_plate; put pizza_dough_big_plate microwave; close_door microwave"/>
 
@@ -58,11 +58,11 @@
     <ActionSequence name="17" text="get tomato_sauce_bottle hand_left; get tomato_sauce_bottle from hand_right; put tomato_sauce_bottle"/>
     <ActionSequence name="18" text="get tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle"/>
 
-    <ActionSequence name="video" text="get peppers_bottle; pour peppers_bottle pizza_dough; put peppers_bottle shelf;get fresh_tomatoes_1; put fresh_tomatoes_1 pizza_dough;get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough 10.3; put tomato_sauce_bottle shelf"/>
+    <ActionSequence name="video" text="get peppers_bottle; pour peppers_bottle pizza_dough; put peppers_bottle shelf;get fresh_tomato_1; put fresh_tomato_1 pizza_dough;get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough 10.3; put tomato_sauce_bottle shelf"/>
 
 
 
-    
+
     <ActionSequence name="unittest2" text="gaze pesto_sauce_bottle; get pesto_sauce_bottle; gaze pesto_sauce_bottle; putx pesto_sauce_bottle shelf" />
 
     <ActionSequence name="unittest5" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough_big_plate 100 " />
@@ -96,52 +96,52 @@
                                        put pizza_dough_big_plate tray" />
 
     <ActionSequence name="ballgrasp" text="get italian_seasoning; put italian_seasoning pizza_dough;
-                                           get mozzarella_cheese ; put mozzarella_cheese pizza_dough;
-                                           get goat_cheese ; put goat_cheese pizza_dough;
-                                           get anchovies ; put anchovies pizza_dough;
-                                           get ricotta_cheese ; put ricotta_cheese pizza_dough;
-                                           get provolone_cheese ; put provolone_cheese pizza_dough;
-                                           get bacon ; put bacon pizza_dough;
-                                           get sausage ; put sausage pizza_dough;
-                                           get mushrooms ; put mushrooms pizza_dough;
-                                           get parmesan_cheese ; put parmesan_cheese pizza_dough;
+                                           get mozzarella_cheese; put mozzarella_cheese pizza_dough;
+                                           get goat_cheese; put goat_cheese pizza_dough;
+                                           get anchovy; put anchovy pizza_dough;
+                                           get ricotta_cheese; put ricotta_cheese pizza_dough;
+                                           get provolone_cheese; put provolone_cheese pizza_dough;
+                                           get bacon; put bacon pizza_dough;
+                                           get sausage; put sausage pizza_dough;
+                                           get mushroom; put mushroom pizza_dough;
+                                           get parmesan_cheese; put parmesan_cheese pizza_dough;
                                            get feta_cheese; put feta_cheese pizza_dough;
                                            get ham; put ham pizza_dough;
-                                           get pepperoni_slices; put pepperoni_slices pizza_dough;
+                                           get pepperoni_slice; put pepperoni_slice pizza_dough;
                                            get grilled_chicken; put grilled_chicken pizza_dough;
 
-                                           get black_olives ; put black_olives pizza_dough;
-                                           get garlic ; put garlic pizza_dough;
-                                           get spinach_leaves ; put spinach_leaves pizza_dough;
-                                           get fresh_basil_leaves ; put fresh_basil_leaves pizza_dough;
-                                           get fresh_tomatoes ; put fresh_tomatoes pizza_dough;
-                                           get red_onion ; put red_onion  pizza_dough;
-                                           get pineapple_chunks ; put pineapple_chunks pizza_dough;
-                                           get sun_dried_tomatoes ; put sun_dried_tomatoes pizza_dough;
-                                           get artichoke_hearts ; put artichoke_hearts pizza_dough;" />
-    
+                                           get black_olive; put black_olive pizza_dough;
+                                           get garlic; put garlic pizza_dough;
+                                           get spinach_leaf; put spinach_leaf pizza_dough;
+                                           get fresh_basil_leaf; put fresh_basil_leaf pizza_dough;
+                                           get fresh_tomato; put fresh_tomato pizza_dough;
+                                           get red_onion; put red_onion  pizza_dough;
+                                           get pineapple_chunks; put pineapple_chunks pizza_dough;
+                                           get sun_dried_tomato; put sun_dried_tomato pizza_dough;
+                                           get artichoke_hearts; put artichoke_hearts pizza_dough;" />
+
     <ActionSequence name="bottle" text="get peppers_bottle; put peppers_bottle shelf;
                                            get pesto_sauce_bottle; put pesto_sauce_bottle shelf;
                                            get salt_bottle; put salt_bottle shelf;
                                            get tomato_sauce_bottle; put tomato_sauce_bottle shelf;
                                            get olive_oil_bottle; put olive_oil_bottle shelf;
                                            get bbq_sauce_bottle; put bbq_sauce_bottle shelf" />
-    
+
     <ActionSequence name="pour" text="get peppers_bottle; pour peppers_bottle pizza_dough; put peppers_bottle shelf;
                                            get pesto_sauce_bottle; pour pesto_sauce_bottle pizza_dough; put pesto_sauce_bottle shelf;
                                            get salt_bottle; pour salt_bottle pizza_dough; put salt_bottle shelf;
                                            get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough; put tomato_sauce_bottle shelf;
-                                           get olive_oil_bottle; pour olive_oil_bottle pizza_dough; put olive_oil_bottle  shelf;
+                                           get olive_oil_bottle; pour olive_oil_bottle pizza_dough; put olive_oil_bottle shelf;
                                            get bbq_sauce_bottle; pour bbq_sauce_bottle pizza_dough; put bbq_sauce_bottle shelf" />
 
 
-    <ActionSequence name="unittest" text="s ballgrasp ; s bottle ; s pour; s frank" />
+    <ActionSequence name="unittest" text="s ballgrasp; s bottle; s pour; s frank" />
 
 
-    
+
 <ActionSequence name="unittest4" text="get salt_bottle from shelf hand_right;
 put salt_bottle table;
-get parmesan_cheese from parmesan_cheese_bowl hand_right; 
+get parmesan_cheese from parmesan_cheese_bowl hand_right;
 get salt_bottle from shelf hand_right;
 put salt_bottle table;
 get salt_bottle from table hand_right;
@@ -157,16 +157,16 @@ pour tomato_sauce_bottle pizza_dough;
 put tomato_sauce_bottle shelf;
 get mozzarella_cheese;
 put mozzarella_cheese tray;
-get pepperoni_slices;
-put pepperoni_slices pizza_dough;
-get black_olives;
-put black_olives pizza_dough;
-get fresh_tomatoes;
-put fresh_tomatoes pizza_dough;
+get pepperoni_slice;
+put pepperoni_slice pizza_dough;
+get black_olive;
+put black_olive pizza_dough;
+get fresh_tomato;
+put fresh_tomato pizza_dough;
 get feta_cheese;
 put feta_cheese pizza_dough;
-get fresh_basil_leaves;
-put fresh_basil_leaves pizza_dough;
+get fresh_basil_leaf;
+put fresh_basil_leaf pizza_dough;
 get olive_oil_bottle;
 pour olive_oil_bottle pizza_dough;
 put olive_oil_bottle shelf;
@@ -174,21 +174,21 @@ get italian_seasoning;
 put italian_seasoning pizza_dough;
 get red_onion;
 put red_onion pizza_dough;
-get sun_dried_tomatoes;
-put sun_dried_tomatoes pizza_dough;
-get artichoke_hearts;
+get sun_dried_tomato;
+put sun_dried_tomato pizza_dough;
+get artichoke_heart;
 put artichoke_hearts pizza_dough;
-get spinach_leaves;
-put spinach_leaves pizza_dough;
+get spinach_leaf;
+put spinach_leaf pizza_dough;
 get goat_cheese;
 put goat_cheese pizza_dough;" />
-    
+
     <!-- Robot with hands including affordances -->
     <xi:include href="../TwoArmJaco7/g_robo.xml"/>
 
     <!-- The cocktail scenario including table -->
     <xi:include href="g_pizza.xml"/>
- 
+
 
     <model_state model="Default" time_stamp="0">
         <joint_state joint="j2s7s300_joint_1_right" position="20"/>

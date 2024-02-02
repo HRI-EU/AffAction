@@ -46,21 +46,8 @@ namespace aff
 {
 
 
-static double getWallclockTime()
-{
-  // Get the current time point
-  auto currentTime = std::chrono::system_clock::now();
-
-  // Convert the time point to a duration since the epoch
-  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
-
-  // Convert the duration to seconds as a floating-point number
-  double seconds = durationSinceEpoch.count();
-
-  return seconds;
-}
-
-LandmarkBase::LandmarkBase() : scene(NULL), graph(NULL), frozen(false)
+LandmarkBase::LandmarkBase() : scene(NULL), graph(NULL), frozen(false),
+  syncInputJsonWithWallclockTime(false)
 {
 }
 
@@ -114,7 +101,17 @@ void LandmarkBase::addTracker(std::unique_ptr<TrackerBase> tracker)
 
 void LandmarkBase::setJsonInput(const nlohmann::json& json)
 {
-  const double time = json["header"]["timestamp"];
+  double time;
+
+  if (syncInputJsonWithWallclockTime)
+  {
+    time = TrackerBase::getWallclockTime();
+  }
+  else
+  {
+    time = json["header"]["timestamp"];
+  }
+
   std::string cameraFrame = json["header"]["frame_id"];
 
   for (auto& entry : json["data"].items())
@@ -250,7 +247,7 @@ bool LandmarkBase::isCalibrating(const std::string& camera) const
 
 void LandmarkBase::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
 {
-  const double wallClockTime = getWallclockTime();
+  const double wallClockTime = TrackerBase::getWallclockTime();
   for (const auto& tracker : trackers)
   {
     tracker->setCurrentTime(wallClockTime);
@@ -272,6 +269,16 @@ void LandmarkBase::onFreezePerception(bool freeze)
   this->frozen = freeze;
 }
 
+void LandmarkBase::setSyncInputWithWallclock(bool enable)
+{
+  syncInputJsonWithWallclockTime = enable;
+}
+
+bool LandmarkBase::getSyncInputWithWallclock() const
+{
+  return syncInputJsonWithWallclockTime;
+}
+
 const RcsGraph* LandmarkBase::getGraph() const
 {
   return this->graph;
@@ -285,6 +292,20 @@ const ActionScene* LandmarkBase::getScene() const
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
 {
   return this->trackers;
+}
+
+void LandmarkBase::enableDebugGraphics(Rcs::Viewer* viewer)
+{
+  // Add skeleton graphics
+  for (auto& tracker : getTrackers())
+  {
+    aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
+    if (st)
+    {
+      st->initGraphics(getGraph(), viewer);
+    }
+  }
+
 }
 
 }   // namespace

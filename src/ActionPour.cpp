@@ -59,9 +59,9 @@ ActionPour::ActionPour(const ActionScene& domain,
 {
   if (params.size()<2)
   {
-    throw ActionException("ERROR REASON: Action has less than two parameters. At least two parameters are needed:"
-                          "The container to pour from, and the container to pour into. "
-                          "SUGGESTION: Correct action command.", ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "Action has less than two parameters. At least two parameters are needed: The container to pour from, and the container to pour into.",
+                          "Correct the action command.");
   }
 
   defaultDuration = 20.0;
@@ -83,8 +83,9 @@ ActionPour::ActionPour(const ActionScene& domain,
 
   if (amountToPour < 0.0)
   {
-    throw ActionException("ERROR REASON: The amount to pour has a negative value. It must be equal or larger than zero."
-                          "SUGGESTION: Pour only liquid amounts with positive volume.", ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "The amount to pour has a negative value. It must be equal or larger than zero.",
+                          "Pour only liquid amounts with positive volume.");
   }
 
   init(domain, graph, objectToPourFrom, objectToPourInto, amountToPour, "base_footprint");
@@ -99,6 +100,13 @@ void ActionPour::init(const ActionScene& domain,
 {
   std::string errorMsg = "ERROR ";
 
+  if (objectToPourFrom == objToPourInto)
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPourFrom + " cannot be poured in itself.",
+                          "Pour it into another object in the environment");
+  }
+
   this->pouringVolume = amountToPour;
 
   const AffordanceEntity* pourFromAff = domain.getAffordanceEntity(objectToPourFrom);
@@ -106,9 +114,9 @@ void ActionPour::init(const ActionScene& domain,
   // Didn't find object to pour from
   if (!pourFromAff)
   {
-    throw ActionException(errorMsg + "REASON: The " + objectToPourFrom +
-                          " to pour from is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPourFrom + " to pour from is unknown.",
+                          "Use an object name that is defined in the environment");
   }
 
   auto openings = getAffordances<Pourable>(pourFromAff);
@@ -116,36 +124,36 @@ void ActionPour::init(const ActionScene& domain,
   // Both bottle need to have an opening
   if (openings.empty())
   {
-    throw ActionException(errorMsg + "REASON: The " + objectToPourFrom + " is not a container that can be poured from."
-                          "SUGGESTION: Choose another object to pour from.",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPourFrom + " is not a container that can be poured from.",
+                          "Choose another object to pour from.");
   }
 
   const AffordanceEntity* pourToAff = domain.getAffordanceEntity(objToPourInto);
 
   if (!pourToAff)
   {
-    throw ActionException(errorMsg + "REASON: The " + objToPourInto +
-                          " to pour into is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objToPourInto + " to pour into is unknown.",
+                          "Use an object name that is defined in the environment");
   }
 
   auto containers = getAffordances<Containable>(pourToAff);
 
   if (containers.empty())
   {
-    throw ActionException(errorMsg + "REASON: The " + objToPourInto +
-                          " to pour into is not a container that can be poured into. "
-                          "SUGGESTION: Choose another object to pour into.", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objToPourInto + " to pour into is not a container that can be poured into.",
+                          "Choose another object to pour into.");
   }
 
   // The bottle object must be in a hand
   const Manipulator* pouringHand = domain.getGraspingHand(graph, pourFromAff);
   if (!pouringHand)
   {
-    throw ActionException(errorMsg + "REASON: The " + objectToPourFrom + " to pour from is not held in a hand."
-                          " SUGGESTION: First get the object " + objectToPourFrom + " before performing this action",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPourFrom + " to pour from is not held in a hand.",
+                          "First get the object " + objectToPourFrom + " before performing this action");
   }
 
   usedManipulators.push_back(pouringHand->name);
@@ -226,12 +234,10 @@ void ActionPour::init(const ActionScene& domain,
   if (receivingHand)
   {
     usedManipulators.push_back(pouringHand->name);
-    RLOG(0, "Glass in hand");
     glasInHand = true;
   }
   else
   {
-    RLOG(0, "Glass standing somewhere");
     glasInHand = false;
   }
 
@@ -381,16 +387,16 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
   // \todo(MG): Allow this, example pizza slices
   if (fromContainers.size()!=1)
   {
-    throw ActionException("ERROR REASON: The " + pourFromAff->name + " that is poured from has " +
-                          std::to_string(fromContainers.size()) + " containers - currently only one is supported",
-                          ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "The " + pourFromAff->name + " that is poured from has " +
+                          std::to_string(fromContainers.size()) + " containers - currently only one is supported");
   }
 
   if (toContainers.size()!=1)
   {
-    throw ActionException("ERROR REASON: The object " + pourToAff->name + " that is poured into has " +
-                          std::to_string(toContainers.size()) + " containers - currently only one is supported",
-                          ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "The object " + pourToAff->name + " that is poured into has " +
+                          std::to_string(toContainers.size()) + " containers - currently only one is supported");
   }
 
   Containable* fromContainer = dynamic_cast<Containable*>(fromContainers[0]);
@@ -402,11 +408,9 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
 
   if (volumeToBePoured + toContainer->getVolume() > toContainer->maxVolume)
   {
-    throw ActionException("ERROR REASON: The container " + toContainer->frame + " does only hold " +
-                          std::to_string(toContainer->maxVolume) +
-                          " liters, pouring would overflow it. SUGGESTION: Pour less than " +
-                          std::to_string(toContainer->maxVolume-toContainer->getVolume()) + " liters",
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "The container " + toContainer->frame + " does only hold " + std::to_string(toContainer->maxVolume) + " liters, pouring would overflow it.",
+                          "Pour less than " + std::to_string(toContainer->maxVolume - toContainer->getVolume()) + " liters");
   }
 
   // Here we do the actual adjustments.

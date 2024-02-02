@@ -46,6 +46,8 @@
 
 
 
+namespace aff
+{
 
 class ArucoCalibrator;
 
@@ -92,5 +94,7 @@ public:
   };
   std::map<std::string,ArucoMarkerData> arucoBodies;
 };
+
+}   // namespace
 
 #endif // ARUCOTRACKER_H

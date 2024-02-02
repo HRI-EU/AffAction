@@ -50,13 +50,15 @@ class ActionScene
 public:
   std::vector<AffordanceEntity> entities;
   std::vector<Manipulator> manipulators;
-  std::vector<Agent*> agents;   // Pointer needed for polymorphism
   std::string foveatedEntity;
+  std::vector<Agent*> agents;   // Pointer needed for polymorphism
 
   ActionScene();
   ActionScene(const std::string& xmlFile);
+  ActionScene(const ActionScene& other);
   virtual ~ActionScene();
   ActionScene& operator = (const ActionScene&);
+  void initializeKinematics(const RcsGraph* graph);
   void print() const;
   bool check(const RcsGraph* graph) const;
   bool reload(const std::string& xmlFile);
@@ -68,6 +70,8 @@ public:
   std::vector<const Manipulator*> getOccupiedManipulators(const RcsGraph* graph) const;
   const AffordanceEntity* getAffordanceEntity(const std::string& name) const;
   std::vector<const AffordanceEntity*> getAffordanceEntities(const std::string& name) const;
+
+  std::vector<const SceneEntity*> getSceneEntities(const std::string& name) const;
 
   // Returns a vector of the child entities that have a parent link to the
   // passed entitie's affordance frames.
@@ -86,13 +90,16 @@ public:
   std::vector<const Manipulator*> getManipulatorsOfType(const std::string& type) const;
   const Manipulator* getGraspingHand(const RcsGraph* graph,
                                      const AffordanceEntity* entity) const;
+
+  // Returns the first combination of manipulator and entity that has been
+  // found to be grasped. \todo(MG): This might have issues if several hands
+  // grasp entities with the same name. In this case, the first one found will
+  // be returned.
   std::tuple<const Manipulator*,const AffordanceEntity*> getGraspingHand(const RcsGraph* graph,
       std::vector<const AffordanceEntity*> entities) const;
 
-  void initAgents();
   Agent* getAgent(const std::string& agentName);
   const Agent* getAgent(const std::string& agentName) const;
-  const Agent* getAgent(const Capability* capability) const;
 };
 
 void sort(const RcsGraph* graph,

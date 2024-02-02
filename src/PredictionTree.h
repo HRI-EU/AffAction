@@ -30,42 +30,60 @@
 
 *******************************************************************************/
 
-#ifndef RCS_TTSCOMPONENT_H
-#define RCS_TTSCOMPONENT_H
+#ifndef AFF_PREDICTIONTREE_H
+#define AFF_PREDICTIONTREE_H
 
-#include "ComponentBase.h"
+#include "TrajectoryPredictor.h"
 
-#include <thread>
+#include <Rcs_graph.h>
 
+#include <unordered_map>
 
 namespace aff
 {
 
-class TTSComponent : public ComponentBase
+class PredictionTreeNode
 {
 public:
 
-  TTSComponent(EntityBase* parent);
-  virtual ~TTSComponent();
+  bool success;
+  double quality;
+  int idx;
+  std::string actionText;
+  PredictionTreeNode* parent;
+  std::vector<PredictionTreeNode*> children;
+  RcsGraph* graph;
 
-private:
+  PredictionTreeNode();
+  PredictionTreeNode(PredictionTreeNode* parent, const TrajectoryPredictor::PredictionResult* predictionResult);
 
-  void onStart();
-  void onStop();
-  void onSpeak(std::string text);
-  void onEmergencyStop();
-  void localThread();
+  ~PredictionTreeNode();
 
-  bool threadRunning;
-  std::string textToSpeak;
-  std::mutex mtx;
-  std::thread ttsThread;
-
-  // Avoid copying this class
-  TTSComponent(const TTSComponent&);
-  TTSComponent& operator=(const TTSComponent&);
+  PredictionTreeNode* addChild(const TrajectoryPredictor::PredictionResult& pr);
 };
 
-}
+class PredictionTree
+{
+public:
 
-#endif   // RCS_TTSCOMPONENT_H
+  PredictionTreeNode* root;
+
+  PredictionTree();
+  ~PredictionTree();
+
+  void printNodesAtEachDepth();
+  void printTreeVisual(const PredictionTreeNode* node, int indent);
+  std::vector<PredictionTreeNode*> getNodesAtDepth(int depth, bool successfullOnly);
+  std::pair<double, std::vector<PredictionTreeNode*>> findSmallestCostPath(int targetDepth);
+  int getMaxDepth() const;
+  int getMaxDepthRecursive(const PredictionTreeNode* node) const;
+
+private:
+  void findSmallestCostPathRecursive(const PredictionTreeNode* node, int currentDepth, double currentCost,
+                                     std::vector<PredictionTreeNode*>& currentPath, int targetDepth,
+                                     std::pair<double, std::vector<PredictionTreeNode*>>& bestPath);
+};
+
+}; // namespace aff
+
+#endif  // AFF_PREDICTIONTREE_H

@@ -32,18 +32,18 @@
     <Body name="table" prev="lab" rigid_body_joints="0.58 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
         <Shape type="FRAME" scale="0.3" graphics="false"/>
         <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
-               distance="true"/>
+               distance="true" textureFile="textures/table.jpg"/>
     </Body>
     <Body name="table_left" prev="table" transform="-0.2 0.3 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_left2" prev="table" transform="-0.2 0.2 0 0 0 0" >
+    <Body name="table_left_2" prev="table" transform="-0.2 0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
     <Body name="table_right" prev="table" transform="-0.2 -0.3 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_right2" prev="table" transform="-0.2 -0.2 0 0 0 0" >
+    <Body name="table_right_2" prev="table" transform="-0.2 -0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
     <Body name="table_3" prev="table" transform="-0.1 0.2 0 0 0 0" >
@@ -53,12 +53,12 @@
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
 
-    <AffordanceModel body="table" type="furniture">
+    <AffordanceModel body="table" types="furniture">
         <Supportable frame="table" />
         <Supportable frame="table_left" extentsX="0.1" extentsY=".1" />
         <Supportable frame="table_right" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_left2" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_right2" extentsX="0.1" extentsY=".1" />
+        <Supportable frame="table_left_2" extentsX="0.1" extentsY=".1" />
+        <Supportable frame="table_right_2" extentsX="0.1" extentsY=".1" />
         <Supportable frame="table_3" extentsX="0.1" extentsY=".1" />
         <Supportable frame="table_4" extentsX="0.1" extentsY=".1" />
     </AffordanceModel>
@@ -67,49 +67,49 @@
     <Body name="shelf" prev="table" rigid_body_joints="0.25 0.1 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
-               distance="true" physics="true" textureFile="wood-ikea-birch.jpg"/>
+               distance="true" physics="true" textureFile="textures/table.jpg"/>
     </Body>
-    <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.001 0 0 0" >
+    <Body name="shelf_position_1" prev="shelf" transform="0 +0.6 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos2" prev="shelf" transform="0 +0.4 0.001 0 0 0" >
+    <Body name="shelf_position_2" prev="shelf" transform="0 +0.4 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos3" prev="shelf" transform="0 +0.2 0.001 0 0 0" >
+    <Body name="shelf_position_3" prev="shelf" transform="0 +0.2 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos4" prev="shelf" transform="0 0 0.001 0 0 0" >
+    <Body name="shelf_position_4" prev="shelf" transform="0 0 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos5" prev="shelf" transform="0 -0.2 0.001 0 0 0" >
+    <Body name="shelf_position_5" prev="shelf" transform="0 -0.2 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos6" prev="shelf" transform="0 -0.4 0.001 0 0 0" >
+    <Body name="shelf_position_6" prev="shelf" transform="0 -0.4 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos7" prev="shelf" transform="0 -0.6 0.001 0 0 0" >
+    <Body name="shelf_position_7" prev="shelf" transform="0 -0.6 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
 
     <AffordanceModel body="shelf" >
-        <Supportable frame="shelf_pos1" />
-        <Supportable frame="shelf_pos2" />
-        <Supportable frame="shelf_pos3" />
-        <Supportable frame="shelf_pos4" />
-        <Supportable frame="shelf_pos5" />
-        <Supportable frame="shelf_pos6" />
-        <Supportable frame="shelf_pos7" />
+        <Supportable frame="shelf_position_1" />
+        <Supportable frame="shelf_position_2" />
+        <Supportable frame="shelf_position_3" />
+        <Supportable frame="shelf_position_4" />
+        <Supportable frame="shelf_position_5" />
+        <Supportable frame="shelf_position_6" />
+        <Supportable frame="shelf_position_7" />
     </AffordanceModel>
 
-    
+
     <!-- bbq_sauce_bottle -->
-    <Body name="bbq_sauce_bottle" prev="shelf_pos2" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
+    <Body name="bbq_sauce_bottle" prev="shelf_position_2" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -121,7 +121,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="bbq_sauce_bottle" type="bottle">
+    <AffordanceModel body="bbq_sauce_bottle" types="bottle">
       <Stackable frame="bbq_sauce_bottle"/>
       <Pourable frame="bbq_sauce_bottle_tip"/>
       <Twistable frame="bbq_sauce_bottle_tip"/>
@@ -151,94 +151,94 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="anchovies_bowl" type="bowl">
+    <AffordanceModel body="anchovies_bowl" types="bowl">
         <Stackable frame="anchovies_bowl"/>
         <Supportable frame="anchovies_bowl_inside"/>
         <Containable frame="anchovies_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="anchovies_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- anchovies1 -->
-    <Body name="anchovies1" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
+    <!-- anchovy_1 -->
+    <Body name="anchovy_1" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="anchovies1_center" prev="anchovies1" transform="0 0 0.01 0 0 0">
+    <Body name="anchovy_1_center" prev="anchovy_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="anchovies" body="anchovies1" type="ingredient">
-        <Stackable frame="anchovies1"  />
-        <BallGraspable frame="anchovies1_center" radius="0.001" />
+    <AffordanceModel body="anchovy_1" types="anchovy ingredient">
+        <Stackable frame="anchovy_1"  />
+        <BallGraspable frame="anchovy_1_center" radius="0.001" />
     </AffordanceModel>
 
-    <!-- anchovies2 -->
-    <Body name="anchovies2" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
+    <!-- anchovy_2 -->
+    <Body name="anchovy_2" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="anchovies2_center" prev="anchovies2" transform="0.02 0 0.01 0 0 0">
+    <Body name="anchovy_2_center" prev="anchovy_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="anchovies" body="anchovies2" type="ingredient">
-        <Stackable frame="anchovies2"  />
-        <BallGraspable frame="anchovies2_center" radius="0.001"/>
+    <AffordanceModel body="anchovy_2" types="anchovy ingredient">
+        <Stackable frame="anchovy_2"  />
+        <BallGraspable frame="anchovy_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- anchovies3 -->
-    <Body name="anchovies3" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
+    <!-- anchovy_3 -->
+    <Body name="anchovy_3" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="anchovies3_center" prev="anchovies3" transform="0 0.02 0.01 0 0 0">
+    <Body name="anchovy_3_center" prev="anchovy_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="anchovies" body="anchovies3" type="ingredient">
-        <Stackable frame="anchovies3"  />
-        <BallGraspable frame="anchovies3_center" radius="0.001"/>
+    <AffordanceModel body="anchovy_3" types="anchovy ingredient">
+        <Stackable frame="anchovy_3"  />
+        <BallGraspable frame="anchovy_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- anchovies4 -->
-    <Body name="anchovies4" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
+    <!-- anchovy_4 -->
+    <Body name="anchovy_4" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="anchovies4_center" prev="anchovies4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="anchovy_4_center" prev="anchovy_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="anchovies" body="anchovies4" type="ingredient">
-        <Stackable frame="anchovies4"  />
-        <BallGraspable frame="anchovies4_center" radius="0.001"/>
+    <AffordanceModel body="anchovy_4" types="anchovy ingredient">
+        <Stackable frame="anchovy_4"  />
+        <BallGraspable frame="anchovy_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- anchovies5 -->
-    <Body name="anchovies5" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
+    <!-- anchovy_5 -->
+    <Body name="anchovy_5" prev="anchovies_bowl_inside" rigid_body_joints="true" color="CHROME" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="anchovies5_center" prev="anchovies5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="anchovy_5_center" prev="anchovy_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="anchovies" body="anchovies5" type="ingredient">
-        <Stackable frame="anchovies5"  />
-        <BallGraspable frame="anchovies5_center" radius="0.001"/>
+    <AffordanceModel body="anchovy_5" types="anchovy ingredient">
+        <Stackable frame="anchovy_5"  />
+        <BallGraspable frame="anchovy_5_center" radius="0.001"/>
     </AffordanceModel>
 
    <!-- artichoke_hearts_bowl -->
@@ -259,88 +259,88 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="artichoke_hearts_bowl" type="bowl">
+    <AffordanceModel body="artichoke_hearts_bowl" types="bowl">
         <Stackable frame="artichoke_hearts_bowl"/>
         <Supportable frame="artichoke_hearts_bowl_inside"/>
         <Containable frame="artichoke_hearts_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="artichoke_hearts_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- artichoke_hearts1 -->
-    <Body name="artichoke_hearts1" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
+    <!-- artichoke_heart_1 -->
+    <Body name="artichoke_heart_1" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="artichoke_hearts1_center" prev="artichoke_hearts1" transform="0 0 0.01 0 0 0">
+    <Body name="artichoke_heart_1_center" prev="artichoke_heart_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="artichoke_hearts" body="artichoke_hearts1" type="ingredient">
-        <Stackable frame="artichoke_hearts1"  />
-        <BallGraspable frame="artichoke_hearts1_center" radius="0.001"/>
+    <AffordanceModel body="artichoke_heart_1" types="artichoke_heart ingredient">
+        <Stackable frame="artichoke_heart_1"  />
+        <BallGraspable frame="artichoke_heart_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- artichoke_hearts2 -->
-    <Body name="artichoke_hearts2" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
+    <!-- artichoke_heart_2 -->
+    <Body name="artichoke_heart_2" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="artichoke_hearts2_center" prev="artichoke_hearts2" transform="0.02 0 0.01 0 0 0">
+    <Body name="artichoke_heart_2_center" prev="artichoke_heart_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="artichoke_hearts" body="artichoke_hearts2" type="ingredient">
-        <Stackable frame="artichoke_hearts2"  />
-        <BallGraspable frame="artichoke_hearts2_center" radius="0.001"/>
+    <AffordanceModel body="artichoke_heart_2" types="artichoke_heart ingredient">
+        <Stackable frame="artichoke_heart_2"  />
+        <BallGraspable frame="artichoke_heart_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- artichoke_hearts3 -->
-    <Body name="artichoke_hearts3" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
+    <!-- artichoke_heart_3 -->
+    <Body name="artichoke_heart_3" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="artichoke_hearts3_center" prev="artichoke_hearts3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="artichoke_heart_3_center" prev="artichoke_heart_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="artichoke_hearts" body="artichoke_hearts3" type="ingredient">
-        <Stackable frame="artichoke_hearts3"  />
-        <BallGraspable frame="artichoke_hearts3_center" radius="0.001"/>
+    <AffordanceModel body="artichoke_heart_3" types="artichoke_heart ingredient">
+        <Stackable frame="artichoke_heart_3"  />
+        <BallGraspable frame="artichoke_heart_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- artichoke_hearts4 -->
-    <Body name="artichoke_hearts4" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
+    <!-- artichoke_heart_4 -->
+    <Body name="artichoke_heart_4" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="artichoke_hearts4_center" prev="artichoke_hearts4" transform="0 0.02 0.01 0 0 0">
+    <Body name="artichoke_heart_4_center" prev="artichoke_heart_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="artichoke_hearts" body="artichoke_hearts4" type="ingredient">
-        <Stackable frame="artichoke_hearts4"  />
-        <BallGraspable frame="artichoke_hearts4_center" radius="0.001"/>
+    <AffordanceModel body="artichoke_heart_4" types="artichoke_heart ingredient">
+        <Stackable frame="artichoke_heart_4"  />
+        <BallGraspable frame="artichoke_heart_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- artichoke_hearts5 -->
-    <Body name="artichoke_hearts5" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
+    <!-- artichoke_heart_5 -->
+    <Body name="artichoke_heart_5" prev="artichoke_hearts_bowl_inside" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="artichoke_hearts5_center" prev="artichoke_hearts5" transform="0 0 0.01 0 0 0">
+    <Body name="artichoke_heart_5_center" prev="artichoke_heart_5" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="artichoke_hearts" body="artichoke_hearts5" type="ingredient">
-        <Stackable frame="artichoke_hearts5"  />
-        <BallGraspable frame="artichoke_hearts5_center" radius="0.001"/>
+    <AffordanceModel body="artichoke_heart_5" types="artichoke_heart ingredient">
+        <Stackable frame="artichoke_heart_5"  />
+        <BallGraspable frame="artichoke_heart_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
@@ -362,90 +362,90 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="bacon_bowl" type="bowl">
+    <AffordanceModel body="bacon_bowl" types="bowl">
         <Stackable frame="bacon_bowl"/>
         <Supportable frame="bacon_bowl_inside"/>
         <Containable frame="bacon_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="bacon_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- bacon1 -->
-    <Body name="bacon1" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
+    <!-- bacon_1 -->
+    <Body name="bacon_1" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="bacon1_center" prev="bacon1" transform="0 0 0.01 0 0 0">
+    <Body name="bacon_1_center" prev="bacon_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="bacon" body="bacon1" type="ingredient">
-        <Stackable frame="bacon1"  />
-        <BallGraspable frame="bacon1_center" radius="0.001"/>
+    <AffordanceModel body="bacon_1" types="bacon ingredient">
+        <Stackable frame="bacon_1"  />
+        <BallGraspable frame="bacon_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- bacon2 -->
-    <Body name="bacon2" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
+    <!-- bacon_2 -->
+    <Body name="bacon_2" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="bacon2_center" prev="bacon2" transform="0.02 0 0.01 0 0 0">
+    <Body name="bacon_2_center" prev="bacon_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="bacon" body="bacon2" type="ingredient">
-        <Stackable frame="bacon2"  />
-        <BallGraspable frame="bacon2_center" radius="0.001"/>
+    <AffordanceModel body="bacon_2" types="bacon ingredient">
+        <Stackable frame="bacon_2"  />
+        <BallGraspable frame="bacon_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- bacon3 -->
-    <Body name="bacon3" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
+    <!-- bacon_3 -->
+    <Body name="bacon_3" prev="bacon_bowl_inside" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="bacon3_center" prev="bacon3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="bacon_3_center" prev="bacon_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="bacon" body="bacon3" type="ingredient">
-        <Stackable frame="bacon3"  />
-        <BallGraspable frame="bacon3_center" radius="0.001"/>
+    <AffordanceModel body="bacon_3" types="bacon ingredient">
+        <Stackable frame="bacon_3"  />
+        <BallGraspable frame="bacon_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- bacon4 -->
-    <Body name="bacon4" prev="bacon_bowl_inside" rigid_body_joints="0 0.02 0 0 0 0" color="RUBY" physics="dynamic" mass="0.1" >
+    <!-- bacon_4 -->
+    <Body name="bacon_4" prev="bacon_bowl_inside" rigid_body_joints="0 0.02 0 0 0 0" color="RUBY" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="bacon4_center" prev="bacon4" transform="0 0.02 0.01 0 0 0">
+    <Body name="bacon_4_center" prev="bacon_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="bacon" body="bacon4" type="ingredient">
-        <Stackable frame="bacon4"  />
-        <BallGraspable frame="bacon4_center" radius="0.001"/>
+    <AffordanceModel body="bacon_4" types="bacon ingredient">
+        <Stackable frame="bacon_4"  />
+        <BallGraspable frame="bacon_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- bacon5 -->
-    <Body name="bacon5" prev="bacon_bowl_inside" rigid_body_joints="0 -0.02 0 0 0 0" color="RUBY" physics="dynamic" mass="0.1" >
+    <!-- bacon_5 -->
+    <Body name="bacon_5" prev="bacon_bowl_inside" rigid_body_joints="0 -0.02 0 0 0 0" color="RUBY" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="bacon5_center" prev="bacon5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="bacon_5_center" prev="bacon_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="bacon" body="bacon5" type="ingredient">
-        <Stackable frame="bacon5"  />
-        <BallGraspable frame="bacon5_center" radius="0.001"/>
+    <AffordanceModel body="bacon_5" types="bacon ingredient">
+        <Stackable frame="bacon_5"  />
+        <BallGraspable frame="bacon_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
@@ -467,96 +467,96 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="black_olives_bowl" type="bowl">
+    <AffordanceModel body="black_olives_bowl" types="bowl">
         <Stackable frame="black_olives_bowl"/>
         <Supportable frame="black_olives_bowl_inside"/>
         <Containable frame="black_olives_bowl_tip" max_volume="0.5" />
         <PowerGraspable frame="black_olives_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- black_olives1 -->
-    <Body name="black_olives1" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
+    <!-- black_olive_1 -->
+    <Body name="black_olive_1" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
                transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
                transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="black_olives1_center" prev="black_olives1" transform="0 0 0.01 0 0 0">
+    <Body name="black_olive_1_center" prev="black_olive_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="black_olives" body="black_olives1" type="ingredient">
-        <Stackable frame="black_olives1"  />
-        <BallGraspable frame="black_olives1_center" radius="0.001"/>
+    <AffordanceModel body="black_olive_1" types="black_olive ingredient">
+        <Stackable frame="black_olive_1"  />
+        <BallGraspable frame="black_olive_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- black_olives2 -->
-    <Body name="black_olives2" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
+    <!-- black_olive_2 -->
+    <Body name="black_olive_2" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
                transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
                transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="black_olives2_center" prev="black_olives2" transform="0.02 0 0.01 0 0 0">
+    <Body name="black_olive_2_center" prev="black_olive_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="black_olives" body="black_olives2" type="ingredient">
-        <Stackable frame="black_olives2"  />
-        <BallGraspable frame="black_olives2_center" radius="0.001"/>
+    <AffordanceModel body="black_olive_2" types="black_olive ingredient">
+        <Stackable frame="black_olive_2"  />
+        <BallGraspable frame="black_olive_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- black_olives3 -->
-    <Body name="black_olives3" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
+    <!-- black_olive_3 -->
+    <Body name="black_olive_3" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
                transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
                transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="black_olives3_center" prev="black_olives3" transform="0 0.02 0.01 0 0 0">
+    <Body name="black_olive_3_center" prev="black_olive_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="black_olives" body="black_olives3" type="ingredient">
-        <Stackable frame="black_olives3"  />
-        <BallGraspable frame="black_olives3_center" radius="0.001"/>
+    <AffordanceModel body="black_olive_3" types="black_olive ingredient">
+        <Stackable frame="black_olive_3"  />
+        <BallGraspable frame="black_olive_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- black_olives4 -->
-    <Body name="black_olives4" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
+    <!-- black_olive_4 -->
+    <Body name="black_olive_4" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
                transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
                transform="-.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="black_olives4_center" prev="black_olives4" transform="-0.02 0 0.01 0 0 0">
+    <Body name="black_olive_4_center" prev="black_olive_4" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="black_olives" body="black_olives4" type="ingredient">
-        <Stackable frame="black_olives4"  />
-        <BallGraspable frame="black_olives4_center" radius="0.001"/>
+    <AffordanceModel body="black_olive_4" types="black_olive ingredient">
+        <Stackable frame="black_olive_4"  />
+        <BallGraspable frame="black_olive_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- black_olives5 -->
-    <Body name="black_olives5" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
+    <!-- black_olive_5 -->
+    <Body name="black_olive_5" prev="black_olives_bowl_inside" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
                transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
                transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="black_olives5_center" prev="black_olives5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="black_olive_5_center" prev="black_olive_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="black_olives" body="black_olives5" type="ingredient">
-        <Stackable frame="black_olives5"  />
-        <BallGraspable frame="black_olives5_center" radius="0.001"/>
+    <AffordanceModel body="black_olive_5" types="black_olive ingredient">
+        <Stackable frame="black_olive_5"  />
+        <BallGraspable frame="black_olive_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- feta_cheese_bowl -->
@@ -577,96 +577,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="feta_cheese_bowl" type="bowl">
+    <AffordanceModel body="feta_cheese_bowl" types="bowl">
         <Stackable frame="feta_cheese_bowl"/>
         <Supportable frame="feta_cheese_bowl_inside"/>
         <Containable frame="feta_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="feta_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- feta_cheese1 -->
-    <Body name="feta_cheese1" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- feta_cheese_1 -->
+    <Body name="feta_cheese_1" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="feta_cheese1_center" prev="feta_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="feta_cheese_1_center" prev="feta_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="feta_cheese" body="feta_cheese1" type="ingredient">
-        <Stackable frame="feta_cheese1"  />
-        <BallGraspable frame="feta_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="feta_cheese_1" types="feta_cheese ingredient">
+        <Stackable frame="feta_cheese_1"  />
+        <BallGraspable frame="feta_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- feta_cheese2 -->
-    <Body name="feta_cheese2" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- feta_cheese_2 -->
+    <Body name="feta_cheese_2" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="feta_cheese2_center" prev="feta_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="feta_cheese_2_center" prev="feta_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="feta_cheese" body="feta_cheese2" type="ingredient">
-        <Stackable frame="feta_cheese2"  />
-        <BallGraspable frame="feta_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="feta_cheese_2" types="feta_cheese ingredient">
+        <Stackable frame="feta_cheese_2"  />
+        <BallGraspable frame="feta_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- feta_cheese3 -->
-    <Body name="feta_cheese3" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- feta_cheese_3 -->
+    <Body name="feta_cheese_3" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="feta_cheese3_center" prev="feta_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="feta_cheese_3_center" prev="feta_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="feta_cheese" body="feta_cheese3" type="ingredient">
-        <Stackable frame="feta_cheese3"  />
-        <BallGraspable frame="feta_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="feta_cheese_3" types="feta_cheese ingredient">
+        <Stackable frame="feta_cheese_3"  />
+        <BallGraspable frame="feta_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- feta_cheese4 -->
-    <Body name="feta_cheese4" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- feta_cheese_4 -->
+    <Body name="feta_cheese_4" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="feta_cheese4_center" prev="feta_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="feta_cheese_4_center" prev="feta_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="feta_cheese" body="feta_cheese4" type="ingredient">
-        <Stackable frame="feta_cheese4"  />
-        <BallGraspable frame="feta_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="feta_cheese_4" types="feta_cheese ingredient">
+        <Stackable frame="feta_cheese_4"  />
+        <BallGraspable frame="feta_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- feta_cheese5 -->
-    <Body name="feta_cheese5" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- feta_cheese_5 -->
+    <Body name="feta_cheese_5" prev="feta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="feta_cheese5_center" prev="feta_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="feta_cheese_5_center" prev="feta_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="feta_cheese" body="feta_cheese5" type="ingredient">
-        <Stackable frame="feta_cheese5"  />
-        <BallGraspable frame="feta_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="feta_cheese_5" types="feta_cheese ingredient">
+        <Stackable frame="feta_cheese_5"  />
+        <BallGraspable frame="feta_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
@@ -688,96 +688,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="fresh_basil_leaves_bowl" type="bowl">
+    <AffordanceModel body="fresh_basil_leaves_bowl" types="bowl">
         <Stackable frame="fresh_basil_leaves_bowl"/>
         <Supportable frame="fresh_basil_leaves_bowl_inside"/>
         <Containable frame="fresh_basil_leaves_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="fresh_basil_leaves_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- fresh_basil_leaves1 -->
-    <Body name="fresh_basil_leaves1" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
+    <!-- fresh_basil_leaf_1 -->
+    <Body name="fresh_basil_leaf_1" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_basil_leaves1_center" prev="fresh_basil_leaves1" transform="0 0 0.01 0 0 0">
+    <Body name="fresh_basil_leaf_1_center" prev="fresh_basil_leaf_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_basil_leaves" body="fresh_basil_leaves1" type="ingredient">
-        <Stackable frame="fresh_basil_leaves1"  />
-        <BallGraspable frame="fresh_basil_leaves1_center" radius="0.001"/>
+    <AffordanceModel body="fresh_basil_leaf_1" types="fresh_basil_leaf ingredient">
+        <Stackable frame="fresh_basil_leaf_1"  />
+        <BallGraspable frame="fresh_basil_leaf_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- fresh_basil_leaves2 -->
-    <Body name="fresh_basil_leaves2" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
+    <!-- fresh_basil_leaf_2 -->
+    <Body name="fresh_basil_leaf_2" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_basil_leaves2_center" prev="fresh_basil_leaves2" transform="0.02 0 0.01 0 0 0">
+    <Body name="fresh_basil_leaf_2_center" prev="fresh_basil_leaf_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_basil_leaves" body="fresh_basil_leaves2" type="ingredient">
-        <Stackable frame="fresh_basil_leaves2"  />
-        <BallGraspable frame="fresh_basil_leaves2_center" radius="0.001"/>
+    <AffordanceModel body="fresh_basil_leaf_2" types="fresh_basil_leaf ingredient">
+        <Stackable frame="fresh_basil_leaf_2"  />
+        <BallGraspable frame="fresh_basil_leaf_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- fresh_basil_leaves3 -->
-    <Body name="fresh_basil_leaves3" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
+    <!-- fresh_basil_leaf_3 -->
+    <Body name="fresh_basil_leaf_3" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_basil_leaves3_center" prev="fresh_basil_leaves3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="fresh_basil_leaf_3_center" prev="fresh_basil_leaf_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_basil_leaves" body="fresh_basil_leaves3" type="ingredient">
-        <Stackable frame="fresh_basil_leaves3"  />
-        <BallGraspable frame="fresh_basil_leaves3_center" radius="0.001"/>
+    <AffordanceModel body="fresh_basil_leaf_3" types="fresh_basil_leaf ingredient">
+        <Stackable frame="fresh_basil_leaf_3"  />
+        <BallGraspable frame="fresh_basil_leaf_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- fresh_basil_leaves4 -->
-    <Body name="fresh_basil_leaves4" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
+    <!-- fresh_basil_leaf_4 -->
+    <Body name="fresh_basil_leaf_4" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_basil_leaves4_center" prev="fresh_basil_leaves4" transform="0 0.02 0.01 0 0 0">
+    <Body name="fresh_basil_leaf_4_center" prev="fresh_basil_leaf_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_basil_leaves" body="fresh_basil_leaves4" type="ingredient">
-        <Stackable frame="fresh_basil_leaves4"  />
-        <BallGraspable frame="fresh_basil_leaves4_center" radius="0.001"/>
+    <AffordanceModel body="fresh_basil_leaf_4" types="fresh_basil_leaf ingredient">
+        <Stackable frame="fresh_basil_leaf_4"  />
+        <BallGraspable frame="fresh_basil_leaf_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- fresh_basil_leaves5 -->
-    <Body name="fresh_basil_leaves5" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
+    <!-- fresh_basil_leaf_5 -->
+    <Body name="fresh_basil_leaf_5" prev="fresh_basil_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_basil_leaves5_center" prev="fresh_basil_leaves5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="fresh_basil_leaf_5_center" prev="fresh_basil_leaf_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_basil_leaves" body="fresh_basil_leaves5" type="ingredient">
-        <Stackable frame="fresh_basil_leaves5"  />
-        <BallGraspable frame="fresh_basil_leaves5_center" radius="0.001"/>
+    <AffordanceModel body="fresh_basil_leaf_5" types="fresh_basil_leaf ingredient">
+        <Stackable frame="fresh_basil_leaf_5"  />
+        <BallGraspable frame="fresh_basil_leaf_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- fresh_tomatoes_bowl -->
@@ -798,95 +798,95 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="fresh_tomatoes_bowl" type="bowl">
+    <AffordanceModel body="fresh_tomatoes_bowl" types="bowl">
         <Stackable frame="fresh_tomatoes_bowl"/>
         <Supportable frame="fresh_tomatoes_bowl_inside"/>
         <Containable frame="fresh_tomatoes_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="fresh_tomatoes_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- fresh_tomatoes1 -->
-    <Body name="fresh_tomatoes1" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
+    <!-- fresh_tomato_1 -->
+    <Body name="fresh_tomato_1" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" physics="true"
             transform="0 0 0.03 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_tomatoes1_center" prev="fresh_tomatoes1" transform="0 0 0.03 0 0 0">
+    <Body name="fresh_tomato_1_center" prev="fresh_tomato_1" transform="0 0 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_tomatoes" body="fresh_tomatoes1" type="ingredient">
-        <Stackable frame="fresh_tomatoes1"  />
-        <BallGraspable frame="fresh_tomatoes1_center" radius="0.03"/>
+    <AffordanceModel body="fresh_tomato_1" types="fresh_tomato ingredient">
+        <Stackable frame="fresh_tomato_1"  />
+        <BallGraspable frame="fresh_tomato_1_center" radius="0.03"/>
     </AffordanceModel>
 
-    <!-- fresh_tomatoes2 -->
-    <Body name="fresh_tomatoes2" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
+    <!-- fresh_tomato_2 -->
+    <Body name="fresh_tomato_2" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.03 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_tomatoes2_center" prev="fresh_tomatoes2" transform="0.02 0 0.03 0 0 0">
+    <Body name="fresh_tomato_2_center" prev="fresh_tomato_2" transform="0.02 0 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_tomatoes" body="fresh_tomatoes2" type="ingredient">
-        <Stackable frame="fresh_tomatoes2"  />
-        <BallGraspable frame="fresh_tomatoes2_center" radius="0.03"/>
+    <AffordanceModel body="fresh_tomato_2" types="fresh_tomato ingredient">
+        <Stackable frame="fresh_tomato_2"  />
+        <BallGraspable frame="fresh_tomato_2_center" radius="0.03"/>
     </AffordanceModel>
 
-    <!-- fresh_tomatoes3 -->
-    <Body name="fresh_tomatoes3" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
+    <!-- fresh_tomato_3 -->
+    <Body name="fresh_tomato_3" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.03 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="fresh_tomatoes3_center" prev="fresh_tomatoes3" transform="-0.02 0 0.03 0 0 0">
+    <Body name="fresh_tomato_3_center" prev="fresh_tomato_3" transform="-0.02 0 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_tomatoes" body="fresh_tomatoes3" type="ingredient">
-        <Stackable frame="fresh_tomatoes3"  />
-        <BallGraspable frame="fresh_tomatoes3_center" radius="0.03"/>
+    <AffordanceModel body="fresh_tomato_3" types="fresh_tomato ingredient">
+        <Stackable frame="fresh_tomato_3"  />
+        <BallGraspable frame="fresh_tomato_3_center" radius="0.03"/>
     </AffordanceModel>
 
-    <!-- fresh_tomatoes4 -->
-    <Body name="fresh_tomatoes4" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
+    <!-- fresh_tomato_4 -->
+    <Body name="fresh_tomato_4" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.03 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_tomatoes4_center" prev="fresh_tomatoes4" transform="0 0.02 0.03 0 0 0">
+    <Body name="fresh_tomato_4_center" prev="fresh_tomato_4" transform="0 0.02 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_tomatoes" body="fresh_tomatoes4" type="ingredient">
-        <Stackable frame="fresh_tomatoes4"  />
-        <BallGraspable frame="fresh_tomatoes4_center" radius="0.03"/>
+    <AffordanceModel body="fresh_tomato_4" types="fresh_tomato ingredient">
+        <Stackable frame="fresh_tomato_4"  />
+        <BallGraspable frame="fresh_tomato_4_center" radius="0.03"/>
     </AffordanceModel>
 
-    <!-- fresh_tomatoes5 -->
-    <Body name="fresh_tomatoes5" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
+    <!-- fresh_tomato_5 -->
+    <Body name="fresh_tomato_5" prev="fresh_tomatoes_bowl_inside" rigid_body_joints="true" color="RED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.03 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="fresh_tomatoes5_center" prev="fresh_tomatoes5" transform="0 -0.02 0.03 0 0 0">
+    <Body name="fresh_tomato_5_center" prev="fresh_tomato_5" transform="0 -0.02 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="fresh_tomatoes" body="fresh_tomatoes5" type="ingredient">
-        <Stackable frame="fresh_tomatoes5"  />
-        <BallGraspable frame="fresh_tomatoes5_center" radius="0.03"/>
+    <AffordanceModel body="fresh_tomato_5" types="fresh_tomato ingredient">
+        <Stackable frame="fresh_tomato_5"  />
+        <BallGraspable frame="fresh_tomato_5_center" radius="0.03"/>
     </AffordanceModel>
 
     <!-- garlic_bowl -->
@@ -907,96 +907,96 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="garlic_bowl" type="bowl">
+    <AffordanceModel body="garlic_bowl" types="bowl">
         <Stackable frame="garlic_bowl"/>
         <Supportable frame="garlic_bowl_inside"/>
         <Containable frame="garlic_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="garlic_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- garlic1 -->
-    <Body name="garlic1" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+    <!-- garlic_1 -->
+    <Body name="garlic_1" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="garlic1_center" prev="garlic1" transform="0 0 0.01 0 0 0">
+    <Body name="garlic_1_center" prev="garlic_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="garlic" body="garlic1" type="ingredient">
-        <Stackable frame="garlic1"  />
-        <BallGraspable frame="garlic1_center" radius="0.001"/>
+    <AffordanceModel body="garlic_1" types="garlic ingredient">
+        <Stackable frame="garlic_1"  />
+        <BallGraspable frame="garlic_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- garlic2 -->
-    <Body name="garlic2" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+    <!-- garlic_2 -->
+    <Body name="garlic_2" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="garlic2_center" prev="garlic2" transform="0.02 0 0.01 0 0 0">
+    <Body name="garlic_2_center" prev="garlic_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="garlic" body="garlic2" type="ingredient">
-        <Stackable frame="garlic2"  />
-        <BallGraspable frame="garlic2_center" radius="0.001"/>
+    <AffordanceModel body="garlic_2" types="garlic ingredient">
+        <Stackable frame="garlic_2"  />
+        <BallGraspable frame="garlic_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- garlic3 -->
-    <Body name="garlic3" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+    <!-- garlic_3 -->
+    <Body name="garlic_3" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="garlic3_center" prev="garlic3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="garlic_3_center" prev="garlic_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="garlic" body="garlic3" type="ingredient">
-        <Stackable frame="garlic3"  />
-        <BallGraspable frame="garlic3_center" radius="0.001"/>
+    <AffordanceModel body="garlic_3" types="garlic ingredient">
+        <Stackable frame="garlic_3"  />
+        <BallGraspable frame="garlic_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- garlic4 -->
-    <Body name="garlic4" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+    <!-- garlic_4 -->
+    <Body name="garlic_4" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="garlic4_center" prev="garlic4" transform="0 0.02 0.01 0 0 0">
+    <Body name="garlic_4_center" prev="garlic_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="garlic" body="garlic4" type="ingredient">
-        <Stackable frame="garlic4"  />
-        <BallGraspable frame="garlic4_center" radius="0.001"/>
+    <AffordanceModel body="garlic_4" types="garlic ingredient">
+        <Stackable frame="garlic_4"  />
+        <BallGraspable frame="garlic_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- garlic5 -->
-    <Body name="garlic5" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+    <!-- garlic_5 -->
+    <Body name="garlic_5" prev="garlic_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="garlic5_center" prev="garlic5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="garlic_5_center" prev="garlic_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="garlic" body="garlic5" type="ingredient">
-        <Stackable frame="garlic5"  />
-        <BallGraspable frame="garlic5_center" radius="0.001"/>
+    <AffordanceModel body="garlic_5" types="garlic ingredient">
+        <Stackable frame="garlic_5"  />
+        <BallGraspable frame="garlic_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- goat_cheese_bowl -->
@@ -1017,96 +1017,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="goat_cheese_bowl" type="bowl">
+    <AffordanceModel body="goat_cheese_bowl" types="bowl">
         <Stackable frame="goat_cheese_bowl"/>
         <Supportable frame="goat_cheese_bowl_inside"/>
         <Containable frame="goat_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="goat_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- goat_cheese1 -->
-    <Body name="goat_cheese1" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- goat_cheese_1 -->
+    <Body name="goat_cheese_1" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="goat_cheese1_center" prev="goat_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="goat_cheese_1_center" prev="goat_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="goat_cheese" body="goat_cheese1" type="ingredient">
-        <Stackable frame="goat_cheese1"  />
-        <BallGraspable frame="goat_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="goat_cheese_1" types="goat_cheese ingredient">
+        <Stackable frame="goat_cheese_1"  />
+        <BallGraspable frame="goat_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- goat_cheese2 -->
-    <Body name="goat_cheese2" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- goat_cheese_2 -->
+    <Body name="goat_cheese_2" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="goat_cheese2_center" prev="goat_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="goat_cheese_2_center" prev="goat_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="goat_cheese" body="goat_cheese2" type="ingredient">
-        <Stackable frame="goat_cheese2"  />
-        <BallGraspable frame="goat_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="goat_cheese_2" types="goat_cheese ingredient">
+        <Stackable frame="goat_cheese_2"  />
+        <BallGraspable frame="goat_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- goat_cheese3 -->
-    <Body name="goat_cheese3" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- goat_cheese_3 -->
+    <Body name="goat_cheese_3" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="goat_cheese3_center" prev="goat_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="goat_cheese_3_center" prev="goat_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="goat_cheese" body="goat_cheese3" type="ingredient">
-        <Stackable frame="goat_cheese3"  />
-        <BallGraspable frame="goat_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="goat_cheese_3" types="goat_cheese ingredient">
+        <Stackable frame="goat_cheese_3"  />
+        <BallGraspable frame="goat_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- goat_cheese4 -->
-    <Body name="goat_cheese4" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- goat_cheese_4 -->
+    <Body name="goat_cheese_4" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="goat_cheese4_center" prev="goat_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="goat_cheese_4_center" prev="goat_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="goat_cheese" body="goat_cheese4" type="ingredient">
-        <Stackable frame="goat_cheese4"  />
-        <BallGraspable frame="goat_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="goat_cheese_4" types="goat_cheese ingredient">
+        <Stackable frame="goat_cheese_4"  />
+        <BallGraspable frame="goat_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- goat_cheese5 -->
-    <Body name="goat_cheese5" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- goat_cheese_5 -->
+    <Body name="goat_cheese_5" prev="goat_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="goat_cheese5_center" prev="goat_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="goat_cheese_5_center" prev="goat_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="goat_cheese" body="goat_cheese5" type="ingredient">
-        <Stackable frame="goat_cheese5"  />
-        <BallGraspable frame="goat_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="goat_cheese_5" types="goat_cheese ingredient">
+        <Stackable frame="goat_cheese_5"  />
+        <BallGraspable frame="goat_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- grilled_chicken_bowl -->
@@ -1127,101 +1127,101 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="grilled_chicken_bowl" type="bowl">
+    <AffordanceModel body="grilled_chicken_bowl" types="bowl">
         <Stackable frame="grilled_chicken_bowl"/>
         <Supportable frame="grilled_chicken_bowl_inside"/>
         <Containable frame="grilled_chicken_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="grilled_chicken_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- grilled_chicken1 -->
-    <Body name="grilled_chicken1" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
+    <!-- grilled_chicken_1 -->
+    <Body name="grilled_chicken_1" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="grilled_chicken1_center" prev="grilled_chicken1" transform="0 0 0.01 0 0 0">
+    <Body name="grilled_chicken_1_center" prev="grilled_chicken_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="grilled_chicken" body="grilled_chicken1" type="ingredient">
-        <Stackable frame="grilled_chicken1"  />
-        <BallGraspable frame="grilled_chicken1_center" radius="0.001"/>
+    <AffordanceModel body="grilled_chicken_1" types="grilled_chicken ingredient">
+        <Stackable frame="grilled_chicken_1"  />
+        <BallGraspable frame="grilled_chicken_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- grilled_chicken2 -->
-    <Body name="grilled_chicken2" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
+    <!-- grilled_chicken_2 -->
+    <Body name="grilled_chicken_2" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="grilled_chicken2_center" prev="grilled_chicken2" transform="0.02 0 0.01 0 0 0">
+    <Body name="grilled_chicken_2_center" prev="grilled_chicken_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="grilled_chicken" body="grilled_chicken2" type="ingredient">
-        <Stackable frame="grilled_chicken2"  />
-        <BallGraspable frame="grilled_chicken2_center" radius="0.001"/>
+    <AffordanceModel body="grilled_chicken_2" types="grilled_chicken ingredient">
+        <Stackable frame="grilled_chicken_2"  />
+        <BallGraspable frame="grilled_chicken_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- grilled_chicken3 -->
-    <Body name="grilled_chicken3" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
+    <!-- grilled_chicken_3 -->
+    <Body name="grilled_chicken_3" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="grilled_chicken3_center" prev="grilled_chicken3" transform="0 0.02 0.01 0 0 0">
+    <Body name="grilled_chicken_3_center" prev="grilled_chicken_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="grilled_chicken" body="grilled_chicken3" type="ingredient">
-        <Stackable frame="grilled_chicken3"  />
-        <BallGraspable frame="grilled_chicken3_center" radius="0.001"/>
+    <AffordanceModel body="grilled_chicken_3" types="grilled_chicken ingredient">
+        <Stackable frame="grilled_chicken_3"  />
+        <BallGraspable frame="grilled_chicken_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- grilled_chicken4 -->
-    <Body name="grilled_chicken4" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
+    <!-- grilled_chicken_4 -->
+    <Body name="grilled_chicken_4" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="grilled_chicken4_center" prev="grilled_chicken4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="grilled_chicken_4_center" prev="grilled_chicken_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="grilled_chicken" body="grilled_chicken4" type="ingredient">
-        <Stackable frame="grilled_chicken4"  />
-        <BallGraspable frame="grilled_chicken4_center" radius="0.001"/>
+    <AffordanceModel body="grilled_chicken_4" types="grilled_chicken ingredient">
+        <Stackable frame="grilled_chicken_4"  />
+        <BallGraspable frame="grilled_chicken_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- grilled_chicken5 -->
-    <Body name="grilled_chicken5" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
+    <!-- grilled_chicken_5 -->
+    <Body name="grilled_chicken_5" prev="grilled_chicken_bowl_inside" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="grilled_chicken5_center" prev="grilled_chicken5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="grilled_chicken_5_center" prev="grilled_chicken_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="grilled_chicken" body="grilled_chicken5" type="ingredient">
-        <Stackable frame="grilled_chicken5"  />
-        <BallGraspable frame="grilled_chicken5_center" radius="0.001"/>
+    <AffordanceModel body="grilled_chicken_5" types="grilled_chicken ingredient">
+        <Stackable frame="grilled_chicken_5"  />
+        <BallGraspable frame="grilled_chicken_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
     <!-- italian_seasoning_bowl -->
-    <Body name="italian_seasoning_bowl" prev="shelf_pos5" rigid_body_joints="true" mass="0.2" physics="dynamic" color="EMERALD">
+    <Body name="italian_seasoning_bowl" prev="shelf_position_5" rigid_body_joints="true" mass="0.2" physics="dynamic" color="EMERALD">
         <Shape type="CYLINDER" radius="0.06" length="0.02" physics="true" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
@@ -1238,7 +1238,7 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="italian_seasoning_bowl" type="bowl">
+    <AffordanceModel body="italian_seasoning_bowl" types="bowl">
         <Stackable frame="italian_seasoning_bowl"/>
         <Supportable frame="italian_seasoning_bowl_inside"/>
         <Containable frame="italian_seasoning_bowl_tip" max_volume="0.5" open="true" />
@@ -1246,89 +1246,89 @@
         <xxxPowerGraspable frame="italian_seasoning_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- italian_seasoning1 -->
-    <Body name="italian_seasoning1" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+    <!-- italian_seasoning_1 -->
+    <Body name="italian_seasoning_1" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="italian_seasoning1_center" prev="italian_seasoning1" transform="0 0 0.01 0 0 0">
+    <Body name="italian_seasoning_1_center" prev="italian_seasoning_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="italian_seasoning" body="italian_seasoning1" type="ingredient">
-        <Stackable frame="italian_seasoning1"  />
-        <BallGraspable frame="italian_seasoning1_center" radius="0.001"/>
+    <AffordanceModel body="italian_seasoning_1" types="italian_seasoning ingredient">
+        <Stackable frame="italian_seasoning_1"  />
+        <BallGraspable frame="italian_seasoning_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- italian_seasoning2 -->
-    <Body name="italian_seasoning2" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+    <!-- italian_seasoning_2 -->
+    <Body name="italian_seasoning_2" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="italian_seasoning2_center" prev="italian_seasoning2" transform="0.02 0 0.01 0 0 0">
+    <Body name="italian_seasoning_2_center" prev="italian_seasoning_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="italian_seasoning" body="italian_seasoning2" type="ingredient">
-        <Stackable frame="italian_seasoning2"  />
-        <BallGraspable frame="italian_seasoning2_center" radius="0.001"/>
+    <AffordanceModel body="italian_seasoning_2" types="italian_seasoning ingredient">
+        <Stackable frame="italian_seasoning_2"  />
+        <BallGraspable frame="italian_seasoning_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- italian_seasoning3 -->
-    <Body name="italian_seasoning3" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+    <!-- italian_seasoning_3 -->
+    <Body name="italian_seasoning_3" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="italian_seasoning3_center" prev="italian_seasoning3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="italian_seasoning_3_center" prev="italian_seasoning_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="italian_seasoning" body="italian_seasoning3" type="ingredient">
-        <Stackable frame="italian_seasoning3"  />
-        <BallGraspable frame="italian_seasoning3_center" radius="0.001"/>
+    <AffordanceModel body="italian_seasoning_3" types="italian_seasoning ingredient">
+        <Stackable frame="italian_seasoning_3"  />
+        <BallGraspable frame="italian_seasoning_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- italian_seasoning4 -->
-    <Body name="italian_seasoning4" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+    <!-- italian_seasoning_4 -->
+    <Body name="italian_seasoning_4" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="italian_seasoning4_center" prev="italian_seasoning4" transform="0 0.02 0.01 0 0 0">
+    <Body name="italian_seasoning_4_center" prev="italian_seasoning_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="italian_seasoning" body="italian_seasoning4" type="ingredient">
-        <Stackable frame="italian_seasoning4"  />
-        <BallGraspable frame="italian_seasoning4_center" radius="0.001"/>
+    <AffordanceModel body="italian_seasoning_4" types="italian_seasoning ingredient">
+        <Stackable frame="italian_seasoning_4"  />
+        <BallGraspable frame="italian_seasoning_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- italian_seasoning5 -->
-    <Body name="italian_seasoning5" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+    <!-- italian_seasoning_5 -->
+    <Body name="italian_seasoning_5" prev="italian_seasoning_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="italian_seasoning5_center" prev="italian_seasoning5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="italian_seasoning_5_center" prev="italian_seasoning_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="italian_seasoning" body="italian_seasoning5" type="ingredient">
-        <Stackable frame="italian_seasoning5"  />
-        <BallGraspable frame="italian_seasoning5_center" radius="0.001"/>
+    <AffordanceModel body="italian_seasoning_5" types="italian_seasoning ingredient">
+        <Stackable frame="italian_seasoning_5"  />
+        <BallGraspable frame="italian_seasoning_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- ham_bowl -->
@@ -1349,96 +1349,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="ham_bowl" type="bowl">
+    <AffordanceModel body="ham_bowl" types="bowl">
         <Stackable frame="ham_bowl"/>
         <Supportable frame="ham_bowl_inside"/>
         <Containable frame="ham_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="ham_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- ham1 -->
-    <Body name="ham1" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
+    <!-- ham_1 -->
+    <Body name="ham_1" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ham1_center" prev="ham1" transform="0 0 0.01 0 0 0">
+    <Body name="ham_1_center" prev="ham_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ham" body="ham1" type="ingredient">
-        <Stackable frame="ham1"  />
-        <BallGraspable frame="ham1_center" radius="0.001"/>
+    <AffordanceModel body="ham_1" types="ham ingredient">
+        <Stackable frame="ham_1"  />
+        <BallGraspable frame="ham_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ham2 -->
-    <Body name="ham2" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
+    <!-- ham_2 -->
+    <Body name="ham_2" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ham2_center" prev="ham2" transform="0.02 0 0.01 0 0 0">
+    <Body name="ham_2_center" prev="ham_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ham" body="ham2" type="ingredient">
-        <Stackable frame="ham2"  />
-        <BallGraspable frame="ham2_center" radius="0.001"/>
+    <AffordanceModel body="ham_2" types="ham ingredient">
+        <Stackable frame="ham_2"  />
+        <BallGraspable frame="ham_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ham3 -->
-    <Body name="ham3" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
+    <!-- ham_3 -->
+    <Body name="ham_3" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ham3_center" prev="ham3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="ham_3_center" prev="ham_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ham" body="ham3" type="ingredient">
-        <Stackable frame="ham3"  />
-        <BallGraspable frame="ham3_center" radius="0.001"/>
+    <AffordanceModel body="ham_3" types="ham ingredient">
+        <Stackable frame="ham_3"  />
+        <BallGraspable frame="ham_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ham4 -->
-    <Body name="ham4" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
+    <!-- ham_4 -->
+    <Body name="ham_4" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ham4_center" prev="ham4" transform="0 0.02 0.01 0 0 0">
+    <Body name="ham_4_center" prev="ham_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ham" body="ham4" type="ingredient">
-        <Stackable frame="ham4"  />
-        <BallGraspable frame="ham4_center" radius="0.001"/>
+    <AffordanceModel body="ham_4" types="ham ingredient">
+        <Stackable frame="ham_4"  />
+        <BallGraspable frame="ham_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ham5 -->
-    <Body name="ham5" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
+    <!-- ham_5 -->
+    <Body name="ham_5" prev="ham_bowl_inside" rigid_body_joints="true" color="RUBY_S" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ham5_center" prev="ham5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="ham_5_center" prev="ham_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ham" body="ham5" type="ingredient">
-        <Stackable frame="ham5"  />
-        <BallGraspable frame="ham5_center" radius="0.001"/>
+    <AffordanceModel body="ham_5" types="ham ingredient">
+        <Stackable frame="ham_5"  />
+        <BallGraspable frame="ham_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- mozzarella_cheese_bowl -->
@@ -1459,95 +1459,95 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="mozzarella_cheese_bowl" type="bowl">
+    <AffordanceModel body="mozzarella_cheese_bowl" types="bowl">
         <Stackable frame="mozzarella_cheese_bowl"/>
         <Supportable frame="mozzarella_cheese_bowl_inside"/>
         <Containable frame="mozzarella_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="mozzarella_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- mozzarella_cheese1 -->
-    <Body name="mozzarella_cheese1" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- mozzarella_cheese_1 -->
+    <Body name="mozzarella_cheese_1" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="mozzarella_cheese1_center" prev="mozzarella_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="mozzarella_cheese_1_center" prev="mozzarella_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mozzarella_cheese" body="mozzarella_cheese1" type="ingredient">
-        <Stackable frame="mozzarella_cheese1"  />
-        <BallGraspable frame="mozzarella_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="mozzarella_cheese_1" types="mozzarella_cheese ingredient">
+        <Stackable frame="mozzarella_cheese_1"  />
+        <BallGraspable frame="mozzarella_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mozzarella_cheese2 -->
-    <Body name="mozzarella_cheese2" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- mozzarella_cheese_2 -->
+    <Body name="mozzarella_cheese_2" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mozzarella_cheese2_center" prev="mozzarella_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="mozzarella_cheese_2_center" prev="mozzarella_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mozzarella_cheese" body="mozzarella_cheese2" type="ingredient">
-        <Stackable frame="mozzarella_cheese2"  />
-        <BallGraspable frame="mozzarella_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="mozzarella_cheese_2" types="mozzarella_cheese ingredient">
+        <Stackable frame="mozzarella_cheese_2"  />
+        <BallGraspable frame="mozzarella_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mozzarella_cheese3 -->
-    <Body name="mozzarella_cheese3" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- mozzarella_cheese_3 -->
+    <Body name="mozzarella_cheese_3" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mozzarella_cheese3_center" prev="mozzarella_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="mozzarella_cheese_3_center" prev="mozzarella_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mozzarella_cheese" body="mozzarella_cheese3" type="ingredient">
-        <Stackable frame="mozzarella_cheese3"  />
-        <BallGraspable frame="mozzarella_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="mozzarella_cheese_3" types="mozzarella_cheese ingredient">
+        <Stackable frame="mozzarella_cheese_3"  />
+        <BallGraspable frame="mozzarella_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mozzarella_cheese4 -->
-    <Body name="mozzarella_cheese4" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- mozzarella_cheese_4 -->
+    <Body name="mozzarella_cheese_4" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mozzarella_cheese4_center" prev="mozzarella_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="mozzarella_cheese_4_center" prev="mozzarella_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mozzarella_cheese" body="mozzarella_cheese4" type="ingredient">
-        <Stackable frame="mozzarella_cheese4"  />
-        <BallGraspable frame="mozzarella_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="mozzarella_cheese_4" types="mozzarella_cheese ingredient">
+        <Stackable frame="mozzarella_cheese_4"  />
+        <BallGraspable frame="mozzarella_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mozzarella_cheese5 -->
-    <Body name="mozzarella_cheese5" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- mozzarella_cheese_5 -->
+    <Body name="mozzarella_cheese_5" prev="mozzarella_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mozzarella_cheese5_center" prev="mozzarella_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="mozzarella_cheese_5_center" prev="mozzarella_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mozzarella_cheese" body="mozzarella_cheese5" type="ingredient">
-        <Stackable frame="mozzarella_cheese5"  />
-        <BallGraspable frame="mozzarella_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="mozzarella_cheese_5" types="mozzarella_cheese ingredient">
+        <Stackable frame="mozzarella_cheese_5"  />
+        <BallGraspable frame="mozzarella_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- mushrooms_bowl -->
@@ -1568,96 +1568,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="mushrooms_bowl" type="bowl">
+    <AffordanceModel body="mushrooms_bowl" types="bowl">
         <Stackable frame="mushrooms_bowl"/>
         <Supportable frame="mushrooms_bowl_inside"/>
         <Containable frame="mushrooms_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="mushrooms_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- mushrooms1 -->
-    <Body name="mushrooms1" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- mushroom_1 -->
+    <Body name="mushroom_1" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mushrooms1_center" prev="mushrooms1" transform="0 0 0.01 0 0 0">
+    <Body name="mushroom_1_center" prev="mushroom_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mushrooms" body="mushrooms1" type="ingredient">
-        <Stackable frame="mushrooms1"  />
-        <BallGraspable frame="mushrooms1_center" radius="0.001"/>
+    <AffordanceModel body="mushroom_1" types="mushroom ingredient">
+        <Stackable frame="mushroom_1"  />
+        <BallGraspable frame="mushroom_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mushrooms2 -->
-    <Body name="mushrooms2" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- mushroom_2 -->
+    <Body name="mushroom_2" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mushrooms2_center" prev="mushrooms2" transform="0.02 0 0.01 0 0 0">
+    <Body name="mushroom_2_center" prev="mushroom_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mushrooms" body="mushrooms2" type="ingredient">
-        <Stackable frame="mushrooms2"  />
-        <BallGraspable frame="mushrooms2_center" radius="0.001"/>
+    <AffordanceModel body="mushroom_2" types="mushroom ingredient">
+        <Stackable frame="mushroom_2"  />
+        <BallGraspable frame="mushroom_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mushrooms3 -->
-    <Body name="mushrooms3" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- mushroom_3 -->
+    <Body name="mushroom_3" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mushrooms3_center" prev="mushrooms3" transform="0 0.02 0.01 0 0 0">
+    <Body name="mushroom_3_center" prev="mushroom_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mushrooms" body="mushrooms3" type="ingredient">
-        <Stackable frame="mushrooms3"  />
-        <BallGraspable frame="mushrooms3_center" radius="0.001"/>
+    <AffordanceModel body="mushroom_3" types="mushroom ingredient">
+        <Stackable frame="mushroom_3"  />
+        <BallGraspable frame="mushroom_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mushrooms4 -->
-    <Body name="mushrooms4" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- mushroom_4 -->
+    <Body name="mushroom_4" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mushrooms4_center" prev="mushrooms4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="mushroom_4_center" prev="mushroom_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mushrooms" body="mushrooms4" type="ingredient">
-        <Stackable frame="mushrooms4"  />
-        <BallGraspable frame="mushrooms4_center" radius="0.001"/>
+    <AffordanceModel body="mushroom_4" types="mushroom ingredient">
+        <Stackable frame="mushroom_4"  />
+        <BallGraspable frame="mushroom_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- mushrooms5 -->
-    <Body name="mushrooms5" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- mushroom_5 -->
+    <Body name="mushroom_5" prev="mushrooms_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="mushrooms5_center" prev="mushrooms5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="mushroom_5_center" prev="mushroom_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="mushrooms" body="mushrooms5" type="ingredient">
-        <Stackable frame="mushrooms5"  />
-        <BallGraspable frame="mushrooms5_center" radius="0.001"/>
+    <AffordanceModel body="mushroom_5" types="mushroom ingredient">
+        <Stackable frame="mushroom_5"  />
+        <BallGraspable frame="mushroom_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- parmesan_cheese_bowl -->
@@ -1678,96 +1678,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="parmesan_cheese_bowl" type="bowl">
+    <AffordanceModel body="parmesan_cheese_bowl" types="bowl">
         <Stackable frame="parmesan_cheese_bowl"/>
         <Supportable frame="parmesan_cheese_bowl_inside"/>
         <Containable frame="parmesan_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="parmesan_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- parmesan_cheese1 -->
-    <Body name="parmesan_cheese1" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- parmesan_cheese_1 -->
+    <Body name="parmesan_cheese_1" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="parmesan_cheese1_center" prev="parmesan_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="parmesan_cheese_1_center" prev="parmesan_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="parmesan_cheese" body="parmesan_cheese1" type="ingredient">
-        <Stackable frame="parmesan_cheese1"  />
-        <BallGraspable frame="parmesan_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="parmesan_cheese_1" types="parmesan_cheese ingredient">
+        <Stackable frame="parmesan_cheese_1"  />
+        <BallGraspable frame="parmesan_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- parmesan_cheese2 -->
-    <Body name="parmesan_cheese2" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- parmesan_cheese_2 -->
+    <Body name="parmesan_cheese_2" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="parmesan_cheese2_center" prev="parmesan_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="parmesan_cheese_2_center" prev="parmesan_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="parmesan_cheese" body="parmesan_cheese2" type="ingredient">
-        <Stackable frame="parmesan_cheese2"  />
-        <BallGraspable frame="parmesan_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="parmesan_cheese_2" types="parmesan_cheese ingredient">
+        <Stackable frame="parmesan_cheese_2"  />
+        <BallGraspable frame="parmesan_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- parmesan_cheese3 -->
-    <Body name="parmesan_cheese3" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- parmesan_cheese_3 -->
+    <Body name="parmesan_cheese_3" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="parmesan_cheese3_center" prev="parmesan_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="parmesan_cheese_3_center" prev="parmesan_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="parmesan_cheese" body="parmesan_cheese3" type="ingredient">
-        <Stackable frame="parmesan_cheese3"  />
-        <BallGraspable frame="parmesan_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="parmesan_cheese_3" types="parmesan_cheese ingredient">
+        <Stackable frame="parmesan_cheese_3"  />
+        <BallGraspable frame="parmesan_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- parmesan_cheese4 -->
-    <Body name="parmesan_cheese4" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- parmesan_cheese_4 -->
+    <Body name="parmesan_cheese_4" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="parmesan_cheese4_center" prev="parmesan_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="parmesan_cheese_4_center" prev="parmesan_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="parmesan_cheese" body="parmesan_cheese4" type="ingredient">
-        <Stackable frame="parmesan_cheese4"  />
-        <BallGraspable frame="parmesan_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="parmesan_cheese_4" types="parmesan_cheese ingredient">
+        <Stackable frame="parmesan_cheese_4"  />
+        <BallGraspable frame="parmesan_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- parmesan_cheese5 -->
-    <Body name="parmesan_cheese5" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- parmesan_cheese_5 -->
+    <Body name="parmesan_cheese_5" prev="parmesan_cheese_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="parmesan_cheese5_center" prev="parmesan_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="parmesan_cheese_5_center" prev="parmesan_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="parmesan_cheese" body="parmesan_cheese5" type="ingredient">
-        <Stackable frame="parmesan_cheese5"  />
-        <BallGraspable frame="parmesan_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="parmesan_cheese_5" types="parmesan_cheese ingredient">
+        <Stackable frame="parmesan_cheese_5"  />
+        <BallGraspable frame="parmesan_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
    <!-- pepperoni_slices_bowl -->
@@ -1788,96 +1788,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="pepperoni_slices_bowl" type="bowl">
+    <AffordanceModel body="pepperoni_slices_bowl" types="bowl">
         <Stackable frame="pepperoni_slices_bowl"/>
         <Supportable frame="pepperoni_slices_bowl_inside"/>
         <Containable frame="pepperoni_slices_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="pepperoni_slices_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- pepperoni_slices1 -->
-    <Body name="pepperoni_slices1" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- pepperoni_slice_1 -->
+    <Body name="pepperoni_slice_1" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="pepperoni_slices1_center" prev="pepperoni_slices1" transform="0 0 0.01 0 0 0">
+    <Body name="pepperoni_slice_1_center" prev="pepperoni_slice_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pepperoni_slices" body="pepperoni_slices1" type="ingredient">
-        <Stackable frame="pepperoni_slices1"  />
-        <BallGraspable frame="pepperoni_slices1_center" radius="0.001"/>
+    <AffordanceModel body="pepperoni_slice_1" types="pepperoni_slice ingredient">
+        <Stackable frame="pepperoni_slice_1"  />
+        <BallGraspable frame="pepperoni_slice_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pepperoni_slices2 -->
-    <Body name="pepperoni_slices2" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- pepperoni_slice_2 -->
+    <Body name="pepperoni_slice_2" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="pepperoni_slices2_center" prev="pepperoni_slices2" transform="0.02 0 0.01 0 0 0">
+    <Body name="pepperoni_slice_2_center" prev="pepperoni_slice_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pepperoni_slices" body="pepperoni_slices2" type="ingredient">
-        <Stackable frame="pepperoni_slices2"  />
-        <BallGraspable frame="pepperoni_slices2_center" radius="0.001"/>
+    <AffordanceModel body="pepperoni_slice_2" types="pepperoni_slice ingredient">
+        <Stackable frame="pepperoni_slice_2"  />
+        <BallGraspable frame="pepperoni_slice_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pepperoni_slices3 -->
-    <Body name="pepperoni_slices3" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- pepperoni_slice_3 -->
+    <Body name="pepperoni_slice_3" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="pepperoni_slices3_center" prev="pepperoni_slices3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="pepperoni_slice_3_center" prev="pepperoni_slice_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pepperoni_slices" body="pepperoni_slices3" type="ingredient">
-        <Stackable frame="pepperoni_slices3"  />
-        <BallGraspable frame="pepperoni_slices3_center" radius="0.001"/>
+    <AffordanceModel body="pepperoni_slice_3" types="pepperoni_slice ingredient">
+        <Stackable frame="pepperoni_slice_3"  />
+        <BallGraspable frame="pepperoni_slice_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pepperoni_slices4 -->
-    <Body name="pepperoni_slices4" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- pepperoni_slice_4 -->
+    <Body name="pepperoni_slice_4" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="pepperoni_slices4_center" prev="pepperoni_slices4" transform="0 0.02 0.01 0 0 0">
+    <Body name="pepperoni_slice_4_center" prev="pepperoni_slice_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pepperoni_slices" body="pepperoni_slices4" type="ingredient">
-        <Stackable frame="pepperoni_slices4"  />
-        <BallGraspable frame="pepperoni_slices4_center" radius="0.001"/>
+    <AffordanceModel body="pepperoni_slice_4" types="pepperoni_slice ingredient">
+        <Stackable frame="pepperoni_slice_4"  />
+        <BallGraspable frame="pepperoni_slice_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pepperoni_slices5 -->
-    <Body name="pepperoni_slices5" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- pepperoni_slice_5 -->
+    <Body name="pepperoni_slice_5" prev="pepperoni_slices_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="pepperoni_slices5_center" prev="pepperoni_slices5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="pepperoni_slice_5_center" prev="pepperoni_slice_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pepperoni_slices" body="pepperoni_slices5" type="ingredient">
-        <Stackable frame="pepperoni_slices5"  />
-        <BallGraspable frame="pepperoni_slices5_center" radius="0.001"/>
+    <AffordanceModel body="pepperoni_slice_5" types="pepperoni_slice ingredient">
+        <Stackable frame="pepperoni_slice_5"  />
+        <BallGraspable frame="pepperoni_slice_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- pineapple_chunks_bowl -->
@@ -1898,96 +1898,96 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="pineapple_chunks_bowl" type="bowl">
+    <AffordanceModel body="pineapple_chunks_bowl" types="bowl">
         <Stackable frame="pineapple_chunks_bowl"/>
         <Supportable frame="pineapple_chunks_bowl_inside"/>
         <Containable frame="pineapple_chunks_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="pineapple_chunks_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- pineapple_chunks1 -->
-    <Body name="pineapple_chunks1" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- pineapple_chunk_1 -->
+    <Body name="pineapple_chunk_1" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="pineapple_chunks1_center" prev="pineapple_chunks1" transform="0 0 0.01 0 0 0">
+    <Body name="pineapple_chunk_1_center" prev="pineapple_chunk_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pineapple_chunks" body="pineapple_chunks1" type="ingredient">
-        <Stackable frame="pineapple_chunks1"  />
-        <BallGraspable frame="pineapple_chunks1_center" radius="0.001"/>
+    <AffordanceModel body="pineapple_chunk_1" types="pineapple_chunk ingredient">
+        <Stackable frame="pineapple_chunk_1"  />
+        <BallGraspable frame="pineapple_chunk_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pineapple_chunks2 -->
-    <Body name="pineapple_chunks2" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- pineapple_chunk_2 -->
+    <Body name="pineapple_chunk_2" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="pineapple_chunks2_center" prev="pineapple_chunks2" transform="0.02 0 0.01 0 0 0">
+    <Body name="pineapple_chunk_2_center" prev="pineapple_chunk_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pineapple_chunks" body="pineapple_chunks2" type="ingredient">
-        <Stackable frame="pineapple_chunks2"  />
-        <BallGraspable frame="pineapple_chunks2_center" radius="0.001"/>
+    <AffordanceModel body="pineapple_chunk_2" types="pineapple_chunk ingredient">
+        <Stackable frame="pineapple_chunk_2"  />
+        <BallGraspable frame="pineapple_chunk_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pineapple_chunks3 -->
-    <Body name="pineapple_chunks3" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- pineapple_chunk_3 -->
+    <Body name="pineapple_chunk_3" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="pineapple_chunks3_center" prev="pineapple_chunks3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="pineapple_chunk_3_center" prev="pineapple_chunk_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pineapple_chunks" body="pineapple_chunks3" type="ingredient">
-        <Stackable frame="pineapple_chunks3"  />
-        <BallGraspable frame="pineapple_chunks3_center" radius="0.001"/>
+    <AffordanceModel body="pineapple_chunk_3" types="pineapple_chunk ingredient">
+        <Stackable frame="pineapple_chunk_3"  />
+        <BallGraspable frame="pineapple_chunk_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pineapple_chunks4 -->
-    <Body name="pineapple_chunks4" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- pineapple_chunk_4 -->
+    <Body name="pineapple_chunk_4" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="pineapple_chunks4_center" prev="pineapple_chunks4" transform="0 0.02 0.01 0 0 0">
+    <Body name="pineapple_chunk_4_center" prev="pineapple_chunk_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pineapple_chunks" body="pineapple_chunks4" type="ingredient">
-        <Stackable frame="pineapple_chunks4"  />
-        <BallGraspable frame="pineapple_chunks4_center" radius="0.001"/>
+    <AffordanceModel body="pineapple_chunk_4" types="pineapple_chunk ingredient">
+        <Stackable frame="pineapple_chunk_4"  />
+        <BallGraspable frame="pineapple_chunk_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- pineapple_chunks5 -->
-    <Body name="pineapple_chunks5" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
+    <!-- pineapple_chunk_5 -->
+    <Body name="pineapple_chunk_5" prev="pineapple_chunks_bowl_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.1" >
         <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="pineapple_chunks5_center" prev="pineapple_chunks5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="pineapple_chunk_5_center" prev="pineapple_chunk_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="pineapple_chunks" body="pineapple_chunks5" type="ingredient">
-        <Stackable frame="pineapple_chunks5"  />
-        <BallGraspable frame="pineapple_chunks5_center" radius="0.001"/>
+    <AffordanceModel body="pineapple_chunk_5" types="pineapple_chunk ingredient">
+        <Stackable frame="pineapple_chunk_5"  />
+        <BallGraspable frame="pineapple_chunk_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
@@ -2009,96 +2009,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="red_onion_bowl" type="bowl">
+    <AffordanceModel body="red_onion_bowl" types="bowl">
         <Stackable frame="red_onion_bowl"/>
         <Supportable frame="red_onion_bowl_inside"/>
         <Containable frame="red_onion_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="red_onion_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- red_onion1 -->
-    <Body name="red_onion1" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
+    <!-- red_onion_1 -->
+    <Body name="red_onion_1" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="red_onion1_center" prev="red_onion1" transform="0 0 0.01 0 0 0">
+    <Body name="red_onion_1_center" prev="red_onion_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="red_onion" body="red_onion1" type="ingredient">
-        <Stackable frame="red_onion1"  />
-        <BallGraspable frame="red_onion1_center" radius="0.001"/>
+    <AffordanceModel body="red_onion_1" types="red_onion ingredient">
+        <Stackable frame="red_onion_1"  />
+        <BallGraspable frame="red_onion_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- red_onion2 -->
-    <Body name="red_onion2" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
+    <!-- red_onion_2 -->
+    <Body name="red_onion_2" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="red_onion2_center" prev="red_onion2" transform="0.02 0 0.01 0 0 0">
+    <Body name="red_onion_2_center" prev="red_onion_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="red_onion" body="red_onion2" type="ingredient">
-        <Stackable frame="red_onion2"  />
-        <BallGraspable frame="red_onion2_center" radius="0.001"/>
+    <AffordanceModel body="red_onion_2" types="red_onion ingredient">
+        <Stackable frame="red_onion_2"  />
+        <BallGraspable frame="red_onion_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- red_onion3 -->
-    <Body name="red_onion3" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
+    <!-- red_onion_3 -->
+    <Body name="red_onion_3" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="red_onion3_center" prev="red_onion3" transform="0 0.02 0.01 0 0 0">
+    <Body name="red_onion_3_center" prev="red_onion_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="red_onion" body="red_onion3" type="ingredient">
-        <Stackable frame="red_onion3"  />
-        <BallGraspable frame="red_onion3_center" radius="0.001"/>
+    <AffordanceModel body="red_onion_3" types="red_onion ingredient">
+        <Stackable frame="red_onion_3"  />
+        <BallGraspable frame="red_onion_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- red_onion4 -->
-    <Body name="red_onion4" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
+    <!-- red_onion_4 -->
+    <Body name="red_onion_4" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="red_onion4_center" prev="red_onion4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="red_onion_4_center" prev="red_onion_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="red_onion" body="red_onion4" type="ingredient">
-        <Stackable frame="red_onion4"  />
-        <BallGraspable frame="red_onion4_center" radius="0.001"/>
+    <AffordanceModel body="red_onion_4" types="red_onion ingredient">
+        <Stackable frame="red_onion_4"  />
+        <BallGraspable frame="red_onion_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- red_onion5 -->
-    <Body name="red_onion5" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
+    <!-- red_onion_5 -->
+    <Body name="red_onion_5" prev="red_onion_bowl_inside" rigid_body_joints="true" color="MAGENTA" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="red_onion5_center" prev="red_onion5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="red_onion_5_center" prev="red_onion_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="red_onion" body="red_onion5" type="ingredient">
-        <Stackable frame="red_onion5"  />
-        <BallGraspable frame="red_onion5_center" radius="0.001"/>
+    <AffordanceModel body="red_onion_5" types="red_onion ingredient">
+        <Stackable frame="red_onion_5"  />
+        <BallGraspable frame="red_onion_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- ricotta_cheese_bowl -->
@@ -2119,104 +2119,104 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="ricotta_cheese_bowl" type="bowl">
+    <AffordanceModel body="ricotta_cheese_bowl" types="bowl">
         <Stackable frame="ricotta_cheese_bowl"/>
         <Supportable frame="ricotta_cheese_bowl_inside"/>
         <Containable frame="ricotta_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="ricotta_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- ricotta_cheese1 -->
-    <Body name="ricotta_cheese1" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- ricotta_cheese_1 -->
+    <Body name="ricotta_cheese_1" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ricotta_cheese1_center" prev="ricotta_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="ricotta_cheese_1_center" prev="ricotta_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ricotta_cheese" body="ricotta_cheese1" type="ingredient">
-        <Stackable frame="ricotta_cheese1"  />
-        <BallGraspable frame="ricotta_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="ricotta_cheese_1" types="ricotta_cheese ingredient">
+        <Stackable frame="ricotta_cheese_1"  />
+        <BallGraspable frame="ricotta_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ricotta_cheese2 -->
-    <Body name="ricotta_cheese2" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- ricotta_cheese_2 -->
+    <Body name="ricotta_cheese_2" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ricotta_cheese2_center" prev="ricotta_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="ricotta_cheese_2_center" prev="ricotta_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ricotta_cheese" body="ricotta_cheese2" type="ingredient">
-        <Stackable frame="ricotta_cheese2"  />
-        <BallGraspable frame="ricotta_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="ricotta_cheese_2" types="ricotta_cheese ingredient">
+        <Stackable frame="ricotta_cheese_2"  />
+        <BallGraspable frame="ricotta_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ricotta_cheese3 -->
-    <Body name="ricotta_cheese3" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- ricotta_cheese_3 -->
+    <Body name="ricotta_cheese_3" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ricotta_cheese3_center" prev="ricotta_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="ricotta_cheese_3_center" prev="ricotta_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ricotta_cheese" body="ricotta_cheese3" type="ingredient">
-        <Stackable frame="ricotta_cheese3"  />
-        <BallGraspable frame="ricotta_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="ricotta_cheese_3" types="ricotta_cheese ingredient">
+        <Stackable frame="ricotta_cheese_3"  />
+        <BallGraspable frame="ricotta_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ricotta_cheese4 -->
-    <Body name="ricotta_cheese4" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- ricotta_cheese_4 -->
+    <Body name="ricotta_cheese_4" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ricotta_cheese4_center" prev="ricotta_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="ricotta_cheese_4_center" prev="ricotta_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ricotta_cheese" body="ricotta_cheese4" type="ingredient">
-        <Stackable frame="ricotta_cheese4"  />
-        <BallGraspable frame="ricotta_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="ricotta_cheese_4" types="ricotta_cheese ingredient">
+        <Stackable frame="ricotta_cheese_4"  />
+        <BallGraspable frame="ricotta_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- ricotta_cheese5 -->
-    <Body name="ricotta_cheese5" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
+    <!-- ricotta_cheese_5 -->
+    <Body name="ricotta_cheese_5" prev="ricotta_cheese_bowl_inside" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="ricotta_cheese5_center" prev="ricotta_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="ricotta_cheese_5_center" prev="ricotta_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="ricotta_cheese" body="ricotta_cheese5" type="ingredient">
-        <Stackable frame="ricotta_cheese5"  />
-        <BallGraspable frame="ricotta_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="ricotta_cheese_5" types="ricotta_cheese ingredient">
+        <Stackable frame="ricotta_cheese_5"  />
+        <BallGraspable frame="ricotta_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- olive_oil_bottle -->
-    <Body name="olive_oil_bottle" prev="shelf_pos3" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="1" >
+    <Body name="olive_oil_bottle" prev="shelf_position_3" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1" />
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -2228,7 +2228,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="olive_oil_bottle" type="bottle">
+    <AffordanceModel body="olive_oil_bottle" types="bottle">
       <Stackable frame="olive_oil_bottle"/>
       <Pourable frame="olive_oil_bottle_tip"/>
       <Twistable frame="olive_oil_bottle_tip"/>
@@ -2240,25 +2240,25 @@
       <Openable open="true"/>
     </AffordanceModel>
 
-    
+
     <!-- Grapes in the olive oil bottle, test for pouring -->
-    <Body name="grapes1" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
+    <Body name="grape_1" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" color="BRICKRED" transform="0 -0.02 0 0 0 0" />
     </Body>
 
-    <AffordanceModel name="grapes" body="grapes1" type="ingredient">
-        <Stackable frame="grapes1" />
-        <BallGraspable frame="grapes1" radius="0.001"/>
+    <AffordanceModel body="grape_1" types="grape ingredient">
+        <Stackable frame="grape_1" />
+        <BallGraspable frame="grape_1" radius="0.001"/>
     </AffordanceModel>
-    
+
     <!-- Grapes in the olive oil bottle, test for pouring -->
-    <Body name="grapes2" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
+    <Body name="grape_2" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" color="BRICKRED" transform="0 0.02 0 0 0 0" />
     </Body>
 
-    <AffordanceModel name="grapes" body="grapes2" type="ingredient">
-        <Stackable frame="grapes2" />
-        <BallGraspable frame="grapes2"  radius="0.001"/>
+    <AffordanceModel body="grape_2" types="grape ingredient">
+        <Stackable frame="grape_2" />
+        <BallGraspable frame="grape_2"  radius="0.001"/>
     </AffordanceModel>
 
     <!-- TODO!! NEED OVEN STL -->
@@ -2293,19 +2293,19 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="oven" id="id_62fe41e3ac572c3ede8251e9" type="furniture">
+    <AffordanceModel body="oven" types="furniture">
         <Supportable frame="oven_inside"/>
         <Hingeable frame="oven_handle" />
         <PointPushable frame="oven_switch" />
     </AffordanceModel>
 
     <!-- peppers_bottle -->
-    <Body name="peppers_bottle" prev="shelf_pos7" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
+    <Body name="peppers_bottle" prev="shelf_position_7" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -2317,7 +2317,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="peppers_bottle" type="bottle">
+    <AffordanceModel body="peppers_bottle" types="bottle">
       <Stackable frame="peppers_bottle"/>
       <Pourable frame="peppers_bottle_tip"/>
       <Twistable frame="peppers_bottle_tip"/>
@@ -2330,12 +2330,12 @@
     </AffordanceModel>
 
     <!-- pesto_sauce_bottle -->
-    <Body name="pesto_sauce_bottle" no_prev="shelf_pos6" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="1" >
+    <Body name="pesto_sauce_bottle" no_prev="shelf_position_6" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -2347,7 +2347,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="pesto_sauce_bottle" type="bottle">
+    <AffordanceModel body="pesto_sauce_bottle" types="bottle">
       <Stackable frame="pesto_sauce_bottle"/>
       <Pourable frame="pesto_sauce_bottle_tip"/>
       <Twistable frame="pesto_sauce_bottle_tip"/>
@@ -2381,7 +2381,7 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="pizza_dough_big_plate" type="plate">
+    <AffordanceModel body="pizza_dough_big_plate" types="plate">
         <Stackable frame="pizza_dough_big_plate"/>
         <Supportable frame="pizza_dough_big_plate_inside"/>
         <PowerGraspable frame="pizza_dough_big_plate_grip_1"/>
@@ -2408,7 +2408,7 @@
         <Shape type="FRAME" scale="0.1" graphics="false" transform="-0.16 0 0.015 0 0 0"/>
     </Body>
 
-    <AffordanceModel body="pizza_dough" type="pizza_dough">
+    <AffordanceModel body="pizza_dough" types="pizza_dough">
         <Stackable frame="pizza_dough"/>
         <Supportable frame="pizza_dough_top" extentsX="0.05" extentsY="0.05" />
         <PowerGraspable frame="pizza_dough_grip_1"/>
@@ -2433,96 +2433,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="provolone_cheese_bowl" type="bowl">
+    <AffordanceModel body="provolone_cheese_bowl" types="bowl">
         <Stackable frame="provolone_cheese_bowl"/>
         <Supportable frame="provolone_cheese_bowl_inside"/>
         <Containable frame="provolone_cheese_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="provolone_cheese_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- provolone_cheese1 -->
-    <Body name="provolone_cheese1" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
+    <!-- provolone_cheese_1 -->
+    <Body name="provolone_cheese_1" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="provolone_cheese1_center" prev="provolone_cheese1" transform="0 0 0.01 0 0 0">
+    <Body name="provolone_cheese_1_center" prev="provolone_cheese_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="provolone_cheese" body="provolone_cheese1" type="ingredient">
-        <Stackable frame="provolone_cheese1"  />
-        <BallGraspable frame="provolone_cheese1_center" radius="0.001"/>
+    <AffordanceModel body="provolone_cheese_1" types="provolone_cheese ingredient">
+        <Stackable frame="provolone_cheese_1"  />
+        <BallGraspable frame="provolone_cheese_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- provolone_cheese2 -->
-    <Body name="provolone_cheese2" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
+    <!-- provolone_cheese_2 -->
+    <Body name="provolone_cheese_2" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="provolone_cheese2_center" prev="provolone_cheese2" transform="0.02 0 0.01 0 0 0">
+    <Body name="provolone_cheese_2_center" prev="provolone_cheese_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="provolone_cheese" body="provolone_cheese2" type="ingredient">
-        <Stackable frame="provolone_cheese2"  />
-        <BallGraspable frame="provolone_cheese2_center" radius="0.001"/>
+    <AffordanceModel body="provolone_cheese_2" types="provolone_cheese ingredient">
+        <Stackable frame="provolone_cheese_2"  />
+        <BallGraspable frame="provolone_cheese_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- provolone_cheese3 -->
-    <Body name="provolone_cheese3" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
+    <!-- provolone_cheese_3 -->
+    <Body name="provolone_cheese_3" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="provolone_cheese3_center" prev="provolone_cheese3" transform="0 0.02 0.01 0 0 0">
+    <Body name="provolone_cheese_3_center" prev="provolone_cheese_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="provolone_cheese" body="provolone_cheese3" type="ingredient">
-        <Stackable frame="provolone_cheese3"  />
-        <BallGraspable frame="provolone_cheese3_center" radius="0.001"/>
+    <AffordanceModel body="provolone_cheese_3" types="provolone_cheese ingredient">
+        <Stackable frame="provolone_cheese_3"  />
+        <BallGraspable frame="provolone_cheese_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- provolone_cheese4 -->
-    <Body name="provolone_cheese4" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
+    <!-- provolone_cheese_4 -->
+    <Body name="provolone_cheese_4" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="provolone_cheese4_center" prev="provolone_cheese4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="provolone_cheese_4_center" prev="provolone_cheese_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="provolone_cheese" body="provolone_cheese4" type="ingredient">
-        <Stackable frame="provolone_cheese4"  />
-        <BallGraspable frame="provolone_cheese4_center" radius="0.001"/>
+    <AffordanceModel body="provolone_cheese_4" types="provolone_cheese ingredient">
+        <Stackable frame="provolone_cheese_4"  />
+        <BallGraspable frame="provolone_cheese_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- provolone_cheese5 -->
-    <Body name="provolone_cheese5" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
+    <!-- provolone_cheese_5 -->
+    <Body name="provolone_cheese_5" prev="provolone_cheese_bowl_inside" rigid_body_joints="true" color="GOLD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="provolone_cheese5_center" prev="provolone_cheese5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="provolone_cheese_5_center" prev="provolone_cheese_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="provolone_cheese" body="provolone_cheese5" type="ingredient">
-        <Stackable frame="provolone_cheese5"  />
-        <BallGraspable frame="provolone_cheese5_center" radius="0.001"/>
+    <AffordanceModel body="provolone_cheese_5" types="provolone_cheese ingredient">
+        <Stackable frame="provolone_cheese_5"  />
+        <BallGraspable frame="provolone_cheese_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
@@ -2532,7 +2532,7 @@
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -2544,7 +2544,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="salt_bottle" type="bottle">
+    <AffordanceModel body="salt_bottle" types="bottle">
       <Stackable frame="salt_bottle"/>
       <Pourable frame="salt_bottle_tip"/>
       <TwistGraspable frame="salt_bottle_tip"/>
@@ -2573,96 +2573,96 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="sausage_bowl" type="bowl">
+    <AffordanceModel body="sausage_bowl" types="bowl">
         <Stackable frame="sausage_bowl"/>
         <Supportable frame="sausage_bowl_inside"/>
         <Containable frame="sausage_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="sausage_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- sausage1 -->
-    <Body name="sausage1" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- sausage_1 -->
+    <Body name="sausage_1" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="sausage1_center" prev="sausage1" transform="0 0 0.01 0 0 0">
+    <Body name="sausage_1_center" prev="sausage_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sausage" body="sausage1" type="ingredient">
-        <Stackable frame="sausage1"  />
-        <BallGraspable frame="sausage1_center" radius="0.001"/>
+    <AffordanceModel body="sausage_1" types="sausage ingredient">
+        <Stackable frame="sausage_1"  />
+        <BallGraspable frame="sausage_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sausage2 -->
-    <Body name="sausage2" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- sausage_2 -->
+    <Body name="sausage_2" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="sausage2_center" prev="sausage2" transform="0.02 0 0.01 0 0 0">
+    <Body name="sausage_2_center" prev="sausage_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sausage" body="sausage2" type="ingredient">
-        <Stackable frame="sausage2"  />
-        <BallGraspable frame="sausage2_center" radius="0.001"/>
+    <AffordanceModel body="sausage_2" types="sausage ingredient">
+        <Stackable frame="sausage_2"  />
+        <BallGraspable frame="sausage_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sausage3 -->
-    <Body name="sausage3" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- sausage_3 -->
+    <Body name="sausage_3" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="sausage3_center" prev="sausage3" transform="0 0.02 0.01 0 0 0">
+    <Body name="sausage_3_center" prev="sausage_3" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sausage" body="sausage3" type="ingredient">
-        <Stackable frame="sausage3"  />
-        <BallGraspable frame="sausage3_center" radius="0.001"/>
+    <AffordanceModel body="sausage_3" types="sausage ingredient">
+        <Stackable frame="sausage_3"  />
+        <BallGraspable frame="sausage_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sausage4 -->
-    <Body name="sausage4" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- sausage_4 -->
+    <Body name="sausage_4" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0.01 0 0 0"/>
     </Body>
 
-    <Body name="sausage4_center" prev="sausage4" transform="0 -0.02 0.01 0 0 0">
+    <Body name="sausage_4_center" prev="sausage_4" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sausage" body="sausage4" type="ingredient">
-        <Stackable frame="sausage4"  />
-        <BallGraspable frame="sausage4_center" radius="0.001"/>
+    <AffordanceModel body="sausage_4" types="sausage ingredient">
+        <Stackable frame="sausage_4"  />
+        <BallGraspable frame="sausage_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sausage5 -->
-    <Body name="sausage5" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
+    <!-- sausage_5 -->
+    <Body name="sausage_5" prev="sausage_bowl_inside" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0.01 0 0 0"/>
     </Body>
 
-    <Body name="sausage5_center" prev="sausage5" transform="-0.02 0 0.01 0 0 0">
+    <Body name="sausage_5_center" prev="sausage_5" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sausage" body="sausage5" type="ingredient">
-        <Stackable frame="sausage5"  />
-        <BallGraspable frame="sausage5_center" radius="0.001"/>
+    <AffordanceModel body="sausage_5" types="sausage ingredient">
+        <Stackable frame="sausage_5"  />
+        <BallGraspable frame="sausage_5_center" radius="0.001"/>
     </AffordanceModel>
 
     <!-- spinach_leaves_bowl -->
@@ -2683,96 +2683,96 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="spinach_leaves_bowl" type="bowl">
+    <AffordanceModel body="spinach_leaves_bowl" types="bowl">
         <Stackable frame="spinach_leaves_bowl"/>
         <Supportable frame="spinach_leaves_bowl_inside"/>
         <Containable frame="spinach_leaves_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="spinach_leaves_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- spinach_leaves1 -->
-    <Body name="spinach_leaves1" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
+    <!-- spinach_leaf_1 -->
+    <Body name="spinach_leaf_1" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="spinach_leaves1_center" prev="spinach_leaves1" transform="0 0 0.01 0 0 0">
+    <Body name="spinach_leaf_1_center" prev="spinach_leaf_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="spinach_leaves" body="spinach_leaves1" type="ingredient">
-        <Stackable frame="spinach_leaves1"  />
-        <BallGraspable frame="spinach_leaves1_center" radius="0.001"/>
+    <AffordanceModel body="spinach_leaf_1" types="spinach_leaf ingredient">
+        <Stackable frame="spinach_leaf_1"  />
+        <BallGraspable frame="spinach_leaf_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- spinach_leaves2 -->
-    <Body name="spinach_leaves2" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
+    <!-- spinach_leaf_2 -->
+    <Body name="spinach_leaf_2" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="spinach_leaves2_center" prev="spinach_leaves2" transform="0.02 0 0.01 0 0 0">
+    <Body name="spinach_leaf_2_center" prev="spinach_leaf_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="spinach_leaves" body="spinach_leaves2" type="ingredient">
-        <Stackable frame="spinach_leaves2"  />
-        <BallGraspable frame="spinach_leaves2_center" radius="0.001"/>
+    <AffordanceModel body="spinach_leaf_2" types="spinach_leaf ingredient">
+        <Stackable frame="spinach_leaf_2"  />
+        <BallGraspable frame="spinach_leaf_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- spinach_leaves3 -->
-    <Body name="spinach_leaves3" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
+    <!-- spinach_leaf_3 -->
+    <Body name="spinach_leaf_3" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="spinach_leaves3_center" prev="spinach_leaves3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="spinach_leaf_3_center" prev="spinach_leaf_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="spinach_leaves" body="spinach_leaves3" type="ingredient">
-        <Stackable frame="spinach_leaves3"  />
-        <BallGraspable frame="spinach_leaves3_center" radius="0.001"/>
+    <AffordanceModel body="spinach_leaf_3" types="spinach_leaf ingredient">
+        <Stackable frame="spinach_leaf_3"  />
+        <BallGraspable frame="spinach_leaf_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- spinach_leaves4 -->
-    <Body name="spinach_leaves4" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
+    <!-- spinach_leaf_4 -->
+    <Body name="spinach_leaf_4" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="spinach_leaves4_center" prev="spinach_leaves4" transform="0 0.02 0.01 0 0 0">
+    <Body name="spinach_leaf_4_center" prev="spinach_leaf_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="spinach_leaves" body="spinach_leaves4" type="ingredient">
-        <Stackable frame="spinach_leaves4"  />
-        <BallGraspable frame="spinach_leaves4_center" radius="0.001"/>
+    <AffordanceModel body="spinach_leaf_4" types="spinach_leaf ingredient">
+        <Stackable frame="spinach_leaf_4"  />
+        <BallGraspable frame="spinach_leaf_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- spinach_leaves5 -->
-    <Body name="spinach_leaves5" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
+    <!-- spinach_leaf_5 -->
+    <Body name="spinach_leaf_5" prev="spinach_leaves_bowl_inside" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="spinach_leaves5_center" prev="spinach_leaves5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="spinach_leaf_5_center" prev="spinach_leaf_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="spinach_leaves" body="spinach_leaves5" type="ingredient">
-        <Stackable frame="spinach_leaves5"  />
-        <BallGraspable frame="spinach_leaves5_center" radius="0.001"/>
+    <AffordanceModel body="spinach_leaf_5" types="spinach_leaf ingredient">
+        <Stackable frame="spinach_leaf_5"  />
+        <BallGraspable frame="spinach_leaf_5_center" radius="0.001"/>
     </AffordanceModel>
 
    <!-- sun_dried_tomatoes_bowl -->
@@ -2793,106 +2793,106 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="sun_dried_tomatoes_bowl" type="bowl">
+    <AffordanceModel body="sun_dried_tomatoes_bowl" types="bowl">
         <Stackable frame="sun_dried_tomatoes_bowl"/>
         <Supportable frame="sun_dried_tomatoes_bowl_inside"/>
         <Containable frame="sun_dried_tomatoes_bowl_tip" max_volume="0.5" open="true" />
         <PowerGraspable frame="sun_dried_tomatoes_bowl_grip_1"/>
     </AffordanceModel>
 
-    <!-- sun_dried_tomatoes1 -->
-    <Body name="sun_dried_tomatoes1" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- sun_dried_tomato_1 -->
+    <Body name="sun_dried_tomato_1" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0 0 0 0 0"/>
     </Body>
 
-    <Body name="sun_dried_tomatoes1_center" prev="sun_dried_tomatoes1" transform="0 0 0.01 0 0 0">
+    <Body name="sun_dried_tomato_1_center" prev="sun_dried_tomato_1" transform="0 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sun_dried_tomatoes" body="sun_dried_tomatoes1" type="ingredient">
-        <Stackable frame="sun_dried_tomatoes1"  />
-        <BallGraspable frame="sun_dried_tomatoes1_center" radius="0.001"/>
+    <AffordanceModel body="sun_dried_tomato_1" types="sun_dried_tomato ingredient">
+        <Stackable frame="sun_dried_tomato_1"  />
+        <BallGraspable frame="sun_dried_tomato_1_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sun_dried_tomatoes2 -->
-    <Body name="sun_dried_tomatoes2" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- sun_dried_tomato_2 -->
+    <Body name="sun_dried_tomato_2" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="sun_dried_tomatoes2_center" prev="sun_dried_tomatoes2" transform="0.02 0 0.01 0 0 0">
+    <Body name="sun_dried_tomato_2_center" prev="sun_dried_tomato_2" transform="0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sun_dried_tomatoes" body="sun_dried_tomatoes2" type="ingredient">
-        <Stackable frame="sun_dried_tomatoes2"  />
-        <BallGraspable frame="sun_dried_tomatoes2_center" radius="0.001"/>
+    <AffordanceModel body="sun_dried_tomato_2" types="sun_dried_tomato ingredient">
+        <Stackable frame="sun_dried_tomato_2"  />
+        <BallGraspable frame="sun_dried_tomato_2_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sun_dried_tomatoes3 -->
-    <Body name="sun_dried_tomatoes3" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- sun_dried_tomato_3 -->
+    <Body name="sun_dried_tomato_3" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="-0.02 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="-0.02 0 0 0 0 0"/>
     </Body>
 
-    <Body name="sun_dried_tomatoes3_center" prev="sun_dried_tomatoes3" transform="-0.02 0 0.01 0 0 0">
+    <Body name="sun_dried_tomato_3_center" prev="sun_dried_tomato_3" transform="-0.02 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sun_dried_tomatoes" body="sun_dried_tomatoes3" type="ingredient">
-        <Stackable frame="sun_dried_tomatoes3"  />
-        <BallGraspable frame="sun_dried_tomatoes3_center" radius="0.001"/>
+    <AffordanceModel body="sun_dried_tomato_3" types="sun_dried_tomato ingredient">
+        <Stackable frame="sun_dried_tomato_3"  />
+        <BallGraspable frame="sun_dried_tomato_3_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sun_dried_tomatoes4 -->
-    <Body name="sun_dried_tomatoes4" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- sun_dried_tomato_4 -->
+    <Body name="sun_dried_tomato_4" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="sun_dried_tomatoes4_center" prev="sun_dried_tomatoes4" transform="0 0.02 0.01 0 0 0">
+    <Body name="sun_dried_tomato_4_center" prev="sun_dried_tomato_4" transform="0 0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sun_dried_tomatoes" body="sun_dried_tomatoes4" type="ingredient">
-        <Stackable frame="sun_dried_tomatoes4"  />
-        <BallGraspable frame="sun_dried_tomatoes4_center" radius="0.001"/>
+    <AffordanceModel body="sun_dried_tomato_4" types="sun_dried_tomato ingredient">
+        <Stackable frame="sun_dried_tomato_4"  />
+        <BallGraspable frame="sun_dried_tomato_4_center" radius="0.001"/>
     </AffordanceModel>
 
-    <!-- sun_dried_tomatoes5 -->
-    <Body name="sun_dried_tomatoes5" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
+    <!-- sun_dried_tomato_5 -->
+    <Body name="sun_dried_tomato_5" prev="sun_dried_tomatoes_bowl_inside" rigid_body_joints="true" color="DARKRED" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
             transform="0 -0.02 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"
             transform="0 -0.02 0 0 0 0"/>
     </Body>
 
-    <Body name="sun_dried_tomatoes5_center" prev="sun_dried_tomatoes5" transform="0 -0.02 0.01 0 0 0">
+    <Body name="sun_dried_tomato_5_center" prev="sun_dried_tomato_5" transform="0 -0.02 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <AffordanceModel name="sun_dried_tomatoes" body="sun_dried_tomatoes5" type="ingredient">
-        <Stackable frame="sun_dried_tomatoes5"  />
-        <BallGraspable frame="sun_dried_tomatoes5_center" radius="0.001"/>
+    <AffordanceModel body="sun_dried_tomato_5" types="sun_dried_tomato ingredient">
+        <Stackable frame="sun_dried_tomato_5"  />
+        <BallGraspable frame="sun_dried_tomato_5_center" radius="0.001"/>
     </AffordanceModel>
 
 
     <!-- tomato_sauce_bottle -->
-    <Body name="tomato_sauce_bottle" prev="shelf_pos4" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
+    <Body name="tomato_sauce_bottle" prev="shelf_position_4" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
         <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
@@ -2904,7 +2904,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="tomato_sauce_bottle" type="bottle">
+    <AffordanceModel body="tomato_sauce_bottle" types="bottle">
       <Stackable frame="tomato_sauce_bottle"/>
       <Pourable frame="tomato_sauce_bottle_tip"/>
       <Twistable frame="tomato_sauce_bottle_tip"/>
@@ -2930,32 +2930,31 @@
     <Body name="tray_grip_1" prev="tray" transform="-0.2 0 0.01 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
-	
-    <Body name="tray_pos1" prev="tray" transform="0.1 0.15 0.06 0 0 0" >
-        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-    </Body>
-	
-    <Body name="tray_pos2" prev="tray" transform="0.1 -0.15 0.06 0 0 0" >
-        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-    </Body>
-	
-    <Body name="tray_pos3" prev="tray" transform="-0.05 0.15 0.06 0 0 0" >
-        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-    </Body>
-	
-    <Body name="tray_pos4" prev="tray" transform="-0.05 -0.15 0.06 0 0 0" >
+
+    <Body name="tray_position_1" prev="tray" transform="0.1 0.15 0.06 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
-    <AffordanceModel body="tray" type="tray">
+    <Body name="tray_position_2" prev="tray" transform="0.1 -0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <Body name="tray_position_3" prev="tray" transform="-0.05 0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <Body name="tray_position_4" prev="tray" transform="-0.05 -0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <AffordanceModel body="tray" types="tray">
         <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
         <xxxSupportable frame="tray_top" extentsX="0.01" extentsY="0.01"/>
         <PowerGraspable frame="tray_grip_1"/>
-        <Supportable frame="tray_pos1" />
-        <Supportable frame="tray_pos2" />
-        <Supportable frame="tray_pos3" />
-        <Supportable frame="tray_pos4" />
+        <Supportable frame="tray_position_1" />
+        <Supportable frame="tray_position_2" />
+        <Supportable frame="tray_position_3" />
+        <Supportable frame="tray_position_4" />
     </AffordanceModel>
 
 </Graph>
-

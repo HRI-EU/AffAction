@@ -43,11 +43,20 @@ The action "get apple" leads to:
 
 ### The "get" action
 
-```bash
-get(<object-to-pick-up> <which-hand (optional)> <"from" parent-object (optional>)
-```
 Grasps an object and lifts it a little bit up. If no manipulator (which-hand) is given,
-the action will determine the best possible manipulator. Internally, the action matches
+the action will determine the best possible manipulator. The same applies to the 
+grasp-to-use. 
+
+```bash
+get(<object-to-pick-up> 
+    <which-hand (optional)> 
+    <grasp-to-use (optional, one out of: PowerGrasp, PincerGrasp, PalmGrasp, BallGrasp, CircularGrasp, TwistGrasp)>
+    <"from" parent-object (optional)> 
+    <"duration" duration_in_seconds (optional)>
+    <"liftHeight" height_in_meters (optional)>)
+```
+
+Internally, the action matches
 the manipulator's capabilities with the object's affordances. These combinations are
 supprted:
 
@@ -70,7 +79,30 @@ get apple_1 hand_right    // Gets the apple_1 with the right hand.
 
 
 ### The "put" action
-put(<object to put down>, <location-hint (optional)> <which-hand (optional)>)
+
+Action to put an entity on another one. 
+
+```bash
+put(<object-to-put> 
+    <target (optional)> 
+    <"frame" target_frame (optional)>
+    <"duration" duration_in_seconds (optional)>)
+```
+
+The object-to-put must be in one of the agent's hands (previously grasped). It also needs to
+have a Stackable affordance. If no target is given, the closest entity below the object-to-put
+is searched. If a target is given, it must have a Supportable affordance. If a target is given,
+the "frame" attribute allows to specify a Supportable frame explicitely. This is sometimes 
+helpful if an entity provides many Supportable surfaces, such as a table with a grid of them.
+For instance:
+
+```bash
+put lemon cutboard                   // Puts a lemon on the cutboard.
+put lemon table frame tablegrid_1    // Puts a lemon on the table's Supportable tablegrid_4
+```
+
+### The "pour" action
+pour(<object to pour from>,<object to pour into>)
 
 ### The "double_get" action
 double_get (<object1, object2>)
@@ -90,8 +122,6 @@ open_door(<door-object>)
 ### The "close_door" action
 close_door (<door-object>)
 
-### The "pour" action
-pour(<object to pour from>,<object to pour into>)
 
 ### The "pose" action
 

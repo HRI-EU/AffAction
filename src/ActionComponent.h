@@ -30,14 +30,15 @@
 
 *******************************************************************************/
 
-#ifndef RCS_ACTIONCOMPONENT_H
-#define RCS_ACTIONCOMPONENT_H
+#ifndef AFF_ACTIONCOMPONENT_H
+#define AFF_ACTIONCOMPONENT_H
 
 #include "ComponentBase.h"
 #include "ActionScene.h"
 
 #include <ControllerBase.h>
 #include <TrajectoryPredictor.h>
+
 
 namespace aff
 {
@@ -56,6 +57,11 @@ public:
   void setMultiThreaded(bool enable);
   bool getLimitCheck() const;
   bool getMultiThreaded() const;
+
+  // Utility functions for trimming a string
+  static std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
+  static std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
+  static std::string& trim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
 
 private:
 
@@ -89,4 +95,4 @@ private:
 
 }
 
-#endif   // RCS_ACTIONCOMPONENT_H
+#endif   // AFF_ACTIONCOMPONENT_H

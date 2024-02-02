@@ -48,6 +48,8 @@ PARAMETERS
 
 #if defined (USE_ROS)
 
+#include "Agent.h"
+
 #include <TaskFactory.h>
 #include <IkSolverRMR.h>
 #include <Rcs_typedef.h>
@@ -114,7 +116,7 @@ void PtuActionComponent::onStart()
   nh->getParam("/ptu/controller/tilt_min_degrees", tilt_min_degrees);
   nh->getParam("/ptu/controller/tilt_max_degrees", tilt_max_degrees);
 
-  RLOG(0, "Pan min: %.2f   Pan max: %.2f   Tilt min: %.2f   Tilt max: %.2f   (all in degrees)",
+  RLOG(0, "Pan range: [%.2f..%.2f]  Tilt range: [%.2f..%.2f] (in degrees)",
        pan_min_degrees, pan_max_degrees, tilt_min_degrees, tilt_max_degrees);
 
   RLOG_CPP(5, "Subscribing to topic /ptu/state");
@@ -189,6 +191,20 @@ void PtuActionComponent::onLookAtCommand(const std::string& bodyName)
 
 void PtuActionComponent::getPanTilt(std::string gazeTarget)
 {
+#if 1
+  double panTilt[2], err[2];
+  size_t maxIter = 100;
+  double eps = 1.0e-8;
+
+  int res = RobotAgent::getPanTilt(copyOfGraph, gazeTarget, panTilt, maxIter, eps, err);
+
+  if ((err[0]<eps) && (err[1]<eps))
+  {
+    getEntity()->publish("PtuPanTiltCommand", panTilt[0], panTilt[1]);
+  }
+
+#else
+
   // Here we can safely assume that copyOfGraph exists.
   const RcsBody* gazeBdy = RcsGraph_getBodyByName(copyOfGraph, gazeTarget.c_str());
   if (!gazeBdy)
@@ -237,7 +253,7 @@ void PtuActionComponent::getPanTilt(std::string gazeTarget)
   const double lambda = 1.0e-8;
   const double eps = 1.0e-6;
   const size_t maxIter = 200;
-  double clipLimit = 0.1;
+  double clipLimit = 0.01;
 
   for (int iter=0; iter<maxIter; ++iter)
   {
@@ -269,6 +285,7 @@ void PtuActionComponent::getPanTilt(std::string gazeTarget)
     getEntity()->publish("PtuPanTiltCommand", panTilt[0], panTilt[1]);
   }
 
+#endif
 }
 
 void PtuActionComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)

@@ -65,9 +65,10 @@ ActionComposite::~ActionComposite()
 {
 }
 
-ActionComposite::ActionComposite(const ActionComposite& other) 
+ActionComposite::ActionComposite(const ActionComposite& other)
 {
-  for (const auto& action : other.actions) {
+  for (const auto& action : other.actions)
+  {
       actions.push_back(action->clone());
   }
 }
@@ -159,12 +160,13 @@ class ActionDoubleGet : public ActionComposite
 {
 public:
 
-  ActionDoubleGet(const ActionDoubleGet& other) : ActionComposite(other) 
-  { 
+  ActionDoubleGet(const ActionDoubleGet& other) : ActionComposite(other)
+  {
       explanation = other.explanation;
   }
 
-  std::unique_ptr<ActionBase> clone() const override {
+  std::unique_ptr<ActionBase> clone() const override
+  {
     return std::make_unique<ActionDoubleGet>(*this);
   }
 
@@ -174,12 +176,13 @@ public:
   {
     if (params.size() != 2)
     {
-      throw ActionException("ERROR REASON: Action command received with " + std::to_string(params.size()) + " arguments, but 2 are expected", ActionException::ParamInvalid);
+      throw ActionException(ActionException::ParamInvalid,
+                            "Action command received with " + std::to_string(params.size()) + " arguments, but 2 are expected");
     }
 
     if (domain.manipulators.size() < 2)
     {
-      throw ActionException("ERROR REASON: Action created with " + std::to_string(domain.manipulators.size()) + " manipulators, but 2 or more are expected", ActionException::ParamInvalid);
+      throw ActionException(ActionException::ParamInvalid, "Action created with " + std::to_string(domain.manipulators.size()) + " manipulators, but 2 or more are expected");
     }
 
     // Compute the two closest manipulators to the two objects
@@ -195,18 +198,18 @@ public:
 
     if (!obj1)
     {
-      throw ActionException("ERROR REASON: Object " + params[0] + " is unknown", ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound, "Object " + params[0] + " is unknown");
     }
 
     if (!obj2)
     {
-      throw ActionException("ERROR REASON: Object " + params[1] + " is unknown", ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound, "Object " + params[1] + " is unknown");
     }
 
     std::vector<std::vector<double>> res;
     for (const auto& m : domain.manipulators)
     {
-      const RcsBody* mBdy = RcsGraph_getBodyByNameNoCase(graph, m.name.c_str());
+      const RcsBody* mBdy = RcsGraph_getBodyByNameNoCase(graph, m.bdyName.c_str());
       std::vector<double> res_i;
       res_i.push_back(Vec3d_distance(mBdy->A_BI.org, obj1->A_BI.org));
       res_i.push_back(Vec3d_distance(mBdy->A_BI.org, obj2->A_BI.org));
@@ -278,12 +281,13 @@ class ActionDoublePut : public ActionComposite
 {
 public:
 
-  ActionDoublePut(const ActionDoubleGet& other) : ActionComposite(other) 
-  { 
+  ActionDoublePut(const ActionDoubleGet& other) : ActionComposite(other)
+  {
       explanation = other.explanation;
   }
 
-  std::unique_ptr<ActionBase> clone() const override {
+  std::unique_ptr<ActionBase> clone() const override
+  {
     return std::make_unique<ActionDoublePut>(*this);
   }
 
@@ -357,12 +361,13 @@ class ActionMultiString : public ActionComposite
 {
 public:
 
-  ActionMultiString(const ActionDoubleGet& other) : ActionComposite(other) 
-  { 
+  ActionMultiString(const ActionDoubleGet& other) : ActionComposite(other)
+  {
       explanation = other.explanation;
   }
 
-  std::unique_ptr<ActionBase> clone() const override {
+  std::unique_ptr<ActionBase> clone() const override
+  {
     return std::make_unique<ActionMultiString>(*this);
   }
 
@@ -417,12 +422,13 @@ class ActionGazeAndGet : public ActionComposite
 {
 public:
 
-  ActionGazeAndGet(const ActionDoubleGet& other) : ActionComposite(other) 
-  { 
+  ActionGazeAndGet(const ActionDoubleGet& other) : ActionComposite(other)
+  {
       explanation = other.explanation;
   }
 
-  std::unique_ptr<ActionBase> clone() const override {
+  std::unique_ptr<ActionBase> clone() const override
+  {
     return std::make_unique<ActionGazeAndGet>(*this);
   }
 

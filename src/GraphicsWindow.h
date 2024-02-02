@@ -213,6 +213,7 @@ protected:
   void onObjectActivation(std::string objectName, bool activation);
   void onObjectColor(std::string graphId, std::string objectName,
                      std::string color);
+  void onObjectsAlpha(std::string objectName, double alpha);
   void onObjectAlpha(std::string whichGraph, std::string objectName,
                      double alpha);
   void onEmergencyStop();

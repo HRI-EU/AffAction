@@ -377,7 +377,7 @@ Containable::Containable(const xmlNodePtr node) : Affordance(node), maxVolume(1.
       double volume = 0.0;
       getXMLNodePropertyDouble(child, "volume", &volume);
       liquidIngredients.push_back(std::make_pair(ingredient,volume));
-      RLOG(0, "Affordance \"%s\" contains %f liters of %s", frame.c_str(), volume, ingredient.c_str());
+      RLOG(1, "Affordance \"%s\" contains %f liters of %s", frame.c_str(), volume, ingredient.c_str());
     }
 
     child = child->next;

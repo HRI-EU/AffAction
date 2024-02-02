@@ -43,6 +43,7 @@
 #include <Rcs_typedef.h>
 #include <Rcs_graphParser.h>
 #include <Rcs_macros.h>
+#include <Rcs_utilsCPP.h>
 
 #include <tuple>
 
@@ -54,19 +55,55 @@ REGISTER_ACTION(ActionPose, "pose");
 
 ActionPose::ActionPose(const ActionScene& domain,
                        const RcsGraph* graph,
-                       std::vector<std::string> params) :
-  ActionPose(graph, params[0], params.size() > 1 ? std::stoi(params[1]) : 0)
+                       std::vector<std::string> params)
 {
+
+  auto it = std::find(params.begin(), params.end(), "duration");
+  if (it != params.end())
+  {
+    defaultDuration = std::stod(*(it+1));
+    params.erase(it+1);
+    params.erase(it);
+  }
+
+  // Get the time stamp value as the second argument after the pose name.
+  int timeStamp = 0;
+
+  if (params.size() > 1)
+  {
+    try
+    {
+      timeStamp = std::stoi(params[1]);
+    }
+    catch (const std::invalid_argument& e)
+    {
+      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + params[0] + " is invalid.",
+                            "Check how you typed the time stamp parameter - it should be an integer value",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
+                            ": time stamp is not an integer value: " + params[1] + " (" + e.what() + ")");
+    }
+    catch (const std::out_of_range& e)
+    {
+      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + params[0] + " is out of range.",
+                            "Check how you typed the time stamp parameter - it should be within the range of integer values",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
+                            ": time stamp is not in the integer range: " + params[1] + " (" + e.what() + ")");
+    }
+  }
+
+  // \todo(MG): This should be the agent's manipulators.
   for (const auto& m : domain.manipulators)
   {
     usedManipulators.push_back(m.name);
   }
+
+  init(graph, params[0], timeStamp);
 }
 
 
-ActionPose::ActionPose(const RcsGraph* graph,
-                       const std::string& mdlStateName,
-                       int timeStamp)
+void ActionPose::init(const RcsGraph* graph,
+                      const std::string& mdlStateName,
+                      int timeStamp)
 {
   MatNd* q = MatNd_create(graph->dof, 1);
   MatNd_setElementsTo(q, DBL_MAX);
@@ -75,7 +112,21 @@ ActionPose::ActionPose(const RcsGraph* graph,
   if (!success)
   {
     MatNd_destroy(q);
-    throw ActionException("ERROR REASON: Could not find pose DEVELOPER: Model state with name not found: " + mdlStateName, ActionException::ParamNotFound);
+    std::vector<std::string> modelStates = Rcs::RcsGraph_getModelStateNames(graph);
+    std::string modelStateString;
+    for (size_t i = 0; i != modelStates.size(); ++i)
+    {
+      modelStateString += modelStates[i];
+      if (i < modelStates.size() - 1)
+      {
+        modelStateString += ", ";
+      }
+    }
+    throw ActionException(ActionException::ParamNotFound, "Could not find pose " + mdlStateName,
+                          "Use one out of these: " + modelStateString + ".",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
+                          ": Model state with name not found: " + mdlStateName + " with time stamp "
+                          + std::to_string(timeStamp));
   }
 
   RCSGRAPH_FOREACH_JOINT(graph)
@@ -88,7 +139,6 @@ ActionPose::ActionPose(const RcsGraph* graph,
       continue;
     }
 
-    // jnts.push_back(std::pair<std::string,double>(std::string(JNT->name), q_des_i));
     jnts.push_back(std::make_tuple(std::string(JNT->name), q_curr_i, q_des_i));
   }
 

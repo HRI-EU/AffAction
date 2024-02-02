@@ -56,8 +56,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (params.empty())
   {
-    throw ActionException("ActionDrop: No object given",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound, "No object to drop given");
   }
 
   this->objectToDrop = params[0];
@@ -68,8 +67,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (dropEntities.empty())
   {
-    throw ActionException("Entity for " + objectToDrop  +
-                          " not found in scene", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound, "Entity for " + objectToDrop  + " not found in scene");
   }
 
   auto gPair = domain.getGraspingHand(graph, dropEntities);
@@ -78,8 +76,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!graspingHand)
   {
-    throw ActionException("ActionDrop: no hand is grasping the object " + objectToDrop,
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible, "No hand is grasping the object " + objectToDrop);
   }
 
   objectToDrop = dropEntity->bdyName;
@@ -113,10 +110,11 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
     if (!surface)
     {
-      throw ActionException("ERROR: Can't drop the " + objectToDrop +
-                            " REASON: There is nothing under the " +
-                            objectToDrop + " where I can put it on",
-                            ActionException::KinematicallyImpossible);
+      throw ActionException(errMsg, ActionException::KinematicallyImpossible);
+      //throw ActionException("ERROR: Can't drop the " + objectToDrop +
+      //    " REASON: There is nothing under the " +
+      //    objectToDrop + " where I can put it on",
+      //    ActionException::KinematicallyImpossible);
     }
 
     this->surfaceName = surface->bdyName;
@@ -124,8 +122,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!surface)
   {
-    throw ActionException("ActionDrop: no surface entity to drop on found",
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible, "No surface entity to drop on found");
   }
 
   // Capability is "graspCapability", all support surfaces are stored in
@@ -140,8 +137,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (affordanceMap.empty())
   {
-    throw ActionException("ActionDrop: Cannot drop object on " + surface->name,
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound, "Cannot drop object on " + surface->name);
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -153,8 +149,7 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!successInit)
   {
-    throw ActionException("Failed to initialize best solution",
-                          ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid, "Failed to initialize best solution");
   }
 
 }
@@ -266,7 +261,8 @@ std::vector<std::string> ActionDrop::getManipulators() const
   return std::vector<std::string>();
 }
 
-std::unique_ptr<ActionBase> ActionDrop::clone() const {
+std::unique_ptr<ActionBase> ActionDrop::clone() const
+{
   return std::make_unique<ActionDrop>(*this);
 }
 

@@ -51,12 +51,12 @@
  * ~/localdisk/camera_tracking > ./scripts/azure_tracking_socket.py --visualize --aruco --body
  *
  * Manually toggle talk flag:
- * rostopic pub /talk_flag audio_msgs/TalkFlag "active: true
+ * rostopic pub /robot_should_listen audio_msgs/TalkFlag "active: true
  * start_stamp:
  *   secs: 0
  *   nsecs: 0"
  *
- * rostopic pub /talk_flag audio_msgs/TalkFlag "active: false
+ * rostopic pub /robot_should_listen audio_msgs/TalkFlag "active: false
  * start_stamp:
  *   secs: 0
  *   nsecs: 0"
@@ -87,7 +87,7 @@ namespace aff
 
 RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* scene_) :
   ComponentBase(parent), scene(scene_), respeakerBdyName("respeaker"), isASREnabled(false),
-  isSoundDirectionEstimationEnabled(true), isSomebodySpeaking(false), isAnyHandRaised(false),
+  isSoundDirectionEstimationEnabled(true), isSomebodySpeaking(false), isAnyHandRaised(false), isAnyHandRaisedOverride(false),
   publishDialogueWithRaisedHandOnly(true), gazeAtSpeaker(true), speakOutSpeakerListenerText(false)
 {
   soundDirection.resize(3);
@@ -96,11 +96,14 @@ RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* sc
   soundDirection[2] = 0.0;
   soundDirectionFilt = soundDirection;
   RCHECK(scene);
+  subscribe("ResetLLM", &RespeakerComponent::onResetLLM);
+  subscribe("ReplayLog", &RespeakerComponent::onReplayLog);
   subscribe("Start", &RespeakerComponent::onStart);
   subscribe("Stop", &RespeakerComponent::onStop);
   subscribe("PostUpdateGraph", &RespeakerComponent::onPostUpdateGraph);
   subscribe("EnableASR", &RespeakerComponent::enableASR);
   subscribe("ToggleASR", &RespeakerComponent::toggleASR);
+  subscribe("ToggleHandRaised", &RespeakerComponent::toggleHandRaised);
   subscribe("EnableSoundDirection", &RespeakerComponent::enableSoundDirectionEstimation);
   onStart();
 }
@@ -109,6 +112,29 @@ RespeakerComponent::~RespeakerComponent()
 {
   enableASR(false);
   enableSoundDirectionEstimation(true);
+}
+
+bool RespeakerComponent::setParameter(const std::string& parameterName, bool flag)
+{
+  if (parameterName=="PublishDialogueWithRaisedHandOnly")
+  {
+    setPublishDialogueWithRaisedHandOnly(flag);
+    return true;
+  }
+  else if (parameterName=="GazeAtSpeaker")
+  {
+    setGazeAtSpeaker(flag);
+    return true;
+  }
+  else if (parameterName=="SpeakOutSpeakerListenerText")
+  {
+    setSpeakOutSpeakerListenerText(flag);
+    return true;
+  }
+
+  RLOG_CPP(1, "Parameter " << parameterName << " not supported - can't set to " << flag);
+
+  return false;
 }
 
 void RespeakerComponent::setPublishDialogueWithRaisedHandOnly(bool enable)
@@ -151,11 +177,11 @@ void RespeakerComponent::enableASR(bool enable)
 {
   if (enable==isASREnabled)
   {
-    RLOG(0, "Talk flag is already %s", enable ? "enabled" : "disabled");
+    RLOG(0, "/robot_should_listen is already %s", enable ? "enabled" : "disabled");
     return;
   }
 
-  RLOG(0, "Setting talk flag to %s", enable ? "TRUE" : "FALSE");
+  RLOG(0, "Setting /robot_should_listen flag to %s", enable ? "TRUE" : "FALSE");
   isASREnabled = enable;
 
 #if defined (USE_ROS)
@@ -163,16 +189,21 @@ void RespeakerComponent::enableASR(bool enable)
   talkFlagMsg.active = isASREnabled;
   talkFlagMsg.start_stamp.sec = 0;
   talkFlagMsg.start_stamp.nsec = 0;
-  //talk_flag_pub.publish(talkFlagMsg);
+  robot_should_listen_pub.publish(talkFlagMsg);
 #endif
 
-  std::string bgColor = enable ? std::string() : std::string("OBSIDIAN");
+  std::string bgColor = enable ? std::string("OBSIDIAN") : std::string();
   getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", bgColor);
 }
 
 void RespeakerComponent::toggleASR()
 {
   enableASR(!isASREnabled);
+}
+
+void RespeakerComponent::toggleHandRaised()
+{
+  isAnyHandRaisedOverride = !isAnyHandRaisedOverride;
 }
 
 void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string& spoken,
@@ -185,12 +216,12 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
   RCHECK_MSG(respeakerBdy, "Not found in graph: %s", respeakerBdyName.c_str());
 
   // Use raised hand as sound direction (if any)
-  isAnyHandRaised = false;
+  bool handRaised = false;
 
   for (const auto& agent : scene->agents)
   {
     HumanAgent* human = dynamic_cast<HumanAgent*>(agent);
-    if (human && human->isVisible)
+    if (human && human->isVisible())
     {
       // HANDTIP_RIGHT = 16, HANDTIP_LEFT = 9, HEAD = 26
       const double* headPos = human->markers[26].org;
@@ -204,37 +235,34 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
       {
         // Transform into respeaker frame
         Vec3d_invTransform(soundDirection.data(), &respeakerBdy->A_BI, headPos);
-        isAnyHandRaised = true;
+        handRaised = true;
         break;
       }
     }
   }
 
+  handRaised |= isAnyHandRaisedOverride;
 
-  // Parse json into text and sound direction
-  if (!spoken.empty())
+  // In the mode when publishing with a raised hand, we enable the ASR when the
+  // hand is raised, and disable it when no hand is raised.
+  if (publishDialogueWithRaisedHandOnly && (handRaised!=isAnyHandRaised))
   {
-    nlohmann::json micJson = nlohmann::json::parse(spoken);
-    //std::string text = micJson["text"];
-    //double soundDir[3];   // Vector from mic to sound source
-    //soundDir[0] = micJson["position"]["x"];
-    //soundDir[1] = micJson["position"]["y"];
-    //soundDir[2] = 0.0;
+    enableASR(handRaised);
   }
+
+  isAnyHandRaised = handRaised;
 
   for (int i=0; i<3; ++i)
   {
     soundDirectionFilt[i] = 0.05*soundDirection[i] + 0.95*soundDirectionFilt[i];
     soundDir[i] = soundDirectionFilt[i];
   }
-  //  RLOG(0, "Sound direction in local coordinates: %.3f %.3f %.3f", soundDir[0], soundDir[1], soundDir[2]);
 
   const double* soundDirLocal = soundDirectionFilt.data();
 
   // Transform direction vector into world coordinates
   Vec3d_copy(micPos, respeakerBdy->A_BI.org);
   Vec3d_transRotateSelf(soundDir, (double(*)[3])respeakerBdy->A_BI.rot);
-  //  RLOG(0, "Sound direction in global coordinates: %.3f %.3f %.3f", soundDir[0], soundDir[1], soundDir[2]);
 
   // We show a cylinder pointing into the sound direction
   RcsBody* soundBeam = RcsGraph_getBodyByName(graph, "sound_beam");
@@ -244,39 +272,12 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
   HTr tmp;
   HTr_setIdentity(&tmp);
   Vec3d_copy(tmp.rot[0], soundDirLocal);   // x-axis is in horizontal plane
-  Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
+  Vec3d_copy(tmp.rot[2], Vec3d_ez());      // z-axis points up
   Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
   HTr_to6DVector(&graph->q->ele[jidx], &tmp);
-  //VecNd_printComment("Sound beam", &graph->q->ele[jidx], 6);
 }
 
 void RespeakerComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
-{
-  onPostUpdateGraphSpeech(desired, current);
-}
-
-void RespeakerComponent::onPostUpdateGraphGaze(RcsGraph* desired, RcsGraph* current)
-{
-  RcsGraph* graph = desired;
-
-  double micPos[3], soundDir[3];
-  updateSoundDirection(graph, std::string(), micPos, soundDir);
-
-  for (const auto& speaker_ : scene->agents)
-  {
-    HumanAgent* speaker = dynamic_cast<HumanAgent*>(speaker_);
-    if (!speaker)
-    {
-      continue;
-    }
-
-    std::string listenerName = getListenerName(micPos, speaker);
-    RLOG_CPP(0, "Speaker " << speaker->name << ": " << listenerName << " listens");
-  }
-
-}
-
-void RespeakerComponent::onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* current)
 {
   // A very short mutex section to not block anything
   textLock.lock();
@@ -298,8 +299,7 @@ void RespeakerComponent::onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* cu
 
   // Check which agent is speaking
   const HumanAgent* speaker = getSpeaker(micPos, soundDir);
-  std::string speakerName = speaker ? speaker->name : "Nobody";
-  std::string listenerName = getListenerName(micPos, speaker);
+  const Agent* listener = getListener(micPos, speaker);
 
   /* Create output json in this format:
   (
@@ -318,16 +318,34 @@ void RespeakerComponent::onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* cu
 #if defined (USE_ROS)
     nlohmann::json outJson = {};
     outJson["text"] = text;
-    outJson["sender"] = speakerName;
-    outJson["receiver"] = listenerName;
+
+    if (speaker)
+    {
+      nlohmann::json speakerJson;
+      speakerJson["name"] = speaker->name;
+      speakerJson["instance_id"] = speaker->instanceId;
+      outJson["sender"] = speakerJson;
+    }
+
+    if (listener)
+    {
+      nlohmann::json listenerJson;
+      listenerJson["name"] = listener->name;
+      listenerJson["instance_id"] = listener->instanceId;
+      outJson["receiver"] = listenerJson;
+    }
 
     std_msgs::String dialogueResult;
     dialogueResult.data = outJson.dump();
     dialogue_pub.publish(dialogueResult);
 #endif
 
+    std::string speakerName = speaker ? speaker->name : "Nobody";
+    std::string listenerName = listener ? listener->name : "Nobody";
+
     char xplain[512];
-    snprintf(xplain, 512, "%s says to %s: %s ", speakerName.c_str(), listenerName.c_str(), text.c_str());
+    snprintf(xplain, 512, "%s says to %s: '%s'",
+             speakerName.c_str(), listenerName.c_str(), text.c_str());
     RLOG(0, "%s", xplain);
 
     if (speakOutSpeakerListenerText)
@@ -335,7 +353,7 @@ void RespeakerComponent::onPostUpdateGraphSpeech(RcsGraph* desired, RcsGraph* cu
       getEntity()->publish("Speak", std::string(xplain));
     }
 
-    if (gazeAtSpeaker)
+    if (speaker && gazeAtSpeaker)
     {
       std::string actionCommand = "gaze " + speakerName;
       getEntity()->publish("ActionSequence", actionCommand);
@@ -357,13 +375,96 @@ void RespeakerComponent::onStart()
     this->soundLocalizationSubscriber = nh->subscribe("/sound_localization", 10, &RespeakerComponent::soundLocalizationRosCallback, this);
     this->asrSubscriber = nh->subscribe("/word", 10, &RespeakerComponent::asrRosCallback, this);
     this->isSpeakingSubscriber = nh->subscribe("/is_speaking", 10, &RespeakerComponent::isSpeakingRosCallback, this);
-    this->talkFlagSubscriber = nh->subscribe("/talk_flag", 10, &RespeakerComponent::talkFlagRosCallback, this);
     RLOG(1, "Done subscribing");
 
-    RLOG_CPP(1, "Advertising topic /talk_flag");
-    this->talk_flag_pub = nh->advertise<audio_msgs::TalkFlag>("/talk_flag", 1);
+    RLOG_CPP(1, "Advertising topic /robot_should_listen");
+    this->robot_should_listen_pub = nh->advertise<audio_msgs::TalkFlag>("/robot_should_listen", 1);
     this->dialogue_pub = nh->advertise<std_msgs::String>("/event_speech", 10);
+    this->reset_llm_pub = nh->advertise<std_msgs::String>("/scene/events", 0);
     RLOG_CPP(1, "Done RespeakerComponent::onStart()");
+  }
+
+#endif
+}
+
+void RespeakerComponent::onReplayLog()
+{
+#if defined (USE_ROS)
+
+  RLOG(0, "RespeakerComponent::onReplayLog()");
+  if (nh)
+  {
+    std_msgs::String resetLLMString;
+
+
+    nlohmann::json outerJson;
+
+    nlohmann::json json;
+    json["id"] = "speaking";
+
+    nlohmann::json assignment;
+    assignment["text"] = "replay_log";
+    assignment["sender"] = nullptr;
+    assignment["receiver"] = nullptr;
+
+    json["assignment"] = assignment;
+    json["present"] = true;
+    json["publish"] = true;
+    json["speech_template"] = "{sender} said to {receiver}: {text}";
+    json["speech"] = "None said to None: clear_history";
+    json["speech_template_past"] = "{sender} said to {receiver}: {text}";
+
+    nlohmann::json dataJson;
+    dataJson["data"] = json;
+
+    outerJson.push_back(dataJson);
+
+    resetLLMString.data = outerJson.dump();
+
+    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
+    reset_llm_pub.publish(resetLLMString);
+  }
+
+#endif
+}
+
+void RespeakerComponent::onResetLLM()
+{
+#if defined (USE_ROS)
+
+  RLOG(0, "RespeakerComponent::onResetLLM()");
+  if (nh)
+  {
+    // {'id': 'speaking', 'assignment': {'text': 'clear_history', 'sender': None, 'receiver': None}, 'present': True, 'publish': True, 'speech_template': '{sender} said to {receiver}: {text}', 'speech': 'None said to None: clear_history', 'speech_template_past': '{sender} said to {receiver}: {text}'}
+    std_msgs::String resetLLMString;
+
+
+    nlohmann::json outerJson;
+
+    nlohmann::json json;
+    json["id"] = "speaking";
+
+    nlohmann::json assignment;
+    assignment["text"] = "clear_history";
+    assignment["sender"] = nullptr;
+    assignment["receiver"] = nullptr;
+
+    json["assignment"] = assignment;
+    json["present"] = true;
+    json["publish"] = true;
+    json["speech_template"] = "{sender} said to {receiver}: {text}";
+    json["speech"] = "None said to None: clear_history";
+    json["speech_template_past"] = "{sender} said to {receiver}: {text}";
+
+    nlohmann::json dataJson;
+    dataJson["data"] = json;
+
+    outerJson.push_back(dataJson);
+
+    resetLLMString.data = outerJson.dump();
+
+    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
+    reset_llm_pub.publish(resetLLMString);
   }
 
 #endif
@@ -397,10 +498,10 @@ const HumanAgent* RespeakerComponent::getSpeaker(const double micPosition[3],
     RLOG(1, "Checking speaker %s is %s (%s, %s)",
          agent->name.c_str(),
          human ? " human" : " not human",
-         (human && human->isVisible) ? "visible" : "not visible",
+         (human && human->isVisible()) ? "visible" : "not visible",
          (human && !human->markers.empty()) ? "markers" : "no markers");
 
-    if (human && human->isVisible && human->hasHead())
+    if (human && human->isVisible() && human->hasHead())
     {
       double headPosition[3];
       bool hasHead = human->getHeadPosition(headPosition);
@@ -421,20 +522,22 @@ const HumanAgent* RespeakerComponent::getSpeaker(const double micPosition[3],
   return speaker;
 }
 
-std::string RespeakerComponent::getListenerName(const double micPosition[3],
-                                                const HumanAgent* speaker_)
+const Agent* RespeakerComponent::getListener(const double micPosition[3],
+                                             const HumanAgent* speaker_)
 {
   HumanAgent* speaker = (HumanAgent*) speaker_;   // \todo(MG): Move to somewhere where ActionScene is not const
 
-  if (!speaker || !speaker->isVisible || !speaker->hasHead())
+  const Agent* lookedAt = nullptr;
+
+  if (!speaker || !speaker->isVisible() || !speaker->hasHead())
   {
-    RLOG(1, "No speaker: all are listeners");
-    return "All";
+    RLOG(1, "No speaker: Can't determine listener");
+    return lookedAt;
   }
 
   // Determine the closest listener of all agents
   double ang = 2.0*M_PI;
-  const Agent* lookedAt = NULL;
+
 
   for (auto& other : scene->agents)
   {
@@ -474,8 +577,8 @@ std::string RespeakerComponent::getListenerName(const double micPosition[3],
 
   if ((!lookedAt) || (ang>AGENT_DETECTION_CONE_ANGLE))
   {
-    RLOG(1, "No listener found: assuming it is talking to all");
-    return "All";
+    RLOG(1, "No listener found");
+    return lookedAt;
   }
 
   speaker->gazeTargetPrev = speaker->gazeTarget;
@@ -487,11 +590,8 @@ std::string RespeakerComponent::getListenerName(const double micPosition[3],
   //   getEntity()->publish("Speak", msg);
   // }
 
-  return lookedAt->name;
+  return lookedAt;
 }
-
-
-
 
 
 #if defined (USE_ROS)
@@ -502,34 +602,13 @@ void RespeakerComponent::isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& m
   RLOG(1, "isSpeakingRosCallback: %s", isSomebodySpeaking ? "SPEAKING" : "NOT SPEAKING");
 }
 
-void RespeakerComponent::talkFlagRosCallback(const audio_msgs::TalkFlag::ConstPtr& msg)
-{
-  enableASR(msg->active);
-  RLOG(0, "talk_flag subscriber: %s", isASREnabled ? "ENABLED" : "DISABLED");
-}
-
 /*
 {"confidence": 0.857319176197052, "text": "hello I Michael", "end_time": 1698945193.0811708, "frame_id": "respeaker_base", "position": {"x": -0.2756373558169989, "y": -0.961261695938319}}
  */
 void RespeakerComponent::asrRosCallback(const std_msgs::String::ConstPtr& msg)
 {
-
-  // We reject any ASR result if no hand is lifted. This means that the
-  // complete speech acquisition must be performed with a raised hand.
-  if ((!isAnyHandRaised) && publishDialogueWithRaisedHandOnly)
-  {
-    return;
-  }
-
-  //if (isASREnabled)
-  {
-    std::lock_guard<std::mutex> lock(textLock);
-    receivedTextJson = msg->data;
-  }
-  // else
-  // {
-  //   RLOG_CPP(0, "Ignoring asr data: " << msg->data);
-  // }
+  std::lock_guard<std::mutex> lock(textLock);
+  receivedTextJson = msg->data;
 }
 
 void RespeakerComponent::soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -545,7 +624,7 @@ void RespeakerComponent::soundLocalizationRosCallback(const geometry_msgs::PoseS
   soundDir[2] = 0.0 * msg->pose.position.z;
   Vec3d_normalizeSelf(soundDir);
 
-  //Ignore sounds from behind
+  // Ignore sounds from behind \todo(MG): Improve hardcoded behavior
   if (soundDir[1] < -0.1)
   {
     return;

@@ -61,22 +61,16 @@ public:
   virtual ~ExampleLLMSim();
   virtual void onStartWebSocket();
   virtual void onStopWebSocket();
-  virtual std::string collectFeedback() const;
   virtual std::string getSceneEntities() const;
   virtual std::string help();
-  virtual bool initParameters();
   virtual bool initAlgo();
   virtual bool initGraphics();
   size_t getNumFailedActions() const;
   void setUseWebsocket(bool enable);
   bool getUseWebsocket() const;
 
-private:
-public:
-
   virtual bool parseArgs(Rcs::CmdLineParser* parser);
   virtual void onActionResult(bool success, double quality, std::string resMsg);
-  virtual void onActionResultUnittest(bool success, double quality, std::string resMsg);
   virtual void onTextCommand(std::string text);
   virtual void process();
 

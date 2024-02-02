@@ -42,6 +42,7 @@
 #include <Rcs_quaternion.h>
 #include <Rcs_body.h>
 
+#include <Rcs_graphicsUtils.h>
 #include <SphereNode.h>
 #include <VertexArrayNode.h>
 #include <COSNode.h>
@@ -51,7 +52,7 @@
 
 
 #define NUM_FRAMES      (32)
-#define DEFAULT_MAX_AGE (1.0)
+#define DEFAULT_MAX_AGE (2.0)
 
 namespace aff
 {
@@ -61,23 +62,8 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
   HTr_from6DVector(&filt, filtVec);
   HTr_firstOrderLPF(&filt, raw, tmc);
   HTr_to6DVector(filtVec, &filt);
-
   // HTr_to6DVector(filtVec, raw);   // Uncomment this for no filtering
 }
-
-// static double getWallclockTime()
-// {
-//   // Get the current time point
-//   auto currentTime = std::chrono::system_clock::now();
-
-//   // Convert the time point to a duration since the epoch
-//   std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
-
-//   // Convert the duration to seconds as a floating-point number
-//   double seconds = durationSinceEpoch.count();
-
-//   return seconds;
-// }
 
 /*
 {"confidence":1,"orientation":{"w":0.7256067991256714,"x":-0.10894668847322464,"y":0.4945780634880066,"z":-0.46585193276405334},"position":{"x":0.03961627197265625,"y":0.20496153259277344,"z":1.744385986328125}}
@@ -232,36 +218,39 @@ struct Skeleton
 {
   Skeleton();
   ~Skeleton();
-  void initGraphics(Rcs::Viewer* viewer, const std::string& color);
+  void initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer, const std::string& color);
   void updateGraphics();
   void setExpectedInitialPose(const HTr* pose);
-  void setAgent(Agent* a);
+  void setAgent(const HumanAgent* agent);
+  void setAlphaRecursive(osg::Node* node, double alpha);
+
   int trackerId;
   double lastUpdate;
+  double age;
   double maxAge;
   bool wasVisible;
   bool isVisible;
-  bool becameVisible;
-  bool becameInvisible;
-  bool hasAgent;
+  double alphaPrev;
+  double alpha;
   std::vector<HTr> markers;
   HTr expectedInitialPose;
-  Agent* agent;
-  std::string name;
+  std::string agentName;
+  std::vector<std::string> agentTypes;
 
   // Only graphics from here
+  Rcs::Viewer* viewer;
   osg::ref_ptr<osg::Switch> sw;
   osg::ref_ptr<Rcs::VertexArrayNode> lmConnectionsNode;
   std::vector<std::pair<int, int>> connection_idx;
   MatNd* lmConnections;
+  std::vector<std::string> visualBodies;
+  std::vector<osg::Node*> visualNodes;
 };
 
 
 
-Skeleton::Skeleton() : trackerId(-1), lastUpdate(0.0), maxAge(DEFAULT_MAX_AGE),
-  wasVisible(false), isVisible(false),
-  becameVisible(false), becameInvisible(false),
-  hasAgent(false)
+Skeleton::Skeleton() : trackerId(-1), lastUpdate(0.0), age(DBL_MAX), maxAge(DEFAULT_MAX_AGE),
+  wasVisible(false), isVisible(false), alphaPrev(1.0), alpha(1.0), viewer(NULL)
 {
   markers.resize(NUM_FRAMES);
   for (auto& m : markers)
@@ -283,14 +272,15 @@ void Skeleton::setExpectedInitialPose(const HTr* pose)
   HTr_copy(&expectedInitialPose, pose);
 }
 
-void Skeleton::setAgent(Agent* a)
+void Skeleton::setAgent(const HumanAgent* human)
 {
-  agent = a;
-  name = a->name;
-  hasAgent = true;
+  agentName = human->name;
+  agentTypes = human->types;
+  visualBodies = human->manipulators;
+  visualBodies.push_back(agentName);
 }
 
-void Skeleton::initGraphics(Rcs::Viewer* viewer, const std::string& color)
+void Skeleton::initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer_, const std::string& color)
 {
   if (sw.valid())
   {
@@ -298,7 +288,9 @@ void Skeleton::initGraphics(Rcs::Viewer* viewer, const std::string& color)
     return;
   }
 
-  RLOG(0, "Initializing skeleton with color %s", color.c_str());
+  this->viewer = viewer_;
+
+  RLOG(5, "Initializing skeleton with color %s", color.c_str());
 
   this->sw = new osg::Switch();
   sw->setAllChildrenOff();
@@ -308,7 +300,9 @@ void Skeleton::initGraphics(Rcs::Viewer* viewer, const std::string& color)
 
   for (size_t i=0; i<NUM_FRAMES; ++i)
   {
-
+    // This makes the spheres point to the marker transforms. It is not
+    // thread-safe so that we might in rare situations see jumping
+    // sphere points.
     osg::ref_ptr<Rcs::SphereNode> sphNd = new Rcs::SphereNode(Vec3d_zeroVec(), 0.025);
     sphNd->makeDynamic(markers[i].org, markers[i].rot);
     sphereNodes.push_back(sphNd);
@@ -333,10 +327,14 @@ void Skeleton::initGraphics(Rcs::Viewer* viewer, const std::string& color)
 
   std::vector<double> linkConnections(2*connection_idx.size());
 
+  // Same as above here: The updating of the lmConnections array is not thread-
+  // safe and we might see spurious rendering issues. We accept this in
+  // favour of saving a more time-consuming communication with the viewer.
   lmConnectionsNode = new Rcs::VertexArrayNode(lmConnections);
   lmConnectionsNode->setPointSize(5);
   lmConnectionsNode->setColor("GRAY");
   sw->addChild(lmConnectionsNode.get());
+  Rcs::setNodeMaterial("GRAY", lmConnectionsNode);
 
   viewer->add(sw.get());
 }
@@ -366,15 +364,60 @@ void Skeleton::updateGraphics()
     sw->setAllChildrenOff();
   }
 
+
+  if (visualNodes.size() < visualBodies.size())
+  {
+    visualNodes.clear();
+    // Get all graph nodes for transparency
+    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualBodies.size() << " bodies");
+    for (const auto& manipulator : visualBodies)
+    {
+      viewer->lock();
+      std::vector<osg::Node*> nodes = viewer->getNodes(manipulator);
+      viewer->unlock();
+      visualNodes.insert(visualNodes.end(), nodes.begin(), nodes.end());
+    }
+    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualNodes.size() << " nodes");
+  }
+  else
+  {
+    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualNodes.size() << " osg nodes and alpha " << alpha);
+    for (auto& nd : visualNodes)
+    {
+      //setAlphaRecursive(nd, alpha);
+      viewer->updateNodeAlphaRecursive(nd, alpha);
+    }
+    viewer->updateNodeAlphaRecursive(sw, alpha);
+    //setAlphaRecursive(sw, alpha);
+  }
+
 }
 
+void Skeleton::setAlphaRecursive(osg::Node* node, double newAlpha)
+{
+  // first check if we should set the transparency of the current node
+  osg::StateSet* stateset = node->getStateSet();
+  if (stateset)
+  {
+    osg::Material* material = dynamic_cast<osg::Material*>(stateset->getAttribute(osg::StateAttribute::MATERIAL));
+    if (material)
+    {
+      // Add transparency
+      material->setAlpha(osg::Material::FRONT_AND_BACK, alpha);
+    }
+  }
 
+  // then traverse the group and call setAlpha on all children
+  osg::Group* group = node->asGroup();
+  if (group)
+  {
+    for (size_t i = 0; i < group->getNumChildren(); i++)
+    {
+      setAlphaRecursive(group->getChild(i), alpha);
+    }
+  }
 
-
-
-
-
-
+}
 
 
 
@@ -415,6 +458,7 @@ void AzureSkeletonTracker::updateGraph(RcsGraph* graph)
 {
   updateSkeletons(graph);
   updateAgents(graph);
+  newAzureUpdate = false;
 }
 
 void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
@@ -435,14 +479,15 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
 
     for (size_t i=0; i< skeletons.size(); ++i)
     {
-      if (skeletons[i]->name==human->name)
+      if (skeletons[i]->agentName==human->name)
       {
         if (skeletons[i]->isVisible)
         {
           human->markers = skeletons[i]->markers;
         }
 
-        human->isVisible = skeletons[i]->isVisible;
+        human->setVisibility(skeletons[i]->isVisible);
+        human->lastTimeSeen = skeletons[i]->age;
       }
 
     }
@@ -464,9 +509,9 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
         const aff::Manipulator* m = scene->getManipulator(mName);
         RCHECK(m);
 
-        if (m->type == "head")
+        if (std::find(m->types.begin(), m->types.end(), "head") != m->types.end())
         {
-          bdy = RcsGraph_getBodyByName(graph, m->name.c_str());
+          bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
@@ -481,18 +526,18 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
           }
 
         }
-        else if (m->type == "left_hand")
+        else if (std::find(m->types.begin(), m->types.end(), "hand_left") != m->types.end())
         {
-          bdy = RcsGraph_getBodyByName(graph, m->name.c_str());
+          bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
             lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_LEFT], tmc);
           }
         }
-        else if (m->type == "right_hand")
+        else if (std::find(m->types.begin(), m->types.end(), "hand_right") != m->types.end())
         {
-          bdy = RcsGraph_getBodyByName(graph, m->name.c_str());
+          bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
@@ -519,20 +564,41 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
     NLOG_CPP(5, "Skeleton[" << i << "]: lastupdate: " << skeletons[i]->lastUpdate
              << " current time: " << currTime << " age: " << age);
 
+    bool updateSkeletonGraphics = newAzureUpdate;
+
     skeletons[i]->wasVisible = skeletons[i]->isVisible;
     skeletons[i]->isVisible = (age<=skeletons[i]->maxAge) ? true : false;
+    skeletons[i]->age = age;
+
+    // age = 0: alpha=1   age=maxAge: alpha=0
+    skeletons[i]->alphaPrev = skeletons[i]->alpha;
+    skeletons[i]->alpha = Math_clip((skeletons[i]->maxAge - skeletons[i]->age)/skeletons[i]->maxAge, 0.0, 1.0);
+    skeletons[i]->alpha = lround(skeletons[i]->alpha*100.0)/100.0;
+    if (skeletons[i]->alpha>0.8)
+    {
+      skeletons[i]->alpha = 1.0;
+    }
+
 
     if ((!skeletons[i]->wasVisible) && skeletons[i]->isVisible)
     {
-      RLOG_CPP(0, "Skeleton " << i << " appeared");
-      skeletons[i]->becameVisible = true;
-      skeletons[i]->becameInvisible = false;
+      RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " appeared");
+      updateSkeletonGraphics = true;
     }
     else if (skeletons[i]->wasVisible && (!skeletons[i]->isVisible))
     {
-      RLOG_CPP(0, "Skeleton " << i << " disappeared");
-      skeletons[i]->becameVisible = false;
-      skeletons[i]->becameInvisible = true;
+      RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " disappeared");
+      updateSkeletonGraphics = true;
+    }
+
+    if (skeletons[i]->alphaPrev != skeletons[i]->alpha)
+    {
+      updateSkeletonGraphics = true;
+    }
+
+    if (updateSkeletonGraphics)
+    {
+      skeletons[i]->updateGraphics();
     }
 
   }
@@ -629,23 +695,6 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     NLOG(0, "corrMap[%zu] = %d", i, corrMap[i]);
   }
 
-
-
-  // The becameVisible and becameInvisible flags are set in the control thread. In order to
-  // not miss them in the socket thread, we reset them at the end of the parse function.
-  for (size_t i=0; i< skeletons.size(); ++i)
-  {
-    if (skeletons[i]->becameVisible)
-    {
-      const double* pelv = skeletons[i]->markers[PELVIS].org;
-      RLOG(0, "Skeleton[%zu] became visible at: %.3f %.3f %.3f",i,pelv[0], pelv[1], pelv[2]);
-    }
-
-    skeletons[i]->updateGraphics();
-    skeletons[i]->becameVisible = false;
-    skeletons[i]->becameInvisible = false;
-  }
-
 }
 
 /*
@@ -732,19 +781,20 @@ bool AzureSkeletonTracker::isSkeletonVisible(size_t idx) const
   return false;
 }
 
-void AzureSkeletonTracker::initGraphics(Rcs::Viewer* viewer)
+void AzureSkeletonTracker::initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer)
 {
   if (!viewer)
   {
     return;
   }
 
-  static std::vector<std::string> gCol{ "RED", "GREEN", "BLUE", "TURQUOISE", "PEWTER", "BRONZE",
-                                        "BRASS", "EMERALD", "JADE", "RUBY" };
+  static std::vector<std::string> gCol{ "RED", "ORANGE", "YELLOW", "BLUE", "GREEN",
+                                        "TURQUOISE", "PEWTER", "BRONZE", "BRASS",
+                                        "EMERALD", "JADE", "RUBY" };
 
   for (size_t i=0; i< skeletons.size(); ++i)
   {
-    skeletons[i]->initGraphics(viewer, gCol[i%gCol.size()]);
+    skeletons[i]->initGraphics(graph, viewer, gCol[i%gCol.size()]);
   }
 
 }
@@ -763,7 +813,7 @@ void AzureSkeletonTracker::setSkeletonDefaultPosition(size_t skeletonIdx, double
 void AzureSkeletonTracker::setSkeletonName(size_t skeletonIdx, const std::string& name)
 {
   RCHECK(skeletonIdx<skeletons.size());
-  skeletons[skeletonIdx]->name = name;
+  skeletons[skeletonIdx]->agentName = name;
 }
 
 void AzureSkeletonTracker::setSkeletonDefaultPositionRadius(double r)
@@ -822,6 +872,7 @@ void AzureSkeletonTracker::addAgent(const std::string& agentName)
 // Map ALL agents (defined in the config) to available skeletons
 void AzureSkeletonTracker::addAgents()
 {
+  RCHECK(scene);
   for (size_t i = 0; i < scene->agents.size(); i++)
   {
     addAgent(scene->agents[i]->name);
@@ -863,8 +914,8 @@ void AzureSkeletonTracker::jsonFromSkeletons(nlohmann::json& json) const
   {
     nlohmann::json skeletonJson;
     skeletonJson["skeleton_id"] = skeletonId;
-    skeletonJson["type"] = "human";
-    skeletonJson["name"] = skeleton->agent->name;
+    skeletonJson["types"] = skeleton->agentTypes;
+    skeletonJson["name"] = skeleton->agentName;
     skeletonJson["visible"] = skeleton->isVisible ? true : false;
 
     size_t linkId = 0;
@@ -890,5 +941,17 @@ void AzureSkeletonTracker::jsonFromSkeletons(nlohmann::json& json) const
   }   // for (const auto& skeleton : st->skeletons)
 
 }
+
+// bool AzureSkeletonTracker::setParameter(const std::string& parameterName, void* ptr)
+// {
+//   if (parameterName=="DebugViewer")
+//   {
+//     initGraphics(graph, (Rcs::Viewer*)ptr);
+//     return true;
+//   }
+
+//   return false;
+// }
+
 
 } // namespace aff

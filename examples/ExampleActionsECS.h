@@ -35,6 +35,7 @@
 #define AFF_EXAMPLEACTIONSECS_H
 
 #include "EntityBase.h"
+#include "ConcurrentSceneQuery.h"
 
 #include <GraphComponent.h>
 #include <GraphicsWindow.h>
@@ -78,21 +79,14 @@ public:
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda;
-  unsigned int speedUp, loopCount;
+  unsigned int speedUp, loopCount, lookaheadCount;
   bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
   bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded;
+  bool singleThreaded, verbose, processingAction, lookahead;
   double dtProcess, dtEvents;
   size_t failCount;
 
-  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
-  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeTrajectory;
-  ES::SubscriberCollectionDecay<const MatNd*, const MatNd*>* setTaskCommand;
-  ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand;
-  ES::SubscriberCollectionDecay<>* setRenderCommand;
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<TextEditComponent> textGui;
   std::unique_ptr<ActionComponent> actionC;
@@ -101,7 +95,9 @@ public:
   std::unique_ptr<IKComponent> ikc;
   std::unique_ptr<GraphicsWindow> viewer;
   std::unique_ptr<TaskGuiComponent> taskGui;
-  RcsGraph* graphToInitializeWith;
+  std::unique_ptr<ConcurrentSceneQuery> sceneQuery;
+  std::unique_ptr<ConcurrentSceneQuery> sceneQuery2;
+  std::unique_ptr<ConcurrentSceneQuery> panTiltQuery;
 
   ExampleActionsECS(int argc, char** argv);
   virtual ~ExampleActionsECS();
@@ -114,13 +110,6 @@ public:
   virtual void startThreaded();
   virtual void step();
   virtual std::string help();
-  void onQuit();
-  void onPrint();
-  void onActionSequence(std::string text);
-  void onTrajectoryMoving(bool isMoving);
-  void onTextCommand(std::string text);
-  void setEnableRobot(bool enable);
-  bool getRobotEnabled() const;
   ActionScene* getScene();
   const ActionScene* getScene() const;
   void addComponent(ComponentBase* component);
@@ -128,20 +117,38 @@ public:
 
   std::vector<std::pair<std::string,std::string>> getCompletedActionStack() const;
 
+  void clearCompletedActionStack();
+  mutable std::mutex stepMtx;
+
 protected:
 
-  void clearCompletedActionStack();
+  void setEnableRobot(bool enable);
+  bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
   void printCompletedActionStack() const;
   std::vector<std::pair<std::string,std::string>> completedActionStack;
   mutable std::mutex actionStackMtx;
-  mutable std::mutex stepMtx;
-
   std::vector<ComponentBase*> hwc;
   std::vector<ComponentBase*> components;
-};
 
-void replaceFirst(std::string& str, const std::string& from, const std::string& to);
+private:
+
+  void onQuit();
+  void onPrint();
+  void onActionSequence(std::string text);
+  void onTrajectoryMoving(bool isMoving);
+  void onTextCommand(std::string text);
+
+  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
+  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
+  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
+  ES::SubscriberCollectionDecay<RcsGraph*>* computeTrajectory;
+  ES::SubscriberCollectionDecay<const MatNd*, const MatNd*>* setTaskCommand;
+  ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand;
+  ES::SubscriberCollectionDecay<>* setRenderCommand;
+
+  RcsGraph* graphToInitializeWith;
+};
 
 }   // namespace aff
 

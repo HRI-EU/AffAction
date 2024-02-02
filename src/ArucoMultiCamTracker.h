@@ -47,6 +47,9 @@
 
 
 
+namespace aff
+{
+
 class ArucoMultiCamCalibrator;
 
 class ArucoMultiCamTracker : public TrackerBase
@@ -101,12 +104,28 @@ private:
   // the camera name.
   std::map<std::string, std::unique_ptr<ArucoMultiCamCalibrator>> calibrators;
 
-  // Key is camera name, values are the parsed aruco shape updates
+  // Key is camera name, values are the parsed aruco shape updates. This data
+  // structure is assembled in the parse() function that parses the incoming
+  // landmarks json from the camera modules. It runs concurrently with the
+  // event callbacks.
   std::map<std::string,std::vector<ArucoMarkerShapeData>> arucoShapes;
 
   // Key is RcsBody name, values are the transformed aruco shapes
   std::map<std::string,ArucoMarkerBodyData> arucoBodies;
 
+  /*! \brief Given a set of Aruco perceptions (arocoShapes) that have been
+   *         acquired through the camera with the name cameraBdy, this function
+   *         creates and returns a body data structure for the given body that
+   *         contains a vector of all the shapes associated with the body, as
+   *         well as a vector of transform estimates for the body given each
+   *         shape. Teh vector q_rbj is not computed in this function. The
+   *         lastUpdateTime is set to the most recent aruco percept.
+   *
+   * \param[in] graph       Graph everything is happening in
+   * \param[in] body        body for which the transforms are to be computed
+   * \param[in] cameraBdy   Name of camera in which arucoShapes are represented in
+   * \return    arucoShapes See data structure arucoBodies.
+   */
   static ArucoMarkerBodyData updateMarkerBodyTransform(const RcsGraph* graph,
                                                        const RcsBody* body,
                                                        const RcsBody* cameraBdy,
@@ -115,8 +134,10 @@ private:
   static void updateMarkerBodyTransforms(const RcsGraph* graph,
                                          const RcsBody* cameraBdy,
                                          const std::vector<ArucoMarkerShapeData>& arucoShapes,
-                                         std::map<std::string,ArucoMarkerBodyData>& arucoBodies);
-
+                                         std::map<std::string,ArucoMarkerBodyData>& arucoBodies,
+                                         double currTime, double maxAge);
 };
+
+}   // namespace
 
 #endif // ARUCOTRACKER_H

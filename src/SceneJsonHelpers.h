@@ -33,18 +33,31 @@
 #ifndef AFF_SCENEJSONHELPERS_H
 #define AFF_SCENEJSONHELPERS_H
 
+#include "ActionScene.h"
 #include "json.hpp"
 
-#include "ActionScene.h"
+
 
 namespace aff
 {
-
 
 void getSceneState(nlohmann::json& stateJson,
                    const ActionScene* scene,
                    const RcsGraph* graph);
 
+nlohmann::json getOccludedObjectsForAgent(const std::string& agentName,
+                                          const ActionScene* scene,
+                                          const RcsGraph* graph);
+
+nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
+                                          const std::string& objectName,
+                                          const ActionScene* scene,
+                                          const RcsGraph* graph);
+
+bool isAgentBusy(const std::string& agentName,
+                 const ActionScene* scene,
+                 const RcsGraph* graph,
+                 double distanceThreshold);
 
 
 }   // namespace aff

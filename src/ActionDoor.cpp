@@ -69,17 +69,19 @@ ActionDoor::ActionDoor(const ActionScene& domain,
 
   if (!objectToOpen)
   {
-    throw ActionException(errorMsg + "REASON: The " + objectToOpenName +
-                          " to open or close is unknown. SUGGESTION: Use an object name that is defined in the environment", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToOpenName +" to open or close is unknown.",
+                          "Use an object name that is defined in the environment");
   }
 
   auto hingeables = getAffordances<Hingeable>(objectToOpen);
 
   if (hingeables.empty())
   {
-    throw ActionException(errorMsg + "REASON: the " + objectToOpenName +
-                          " is not openable or closable. DEVELOPER: no Hingeable affordances found",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "the " + objectToOpenName + " is not openable or closable.",
+                          "",
+                          "No Hingeable affordances found");
   }
 
   objectToOpenName = objectToOpen->bdyName;
@@ -109,16 +111,16 @@ ActionDoor::ActionDoor(const ActionScene& domain,
     // If a manipulator has been passed but cannot be found, we consider this as an error.
     if (!hand)
     {
-      std::string reasonMsg = " REASON: Can't find a hand with the name " + manipulator;
-      std::string suggestionMsg = " SUGGESTION: Use a hand name that is defined in the environment";
-      throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+      std::string reasonMsg = "Can't find a hand with the name " + manipulator;
+      std::string suggestionMsg = "Use a hand name that is defined in the environment";
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
     }
 
     if (!hand->isEmpty(graph))
     {
-      throw ActionException(errorMsg + "REASON: The hand " + manipulator +
-                            " is already holding something. SUGGESTION: Free your hand before performing this command, or use another hand",
-                            ActionException::KinematicallyImpossible);
+      throw ActionException(ActionException::KinematicallyImpossible,
+                            "REASON: The hand " + manipulator + " is already holding something.",
+                            "Free your hand before performing this command, or use another hand");
     }
 
     freeManipulators.push_back(hand);
@@ -126,9 +128,9 @@ ActionDoor::ActionDoor(const ActionScene& domain,
 
   if (freeManipulators.empty())
   {
-    std::string reasonMsg = " REASON: All hands are already full";
-    std::string suggestionMsg = " SUGGESTION: Free one or all your hands before performing this command";
-    throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::KinematicallyImpossible);
+    std::string reasonMsg = "All hands are already full";
+    std::string suggestionMsg = "Free one or all your hands before performing this command";
+    throw ActionException(ActionException::KinematicallyImpossible, reasonMsg, suggestionMsg);
   }
 
   // From here on we have one or several manipulators that can be tentatively used
@@ -144,8 +146,8 @@ ActionDoor::ActionDoor(const ActionScene& domain,
   // How sad that we have to stop here.
   if (affordanceMap.empty())
   {
-    throw ActionException(errorMsg + "REASON: Don't have the capability to grasp the handle of the " + objectToOpenName,
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "Don't have the capability to grasp the handle of the " + objectToOpenName);
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -343,7 +345,8 @@ std::vector<double> ActionDoor::getInitOptimState(tropic::TrajectoryControllerBa
   return o;
 }
 
-std::unique_ptr<ActionBase> ActionDoor::clone() const {
+std::unique_ptr<ActionBase> ActionDoor::clone() const
+{
   return std::make_unique<ActionDoor>(*this);
 }
 

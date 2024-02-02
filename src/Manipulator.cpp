@@ -62,29 +62,12 @@ namespace aff
  *
  ******************************************************************************/
 
-Manipulator::Manipulator()
+Manipulator::Manipulator() : reach(0.0)
 {
 }
 
-Manipulator::Manipulator(const xmlNodePtr node)
+Manipulator::Manipulator(const xmlNodePtr node) : SceneEntity(node), reach(0.0)
 {
-  name = Rcs::getXMLNodePropertySTLString(node, "name");
-  id = Rcs::getXMLNodePropertySTLString(node, "id");
-  type = Rcs::getXMLNodePropertySTLString(node, "type");
-
-  if (name.empty()) 
-  {
-    RFATAL("Manipulator name not provided.");
-  }
-
-  if (type.empty())
-  {
-    RFATAL("Manipulator type not provided: `%s`", name.c_str());
-  } 
-
-  RLOG(5, "Adding Manipulator with name=%s id=%s type=%s",
-       name.c_str(), id.c_str(), type.c_str());
-
   xmlNodePtr child = node->children;
 
   while (child)
@@ -127,10 +110,10 @@ Manipulator::Manipulator(const xmlNodePtr node)
 
 }
 
-Manipulator::Manipulator(const Manipulator& other) :
-  name(other.name), id(other.id), type(other.type), fingerJoints(other.fingerJoints)
+Manipulator::Manipulator(const Manipulator& other) : SceneEntity(other),
+  baseJointName(other.baseJointName), fingerJoints(other.fingerJoints), reach(other.reach)
 {
-  RLOG(0, "Copying manipulator");
+  RLOG_CPP(1, "Copying manipulator " << name);
 
   for (size_t i=0; i<other.capabilities.size(); ++i)
   {
@@ -142,17 +125,15 @@ Manipulator::Manipulator(const Manipulator& other) :
 
 Manipulator& Manipulator::operator= (const Manipulator& copyFromMe)
 {
-  //RLOG(0, "**** Calling ASSIGNMENT of Manipulator");
   if (this == &copyFromMe)
   {
     return *this;
   }
 
-  name = copyFromMe.name;
-  id = copyFromMe.id;
-  agent = copyFromMe.agent;
-  type = copyFromMe.type;
+  SceneEntity::operator=(copyFromMe);
+  baseJointName = copyFromMe.baseJointName;
   fingerJoints = copyFromMe.fingerJoints;
+  reach = copyFromMe.reach;
 
   for (size_t i=0; i<capabilities.size(); ++i)
   {
@@ -178,8 +159,10 @@ Manipulator::~Manipulator()
 
 void Manipulator::print() const
 {
-  std::cout << "Manipulator " << name << " has " << capabilities.size()
-            << " capabilities:" << std::endl;
+  std::cout << "Manipulator '" << name << "' (body: '" << bdyName << "') has "
+            << capabilities.size() << " capabilities:" << std::endl;
+  std::cout << "Reach is " << reach << " m, base joint (shoulder) is '"
+            << baseJointName << "'" << std::endl;
   for (auto c : capabilities)
   {
     c->print();
@@ -190,10 +173,11 @@ void Manipulator::print() const
 bool Manipulator::check(const RcsGraph* graph) const
 {
   bool success = true;
-  const RcsBody* manipulatorBody = RcsGraph_getBodyByName(graph, name.c_str());
+
+  const RcsBody* manipulatorBody = RcsGraph_getBodyByName(graph, bdyName.c_str());
   if (!manipulatorBody)
   {
-    RLOG(1, "No graph body with name '%s' was found", name.c_str());
+    RLOG(1, "No graph body with name '%s' was found", bdyName.c_str());
     success = false;
   }
 
@@ -245,45 +229,32 @@ bool Manipulator::check(const RcsGraph* graph) const
 
 bool Manipulator::isEmpty(const RcsGraph* graph) const
 {
-  // mHand is guaranteed to be valid after checking the domain.
-  RcsBody* mHand = RcsGraph_getBodyByName(graph, name.c_str());
+  std::vector<std::string> capabilityFrames;
+  for (auto c : capabilities)
+  {
+    capabilityFrames.push_back(c->frame);
+  }
 
   // Traverse through all bodies that are children of the manipulator
-  // (including the manipulator itself).
-  RCSBODY_TRAVERSE_CHILD_BODIES(graph, mHand)
+  RCSBODY_TRAVERSE_CHILD_BODIES(graph, body(graph))
   {
-    // We ignore bodies that have only a frame shape, since these typically
-    // define capabilities and not objects to interact.
-    if ((BODY->nShapes==1) && (BODY->shapes[0].type==RCSSHAPE_REFFRAME))
+    // We ignore bodies that have no shape or only a frame shape, since
+    // these typically define capabilities and not objects to interact.
+    if (((BODY->nShapes==1) && (BODY->shapes[0].type==RCSSHAPE_REFFRAME)) ||
+        (BODY->nShapes==0))
     {
       continue;
     }
 
-    bool isOwnChild = false;
-
-    // Traversing all grasps of the manipulator. If the currently traversed
-    // body corresponds to one of the grasp frames, the manipulator is not
-    // considered as occupied.
-    for (auto c : capabilities)
+    // If a body in the hand's children is not a capability frame, it is something
+    // else that we consider to occupy the manipulator. We can then return early.
+    if (std::find(capabilityFrames.begin(), capabilityFrames.end(), BODY->name) == capabilityFrames.end())
     {
-      if (!dynamic_cast<GraspCapability*>(c))
-      {
-        continue;
-      }
-
-      if (STREQ(BODY->name, c->frame.c_str()))
-      {
-        isOwnChild = true;
-        break;
-      }
-    }
-
-    if (!isOwnChild)
-    {
-      //RLOG(0, "\"%s\" is held in hand", BODY->name);
+      NLOG(0, "Manipulator %s is occupied with body %s", name.c_str(), BODY->name);
       return false;
     }
-  }
+
+  }   // RCSBODY_TRAVERSE_CHILD_BODIES
 
   return true;
 }
@@ -429,7 +400,7 @@ std::vector<const AffordanceEntity*> Manipulator::getGraspedEntities(const Actio
 {
   std::vector<const AffordanceEntity*> foundOnes;
 
-  const RcsBody* hand = RcsGraph_getBodyByName(graph, name.c_str());
+  const RcsBody* hand = RcsGraph_getBodyByName(graph, bdyName.c_str());
   RCHECK(hand);   // Should never happen \todo(MG): Remove if tested
 
   for (const auto& childCandidate : scene.entities)
@@ -459,7 +430,7 @@ std::vector<std::string> Manipulator::getChildrenOfManipulator(const ActionScene
 {
   std::vector<std::string>  collectedChildren;
 
-  RcsBody* hand = RcsGraph_getBodyByName(graph, name.c_str());
+  RcsBody* hand = RcsGraph_getBodyByName(graph, bdyName.c_str());
   RCHECK(hand);
 
   RCSBODY_TRAVERSE_BODIES(graph, hand)
@@ -476,6 +447,84 @@ std::vector<std::string> Manipulator::getChildrenOfManipulator(const ActionScene
   }
 
   return collectedChildren;
+}
+
+void Manipulator::computeBaseJointName(const ActionScene* scene,
+                                       const RcsGraph* graph)
+{
+  auto graspCapabilities = getCapabilities<GraspCapability>(this);
+  if (graspCapabilities.empty())
+  {
+    return;
+  }
+
+  // Now we have a grasping hand
+  const RcsBody* ee = RcsGraph_getBodyByName(graph, bdyName.c_str());
+  RCHECK(ee);
+
+  // Find "driving" joint of the body
+  RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, ee);
+
+
+  this->reach = Vec3d_distance(ee->A_BI.org, jnt->A_JI.org);
+  for (const auto& capability : graspCapabilities)
+  {
+    ee = RcsGraph_getBodyByName(graph, capability->frame.c_str());
+    RCHECK(ee);
+    this->reach = std::max(this->reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
+    RLOG_CPP(0, "Reach by " << ee->name << " is " << reach);
+  }
+
+  // Traverse backwards from end effector and collect all unconstrained joints
+  std::vector<const RcsJoint*> jnts;
+  while (jnt)
+  {
+    if (!jnt->constrained)
+    {
+      jnts.push_back(jnt);
+    }
+    jnt = RCSJOINT_BY_ID(graph, jnt->prevId);
+  }
+
+  // Calculate reach as sum of segments
+  const RcsJoint* baseJnt = nullptr;
+  if (!jnts.empty())
+  {
+    baseJnt = jnts.back();
+    this->baseJointName = baseJnt->name;
+    for (size_t i = 1; i < jnts.size(); ++i)
+    {
+      this->reach += Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org);
+    }
+  }
+
+  // Here we have a reach for the end effector
+  RLOG(0, "[%s]: basejointname is %s, Reach is %f",
+       name.c_str(), baseJointName.c_str(), reach);
+}
+
+bool Manipulator::canReachTo(const ActionScene* scene,
+                             const RcsGraph* graph,
+                             const double position[3]) const
+{
+  // No grasp capabilities - no reaching
+  if (getCapabilities<GraspCapability>(this).empty())
+  {
+    return false;
+  }
+
+  bool reachable = false;
+
+  const RcsJoint* baseJnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
+  RCHECK_MSG(baseJnt, "Manipulator '%s' ('%s'): Base joint '%s' not found in graph",
+             name.c_str(), bdyName.c_str(), baseJointName.c_str());
+
+  if (Vec3d_distance(position, baseJnt->A_JI.org) < reach)
+  {
+    reachable = true;
+  }
+
+  return reachable;
 }
 
 } // namespace aff

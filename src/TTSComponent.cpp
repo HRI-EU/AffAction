@@ -31,38 +31,25 @@
 *******************************************************************************/
 
 #include "TTSComponent.h"
-#include "EntityBase.h"
 
 #include <Rcs_macros.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/types.h>
 
-#if !defined (_MSC_VER)
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#else
-#pragma comment(lib, "Ws2_32.lib")
-#include <WinSock2.h>
-#include "ttspeak.h"
+#if defined (_MSC_VER)
+#include <sapi.h>
 #endif
 
 
 namespace aff
 {
 
-TTSComponent::TTSComponent(EntityBase* parent, int port_) :
-  ComponentBase(parent),
-  port(port_), threadRunning(false)
+TTSComponent::TTSComponent(EntityBase* parent) :
+  ComponentBase(parent), threadRunning(false)
 {
-#if defined (_MSC_VER)
-  port = -1;
-#endif
   subscribe("Start", &TTSComponent::onStart);
   subscribe("Stop", &TTSComponent::onStop);
   subscribe<std::string>("Speak", &TTSComponent::onSpeak);
@@ -71,11 +58,6 @@ TTSComponent::TTSComponent(EntityBase* parent, int port_) :
 
 TTSComponent::~TTSComponent()
 {
-}
-
-void TTSComponent::setPort(int port_)
-{
-  this->port = port_;
 }
 
 void TTSComponent::onStart()
@@ -87,15 +69,7 @@ void TTSComponent::onStart()
   }
 
   this->threadRunning = true;
-
-  if (port==-1)
-  {
-    ttsThread = std::thread(&TTSComponent::localThread, this);
-  }
-  else
-  {
-    ttsThread = std::thread(&TTSComponent::listenerThread, this);
-  }
+  ttsThread = std::thread(&TTSComponent::localThread, this);
 }
 
 void TTSComponent::onStop()
@@ -125,65 +99,8 @@ void TTSComponent::onEmergencyStop()
   onSpeak("Oh no, emergency stop detected");
 }
 
-void TTSComponent::listenerThread()
-{
-#if defined (_MSC_VER)
-  SOCKET sockfd;
-#else
-  int sockfd;
-#endif
-
-  struct sockaddr_in serveraddr;
-
-  // Creating socket file descriptor
-  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-  {
-    perror("socket creation failed");
-    RFATAL("socket creation failed");
-  }
-
-
-  /* gethostbyname: get the server's DNS entry */
-  const char* hostname = "dexcoop-03";
-  struct hostent* server = gethostbyname(hostname);
-  if (server == NULL)
-  {
-    fprintf(stderr,"ERROR, no such host as %s\n", hostname);
-    RFATAL("gethostbyname failed");
-  }
-
-  memset(&serveraddr, 0, sizeof(serveraddr));
-  serveraddr.sin_family = AF_INET;
-  memcpy((char*)&serveraddr.sin_addr.s_addr, (char*)server->h_addr,
-         server->h_length);
-  //bcopy((char*)server->h_addr,
-  //  (char*)&serveraddr.sin_addr.s_addr, server->h_length);
-  serveraddr.sin_port = htons(port);
-
-
-  while (this->threadRunning)
-  {
-    mtx.lock();
-    std::string text = this->textToSpeak;
-    this->textToSpeak.clear();
-    mtx.unlock();
-
-    if (text.length() > 0)
-    {
-      sendto(sockfd, (const char*) text.c_str(), text.length(),
-             0, (const struct sockaddr*) &serveraddr, sizeof(serveraddr));
-      RLOG(0, "Speaking: \"%s\"", text.c_str());
-    }
-  }
-
-#if defined (_MSC_VER)
-  closesocket(sockfd);
-#else
-  close(sockfd);
-#endif
-}
-
 // If port is set to -1, this thread runs espeak on the local machine
+#if !defined (_MSC_VER)
 void TTSComponent::localThread()
 {
 
@@ -196,9 +113,9 @@ void TTSComponent::localThread()
 
     if (text.length() > 0)
     {
-#if !defined (_MSC_VER)
 
-      std::string consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
+      //std::string consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
+      std::string consCmd = "espeak " + std::string("\"") + text + std::string("\"");
       int err = system(consCmd.c_str());
 
       if (err == -1)
@@ -210,21 +127,54 @@ void TTSComponent::localThread()
         RLOG(0, "--- Saying \"%s\"", text.c_str());
         RLOG(0, "Console command \"%s\"", consCmd.c_str());
       }
-
-#else
-      // Class constructor called with object speechOut
-      ttspeak speechOut;
-
-      // Loads the ComSpeak function with max array size of 256 (was 100)
-      // and gender enum of type FEMALE
-      speechOut.loadComSpeak(256, MALE);
-
-      // String to speech synthesis. It returns after the text has been spoken.
-      speechOut.comSpeak(text);
-#endif
     }
   }
 
 }
+
+#else
+
+void TTSComponent::localThread()
+{
+  // Initialize COM
+  if (FAILED(::CoInitialize(NULL)))
+  {
+    RLOG_CPP(0, "Failed to initialize COM object");
+    return;
+  }
+
+  // Create a SAPI voice object
+  ISpVoice* pVoice = NULL;
+  HRESULT hr = CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&pVoice);
+
+  if (!SUCCEEDED(hr))
+  {
+    RLOG_CPP(0, "Failed to create SAPI voice object : 0x % x" << hr);
+    return;
+  }
+
+  while (this->threadRunning)
+  {
+    mtx.lock();
+    std::string text = this->textToSpeak;
+    this->textToSpeak.clear();
+    mtx.unlock();
+
+    // The text to be converted to speech
+    std::wstring widestr = std::wstring(text.begin(), text.end());
+    const wchar_t* textToSpeak = widestr.c_str();
+
+    // Speak the text
+    pVoice->Speak(textToSpeak, 0, NULL);
+    pVoice->WaitUntilDone(INFINITE);
+  }
+
+  // Release the voice object
+  pVoice->Release();
+
+  // Uninitialize COM
+  CoUninitialize();
+}
+#endif
 
 }   // namespace aff

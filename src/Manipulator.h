@@ -50,16 +50,14 @@ namespace aff
 
 class ActionScene;
 
-class Manipulator
+class Manipulator : public SceneEntity
 {
 public:
 
-  std::string name;
-  std::string id;
-  std::string agent;
-  std::string type;
+  std::string baseJointName;
   std::vector<std::string> fingerJoints;
   std::vector<Capability*> capabilities;
+  double reach;
 
   Manipulator();
   Manipulator(const xmlNodePtr node);
@@ -68,7 +66,27 @@ public:
   virtual ~Manipulator();
   void print() const;
   virtual bool check(const RcsGraph* graph) const;
+
+  /*! \brief Returns if the manipulator can reach to a point in world
+   *         coordinates. The function checks if the point is within
+   *         reach distance from the manipulator's base joint. We
+   *         don't yet deal with cartesian joints etc. but assume a
+   *         "normal" robot with hinge joints.
+   */
+  bool canReachTo(const ActionScene* scene,
+                  const RcsGraph* graph,
+                  const double position[3]) const;
+
+  /*! \brief Returns true if the manipulator is holding an object. This is
+   *         determined rather low-level: We traverse all children of the
+   *         manipulator. If there is a child that is not a frame of one of
+   *         the manipulator's capabilities, we assume that the hand is not
+   *         empty.
+   */
   bool isEmpty(const RcsGraph* graph) const;
+
+  /*! \brief Returns the number of the parsed finger joint names.
+   */
   size_t getNumFingers() const;
 
   /*! \brief For now this is specific for the Jaco Gen2 3-finger hand. By
@@ -107,15 +125,17 @@ public:
   std::string getGraspingFrame(const RcsGraph* graph,
                                const AffordanceEntity* entity) const;
 
-  // If the manipulator has grasped the entity, the function returns the grasp
-  // affordances that are closer to the grasp frame than dist. Otherwise, it
-  // will return an empty vector.
+  /*! \brief If the manipulator has grasped the entity, the function returns the
+   *         grasp affordances that are closer to the grasp frame than dist.
+   *         Otherwise, it will return an empty vector.
+   */
   std::vector<const Affordance*> getGraspAffordances(const RcsGraph* graph,
                                                      const AffordanceEntity* entity,
                                                      double dist) const;
 
-  // Returns a vector of AffordanceEntities that are children of the
-  // manipulator.
+  /*! \brief Returns a vector of AffordanceEntities that are children of the
+   *         gmanipulator.
+   */
   std::vector<const AffordanceEntity*> getGraspedEntities(const ActionScene& scene,
                                                           const RcsGraph* graph) const;
 
@@ -124,6 +144,10 @@ public:
                                                     bool useInstanceName) const;
 
   std::string getGazingFrame() const;
+
+  // Called by ActionScene::initializeKinematics()
+  void computeBaseJointName(const ActionScene* scene,
+                            const RcsGraph* graph);
 };
 
 } // namespace aff

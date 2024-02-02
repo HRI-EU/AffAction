@@ -54,19 +54,6 @@
 #endif
 
 
-static double getWallclockTime()
-{
-  // Get the current time point
-  auto currentTime = std::chrono::system_clock::now();
-
-  // Convert the time point to a duration since the epoch
-  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
-
-  // Convert the duration to seconds as a floating-point number
-  double seconds = durationSinceEpoch.count();
-
-  return seconds;
-}
 
 static void appendToFile(const std::string& fileName, const std::string& str)
 {
@@ -161,67 +148,15 @@ public:
     logging = !logging;
   }
 
-  void addArucoTracker(const std::string& camera="camera",
-                       const std::string& baseMarker="aruco_base")
-  {
-    auto tracker = new ArucoTracker(camera, baseMarker);
-    tracker->addCalibrationFinishedCallback([this](const HTr* A_CI) -> void
-    {
-      setCameraTransform(A_CI);
-    });
-    addTracker(std::unique_ptr<ArucoTracker>(tracker));
-  }
-
-  AzureSkeletonTracker* addSkeletonTracker(size_t numSkeletons=3)
-  {
-    RLOG(0, "New AzureSkeletonTracker with %zu skeletons", numSkeletons);
-    
-    auto tracker = new AzureSkeletonTracker(numSkeletons);
-    tracker->setScene(scene);
-    addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
-    
-    return tracker;
-  }
-
-  void addSkeletonTracker(std::vector<HTr> defaultPositions, double defaultRadius,
-                          Rcs::Viewer* viewer=nullptr,
-                          std::vector<std::string> skeletonNames=std::vector<std::string>(),
-                          ActionScene* scene=nullptr)
-  {
-    RLOG(0, "new AzureSkeletonTracker");
-    auto tracker = new AzureSkeletonTracker(defaultPositions.size());
-    tracker->initGraphics(viewer);
-    tracker->setSkeletonDefaultPositionRadius(defaultRadius);
-    tracker->setScene(scene);
-
-    if (!skeletonNames.empty())
-    {
-      RCHECK(skeletonNames.size()==defaultPositions.size());
-    }
-
-    for (size_t i=0; i<defaultPositions.size(); ++i)
-    {
-      const double* pos = defaultPositions[i].org;
-      tracker->setSkeletonDefaultPosition(i, pos[0], pos[1], pos[2]);
-      if (!skeletonNames.empty())
-      {
-        tracker->setSkeletonName(i, skeletonNames[i]);
-      }
-    }
-
-
-    addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
-  }
-
   // Same as in LandmarkBase with the addition of the time being handled
   // differently when data comes from a file.
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   {
-    const double wallClockTime = readDataFromFile ? 0.0 : getWallclockTime();
-      for (const auto& tracker : trackers)
-      {
-        tracker->setCurrentTime(wallClockTime);
-      }
+    const double wallClockTime = readDataFromFile ? 0.0 : TrackerBase::getWallclockTime();
+    for (const auto& tracker : trackers)
+    {
+      tracker->setCurrentTime(wallClockTime);
+    }
 
     updateGraph(desired);
   }
@@ -243,6 +178,7 @@ public:
   void fromFileThreadFunc(const std::string& fileName)
   {
     threadFunctionCompleted = false;
+    setSyncInputWithWallclock(true);
 
     RLOG_CPP(0, "Reading data from " << fileName);
     std::ifstream ifs(fileName);
@@ -251,22 +187,22 @@ public:
     RLOG_CPP(0, "Parsing jsons");
     std::vector<nlohmann::json> jsons;
 
-    try
-    {
-      while (!ifs.eof())
-      {
-        nlohmann::json j;
-        ifs >> j;
-        // (CP) disabled for other debugging
-        //RLOG_CPP(1, "json: '" << j << "'");
-        j["header"]["timestamp"] = 0.0;
-        jsons.push_back(j);
-      }
-    }
-    catch (nlohmann::json::parse_error& ex)
-    {
-      std::cerr << "parse error at byte " << ex.byte << std::endl;
-    }
+    // try
+    // {
+    //   while (!ifs.eof())
+    //   {
+    //     nlohmann::json j;
+    //     ifs >> j;
+    //     // (CP) disabled for other debugging
+    //     //RLOG_CPP(1, "json: '" << j << "'");
+    //     j["header"]["timestamp"] = 0.0;
+    //     jsons.push_back(j);
+    //   }
+    // }
+    // catch (nlohmann::json::parse_error& ex)
+    // {
+    //   std::cerr << "parse error at byte " << ex.byte << std::endl;
+    // }
 
     RLOG_CPP(0, "json has " << jsons.size() << " entries");
 
@@ -422,9 +358,7 @@ private:
   bool threadRunning;
   bool threadFunctionCompleted;
   bool readDataFromFile;
-  // bool frozen;
   bool logging;
-
 
   int socketTimeoutInMsec;
   double frameRate;

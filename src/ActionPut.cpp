@@ -77,14 +77,6 @@ ActionPut::ActionPut(const ActionScene& domain,
     params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
-  }
-
   init(domain, graph, params[0], params.size() > 1 ? params[1] : std::string());
 }
 
@@ -96,6 +88,13 @@ void ActionPut::init(const ActionScene& domain,
   RLOG_CPP(1, "Calling put with object='" << objectToPut << "' surface='"
            << surfaceToPutOn << "'");
 
+  if (objectToPut == surfaceToPutOn)
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPut + " cannot be put on itself.",
+                          "Put it onto another object in the environment");
+  }
+
   Vec3d_setZero(downProjection);
 
   // Initialize object to put
@@ -103,8 +102,9 @@ void ActionPut::init(const ActionScene& domain,
 
   if (objects.empty())
   {
-    throw ActionException("ERROR REASON: The " + objectToPut + " is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPut + " is unknown.",
+                          "Use an object name that is defined in the environment");
   }
 
   auto gPair = domain.getGraspingHand(graph, objects);
@@ -113,14 +113,16 @@ void ActionPut::init(const ActionScene& domain,
 
   if (!graspingHand)
   {
-    throw ActionException("ERROR REASON: The " + objectToPut + " is not held in the hand. SUGGESTION: First get the " + objectToPut + " in the hand before performing this command",
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "The " + objectToPut + " is not held in the hand.",
+                          "First get the " + objectToPut + " in the hand before performing this command");
   }
 
   if (getAffordances<Stackable>(object).empty())
   {
-    throw ActionException("ERROR REASON: I don't know how to place the " + objectToPut + " on a surface. SUGGESTION: Try to hand it over, or try something else",
-                          ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "I don't know how to place the " + objectToPut + " on a surface.",
+                          "Try to hand it over, or try something else");
   }
 
   objName = object->bdyName;
@@ -146,9 +148,15 @@ void ActionPut::init(const ActionScene& domain,
 
   // Determine the frame of the object at which it is grasped. This is aligned with
   // the hand's grasping frame (not the orientation necessarily if powergrasped \todo(MG)).
-  RLOG_CPP(0, "Grasp frame distance is " << std::get<2>(ca));
+  RLOG_CPP(1, "Grasp frame distance is " << std::get<2>(ca));
   const Affordance* a_grasp = std::get<1>(ca);
-  RCHECK(a_grasp);
+
+  if (!a_grasp)
+  {
+    throw ActionException(ActionException::UnknownError, "Internal error", "",
+                          "Internal error: graspingHand->getGrasp failed with entity " + object->name);
+  }
+
   objGraspFrame = a_grasp->frame;
 
   // Detect surface
@@ -157,9 +165,9 @@ void ActionPut::init(const ActionScene& domain,
   // If a non-empty name for the surface has been given, we enforce that it exists
   if ((!surface) && (!surfaceToPutOn.empty()))
   {
-    throw ActionException("ERROR REASON: The surface " + surfaceToPutOn + " to put the " + objectToPut +
-                          " on is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The surface " + surfaceToPutOn + " to put the " + objectToPut + " on is unknown.",
+                          "Use an object name that is defined in the environment");
   }
 
   // If no surface name was specified, we search the surface by raycasting.
@@ -173,9 +181,9 @@ void ActionPut::init(const ActionScene& domain,
     // If we still didn't find a surface, we give up.
     if (!surface)
     {
-      throw ActionException("ERROR REASON: There is nothing under the " +
-                            objectToPut + " where I can put it on. SUGGESTION: Specify another object to put it on",
-                            ActionException::KinematicallyImpossible);
+      throw ActionException(ActionException::KinematicallyImpossible,
+                            "There is nothing under the " + objectToPut + " where I can put it on.",
+                            "Specify another object to put it on");
     }
 
     else
@@ -192,15 +200,14 @@ void ActionPut::init(const ActionScene& domain,
   // If there are none, we give up.
   if (affordanceMap.empty())
   {
-    throw ActionException("ERROR REASON: I can't put the " + objectToPut + " on the " + surface->name +
-                          " because it does not support it. SUGGESTION: Specify another object to put it on",
-                          ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "I can't put the " + objectToPut + " on the " + surface->name + " because it does not support it.",
+                          "Specify another object to put it on");
   }
 
   // Erase the Supportables that don't match the "whereOn" name if it has been specified
   if (!whereOn.empty())
   {
-
     auto it = affordanceMap.begin();
     while (it != affordanceMap.end())
     {
@@ -221,8 +228,9 @@ void ActionPut::init(const ActionScene& domain,
   // If the map is empty after removing all non-frame Supportables, we give up.
   if (affordanceMap.empty())
   {
-    throw ActionException("ERROR REASON: I can't put the " + objectToPut + " on the " + surface->name +
-                          "'s frame " + whereOn + ".", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "I can't put the " + objectToPut + " on the " + surface->name + "'s frame " + whereOn + ".",
+                          "", "The affordance map is empty after removing all non-frame supportables");
   }
 
   // Erase the Supportables that are already occupied with a collideable
@@ -286,11 +294,12 @@ void ActionPut::init(const ActionScene& domain,
     // RLOG_CPP(-1, "AFTER: " << affordanceMap.size());
   }
 
-  // There's already somethin on all supportables
+  // There's already something on all supportables
   if (affordanceMap.empty())
   {
-    throw ActionException("ERROR REASON: I can't put the " + objectToPut + " on the " + surface->name +
-                          ". There is already something on it. SUGGESTION: Put the object somewhere else, or remove the blocking object. ", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "I can't put the " + objectToPut + " on the " + surface->name + ". There is already something on it.",
+                          "Put the object somewhere else, or remove the blocking object.");
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -325,8 +334,11 @@ bool ActionPut::initialize(const ActionScene& domain,
   supportRegionY = supportable->extentsY;
 
   Affordance* bottomAff = std::get<1>(affordanceMap[solutionRank]);
+  RCHECK_MSG(bottomAff, "affordanceMap.size()=%zu, solutionRank=%zu",
+             affordanceMap.size(), solutionRank);   // never happens
   Stackable* stackable = dynamic_cast<Stackable*>(bottomAff);
-  RCHECK(stackable);   // never happens
+  RCHECK_MSG(stackable, "'%s' has no Stackable affordance",
+             bottomAff->frame.c_str());   // never happens
   this->polarAxisIdx = stackable->normalDir;
 
   this->objBottomName = bottomAff->frame;

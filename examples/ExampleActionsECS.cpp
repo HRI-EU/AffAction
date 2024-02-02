@@ -34,6 +34,7 @@
 #include "ActionFactory.h"
 #include "ActionSequence.h"
 #include "HardwareComponent.h"
+#include "SceneJsonHelpers.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -73,22 +74,44 @@ void AffActionExampleInfo()
 
 namespace aff
 {
-// Utility functions for trimming a string
-std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
+
+/*******************************************************************************
+ * Replace the first occurence of a string in another string.
+ * The replacement is aware of word boundaries, i.e. it will not replace
+ * "s 1" in "s 11".
+ ******************************************************************************/
+static void replaceFirst(std::string& str, const std::string& search, const std::string& replace)
 {
-  str.erase(0, str.find_first_not_of(chars));
-  return str;
+  size_t pos = 0;
+  const size_t search_len = search.length();
+  const size_t replace_len = replace.length();
+
+  while ((pos = str.find(search, pos)) != std::string::npos)
+  {
+    // Check if the found occurrence is not part of a bigger sequence
+    // E.g. for "s 1" we don't want to replace "s 11"
+    if ((pos == 0 || !std::isalnum(str[pos - 1])) &&
+        (pos + search_len == str.length() || !std::isalnum(str[pos + search_len])))
+    {
+      str.replace(pos, search_len, replace);
+      pos += replace_len;
+      // quit after 1st replacement
+      break;
+    }
+    else
+    {
+      // Move past the found occurrence without replacing
+      pos += search_len;
+    }
+  }
 }
 
-std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void onSetLogLevel(int dl)
 {
-  str.erase(str.find_last_not_of(chars) + 1);
-  return str;
-}
-
-std::string& trim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
-{
-  return ltrim(rtrim(str, chars), chars);
+  RcsLogLevel = dl;
 }
 
 /*******************************************************************************
@@ -196,6 +219,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   lambda = 1.0e-6;
   speedUp = 1;
   loopCount = 0;
+  lookaheadCount = 0;
 
   pause = false;
   noSpeedCheck = false;
@@ -214,6 +238,9 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   unittest = false;
   withRobot = false;
   singleThreaded = false;
+  verbose = true;
+  processingAction = false;
+  lookahead = false;
 
   dtProcess = 0.0;
   dtEvents = 0.0;
@@ -246,8 +273,9 @@ ExampleActionsECS::~ExampleActionsECS()
 
 bool ExampleActionsECS::initParameters()
 {
-  xmlFileName = "g_scenario.xml";
-  config_directory = "config/xml/SmileActions";
+  xmlFileName = "g_topReport_4.xml";
+  config_directory = "config/xml/Affaction/examples";
+  speedUp = 3;
 
   return true;
 }
@@ -278,9 +306,12 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-noTextGui", &noTextGui, "Do not launch TextGui");
   parser->getArgument("-plot", &plot, "Enable debug plotting");
   parser->getArgument("-valgrind", &valgrind, "Valgrind mode without graphics and Gui");
+  parser->getArgument("-verbose", &verbose, "Print debug information to console");
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
+  parser->getArgument("-lookahead", &lookahead, "Perform lookahead for whole sequences");
+  parser->getArgument("-lookaheadCount", &lookaheadCount, "Number of actions to lookahead");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -306,6 +337,7 @@ bool ExampleActionsECS::initAlgo()
   entity.registerEvent<>("EmergencyStop");
   entity.registerEvent<>("EmergencyRecover");
   entity.registerEvent<>("Quit");
+  entity.subscribe("SetLogLevel", &onSetLogLevel);
   entity.subscribe("Quit", &ExampleActionsECS::onQuit, this);
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
@@ -350,7 +382,15 @@ bool ExampleActionsECS::initAlgo()
       child = getXMLChildByName(node, "BroadPhase");
       if (child)
       {
-        RcsBroadPhase* bp = RcsBroadPhase_createFromXML(controller->getGraph(), child);
+        RcsBroadPhase* bp = NULL;
+        if (noCollCheck)
+        {
+          bp = RcsBroadPhase_create(controller->getGraph(), 0.0);
+        }
+        else
+        {
+          bp = RcsBroadPhase_createFromXML(controller->getGraph(), child);
+        }
         RcsBroadPhase_updateBoundingVolumes(bp);
         controller->setBroadPhase(bp);
 
@@ -410,10 +450,17 @@ bool ExampleActionsECS::initAlgo()
   if (!hwc.empty())
   {
     setEnableRobot(true);
+    RCHECK_MSG(noCollCheck==false, "You are running the real system without collision detection");
   }
 
   // Initialization sequence to initialize all graphs from the sensory state
   entity.initialize(graphC->getGraph());
+
+  this->sceneQuery = std::make_unique<ConcurrentSceneQuery>(this);
+  this->sceneQuery2 = std::make_unique<ConcurrentSceneQuery>(this);
+  this->panTiltQuery = std::make_unique<ConcurrentSceneQuery>(this);
+
+  RLOG_CPP(0, help());
 
   return true;
 }
@@ -509,39 +556,15 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('f', [this](char k)
   {
-    RLOG(0, "Loading action sequence from file");
-    std::string filename = "action_sequence.txt";
-    std::vector<std::string> lines;
-    std::ifstream file(filename);
+    RLOG(0, "Test occlusions");
+    nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", actionC->getDomain(),
+                                                     controller->getGraph());
+    RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
 
-    if (!file.is_open())
-    {
-      RLOG_CPP(0, "Failed to open file: " << filename);
-    }
-    else
-    {
-      std::string line;
-      while (std::getline(file, line))
-      {
-        lines.push_back(line);
-      }
+    json = getOccludedObjectsForAgent("Daniel", actionC->getDomain(), controller->getGraph());
+    RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
 
-      file.close();
-
-      std::string result;
-      for (size_t i = 0; i < lines.size(); ++i)
-      {
-        result += lines[i];
-        if (i != lines.size() - 1)
-        {
-          result += ";";
-        }
-      }
-
-      entity.publish("ActionSequence", result);
-    }
-
-  }, "Load action sequence from file");
+  }, "Test occlusions");
 
   viewer->setKeyCallback('h', [this](char k)
   {
@@ -551,6 +574,7 @@ bool ExampleActionsECS::initGraphics()
     str += actionC->getDomain()->printAffordancesToString();
     new Rcs::TextGui(str, "Actions and affordances");
   }, "Showing actions and affordances in text window");
+
   viewer->setKeyCallback('C', [this](char k)
   {
     static bool flag = false;
@@ -630,6 +654,34 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Show dot file");
 
+  viewer->setKeyCallback('E', [this](char k)
+  {
+    Rcs::BodyNode* bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (!bn)
+    {
+      return;
+    }
+
+    auto ntt = getScene()->getAffordanceEntity(bn->body()->name);
+    if (ntt)
+    {
+      RMSG_CPP("Entity: " << ntt->name);
+    }
+    else
+    {
+      auto agent = getScene()->getAgent(bn->body()->name);
+      if (agent)
+      {
+        RMSG_CPP("Agent: " << agent->name);
+      }
+      else
+      {
+        RMSG_CPP("No entity or agent for: " << bn->body()->name);
+      }
+    }
+
+  }, "Get body under mouse");
+
   viewer->setKeyCallback('m', [this](char k)
   {
     Rcs::BodyNode* bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
@@ -640,7 +692,7 @@ bool ExampleActionsECS::initGraphics()
 
     const ActionScene* scene = actionC->getDomain();
     std::vector<const Manipulator*> om = scene->getOccupiedManipulators(controller->getGraph());
-    RLOG_CPP(0, "Found " << om.size() << " free manipulators");
+    RLOG_CPP(0, "Found " << om.size() << " occupied manipulators");
 
     if (om.empty())
     {
@@ -650,13 +702,63 @@ bool ExampleActionsECS::initGraphics()
     else
     {
       std::vector<const AffordanceEntity*> ge = om[0]->getGraspedEntities(*scene, controller->getGraph());
-      RCHECK(!ge.empty());
+      RCHECK_MSG(!ge.empty(), "For manipulator: '%s'", om[0]->name.c_str());
 
       std::string textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
       entity.publish("ActionSequence", textCmd);
     }
 
   }, "Get body under mouse");
+
+  viewer->setKeyCallback('a', [this](char k)
+  {
+    RLOG(0, "Toggling talk flag");
+    //entity.publish("ToggleASR");
+    entity.publish("ToggleHandRaised");
+
+  }, "Toggle talk flag");
+
+  viewer->setKeyCallback('l', [this](char k)
+  {
+    RLOG(0, "Resetting LLM memory");
+    entity.publish("ResetLLM");
+
+  }, "Resetting LLM memory");
+
+  viewer->setKeyCallback('p', [this](char k)
+  {
+    RLOG(0, "Replaying log");
+    entity.publish("ReplayLog");
+
+  }, "Replaying log");
+
+  viewer->setKeyCallback('A', [this](char k)
+  {
+    RLOG(0, "Test pan tilt angle calculation");
+
+    double t_calc = Timer_getSystemTime();
+    std::vector<double> panTilt = panTiltQuery->getPanTilt("robot", "id_6328686182f50bb1672483c3");
+
+
+    // Agent* robo_ = getScene()->getAgent("robot");
+    // RCHECK(robo_);
+
+    // double panTilt[2], err[2];
+    // size_t maxIter = 100;
+    // double eps = 1.0e-8;
+    // RobotAgent* robo = dynamic_cast<RobotAgent*>(robo_);
+
+    // double t_calc = Timer_getSystemTime();
+    // int iter = robo->getPanTilt(controller->getGraph(), "table", panTilt, maxIter, eps, err);
+    t_calc = Timer_getSystemTime() - t_calc;
+
+    // RLOG(0, "pan=%.1f tilt=%.1f err=%f %f took %d iterations and %.1f msec",
+    //      RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), err[0], err[1], iter, 1.0e3*t_calc);
+    if (!panTilt.empty())
+      RLOG(0, "pan=%.1f tilt=%.1f took %.1f msec",
+           RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), 1.0e3 * t_calc);
+
+  }, "Test pan tilt angle calculation");
 
 
   viewer->start();
@@ -706,6 +808,25 @@ void ExampleActionsECS::run()
   // has not been set, it is an empty string that immediately returns.
   entity.publish("Start");
   entity.process();
+
+  if (valgrind)
+  {
+    // get fanta_bottle;put fanta_bottle lego_box;pose default
+    std::vector<std::string> seqCmd;
+    seqCmd.push_back("get id_653a43c5b914a01674642a45");
+    seqCmd.push_back("put id_653a43c5b914a01674642a45 id_659fdeb2adfdf5b78af73fed_close");
+    seqCmd.push_back("pose default");
+    auto res = sceneQuery2->planActionSequence(seqCmd, seqCmd.size());
+    std::string newCmd;
+    for (size_t i = 0; i < res.size(); ++i)
+    {
+      newCmd += res[i];
+      newCmd += ";";
+    }
+
+    RLOG_CPP(0, "Command : " << newCmd);
+    runLoop = false;
+  }
 
   if (!sequenceCommand.empty())
   {
@@ -787,6 +908,7 @@ std::string ExampleActionsECS::help()
   s << ActionFactory::printToString();
   s << Rcs::RcsGraph_printUsageToString(xmlFileName);
   s << Rcs::RcsShape_distanceFunctionsToString();
+  s << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
 
   return s.str();
 }
@@ -799,7 +921,12 @@ void ExampleActionsECS::onQuit()
 
 void ExampleActionsECS::onActionSequence(std::string text)
 {
-  RMSG_CPP("RECEIVED: " << text);
+  processingAction = true;
+
+  if (verbose)
+  {
+    RMSG_CPP("RECEIVED: " << text);
+  }
   clearCompletedActionStack();
 
   // Early exit in case we receive an empty string
@@ -918,16 +1045,43 @@ void ExampleActionsECS::onActionSequence(std::string text)
     }
   }
 
+  // From here on, any sequence has been expanded
   RLOG_CPP(0, "Sequence expanded to '" << text << "'");
 
-  // From here on, any sequence has been expanded
+  // // From here on, any sequence has been expanded
   actionStack = Rcs::String_split(text, ";");
 
   // Strip individual actions from white spaces etc.
   for (auto& action : actionStack)
   {
-    trim(action);
+    ActionComponent::trim(action);
   }
+
+  // In case of action sequences, perform lookahead predictions.
+  // The number of actions to lookahead is determined by the
+  // stepsToPlan parameter (default is actionStack.size()).
+  // The lookahead process returns a corrected actionStack with
+  // various parameters for actions (e.g. grip type to use in the case
+  // of the `get` action) based on what the best sequence
+  // of future predictions was found.
+#if 0
+  if (lookahead)
+  {
+    if (actionStack.size() > 1)
+    {
+      if (lookaheadCount > 1)
+      {
+        // Lookahead a specific number of actions only
+        actionStack = std::move(sceneQuery->planActionSequence(actionStack, lookaheadCount));
+      }
+      else
+      {
+        // Lookahead the entire sequence
+        actionStack = std::move(sceneQuery->planActionSequence(actionStack, actionStack.size()));
+      }
+    }
+  }
+#endif
 
   entity.publish("TextCommand", actionStack[0]);
 }
@@ -963,7 +1117,10 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
     // stack we can simply exit the run
     if (unittest)
     {
-      RMSG_CPP("Quitting unit tests since actionStack is empty");
+      if (verbose)
+      {
+        RMSG_CPP("Quitting unit tests since actionStack is empty");
+      }
       ExampleBase::stop();
     }
   }
@@ -1019,7 +1176,8 @@ void ExampleActionsECS::onTextCommand(std::string text)
       }
 
       RLOG_CPP(0, "Reloading ActionScene with file " << resetCmd[1]);
-      actionC->getDomain()->reload(resetCmd[1]);
+      getScene()->reload(resetCmd[1]);
+      getScene()->initializeKinematics(newGraph);   // Reach and shoulder joints
       RLOG_CPP(0, "Done reloading ActionScene with file " << resetCmd[1]);
 
       RcsGraph_destroy(graphToInitializeWith);
@@ -1039,7 +1197,8 @@ void ExampleActionsECS::onTextCommand(std::string text)
     // The ActionScene is reloaded, since otherwise fill levels etc. remain as
     // they are.
     RLOG(0, "Reloading scene from %s", controller->getGraph()->cfgFile);
-    actionC->getDomain()->reload(controller->getGraph()->cfgFile);
+    getScene()->reload(controller->getGraph()->cfgFile);
+    getScene()->initializeKinematics(controller->getGraph());   // Reach and shoulder joints
 
     if (actionStack.size()>1)
     {
@@ -1134,37 +1293,6 @@ void ExampleActionsECS::printCompletedActionStack() const
   {
     RMSG("completedActionStack[%zu]: Action='%s' result='%s'",
          i, completedActionStack[i].first.c_str(), completedActionStack[i].second.c_str());
-  }
-}
-
-/*******************************************************************************
- * Replace the first occurence of a string in another string.
- * The replacement is aware of word boundaries, i.e. it will not replace
- * "s 1" in "s 11".
- ******************************************************************************/
-void replaceFirst(std::string& str, const std::string& search, const std::string& replace)
-{
-  size_t pos = 0;
-  const size_t search_len = search.length();
-  const size_t replace_len = replace.length();
-
-  while ((pos = str.find(search, pos)) != std::string::npos)
-  {
-    // Check if the found occurrence is not part of a bigger sequence
-    // E.g. for "s 1" we don't want to replace "s 11"
-    if ((pos == 0 || !std::isalnum(str[pos - 1])) &&
-        (pos + search_len == str.length() || !std::isalnum(str[pos + search_len])))
-    {
-      str.replace(pos, search_len, replace);
-      pos += replace_len;
-      // quit after 1st replacement
-      break;
-    }
-    else
-    {
-      // Move past the found occurrence without replacing
-      pos += search_len;
-    }
   }
 }
 

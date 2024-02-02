@@ -404,6 +404,7 @@ void GraphicsWindow::subscribeAll(bool startWithStartEvent)
   subscribe("RemoveNode", &GraphicsWindow::onRemoveNode);
   subscribe("SetObjectColor", &GraphicsWindow::onObjectColor);
   subscribe("SetObjectAlpha", &GraphicsWindow::onObjectAlpha);
+  subscribe("SetObjectsAlpha", &GraphicsWindow::onObjectsAlpha);
   subscribe("SetNodeTransform", &GraphicsWindow::onSetNodeTransform);
 
   if (this->synWithEventLoop)
@@ -1182,6 +1183,12 @@ void GraphicsWindow::onObjectColor(std::string whichGraph,
 
 }
 
+void GraphicsWindow::onObjectsAlpha(std::string objectName,
+                                    double alpha)
+{
+  onObjectAlpha(std::string(), objectName, alpha);
+}
+
 void GraphicsWindow::onObjectAlpha(std::string whichGraph,
                                    std::string objectName,
                                    double alpha)
@@ -1221,14 +1228,14 @@ void GraphicsWindow::onObjectAlpha(std::string whichGraph,
     }
 
 
-    NLOG(0, "Setting alpha of BodyNode \"%s\" in graph \"%s\" to %f",
+    RLOG(0, "Setting alpha of BodyNode \"%s\" in graph \"%s\" to %f",
          objectName.c_str(), mi->getGraphPtr()->cfgFile, alpha);
 
     if (bnd->body()->nShapes>0)
     {
-      lock();
-      setNodeMaterial(bnd->body()->shapes[0].color, bnd, alpha);
-      unlock();
+      // Passes alpha into viewer's event loop - this is threadsafe
+      // setNodeAlpha(bnd, alpha);   // Hard overwrite of top-level node's alpha
+      updateNodeAlphaRecursive(bnd, alpha);   // Traverse sub-nodes and set only those who have a material
     }
   }
 

@@ -44,7 +44,11 @@
 #include <tuple>
 
 
+namespace aff
+{
+
 static const double default_marker_length = 1.0;
+
 
 
 /*******************************************************************************
@@ -271,18 +275,25 @@ void ArucoMultiCamTracker::updateGraph(RcsGraph* graph)
   // We have to call computeDofsFromAruco() here, since it depends on the graph.
   if (newArucoUpdate)
   {
+    const double currTime = getWallclockTime();
+
     // Just the camera transform and the arucoMap can be written from
     // different threads. We protect them here.
     parseMtx.lock();
     auto localArucoShapes = arucoShapes;
     parseMtx.unlock();
 
-    // Update each body data structure with the incoming aruco shapes.
+    // Update each body data structure with the incoming aruco shapes. This loop
+    // goes over the cameras that are the key of the arucoShapes data structure.
     for (const auto& a : localArucoShapes)
     {
+      // This traverses the complete graph and updates all body transforms
       const RcsBody* cameraBdy = RcsGraph_getBodyByName(graph, a.first.c_str());
+      const double maxAge = 0.5;
       RCHECK_MSG(cameraBdy, "%s", a.first.c_str());
-      updateMarkerBodyTransforms(graph, cameraBdy, a.second, arucoBodies);
+      updateMarkerBodyTransforms(graph, cameraBdy, a.second, arucoBodies, currTime, maxAge);
+
+      // Here we should eliminate all "outdated" percepts.
 
       // Instantiate calibrator if not existing
       auto calib_it = calibrators.find(a.first);
@@ -452,13 +463,17 @@ ArucoMultiCamTracker::updateMarkerBodyTransform(const RcsGraph* graph,
 
     for (const auto& aruco : arucoShapes)
     {
+      // Don't do anything if shape's marker name (in RcsShape::material) is
+      // not the aruco marker name
       if (std::string(SHAPE->material) != aruco.markerShapeName)
       {
         continue;
       }
 
-      // Marker in camera coordinates. We divide it by the marker extents
-      // so that different-sized markers are handled correctly.
+      // From here on, the RcsShape corresponds to the aruco marker shape.
+
+      // Compute marker in camera coordinates. We divide it by the marker
+      // extents so that different-sized markers are handled correctly.
       HTr T_MC = aruco.T_MC;
       Vec3d_constMulSelf(T_MC.org, SHAPE->extents[0]/default_marker_length);
 
@@ -496,8 +511,10 @@ ArucoMultiCamTracker::updateMarkerBodyTransform(const RcsGraph* graph,
 void ArucoMultiCamTracker::updateMarkerBodyTransforms(const RcsGraph* graph,
                                                       const RcsBody* cameraBdy,
                                                       const std::vector<ArucoMultiCamTracker::ArucoMarkerShapeData>& arucoShapes,
-                                                      std::map<std::string,ArucoMultiCamTracker::ArucoMarkerBodyData>& arucoBodies)
+                                                      std::map<std::string,ArucoMultiCamTracker::ArucoMarkerBodyData>& arucoBodies,
+                                                      double currTime, double maxAge) // Everything older than this is erased from the data
 {
+
   RCSGRAPH_FOREACH_BODY(graph)
   {
     if (BODY->id == -1)
@@ -509,9 +526,56 @@ void ArucoMultiCamTracker::updateMarkerBodyTransforms(const RcsGraph* graph,
 
     if (!bdyData.shapes.empty())
     {
-      arucoBodies[BODY->name] = bdyData;
+      // This overwrites everything
+      // arucoBodies[BODY->name] = bdyData;
+
+      // But we should just append it
+      auto bdydat_it = arucoBodies.find(BODY->name);
+      if (bdydat_it == arucoBodies.end())
+      {
+        arucoBodies[BODY->name] = bdyData;
+      }
+      else
+      {
+        bdydat_it->second.shapes.insert(bdydat_it->second.shapes.end(), bdyData.shapes.begin(), bdyData.shapes.end());
+        bdydat_it->second.A_BP.insert(bdydat_it->second.A_BP.end(), bdyData.A_BP.begin(), bdyData.A_BP.end());
+        bdydat_it->second.lastUpdateTime = std::max(bdydat_it->second.lastUpdateTime, bdyData.lastUpdateTime);
+        RCHECK(bdydat_it->second.qIdx==bdyData.qIdx);
+        RCHECK(bdydat_it->second.isBaseMarker==bdyData.isBaseMarker);
+      }
+
+
+      // Here we delete all old shapes and update the lastTimeSeen
+      bdydat_it = arucoBodies.find(BODY->name);
+      auto shp_it = bdydat_it->second.shapes.begin();
+      auto trf_it = bdydat_it->second.A_BP.begin();
+      while (shp_it != bdydat_it->second.shapes.end())
+      {
+        // If shape is old then delete it
+        if (shp_it->lastUpdateTime<currTime-maxAge)
+        {
+          // Reset the iterator to next item.
+          shp_it = bdydat_it->second.shapes.erase(shp_it);
+          trf_it = bdydat_it->second.A_BP.erase(trf_it);
+        }
+        else
+        {
+          shp_it++;
+          trf_it++;
+        }
+      }
+
+      // Here we update the most recen percept time since this might have
+      // changed after deletion of old percepts.
+      bdydat_it->second.lastUpdateTime = 0.0;
+      for (const auto& sh : bdydat_it->second.shapes)
+      {
+        bdydat_it->second.lastUpdateTime = std::max(bdydat_it->second.lastUpdateTime, sh.lastUpdateTime);
+      }
     }
 
   }   // RCSGRAPH_FOREACH_BODY(graph)
 
 }
+
+}   // namespace

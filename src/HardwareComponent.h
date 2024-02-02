@@ -36,16 +36,10 @@
 
 #include "ComponentBase.h"
 #include "ActionScene.h"
-#include <Rcs_graph.h>
-
-
-#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 
 
 namespace aff
 {
-
-void initROS(double rosDt);
 
 std::vector<ComponentBase*> getComponents(EntityBase& entity,
                                           const RcsGraph* graph,

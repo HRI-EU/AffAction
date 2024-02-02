@@ -61,7 +61,6 @@ ActionScene::ActionScene()
 
 ActionScene::ActionScene(const std::string& xmlFile)
 {
-  RLOG(0, "Initializing ActionScene...");
   xmlDocPtr doc = NULL;
   xmlNodePtr node = NULL;
 
@@ -78,12 +77,6 @@ ActionScene::ActionScene(const std::string& xmlFile)
   {
     parseRecursive(node, this);
     parseAgents(node, this);
-
-    RLOG(0, "Initialized %zu agents: ", agents.size());
-    for (const auto& a : agents)
-    {
-      a->print();
-    }
   }
   else
   {
@@ -93,22 +86,49 @@ ActionScene::ActionScene(const std::string& xmlFile)
   xmlFreeDoc(doc);
 }
 
+ActionScene::ActionScene(const ActionScene& copyFromMe)
+{
+  entities = copyFromMe.entities;
+  manipulators = copyFromMe.manipulators;
+  foveatedEntity = copyFromMe.foveatedEntity;
+
+  for (size_t i=0; i<copyFromMe.agents.size(); ++i)
+  {
+    agents.push_back(copyFromMe.agents[i]->clone());
+  }
+
+}
+
 ActionScene::~ActionScene()
 {
+  for (size_t i=0; i<agents.size(); ++i)
+  {
+    delete agents[i];
+  }
+
 }
 
 ActionScene& ActionScene::operator= (const ActionScene& copyFromMe)
 {
-  RLOG(1, "ActionScene::operator=");
   if (this == &copyFromMe)
   {
     return *this;
   }
 
-  RLOG(1, "ActionScene::operator=");
   entities = copyFromMe.entities;
   manipulators = copyFromMe.manipulators;
-  agents = copyFromMe.agents;
+
+  for (size_t i=0; i<agents.size(); ++i)
+  {
+    delete agents[i];
+  }
+  agents.clear();
+
+  for (size_t i=0; i<copyFromMe.agents.size(); ++i)
+  {
+    agents.push_back(copyFromMe.agents[i]->clone());
+  }
+
   foveatedEntity = copyFromMe.foveatedEntity;
 
   return *this;
@@ -136,12 +156,6 @@ bool ActionScene::reload(const std::string& xmlFile)
   {
     parseRecursive(node, this);
     parseAgents(node, this);
-
-    RLOG(0, "Initialized %zu agents", agents.size());
-    for (const auto& a : agents)
-    {
-      a->print();
-    }
   }
   else
   {
@@ -169,6 +183,12 @@ void ActionScene::print() const
   {
     m.print();
   }
+
+  for (const auto& a : agents)
+  {
+    a->print();
+  }
+
 }
 
 bool ActionScene::check(const RcsGraph* graph) const
@@ -185,6 +205,11 @@ bool ActionScene::check(const RcsGraph* graph) const
     success = m.check(graph) && success;
   }
 
+  for (auto& a : agents)
+  {
+    success = a->check(this, graph) && success;
+  }
+
   return success;
 }
 
@@ -195,8 +220,6 @@ void ActionScene::parseRecursive(const xmlNodePtr parentNode, ActionScene* scene
   {
     if (node->type == XML_ELEMENT_NODE)
     {
-      //RLOG(5, "Found node with name: %s", node->name);
-
       if (xmlStrcmp(node->name, BAD_CAST "AffordanceModel")==0)
       {
         scene->entities.emplace_back(AffordanceEntity(node));
@@ -238,14 +261,7 @@ ActionScene ActionScene::parse(const std::string& xmlFile)
   if (node)
   {
     parseRecursive(node, &scene);
-
     parseAgents(node, &scene);
-
-    RLOG(0, "Initialized %zu agents", scene.agents.size());
-    for (const auto& a : scene.agents)
-    {
-      a->print();
-    }
   }
   else
   {
@@ -315,8 +331,8 @@ const AffordanceEntity* ActionScene::getAffordanceEntity(const std::string& name
 
   for (size_t i=0; i<entities.size(); ++i)
   {
-    if (STRCASEEQ(entities[i].name.c_str(), name.c_str()) ||
-        STRCASEEQ(entities[i].id.c_str(), name.c_str()))
+    // Return first entity whose types contains the requested name.
+    if (std::find(entities[i].types.begin(), entities[i].types.end(), name) != entities[i].types.end())
     {
       return &entities[i];
     }
@@ -334,10 +350,10 @@ std::vector<const AffordanceEntity*> ActionScene::getAffordanceEntities(const st
     return foundOnes;
   }
 
+  // Add entities whose types contains the requested name.
   for (size_t i=0; i<entities.size(); ++i)
   {
-    if (STRCASEEQ(entities[i].name.c_str(), name.c_str()) ||
-        STRCASEEQ(entities[i].id.c_str(), name.c_str()))
+    if (std::find(entities[i].types.begin(), entities[i].types.end(), name) != entities[i].types.end())
     {
       foundOnes.push_back(&entities[i]);
     }
@@ -345,6 +361,33 @@ std::vector<const AffordanceEntity*> ActionScene::getAffordanceEntities(const st
 
   return foundOnes;
 }
+
+std::vector<const SceneEntity*> ActionScene::getSceneEntities(const std::string& name) const
+{
+  std::vector<const SceneEntity*> res;
+
+  auto v1 = getAffordanceEntities(name);
+
+  if (!v1.empty())
+  {
+    res.assign(v1.begin(), v1.end());
+  }
+
+  auto v2 = getAgent(name);
+  if (v2)
+  {
+    res.push_back(v2);
+  }
+
+  auto v3 = getManipulator(name);
+  if (v3)
+  {
+    res.push_back(v3);
+  }
+
+  return res;
+}
+
 
 std::vector<const AffordanceEntity*> ActionScene::getAllChildren(const RcsGraph* graph,
                                                                  const AffordanceEntity* entity) const
@@ -386,9 +429,8 @@ std::vector<const AffordanceEntity*> ActionScene::getDirectChildren(const RcsGra
   const RcsBody* parentBdy = RcsGraph_getBodyByName(graph, parent->bdyName.c_str());
   RCHECK(parentBdy);
 
-  // RLOG(0, "Checking parent %s", parent->bdyName.c_str());
-
-  // There might be several affordances sharing the same frame. We therefore collect all unique frames, and then search through their children.
+  // There might be several affordances sharing the same frame. We therefore
+  // collect all unique frames, and then search through their children.
   std::vector<std::string> parentFrames;
   for (const Affordance* parentAffordance : parent->affordances)
   {
@@ -469,8 +511,8 @@ const Manipulator* ActionScene::getManipulator(const std::string& name) const
 {
   for (size_t i=0; i<manipulators.size(); ++i)
   {
-    if (STRCASEEQ(manipulators[i].name.c_str(), name.c_str()) ||
-        STRCASEEQ(manipulators[i].id.c_str(), name.c_str()))
+    // Return first manipulators whose types contains the requested name.
+    if (std::find(manipulators[i].types.begin(), manipulators[i].types.end(), name) != manipulators[i].types.end())
     {
       return &manipulators[i];
     }
@@ -499,9 +541,10 @@ std::vector<const Manipulator*> ActionScene::getManipulatorsOfType(const std::st
 {
   std::vector<const Manipulator*> typeManipulators;
 
+  // Add manipulators whose types contains the requested name.
   for (const auto& m : manipulators)
   {
-    if (m.type == type)
+    if (std::find(m.types.begin(), m.types.end(), type) != m.types.end())
     {
       typeManipulators.push_back(&m);
     }
@@ -572,7 +615,7 @@ const Agent* ActionScene::getAgent(const std::string& name) const
 {
   for (size_t i=0; i<agents.size(); ++i)
   {
-    if (STRCASEEQ(agents[i]->name.c_str(), name.c_str()))
+    if (std::find(agents[i]->types.begin(), agents[i]->types.end(), name) != agents[i]->types.end())
     {
       return agents[i];
     }
@@ -585,13 +628,22 @@ Agent* ActionScene::getAgent(const std::string& name)
 {
   for (size_t i=0; i<agents.size(); ++i)
   {
-    if (STRCASEEQ(agents[i]->name.c_str(), name.c_str()))
+    if (std::find(agents[i]->types.begin(), agents[i]->types.end(), name) != agents[i]->types.end())
     {
       return agents[i];
     }
   }
 
   return NULL;
+}
+
+void ActionScene::initializeKinematics(const RcsGraph* graph)
+{
+  for (auto& m : manipulators)
+  {
+    m.computeBaseJointName(this, graph);
+  }
+
 }
 
 } // namespace aff

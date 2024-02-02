@@ -58,7 +58,7 @@ public:
 
   virtual ~AzureSkeletonTracker();
 
-  void initGraphics(Rcs::Viewer* viewer);
+  void initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer);
 
   // Process aruco frames. Called from control loop (100Hz or so)
   void updateGraph(RcsGraph* graph);
@@ -82,6 +82,8 @@ public:
   void setScene(aff::ActionScene* scene);
 
   void jsonFromSkeletons(nlohmann::json& json) const;
+
+  // bool setParameter(const std::string& parameterName, void* ptr);
 
 private:
 

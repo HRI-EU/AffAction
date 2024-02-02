@@ -36,9 +36,11 @@
 #include <Rcs_math.h>
 #include <Rcs_typedef.h>
 #include <Rcs_shape.h>
+#include <Rcs_body.h>
 #include <Rcs_timer.h>
 
 #include <mutex>
+#include <queue>
 
 
 
@@ -53,30 +55,66 @@ void getSceneState(nlohmann::json& stateJson,
                    const ActionScene* scene,
                    const RcsGraph* graph)
 {
-  std::string fb;
   std::string logStr;
 
-  // Step 1: Collect manipulator data
-  for (const auto& m : scene->manipulators)
+  // Step 1: Collect agent data including their affordances.
+  nlohmann::json agentsJson;
+  for (const auto& a : scene->agents)
   {
-    logStr += m.name + "; ";
+    logStr += a->name + "; ";
+    nlohmann::json agentJson;
+    agentJson["name"] = a->name;
+    agentJson["instance_id"] = a->instanceId;
+    agentJson["types"] = a->types;
+    agentJson["visible"] = a->isVisible();
 
-    std::vector<std::string> collectedChildren = m.getChildrenOfManipulator(scene, graph, false);
+    RcsBody* bdy = RcsGraph_getBodyByName(graph, a->bdyName.c_str());
+    RCHECK_MSG(bdy, "%s", a->bdyName.c_str());
 
-    stateJson[m.name]["type"] = m.type;
-    stateJson[m.name]["holdsObject"] = collectedChildren;
-    stateJson[m.name]["isHeldByObject"] = std::vector<std::string>();
+    agentJson["position"] = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
+    double ea[3];
+    Mat3d_toEulerAngles(ea, bdy->A_BI.rot);
+    agentJson["euler_xyzr"] = std::vector<double>(ea, ea+3);
+
+    nlohmann::json manipulatorsJson;
+    for (const auto& mName : a->manipulators)
+    {
+      nlohmann::json manipulatorJson;
+
+      const auto m = scene->getManipulator(mName);
+      manipulatorJson["name"] = m->name;
+      manipulatorJson["instance_id"] = m->instanceId;
+      manipulatorJson["types"] = m->types;
+      manipulatorJson["holds_object"] = m->getChildrenOfManipulator(scene, graph, false);
+      manipulatorJson["is_held_by_object"] = std::vector<std::string>();
+
+      RcsBody* bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
+      RCHECK(bdy);
+
+      manipulatorJson["position"] = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
+      double ea[3];
+      Mat3d_toEulerAngles(ea, bdy->A_BI.rot);
+      manipulatorJson["euler_xyzr"] = std::vector<double>(ea, ea+3);
+
+      manipulatorsJson += manipulatorJson;
+
+    }
+    agentJson["manipulators"] = manipulatorsJson;
+
+    agentsJson += agentJson;
   }
-
-  RLOG_CPP(1, "Manipulators: " << logStr);
+  stateJson["agents"] = agentsJson;
+  //RLOG_CPP(1, "Agents: " << logStr);
   logStr.clear();
 
   // Step 2: Collect affordance entity data
+  nlohmann::json entitiesJson;
   for (const auto& e : scene->entities)
   {
+
     logStr += e.name + "; ";
 
-
+    nlohmann::json entityJson;
     RcsBody* bdy = RcsGraph_getBodyByName(graph, e.bdyName.c_str());
     RCHECK(bdy);
 
@@ -99,8 +137,10 @@ void getSceneState(nlohmann::json& stateJson,
       RLOG_CPP(1, "Couldn't find color for entity " << e.name);
     }
 
-    stateJson[e.name]["type"] = e.type;
-    stateJson[e.name]["color"] = bodyColor;
+    entityJson["name"] = e.name;
+    entityJson["instance_id"] = e.instanceId;
+    entityJson["types"] = e.types;
+    entityJson["color"] = bodyColor;
 
 
     // Add shapes with position and Euler angles
@@ -108,12 +148,12 @@ void getSceneState(nlohmann::json& stateJson,
 
     "salt_bottle": {
         "color": "WHITE",
-        "euler_xyzr": [ 0.0, 0.0, 0.0 ],
-        "fillLevel": 0.5,
-        "holdsLiquid": [ "salt" ],
-        "holdsObject": [],
-        "isHeldByObject": [ "shelf" ],
-        "position": [ 0.03, -0.1, 0.971 ],
+        "euler_xyzr": [0.0, 0.0, 0.0],
+        "fill_level": 0.5,
+        "holds_liquid": ["salt"],
+        "holds_object": [],
+        "is_held_by_object": ["shelf"],
+        "position": [0.03, -0.1, 0.971],
         "type": "bottle",
         "volume": 0.5,
         "collision_shapes" : [{"type": "BOX",    "position": [0, 0, 1], "euler_xyzr": [1, 2, 3], "extents":  [1, 2, 3]},
@@ -149,88 +189,79 @@ void getSceneState(nlohmann::json& stateJson,
       };
       shapeJson += j2;
     }
-    stateJson[e.name]["collision_shapes"] = shapeJson;
-
-
-
-    // std::vector<std::string> collectedChildren = getChildrenOfAffordanceEntity(&e);
-    // stateJson[e.name]["holdsObject"] = collectedChildren;
+    entityJson["collision_shapes"] = shapeJson;
 
     // Only direct children, not the whole sub-tree
-    stateJson[e.name]["holdsObject"] = std::vector<std::string>();
+    entityJson["holds_object"] = std::vector<std::string>();
     auto collectedChildren = scene->getDirectChildren(graph, &e);
     for (auto child : collectedChildren)
     {
       // We use the name, not the bdyName (instance name) here
-      stateJson[e.name]["holdsObject"].push_back(child->name);
+      entityJson["holds_object"].push_back(child->name);
     }
-
-
 
 
     const Manipulator* holdingHand = scene->getGraspingHand(graph, &e);
     const AffordanceEntity* holdingObject = scene->getParentAffordanceEntity(graph, &e);
-    stateJson[e.name]["isHeldByObject"] = std::vector<std::string>();
+    entityJson["is_held_by_object"] = std::vector<std::string>();
     std::string parentName = holdingHand ? holdingHand->name : holdingObject ? holdingObject->name : std::string();
     if (!parentName.empty())
     {
-      stateJson[e.name]["isHeldByObject"].push_back(parentName);
+      entityJson["is_held_by_object"].push_back(parentName);
     }
 
 
     // Populate the transformation field
     {
-      stateJson[e.name]["position"] = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
+      entityJson["position"] = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
       double ea[3];
       Mat3d_toEulerAngles(ea, bdy->A_BI.rot);
-      stateJson[e.name]["euler_xyzr"] = std::vector<double>(ea, ea+3);
+      entityJson["euler_xyzr"] = std::vector<double>(ea, ea+3);
     }
 
 
-    /* Here we populate the "holdsLiquid" and volume values
+    /* Here we populate the "holds_liquid" and volume values
     "tomato_sauce_bottle": {
             "type": "bottle",
             "volume": 0.5,
-            "fillLevel": 0.5,
-            "holdsLiquid": [ "tomato_sauce" ],
-            "isHoldByObject": [
-                "table" <-- Should be held by the table
-            ]
+            "fill_level": 0.5,
+            "holds_liquid": ["tomato_sauce"],
+            "is_held_by_object": ["table"] <-- Should be held by the table
         },
      */
 
-    stateJson[e.name]["holdsLiquid"] = std::vector<std::string>();
+    entityJson["holds_liquid"] = std::vector<std::string>();
     std::vector<Containable*> containables = getAffordances<Containable>(&e);
     double volume = 0.0;
-    double fillLevel = 0.0;
+    double fill_level = 0.0;
 
     for (auto c : containables)
     {
       volume += c->maxVolume;
       for (const auto& l : c->liquidIngredients)
       {
-        stateJson[e.name]["holdsLiquid"].push_back(l.first);
-        fillLevel += l.second;
+        entityJson["holds_liquid"].push_back(l.first);
+        fill_level += l.second;
       }
     }
 
-    stateJson[e.name]["fillLevel"] = fillLevel;
-    stateJson[e.name]["volume"] = volume;
+    entityJson["fill_level"] = fill_level;
+    entityJson["volume"] = volume;
 
-    /* Here we populate the "closure" state. For this, we go throug the Affordances and take the closure state
-       from the first one we find. We give a warning if we see more than one Containables.
+    /* Here we populate the "closure" state. For this, we go through the Affordances and take the
+       closure state from the first one we find. We give a warning if we see more than one Containables.
      "fridge": {
-       "type": "furniture",
+       "types": ["furniture"],
        "closure": "closed",
        "power": "on",
-       "holdsObject": [ "milk_bottle", "cranberry_juice_bottle", "pineapple_juice_bottle", "tomato_juice_bottle" ],
-       "isHeldByObject": ["table"]
+       "holds_object": ["milk_bottle", "cranberry_juice_bottle", "pineapple_juice_bottle"],
+       "is_held_by_object": ["table"]
      },
       */
     std::vector<Openable*> openables = getAffordances<Openable>(&e);
     if (openables.size()>=1)
     {
-      stateJson[e.name]["closure"].push_back(!openables[0]->isOpen);
+      entityJson["closure"].push_back(!openables[0]->isOpen);
       if (openables.size()>1)
       {
         RLOG_CPP(1, "Object " << e.name << " has " << openables.size() <<
@@ -238,76 +269,252 @@ void getSceneState(nlohmann::json& stateJson,
       }
     }
 
-
-
-
-
+    entitiesJson += entityJson;
 
   }   // for (const auto& e : scene->entities)
+  stateJson["entities"] = entitiesJson;
 
-
-  // Step 3: Collect gaze data
-
-  /* Here we populate the gaze values. The fovea object is the one that has
-     been looked at with the ActionGaze. If no gaze action was sent, this
-     field is empty. The perif part contains all other obejcts for now.
-
-  "gaze": {
-    "fovea": ["table"],
-    "perif": ["pizza_dough_big_plate","mozzarella_cheese_bowl","garlic_bowl",...],
-    "isHeldByObject": ["robot"]
-  },
-      */
-  {
-    stateJson["gaze"]["fovea"] = std::vector<std::string>();
-    if (!scene->foveatedEntity.empty())
-    {
-      stateJson["gaze"]["fovea"].push_back(scene->foveatedEntity);
-    }
-
-    stateJson["gaze"]["perif"] = std::vector<std::string>();
-    for (const auto& e : scene->entities)
-    {
-      if (scene->foveatedEntity!=e.name)
-      {
-        stateJson["gaze"]["perif"].push_back(e.name);
-      }
-    }
-
-    stateJson["gaze"]["isHeldByObject"].push_back("robot");
-  }
-
-  // TODO (CP) - currently hardcoded
-  // Step 4: Collect lab data
-
-  stateJson["table"]["isHeldByObject"].push_back("lab");
-
-  // "lab": {
-  //   "type": "room",
-  //   "holdsObject": ["table"],
-  //   "isHeldByObject" : []
-  // }
-  {
-    stateJson["lab"]["type"] = "room";
-    stateJson["lab"]["holdsObject"] = std::vector<std::string>({"table", "shelf"});
-    stateJson["lab"]["isHeldByObject"] = std::vector<std::string>();
-  }
-  // TODO (CP) - currently hardcoded
-  // Step 4: Collect robot data
-
-  // "robot": {
-  //   "type": "robot",
-  //   "holdsObject": ["gaze","hand_left","hand_right"],
-  //   "isHeldByObject": ["lab"]
-  // }
-  {
-    stateJson["robot"]["type"] = "robot";
-    stateJson["robot"]["holdsObject"] = std::vector<std::string>({"gaze", "hand_left", "hand_right"});
-    stateJson["robot"]["isHeldByObject"] = std::vector<std::string>({"lab"});
-  }
-
-  RLOG_CPP(1, "affordance entities: " << logStr);
-  RLOG_CPP(1, "JSON: " << stateJson.dump(4));
+  // RLOG_CPP(1, "affordance entities: " << logStr);
+  // RLOG_CPP(2, "JSON: " << stateJson.dump(4));
 }
+
+bool isAgentBusy(const std::string& agentName,
+                 const ActionScene* scene,
+                 const RcsGraph* graph,
+                 double distanceThreshold)
+{
+  const HumanAgent* agent = dynamic_cast<const HumanAgent*>(scene->getAgent(agentName));
+
+  if (!agent)
+  {
+    return false;
+  }
+
+  for (const auto& mName : agent->manipulators)
+  {
+    const aff::Manipulator* m = scene->getManipulator(mName);
+
+    // if (getCapabilities<GraspCapability>(m).empty())
+    // {
+    //   continue;
+    // }
+
+    if (!m->isOfType("hand"))
+    {
+      continue;
+    }
+
+    // From here on, we know that the manipulator can grasp something
+    const RcsBody* hand = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
+    RCHECK_MSG(hand, "Couldn't find RcsBody \"%s\" for manipulator \"%s\" of agent \"%s\"",
+               m->bdyName.c_str(), m->name.c_str(), agentName.c_str());
+    const double* handPos = hand->A_BI.org;
+
+    for (const auto& ntt : scene->entities)
+    {
+      const RcsBody* nttBdy = RcsGraph_getBodyByName(graph, ntt.bdyName.c_str());
+
+      if (!nttBdy)
+      {
+        RLOG(1, "No RcsBody found for %s", ntt.bdyName.c_str());
+        continue;
+      }
+
+      // Ignore very large objects like a table
+      double ignoreLarge = false;
+      {
+        const double d_limit = 1.0;  // 1m
+        double xyzMin[3], xyzMax[3];
+        bool hasAABB = RcsBody_computeAABB(nttBdy, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax);
+        if (hasAABB)
+        {
+          double d_aabb = Vec3d_distance(xyzMin, xyzMax);
+          if (d_aabb > d_limit)
+          {
+            ignoreLarge = true;
+          }
+        }
+
+      }
+
+      if (ignoreLarge)
+      {
+        RLOG(1, "Ignoring large object %s", ntt.bdyName.c_str());
+        continue;
+      }
+      // End ignore large objects
+
+      if (Vec3d_distance(hand->A_BI.org, nttBdy->A_BI.org) < distanceThreshold)
+      {
+        RLOG_CPP(0, agentName << " is busy with the " << nttBdy->name);
+        return true;
+      }
+
+    }   // scene->entities
+
+  }   // agent->manipulators
+
+  return false;
+}
+
+// Returns empty json if no occluded objects exist, or an array of occluded objects
+// for the agent: {"occluded": [{"name": "entity name 1", "instance_id": "entity id 1"},
+//                              {"name": "entity name 2", "instance_id": "entity id 2"}]}
+nlohmann::json getOccludedObjectsForAgent(const std::string& agentName,
+                                          const ActionScene* scene,
+                                          const RcsGraph* graph)
+{
+  nlohmann::json json;
+  json["occluded"] = std::vector<nlohmann::json>();
+
+  for (const auto& ntt : scene->entities)
+  {
+    nlohmann::json j = getObjectOccludersForAgent(agentName, ntt.name, scene, graph);
+    if (!j["occluded_by"].empty())
+    {
+      nlohmann::json occludedJson;
+      occludedJson["name"] = ntt.name;
+      occludedJson["instance_id"] = ntt.instanceId;
+      json["occluded"].push_back(occludedJson);
+    }
+
+  }
+
+  return json;
+}
+
+// Returns empty json if not occluded, or occluding objects sorted by distance
+// to eye (increasing): {"occluded_by": ["entity name 1", "entity name 2"] }
+nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
+                                          const std::string& objectName,
+                                          const ActionScene* scene,
+                                          const RcsGraph* graph)
+{
+  nlohmann::json json;
+  json["occluded_by"] = std::vector<nlohmann::json>();
+
+  const HumanAgent* agent = dynamic_cast<const HumanAgent*>(scene->getAgent(agentName));
+
+  if (!agent)
+  {
+    return json;
+  }
+
+  std::vector<const Manipulator*> heads = agent->getManipulatorsOfType(scene, "head");
+  RCHECK_MSG(heads.size()<=1, "Agent \"%s\" has more than 1 manipulator of type head", agent->name.c_str());
+
+  std::priority_queue<std::pair<double,nlohmann::json>,
+      std::vector<std::pair<double,nlohmann::json>>,
+      std::greater<std::pair<double,nlohmann::json>> > queue;
+
+  for (const auto& m : heads)
+  {
+    const RcsBody* head = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
+    RCHECK_MSG(head, "Couldn't find RcsBody \"%s\" for head manipulator \"%s\" of agent \"%s\"",
+               m->bdyName.c_str(), m->name.c_str(), agentName.c_str());
+    const double* eyePos = head->A_BI.org;
+
+    std::vector<const AffordanceEntity*> ntts = scene->getAffordanceEntities(objectName);
+    RCHECK_MSG(ntts.size()<=1, "Currently we can't deal with non-unique entities (%s)", objectName.c_str());
+
+    // Loop over all entities with the same name
+    for (const auto& goalNtt : ntts)
+    {
+      const RcsBody* goalBdy = RcsGraph_getBodyByName(graph, goalNtt->bdyName.c_str());
+
+      if (!goalBdy)
+      {
+        RLOG(1, "No RcsBody found for %s", goalNtt->bdyName.c_str());
+        continue;
+      }
+
+      if (RcsBody_numDistanceShapes(goalBdy)==0)
+      {
+        continue;
+      }
+
+      double goalPos[3];
+      Vec3d_copy(goalPos, goalBdy->A_BI.org);
+
+      double xyzMin[3], xyzMax[3];
+      bool hasAABB = RcsBody_computeAABB(goalBdy, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax);
+      if (hasAABB)
+      {
+        for (int i=0; i<3; ++i)
+        {
+          goalPos[i] += 0.5*(xyzMax[i]-xyzMin[i]);
+        }
+      }
+
+      double dir[3];
+      Vec3d_sub(dir, goalPos, eyePos);
+
+      // Create a virtual body that is the line of sight
+      RcsBody vBdy;
+      memset(&vBdy, 0, sizeof(RcsBody));
+      HTr_setIdentity(&vBdy.A_BP);
+      HTr_setIdentity(&vBdy.A_BI);
+      vBdy.nShapes = 1;
+      RcsShape sh;
+      RcsShape_init(&sh);
+      sh.computeType = RCSSHAPE_COMPUTE_DISTANCE;
+      sh.type = RCSSHAPE_SSL;
+      Vec3d_set(sh.extents, 0.01, 0.01, Vec3d_getLength(dir));
+      vBdy.shapes = &sh;
+      Vec3d_copy(vBdy.A_BI.org, eyePos);
+      Mat3d_fromVec(vBdy.A_BI.rot, dir, 2);
+
+      for (const auto& checkNtt : scene->entities)
+      {
+        const RcsBody* checkBdy = RcsGraph_getBodyByName(graph, checkNtt.bdyName.c_str());
+
+        // Ignore self intersections
+        if (checkBdy==goalBdy)
+        {
+          continue;
+        }
+
+        if (!checkBdy)
+        {
+          RLOG(1, "No RcsBody found for %s", checkNtt.bdyName.c_str());
+          continue;
+        }
+
+        double cp0[3], cp1[3];
+        const double d = RcsBody_distance(&vBdy, checkBdy, cp0, cp1, NULL);
+        if (d<=0.0)
+        {
+          NLOG(0, "*** OCCLUSION %s (%s)- %s (%s): d=%f   cp0=%.4f %.4f %.4f   cp1=%.4f %.4f %.4f",
+               checkNtt.bdyName.c_str(), checkNtt.name.c_str(), goalNtt->bdyName.c_str(), goalNtt->name.c_str(),
+               d, cp0[0], cp0[1], cp0[2], cp1[0], cp1[1], cp1[2]);
+
+          nlohmann::json occluderJson;
+          occluderJson["name"] = checkNtt.name;
+          occluderJson["instance_id"] = checkNtt.instanceId;
+          queue.push(std::make_pair(Vec3d_distance(checkBdy->A_BI.org, eyePos), occluderJson));
+        }
+        else
+        {
+          NLOG(1, "--- NO OCCLUSION %s - %s", checkNtt.name.c_str(), goalNtt->name.c_str());
+        }
+      }
+
+    }   // for (const auto& goalNtt : ntts)
+
+  }   // for (const auto& m : heads)
+
+  // Add the occluders to the json, ordered according to their distance to the eye (closest first)
+  while (!queue.empty())
+  {
+    NLOG_CPP(0, queue.top().first << " " << queue.top().second);
+    json["occluded_by"].push_back(queue.top().second);
+    queue.pop();
+  }
+
+  return json;
+}
+
+
+
 
 }   // namespace aff

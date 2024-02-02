@@ -48,15 +48,38 @@ physically interact with an affordance model.
 
 namespace aff
 {
+std::string join_strings(const std::vector<std::string>& strings);
 
-class AffordanceEntity
+class SceneEntity
+{
+public:
+  std::string name;
+  std::string bdyName;
+  std::string instanceId;
+  std::vector<std::string> types;
+
+  SceneEntity();
+  SceneEntity(const xmlNodePtr node);
+  virtual ~SceneEntity();
+
+  /*! \brief Returns true if one of the SceneEntitie's types equals the
+   *         type passed in the argument, false otherwise.
+   */
+  bool isOfType(const std::string& type) const;
+
+  /*! \brief Checks if the RcsBody matching bdyName has a collideable shape.
+   */
+  bool isCollideable(const RcsGraph* graph) const;
+
+  /*! \brief Returns the RcsBody matching bdyName.
+   */
+  const RcsBody* body(const RcsGraph* graph) const;
+};
+
+class AffordanceEntity : public SceneEntity
 {
 public:
 
-  std::string name;
-  std::string bdyName;
-  std::string id;
-  std::string type;
   std::vector<Affordance*> affordances;
 
   AffordanceEntity();
@@ -66,9 +89,6 @@ public:
   virtual ~AffordanceEntity();
   void print() const;
   virtual bool check(const RcsGraph* graph) const;
-
-  // Checks if the RcsBody matching bdyName has a collideable shape.
-  bool isCollideable(const RcsGraph* graph) const;
 };
 
 }   // namespace aff

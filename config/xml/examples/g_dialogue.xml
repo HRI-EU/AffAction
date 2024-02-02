@@ -49,7 +49,7 @@
 
 
 
-    
+
     <!-- Robot with hands including affordances -->
     <Group prev="floor" >
       <xi:include href="../TwoArmJaco7/g_robot_arms_high.xml" />
@@ -62,7 +62,7 @@
 
 
 
-    
+
     <Body name="camera" prev="aruco_base" color="BLACK_RUBBER" rigid_body_joints="-0.982 0.329 1.910  156.865 46.544 115.820" >
         <Shape type="FRAME" scale="0.2" graphics="true"/>
         <Shape type="BOX" extents="0.1 0.05 0.02" graphics="true"/>
@@ -74,7 +74,7 @@
         <Shape type="BOX" extents="0.6 0.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true" textureFile="textures/table.jpg"/>
     </Body>
-    
+
     <!-- <Body name="tomato_sauce_bottle" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" > -->
     <!--     <Shape type="BOX" extents="0.06 0.06 0.14" graphics="true" distance="false" physics="true" transform="0 0 0.07 0 0 0" /> -->
     <!--     <Shape type="FRAME" marker="true" markerName="aruco_15" extents="0.04 0.04 0" scale="0.1" -->
@@ -92,7 +92,7 @@
         <Shape type="BOX" extents="0.06 0.06 0.14" graphics="true" distance="false" physics="true" transform="0 0 0.07 0 0 0" />
         <Shape type="FRAME" marker="true" markerName="aruco_15" extents="0.04 0.04 0" scale="0.1"
                transform="0.03 0 0.0275 0 90 90"/>
-        <Shape type="BOX" extents="0.04 0.04 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.04 0.04 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_15.jpg" transform="0.03 0 0.0275 0 90 90"/>
     </Body>
     <!-- <Body name="tomato_sauce_bottle" prev="table" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" > -->
@@ -112,7 +112,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <AffordanceModel body="tomato_sauce_bottle" type="bottle">
+    <AffordanceModel body="tomato_sauce_bottle" types="bottle">
       <Stackable frame="tomato_sauce_bottle"/>
       <Pourable frame="tomato_sauce_bottle_tip"/>
       <Twistable frame="tomato_sauce_bottle_tip"/>
@@ -132,12 +132,12 @@
 
 
 
-    <Manipulator name="head_kinect_link" type="head">
+    <Manipulator body="head_kinect_link" types="head">
       <GazeCapability frame="head_kinect_lens" />
     </Manipulator>
 
-    <Agent type="robot" name="Robo">
-      <Component manipulator="head_kinect_link" type="head"/> 
+    <Agent types="robot" name="Robo">
+      <Component manipulator="head_kinect_link"/>
     </Agent>
 
 
@@ -184,10 +184,9 @@
     </model_state>
 
 
-    
+
     <BroadPhase DistanceThreshold="0.001">
     </BroadPhase>
 
-    
-</Graph>
 
+</Graph>

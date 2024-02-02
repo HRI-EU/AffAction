@@ -30,11 +30,12 @@
 
 *******************************************************************************/
 
-#include "ActionGaze.h"
+#include "ActionPanTilt.h"
 #include "ActionFactory.h"
 #include "ActivationSet.h"
 #include "VectorConstraint.h"
 #include "JointWeightConstraint.h"
+#include "Agent.h"
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
@@ -45,11 +46,11 @@
 
 namespace aff
 {
-REGISTER_ACTION(ActionGaze, "gaze");
+REGISTER_ACTION(ActionPanTilt, "pantilt");
 
-ActionGaze::ActionGaze(const ActionScene& scene,
-                       const RcsGraph* graph,
-                       std::vector<std::string> params) :
+ActionPanTilt::ActionPanTilt(const ActionScene& scene,
+                             const RcsGraph* graph,
+                             std::vector<std::string> params) :
   isGazeTargetInHand(false),
   keepTasksActiveAfterEnd(true)
 {
@@ -173,11 +174,11 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   explanation = "I'm gazing at the " + gazeTarget;
 }
 
-ActionGaze::~ActionGaze()
+ActionPanTilt::~ActionPanTilt()
 {
 }
 
-std::vector<std::string> ActionGaze::createTasksXML() const
+std::vector<std::string> ActionPanTilt::createTasksXML() const
 {
   std::vector<std::string> tasks;
 
@@ -191,7 +192,22 @@ std::vector<std::string> ActionGaze::createTasksXML() const
   return tasks;
 }
 
-tropic::TCS_sptr ActionGaze::createTrajectory(double t_start, double t_end) const
+std::vector<std::string> ActionPanTilt::createTasksPanTiltXML() const
+{
+  std::vector<std::string> tasks;
+
+  // taskGaze: XYZ-task with effector=gazeTarget and refBdy=cameraFrame
+  // was YZ
+  std::string xmlTask;
+  xmlTask = "<Task name=\"pan\" controlVariable=\"Joint\" jnt=\"ptu_pan_joint\" />";
+  tasks.push_back(xmlTask);
+  xmlTask = "<Task name=\"tilt\" controlVariable=\"Joint\" jnt=\"ptu_tilt_joint\" />";
+  tasks.push_back(xmlTask);
+
+  return tasks;
+}
+
+tropic::TCS_sptr ActionPanTilt::createTrajectory(double t_start, double t_end) const
 {
   const double afterTime = 0.5;
   auto a1 = std::make_shared<tropic::ActivationSet>();
@@ -217,29 +233,42 @@ tropic::TCS_sptr ActionGaze::createTrajectory(double t_start, double t_end) cons
   return a1;
 }
 
-double ActionGaze::getDurationHint() const
+tropic::TCS_sptr ActionPanTilt::createTrajectoryPanTilt(double t_start, double t_end) const
+{
+  const double afterTime = 0.5;
+  auto a1 = std::make_shared<tropic::ActivationSet>();
+
+  a1->addActivation(t_start, true, 0.5, taskGaze);
+  a1->addActivation(t_end + afterTime, false, 0.5, taskGaze);
+
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {0.0, 0.0}, taskGaze));
+
+  return a1;
+}
+
+double ActionPanTilt::getDurationHint() const
 {
   return 3.0;
 }
 
-std::string ActionGaze::explain() const
+std::string ActionPanTilt::explain() const
 {
   return explanation;
 }
 
-std::vector<std::string> ActionGaze::getManipulators() const
+std::vector<std::string> ActionPanTilt::getManipulators() const
 {
   return usedManipulators;
 }
 
-std::string ActionGaze::getGazeTarget() const
+std::string ActionPanTilt::getGazeTarget() const
 {
   return gazeTarget;
 }
 
-std::unique_ptr<ActionBase> ActionGaze::clone() const
+std::unique_ptr<ActionBase> ActionPanTilt::clone() const
 {
-  return std::make_unique<ActionGaze>(*this);
+  return std::make_unique<ActionPanTilt>(*this);
 }
 
 }   // namespace aff

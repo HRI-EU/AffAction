@@ -2,6 +2,7 @@
 *~
 .idea
 .vscode
+__pycache__/
 
 # Artistic style indentation backup files
 *.before_astyle

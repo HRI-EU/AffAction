@@ -92,7 +92,7 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel name="block" body="block_1" type="bowl">
+    <AffordanceModel body="block_1" types="block bowl">
         <Stackable frame="block_1"/>
         <Supportable frame="block_1_top"/>
         <PowerGraspable frame="block_1_grip"/>
@@ -112,7 +112,7 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel name="block" body="block_2" type="bowl">
+    <AffordanceModel body="block_2" types="block bowl">
         <Stackable frame="block_2"/>
         <Supportable frame="block_2_top"/>
         <PowerGraspable frame="block_2_grip"/>
@@ -132,7 +132,7 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel name="block" body="block_3" type="bowl">
+    <AffordanceModel body="block_3" types="block bowl">
         <Stackable frame="block_3"/>
         <Supportable frame="block_3_top"/>
         <PowerGraspable frame="block_3_grip"/>
@@ -156,11 +156,11 @@
     <ActionSequence name="test_cascade_11" text="get block; put block table"/>
     <ActionSequence name="test_cascade_12" text="s test_cascade_1; s test_cascade_11"/>
 
-    <!-- 
+    <!--
         <ActionSequence name="test_1" text="gaze block_1; get block_1;"/>
         <ActionSequence name="test_1" text="gaze block_2; get block_2"/>
            .
-           .   
+           .
            .
     -->
 

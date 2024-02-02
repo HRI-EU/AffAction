@@ -37,7 +37,7 @@
 &#xA;  and adjust the model state from JacoDefaultPoseArmsLow to JacoDefaultPoseArmsHigh.
 &#xA;
 &#xA;  Forward kinematics:
-&#xA;  bin\Release\Rcs -m 2 -dir config\xml\SmileActions -f g_summerparty.xml 
+&#xA;  bin\Release\Rcs -m 2 -dir config\xml\SmileActions -f g_summerparty.xml
 &#xA;
 &#xA;  With simulated robot and real perception:
 &#xA;  bin\Release\ExampleRunnerAll -m 2 -c Actions -e Summerparty -noLimits -notrajcheck -tts
@@ -74,7 +74,7 @@
     <xi:include href="g_hand_left.xml"/>
     <xi:include href="g_hand_right.xml"/>
 
-<!-- 
+<!--
     <Body name="robot_los" prev="head_kinect_rgb_link" color="LIGHTGRAY_TRANS">
         <Shape type="SSL" length="2" radius="0.004" graphics="true"/>
     </Body>
@@ -83,13 +83,13 @@
         <Shape type="SPHERE" radius="0.025" graphics="true"/>
     </Body>
  -->
- 
-    <!-- z: forward, x: right, y: down 
+
+    <!-- z: forward, x: right, y: down
     <Body name="camera" prev="center_post_link" physics="kinematic" transform="0.06 0 .6 0 90 -90" >
       <Shape type="BOX" extents="0.08 0.03 0.02"  transform="0 0 -0.01 0 0 0" graphics="true" color="BLACK_RUBBER" />
       <Shape type="FRAME" scale="0.25" />
     </Body>-->
-	
+
     <!-- Face mesh is parenting camera
     <Body name="face" prev="camera" rigid_body_joints="0 0 1.5 180 0 0" >
         <Shape type="MESH" meshFile="FaceMesh-holes-468.obj" scale="0.01" resizeable="true" color="RED" />
@@ -98,31 +98,31 @@
 
 
 
-<!-- 
+<!--
     <Group prev="lab" transform="0.58 0.8 0.7 0 0 0">
         <xi:include href="g_table_1.xml"/>
     </Group>
 	-->
-		
+
 	<Body name="table_1" prev="lab" rigid_body_joints="0.58 0 0.8 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="BOX" extents="0.6 0.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" textureFile="wood-ikea-birch.jpg"/>
     </Body>
 
-    <AffordanceModel body="table_1" id="id_6328686182f50bb1672483c3">
+    <AffordanceModel body="table_1">
         <Supportable frame="table_1" extentsX="0.6" extentsY="0.8" />
     </AffordanceModel>
 
-	
-	
+
+
     <Group prev="table_1" rigid_body_joints="0 -0.2 0 0 0 90">
         <xi:include href="g_cola_bottle_1.xml"/>
     </Group>
     <Group prev="table_1" rigid_body_joints="0 0.2 0 0 0 90">
         <xi:include href="g_glass_2.xml"/>
     </Group>
-	<!-- 
+	<!--
     <Group prev="table_1" rigid_body_joints="0 -0.45 0 0 0 90">
         <xi:include href="g_cereal_box_1.xml"/>
     </Group>

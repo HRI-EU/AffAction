@@ -1,6 +1,9 @@
 <Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="InitialPose">
 
-    <Body name="base_footprint" mass="0.001" inertia="1 0 0 0 1 0 0 0 1">
+    <Body name="Johnnie" >
+    </Body>
+
+    <Body name="base_footprint" prev="Johnnie" mass="0.001" inertia="1 0 0 0 1 0 0 0 1">
         <Shape type="FRAME" scale="0.5"/>
     </Body>
 
@@ -165,10 +168,17 @@
     <Body name="head_kinect_lens" prev="head_kinect_link"  physics="none">
     </Body>
 
-    <Body name="respeaker" prev="head_kinect_link" transform="0 -0.1 0 90 0 0" physics="none">
+    <xxBody name="respeaker" prev="head_kinect_link" transform="0 -0.1 0 90 0 0" physics="none">
+        <Shape type="FRAME" scale="0.2"/>
+        <Shape type="CYLINDER" radius="0.05" length="0.01" distance="false" graphics="true" physics="false" color="BLACK_RUBBER" />
+    </xxBody>
+	
+	        <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="CYLINDER" radius="0.05" length="0.01" distance="false" graphics="true" physics="false" color="BLACK_RUBBER" />
     </Body>
+
+
 
     <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none" >
         <Shape type="SSL" radius="0.025" length="0.5" color="GREEN" transform="0 0 0 0 90 0" graphics="true" distance="false" physics="false" />

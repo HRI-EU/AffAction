@@ -57,12 +57,12 @@
         <Shape type="BOX" extents="0.8 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true" textureFile="textures/table.jpg"/>
     </Body>
-    
+
     <Body name="tomato_sauce_bottle" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
         <Shape type="BOX" extents="0.06 0.06 0.14" graphics="true" distance="false" physics="true" transform="0 0 0.07 0 0 0" />
         <Shape type="FRAME" marker="true" markerName="aruco_15" extents="0.04 0.04 0" scale="0.1"
                transform="0.03 0 0.0275 0 90 90"/>
-        <Shape type="BOX" extents="0.04 0.04 0.0001" graphics="true" distance="false" physics="false" 
+        <Shape type="BOX" extents="0.04 0.04 0.0001" graphics="true" distance="false" physics="false"
                textureFile="aruco/4x4marker_15.jpg" transform="0.03 0 0.0275 0 90 90"/>
     </Body>
 
@@ -77,11 +77,11 @@
     <Body name="seat_agent_15" rigid_body_joints="0 -1 0.5 0 0 0" color="BLUE" >
         <Shape type="SPHERE" radius="0.1" graphics="true" distance="false" physics="true" />
     </Body>
-    
-	
-	
-	
-	
+
+
+
+
+
 
     <!-- Robot hand -->
     <Body name="dave_hand_left" rigid_body_joints="true"  color="RED" >
@@ -96,32 +96,31 @@
     <Body name="dave_grip_right" prev="dave_hand_right" >
     </Body>
 
-    <Manipulator name="dave_hand_left" type="hand">
+    <Manipulator body="dave_hand_left" types="hand">
       <PowergraspCapability frame="dave_grip_left" />
     </Manipulator>
 
-    <Manipulator name="dave_hand_right" type="hand">
+    <Manipulator body="dave_hand_right" types="hand">
       <PowergraspCapability frame="dave_grip_right" />
     </Manipulator>
 
 
-	    
-    <Agent type="human" name="Dave" id="some_weird_id_xxx" defaultPos="0 1 0.5" defaultRadius="0.5" >
+
+    <Agent types="human" name="Dave" defaultPos="0 1 0.5" defaultRadius="0.5" >
       <Component manipulator="dave_hand_left" />
       <Component manipulator="dave_hand_right" />
     </Agent>
 
-	
+
     <!-- <AgentModel name="Bob" body="seat_agent_09" type="human"> -->
-    <!--   <Manipulator name="bob_hand_left"/> -->
+    <!--   <Manipulator body="bob_hand_left"/> -->
     <!-- </AgentModel> -->
 
 
 
-    
+
     <BroadPhase DistanceThreshold="0.001">
     </BroadPhase>
 
-    
-</Graph>
 
+</Graph>

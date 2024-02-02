@@ -29,44 +29,42 @@
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
 
-    
+
     <Body name="Antonio" prev="aruco_base" rigid_body_joints="0 -0.8 0.5 0 0 0" physics="kinematic" color="BLUE" >
        <Shape type="SPHERE" radius="0.1" graphics="true" physics="false" distance="false" />
     </Body>
-    
+
     <Body name="Antonio_head" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="BLUE" >
        <Shape type="BOX" extents="0.2 0.15 0.25" graphics="true" physics="false" distance="false" />
        <Shape type="SSL" length="2" radius="0.015" graphics="true" physics="false" distance="false"
 	      transform="0 0 0 -90 0 0" />
        <Shape type="FRAME" />
     </Body>
-    
-    <Body name="Antonio_handLeft" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="BLUE" >
+
+    <Body name="Antonio_hand_left" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="BLUE" >
        <Shape type="BOX" extents="0.1 0.025 0.05" graphics="true" physics="false" distance="false" />
         <Shape type="FRAME" />
     </Body>
-    
-    <Body name="Antonio_handRight" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="BLUE" >
+
+    <Body name="Antonio_hand_right" prev="aruco_base" rigid_body_joints="true" physics="kinematic" color="BLUE" >
        <Shape type="BOX" extents="0.1 0.025 0.05" graphics="true" physics="false" distance="false" />
        <Shape type="FRAME" />
     </Body>
 
-    <Manipulator name="Antonio_head" type="head">
+    <Manipulator body="Antonio_head" types="head">
     </Manipulator>
 
-    <Manipulator name="Antonio_handLeft" type="left_hand">
+    <Manipulator body="Antonio_hand_left" types="hand_left hand">
     </Manipulator>
 
-    <Manipulator name="Antonio_handRight" type="right_hand">
+    <Manipulator body="Antonio_hand_right" types="hand_right hand">
     </Manipulator>
 
-    <Agent type="human" name="Antonio" body="Antonio" tracker="azure_kinect" id="1"
-	   defaultPosition="0 -0.8 0.5" defaultRadius="0.5">
+    <Agent types="human" name="Antonio" tracker="azure_kinect" defaultPosition="0 -0.8 0.5" defaultRadius="0.5">
        <Component manipulator="Antonio_head" />
-       <Component manipulator="Antonio_handLeft" />
-       <Component manipulator="Antonio_handRight" />
+       <Component manipulator="Antonio_hand_left" />
+       <Component manipulator="Antonio_hand_right" />
     </Agent>
 
-    
-</Graph>
 
+</Graph>

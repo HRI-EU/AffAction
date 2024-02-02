@@ -31,39 +31,40 @@
 
 *******************************************************************************/
 
-#ifndef TRACKERBASE_H
-#define TRACKERBASE_H
+#include "TrackerBase.h"
 
-#include "json.hpp"
-
-#include <Rcs_graph.h>
-
-#include <string>
+#include <chrono>
 
 
 namespace aff
 {
 
-class TrackerBase
+TrackerBase::TrackerBase() : currentTime(0.0)
 {
-public:
+}
 
-  TrackerBase();
-  virtual std::string getRequestKeyword() const = 0;
-  virtual void parse(const nlohmann::json& json, double time, const std::string& cameraFrame) = 0;
-  virtual void updateGraph(RcsGraph* graph) = 0;
-  virtual void setCameraTransform(const HTr* A_camI) = 0;
-  virtual void setCurrentTime(double time);
-  virtual double getCurrentTime() const;
-  static double getWallclockTime();
+void TrackerBase::setCurrentTime(double time)
+{
+  currentTime = time;
+}
 
-protected:
+double TrackerBase::getCurrentTime() const
+{
+  return currentTime;
+}
 
-  double currentTime;
-};
+/*static*/ double TrackerBase::getWallclockTime()
+{
+  // Get the current time point
+  auto currentTime = std::chrono::system_clock::now();
+
+  // Convert the time point to a duration since the epoch
+  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
+
+  // Convert the duration to seconds as a floating-point number
+  double seconds = durationSinceEpoch.count();
+
+  return seconds;
+}
 
 }   // namespace
-
-
-
-#endif // TRACKERBASE_H

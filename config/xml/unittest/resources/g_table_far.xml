@@ -34,8 +34,8 @@
         <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true"/>
     </Body>
-
-    <!--
+    
+    <!-- 
         ***********************************************************************
 
         centers
@@ -50,12 +50,28 @@
     <Body name="table_l" prev="table" transform="0 0.3 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="RED" />
     </Body>
-
+    
+    <Body name="table_l_far" prev="table" transform="0 0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="MAGENTA" />
+    </Body>
+    
     <Body name="table_r" prev="table" transform="0 -0.3 0 0 0 0" >
          <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="BLUE" />
     </Body>
 
-    <!--
+    <Body name="table_r_far" prev="table" transform="0 -0.6 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="MAGENTA" />
+    </Body>
+
+    <Body name="table_r_far_n" prev="table_r_far" transform="0.2 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="MAGENTA" />
+    </Body>
+
+    <Body name="table_r_far_s" prev="table_r_far" transform="-0.2 0 0 0 0 0" >
+         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="MAGENTA" />
+    </Body>
+
+    <!-- 
         ***********************************************************************
 
         left side
@@ -75,7 +91,7 @@
     <Body name="table_l_w" prev="table" transform="0 0.4 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <!--
+    <!-- 
         ***********************************************************************
 
         right side
@@ -96,7 +112,7 @@
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
 
-    <!--
+    <!-- 
         ***********************************************************************
 
         table affordance model
@@ -104,23 +120,38 @@
         ***********************************************************************
     -->
 
-    <AffordanceModel body="table" types="furniture">
+    <AffordanceModel body="table" type="furniture">
         <Supportable frame="table" />
-
+        
         <Supportable frame="table_c" />
-
+        
         <Supportable frame="table_l" />
         <Supportable frame="table_l_n" />
         <Supportable frame="table_l_s" />
         <Supportable frame="table_l_e" />
         <Supportable frame="table_l_w" />
+        <Supportable frame="table_l_far"/>
 
         <Supportable frame="table_r" />
         <Supportable frame="table_r_n" />
         <Supportable frame="table_r_s" />
         <Supportable frame="table_r_e" />
         <Supportable frame="table_r_w" />
-
+        
     </AffordanceModel>
 
+    <AffordanceModel body="table_c" type="furniture">
+        <Supportable frame="table_c" />
+    </AffordanceModel> 
+
+    <AffordanceModel body="table_l_far" type="furniture">
+        <Supportable frame="table_l_far" />
+    </AffordanceModel>
+
+    <AffordanceModel body="table_r_far" type="furniture">
+        <Supportable frame="table_r_far" />
+        <Supportable frame="table_r_far_n" />
+        <Supportable frame="table_r_far_s" />
+    </AffordanceModel>
+    
 </Graph>

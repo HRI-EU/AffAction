@@ -68,19 +68,6 @@ ExampleLLMSim::~ExampleLLMSim()
   onStopWebSocket();
 }
 
-bool ExampleLLMSim::initParameters()
-{
-  ExampleActionsECS::initParameters();
-  config_directory = "config/xml/SmileSimulator";
-  xmlFileName = "g_scenario_pizza.xml";
-  noTrajCheck = false;
-  noLimits = false;
-  noTextGui = false;
-  speedUp = 3;
-
-  return true;
-}
-
 bool ExampleLLMSim::initGraphics()
 {
   ExampleActionsECS::initGraphics();
@@ -107,35 +94,7 @@ bool ExampleLLMSim::initGraphics()
   if (!hwc.empty())
   {
     entity.publish("BackgroundColor", std::string("PEWTER"));
-
-    viewer->setKeyCallback('l', [this](char k)
-    {
-      RLOG(0, "Toggle talk flag");
-      entity.publish("ToggleASR");
-
-    }, "Toggle talk flag");
-
   }
-
-  viewer->setKeyCallback('a', [this](char k)
-  {
-    RLOG(0, "Test pan tilt angle calculation");
-    Agent* robo_ = getScene()->getAgent("Robo");
-    RCHECK(robo_);
-
-    double panTilt[2], err[2];
-    size_t maxIter = 100;
-    double eps = 1.0e-8;
-    RobotAgent* robo = dynamic_cast<RobotAgent*>(robo_);
-
-    double t_calc = Timer_getSystemTime();
-    int iter = robo->getPanTilt(controller->getGraph(), "table", panTilt, maxIter, eps, err);
-    t_calc = Timer_getSystemTime() - t_calc;
-
-    RLOG(0, "pan=%.1f tilt=%.1f err=%f %f took %d iterations and %.1f msec",
-         RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), err[0], err[1], iter, 1.0e3*t_calc);
-
-  }, "Test pan tilt angle calculation");
 
   return true;
 }
@@ -147,13 +106,9 @@ bool ExampleLLMSim::initAlgo()
   if (unittest)
   {
     useWebsocket = false;
-    entity.subscribe<bool, double, std::string>("ActionResult", &ExampleLLMSim::onActionResultUnittest, this);
-  }
-  else
-  {
-    entity.subscribe<bool, double, std::string>("ActionResult", &ExampleLLMSim::onActionResult, this);
   }
 
+  entity.subscribe<bool, double, std::string>("ActionResult", &ExampleLLMSim::onActionResult, this);
   entity.subscribe("TextCommand", &ExampleLLMSim::onTextCommand, this);
   entity.subscribe("Stop", &ExampleLLMSim::onStopWebSocket, this);
   entity.subscribe("Start", &ExampleLLMSim::onStartWebSocket, this);
@@ -200,9 +155,6 @@ bool ExampleLLMSim::initAlgo()
     this->server.start_accept();
   }
 
-  // Create static graph copies at this point
-  collectFeedback();
-
   return true;
 }
 
@@ -210,7 +162,7 @@ std::string ExampleLLMSim::help()
 {
   std::stringstream s;
 
-  s << ExampleBase::help();
+  s << ExampleActionsECS::help();
 
   std::string usage = "Websocket action server \n"
                       "   This example requires to start a websocket server\n";
@@ -284,21 +236,45 @@ void ExampleLLMSim::onStopWebSocket()
 
 void ExampleLLMSim::onActionResult(bool success, double quality, std::string resMsg)
 {
-  RMSG_CPP(resMsg);
+  if (verbose)
+  {
+    RMSG_CPP(resMsg);
+  }
   entity.publish("SetTextLine", resMsg, 1);
+
+  lastResultMsg = resMsg;
 
   // This needs to be done independent of failure or success
   if (!actionStack.empty())
   {
     addToCompletedActionStack(actionStack[0], resMsg);
-    printCompletedActionStack();
+
+    if (verbose)
+    {
+      printCompletedActionStack();
+    }
+
     actionStack.erase(actionStack.begin());
   }
 
   if (!success)
   {
     numFailedActions++;
-    actionStack.clear();
+
+    if (unittest)
+    {
+      if (!actionStack.empty())
+      {
+        // \todo: Check why this works
+        //RPAUSE_MSG("Calling reset");
+        entity.publish("TextCommand", std::string("reset"));
+        actionStack.insert(actionStack.begin(), "reset");
+      }
+    }
+    else
+    {
+      actionStack.clear();
+    }
     RLOG_CPP(0, "Clearing action stack, number of failed actions: " << numFailedActions);
   }
 
@@ -310,10 +286,11 @@ void ExampleLLMSim::onActionResult(bool success, double quality, std::string res
     RLOG(0, "ActionStack is empty, unfreezing perception");
     entity.publish("FreezePerception", false);
     entity.publish<std::string, std::string>("RenderCommand", "BackgroundColor", "");
+    processingAction = false;
   }
 
   // In valgrind mode, we only perform one action, since this might run with valgrind
-  if (valgrind)
+  if (valgrind || (unittest && actionStack.empty()))
   {
     ExampleBase::stop();
   }
@@ -324,44 +301,22 @@ void ExampleLLMSim::onActionResult(bool success, double quality, std::string res
 
   // HACK \todo(MG): Unify this
   failCount = numFailedActions;
-}
-
-void ExampleLLMSim::onActionResultUnittest(bool success, double quality, std::string resMsg)
-{
-  RMSG_CPP("Unittest: " + resMsg);
-  entity.publish("SetTextLine", resMsg, 1);
-
-  lastResultMsg = resMsg;
-
-  if (!success)
-  {
-    numFailedActions++;
-
-    if (!actionStack.empty())
-    {
-      entity.publish("TextCommand", std::string("reset"));
-    }
-  }
-
-  // In valgrind mode, we only perform one action, since this might run with valgrind
-  if (valgrind)
-  {
-    ExampleBase::stop();
-  }
-
-  // HACK \todo(MG): Unify this
-  failCount = numFailedActions;
+  //processingAction = false;
 }
 
 // This only handles the "get_state" keyword
 void ExampleLLMSim::onTextCommand(std::string text)
 {
-  RMSG_CPP("ExampleLLMSim::onTextCommand RECEIVED: " << text);
+  if (verbose)
+  {
+    RMSG_CPP("ExampleLLMSim::onTextCommand RECEIVED: " << text);
+  }
+
   if (text=="get_state")
   {
     std::thread feedbackThread([this]()
     {
-      std::string fb = collectFeedback();
+      std::string fb = sceneQuery->getSceneState();
       if (connected && useWebsocket)
       {
         this->server.send(hdl, fb, websocketpp::frame::opcode::TEXT);
@@ -403,38 +358,49 @@ std::string ExampleLLMSim::getSceneEntities() const
     res += n + ", ";
   }
 
-  return res;
-}
-
-std::string ExampleLLMSim::collectFeedback() const
-{
-
-  double t0 = Timer_getSystemTime();
-  static RcsGraph* staticGraph = NULL;
-  static ActionScene staticScene;
-
-  stepMtx.lock();
-  if (!staticGraph)
+#if 1
+  // Add agents \todo(MG): Names not resolved properly
+  if (!scene->agents.empty())
   {
-    staticGraph = RcsGraph_clone(controller->getGraph());
-}
-  else
-  {
-    RcsGraph_copy(staticGraph, controller->getGraph());
+    res += " These agents are in the scene: ";
+
+    for (const auto& a : scene->agents)
+    {
+      if (!a->types.empty())
+      {
+        res += a->types[0] + ", ";
+      }
+    }
+
   }
-  double t1 = Timer_getSystemTime();
 
-  staticScene = *getScene();
-  double t2 = Timer_getSystemTime();
-  stepMtx.unlock();
+  // Add agent's reachability
+  if (!scene->agents.empty())
+  {
 
-  NLOG(1, "get_state took %.3f  %.3f msec (graph, actions)",
-       (t1-t0)*1.0e3, (t2-t1)*1.0e3);
+    for (const auto& a : scene->agents)
+    {
+      if (!a->types.empty())
+      {
+        auto ntts = a->getObjectsInReach(scene, controller->getGraph());
+        if (ntts.empty())
+        {
+          res += a->name + " can not reach any object ";
+        }
+        else
+        {
+          res += a->name + " can reach these objects: ";
+          for (const auto& n : ntts)
+          {
+            res += n->name + ", ";
+          }
+        }
+      }
+    }
+  }
+#endif
 
-  nlohmann::json stateJson;
-  getSceneState(stateJson, &staticScene, staticGraph);
-
-  return stateJson.dump();
+  return res;
 }
 
 void ExampleLLMSim::setUseWebsocket(bool enable)

@@ -30,42 +30,64 @@
 
 *******************************************************************************/
 
-#ifndef RCS_TTSCOMPONENT_H
-#define RCS_TTSCOMPONENT_H
+#ifndef AFF_ACTIONPASS_H
+#define AFF_ACTIONPASS_H
 
-#include "ComponentBase.h"
 
-#include <thread>
+#include "ActionBase.h"
+
 
 
 namespace aff
 {
 
-class TTSComponent : public ComponentBase
+class ActionPass : public ActionBase
 {
 public:
 
-  TTSComponent(EntityBase* parent);
-  virtual ~TTSComponent();
+  ActionPass(const ActionScene& domain,
+             const RcsGraph* graph,
+             std::vector<std::string> params);
 
-private:
+  virtual ~ActionPass();
+  std::unique_ptr<ActionBase> clone() const;
 
-  void onStart();
-  void onStop();
-  void onSpeak(std::string text);
-  void onEmergencyStop();
-  void localThread();
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  std::string explain() const;
+  std::vector<std::string> getManipulators() const;
 
-  bool threadRunning;
-  std::string textToSpeak;
-  std::mutex mtx;
-  std::thread ttsThread;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  size_t getNumSolutions() const;
 
-  // Avoid copying this class
-  TTSComponent(const TTSComponent&);
-  TTSComponent& operator=(const TTSComponent&);
+protected:
+
+  void init(const ActionScene& domain,
+            const RcsGraph* graph,
+            const std::string& objAffordance,
+            const std::string& surface);
+
+  std::vector<std::string> createTasksXML() const;
+
+  std::string objectRcsName;
+  std::string graspingHandRcsName;
+  std::string agentHeadRcsName;
+  std::string fingerJoints;
+
+  std::string taskHandPos;
+  std::string taskHandOri;
+  std::string taskFingers;
+
+  std::string explanation;
+
+  std::vector<std::string> usedManipulators;
+
+  std::vector<double> handOpen;
+  double passPt[3];
+  double retractPt[3];
 };
 
-}
+}   // namespace aff
 
-#endif   // RCS_TTSCOMPONENT_H
+
+
+#endif // AFF_ACTIONPASS_H

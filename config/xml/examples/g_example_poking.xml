@@ -37,7 +37,7 @@
 &#xA;  and adjust the model state from JacoDefaultPoseArmsLow to JacoDefaultPoseArmsHigh.
 &#xA;
 &#xA;  Forward kinematics:
-&#xA;  bin\Release\Rcs -m 2 -dir config\xml\SmileActions -f g_summerparty.xml 
+&#xA;  bin\Release\Rcs -m 2 -dir config\xml\SmileActions -f g_summerparty.xml
 &#xA;
 &#xA;  With simulated robot and real perception:
 &#xA;  bin\Release\ExampleRunnerAll -m 2 -c Actions -e Summerparty -noLimits -notrajcheck -tts
@@ -82,20 +82,20 @@
                distance="true" textureFile="wood-ikea-birch.jpg"/>
     </Body>
 
-    <AffordanceModel body="table_1" id="id_6328686182f50bb1672483c3">
+    <AffordanceModel body="table_1">
         <Supportable frame="table_1" extentsX="0.6" extentsY="0.8" />
     </AffordanceModel>
-	
+
 	<!-- A microwave -->
     <Group prev="table_1" rigid_body_joints="0.3 0 0.1 0 0 -90">
         <xi:include href="g_microwave_1.xml"/>
     </Group>
-	
+
 	<!-- A plate -->
     <Group prev="table_1" rigid_body_joints="-0.2 0.65 0 0 0 0">
         <xi:include href="g_plate_1.xml"/>
     </Group>
-	
+
 	<!-- Another plate -->
     <Group prev="table_1" rigid_body_joints="0.1 -0.5 0 0 0 0">
         <xi:include href="g_plate_2.xml"/>
@@ -105,18 +105,18 @@
     <Group prev="plate_2" rigid_body_joints="0 0 0 0 0 0">
         <xi:include href="g_cola_bottle_1.xml"/>
     </Group>
-	
+
 	<!-- A glass -->
     <Group prev="plate_1" rigid_body_joints="0 0 0.01 0 0 0">
         <xi:include href="g_glass_2.xml"/>
     </Group>
-	
+
 	<!-- A cereal box -->
     <Group prev="table_1" rigid_body_joints="-0.2 -0.7 0 0 0 0">
         <xi:include href="g_cereal_box_1.xml"/>
     </Group>
-	
-	
+
+
 
     <model_state model="JacoDefaultPoseArmsHigh" time_stamp="">
         <joint_state joint="j2s7s300_joint_1_right" position="20"/>

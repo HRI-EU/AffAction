@@ -70,8 +70,8 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
 {
   if (params.empty())
   {
-    throw ActionException("ActionFingerPush: needs at least 1 parameter, but received 0",
-                          ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "Action expects at least 1 parameter, but received 0");
   }
 
 
@@ -86,27 +86,27 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
 
     if (!object)
     {
-      throw ActionException("ERROR REASON: The " + params[0] +
-                            " is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                            ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "ERROR REASON: The " + params[0] + " is unknown. ",
+                            "Use an object name that is defined in the environment");
     }
 
     auto pushables = getAffordances<PointPushable>(object);
     if (pushables.empty())
     {
-      throw ActionException("ERROR REASON: The " + params[0] +
-                            " is not switchable. SUGGESTION: Replace this action with a more clever one.",
-                            ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + params[0] + " is not switchable.",
+                            "Replace this action with a more clever one.");
     }
 
     // \todo(MG)
     if (pushables.size() != 1)
     {
-      throw ActionException("ERROR REASON: found " + std::to_string(pushables.size()) +
-                            " frames, but only 1 is supported", ActionException::ParamInvalid);
+      throw ActionException(ActionException::ParamInvalid,
+                            "Found " + std::to_string(pushables.size()) + " frames, but only 1 is supported");
     }
 
-    RLOG_CPP(0, "Found object to push: " << object->name);
+    RLOG_CPP(1, "Found object to push: " << object->name);
     frameToBePoked = pushables[0]->frame;
   }
 
@@ -124,24 +124,25 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
 
     if (!pusher)
     {
-      throw ActionException("ERROR REASON: The tool to push with " + params[1] +
-                            " is unknown. SUGGESTION: Use an object name that is defined in the environment",
-                            ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "The tool to push with " + params[1] + " is unknown.",
+                            "Use an object name that is defined in the environment");
     }
     auto pokables = getAffordances<PointPokable>(pusher);
 
     if (pokables.empty())
     {
-      throw ActionException("ERROR REASON: The tool " + params[1] +
-                            " cannot be used to switch something on. SUGGESTION: Use another tool",
-                            ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "ERROR REASON: The tool " + params[1] + " cannot be used to switch something on.",
+                            "Use another tool");
     }
 
     // \todo(MG)
     if (pokables.size() != 1)
     {
-      throw ActionException("ActionFingerPush: found " + std::to_string(pokables.size()) +
-                            " pokables, but only 1 is supported", ActionException::ParamInvalid);
+      throw ActionException(ActionException::ParamInvalid,
+                            "Found " + std::to_string(pokables.size()) +
+                            " pokables, but only 1 is supported");
     }
 
     frameThatPokes = pokables[0]->frame;
@@ -180,8 +181,9 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
 
     if (!closestFinger)
     {
-      throw ActionException("ERROR REASON: Robot has no fingers to perform this action. SUGGESTION: Use a tool",
-                            ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "Agent has no fingers to perform this action.",
+                            "Use a tool");
     }
 
     if (frameThatPokes.empty())
@@ -217,8 +219,6 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     explanation += " with the ";
     explanation += params[1];
   }
-  RLOG_CPP(0, explanation);
-  RLOG(0, "Done constructing ActionFingerPush");
 }
 
 ActionFingerPush::~ActionFingerPush()

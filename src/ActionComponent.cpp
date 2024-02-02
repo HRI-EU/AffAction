@@ -39,8 +39,8 @@
 #include <ActionFactory.h>
 #include <ActionBase.h>
 #include <ActionGaze.h>// \todo(MG): Remove from here.
-#include <ActionPut.h>// \todo(MG): Remove from here.
 #include <ConcurrentExecutor.h>
+#include <PredictionTree.h>
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_utilsCPP.h>
@@ -52,7 +52,6 @@
 #include <iostream>
 #include <cstdio>
 #include <algorithm>
-#include <random>// \todo(MG) remove if HACK is gone
 
 
 // \todo(MG): This is only for testing and should be 1 and 1
@@ -62,6 +61,24 @@ const double scaleDtPrediction = 1.0;   // Higher makes predictions compute fast
 
 namespace aff
 {
+
+// Utility functions for trimming a string
+std::string& ActionComponent::ltrim(std::string& str, const std::string& chars)
+{
+  str.erase(0, str.find_first_not_of(chars));
+  return str;
+}
+
+std::string& ActionComponent::rtrim(std::string& str, const std::string& chars)
+{
+  str.erase(str.find_last_not_of(chars) + 1);
+  return str;
+}
+
+std::string& ActionComponent::trim(std::string& str, const std::string& chars)
+{
+  return ActionComponent::ltrim(ActionComponent::rtrim(str, chars), chars);
+}
 
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
                                  const RcsBroadPhase* broadphase_) :
@@ -76,6 +93,7 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
   subscribe("Stop", &ActionComponent::onStop);
 
   this->domain = ActionScene::parse(graph->cfgFile);
+  domain.initializeKinematics(graph);
   RCHECK(domain.check(graph));
 
   if (File_exists("action_sequence.txt"))
@@ -100,14 +118,27 @@ void ActionComponent::onStop()
 
 void ActionComponent::onTextCommand(std::string text)
 {
-  RMSG_CPP("RECEIVED: " << text);
+  RLOG_CPP(0, "RECEIVED: " << text);
 
   // All sequences must have been resolved before this point.
   RCHECK_MSG(text.find(';') == std::string::npos,
              "Received string with semicolon: '%s'", text.c_str());
 
+  // Here we catch the speak actions. This does not yet support the grammar
+  // with parallel actions (concatenated with +)
+  if (STRNEQ(text.c_str(), "speak", 5))
+  {
+    std::string textToSpeak = text.c_str()+5;
+    RLOG_CPP(0, "Speak action: " << textToSpeak);
+    getEntity()->publish("Speak", textToSpeak);
+    std::string explanation = "SUCCESS DEVELOPER: speaking '" +
+                              textToSpeak + "' " + std::string(__FILENAME__) +
+                              " line " + std::to_string(__LINE__);
+    getEntity()->publish("ActionResult", true, 0.0, explanation);
+    return;
+  }
+
   // reset and get_state are taken care of somewhere else
-  //if ((text!="reset") && (text!="get_state"))
   if ((!STRNEQ(text.c_str(), "reset", 5)) && (text!="get_state"))
   {
     std::thread t1(&ActionComponent::actionThread, this, text);
@@ -123,6 +154,9 @@ void ActionComponent::onPrint()
 
 void ActionComponent::actionThread(std::string text)
 {
+
+  RLOG(0, "actionThread text: `%s`", text.c_str());
+
   // Reentrancy lock
   std::lock_guard<std::mutex> lock(actionThreadMtx);
 
@@ -243,31 +277,6 @@ void ActionComponent::actionThread(std::string text)
     RLOG_CPP(0, "Sorting " << predResults.size() << " predictions");
     std::sort(predResults.begin(), predResults.end(), TrajectoryPredictor::PredictionResult::lesser);
 
-
-    // HACK for action get shuffle where to put
-    //if (dynamic_cast<ActionPut*>(action.get()))
-    //{
-    //  RLOG(-1, "WARNING: The put action does select a random target");
-    //  std::vector<TrajectoryPredictor::PredictionResult> successResults;
-
-    //  for (size_t i=0; i<predResults.size(); ++i)
-    //  {
-    //    if (predResults[i].success)
-    //    {
-    //      successResults.push_back(predResults[i]);
-    //    }
-    //  }
-
-    //  std::random_device rd;
-    //  std::mt19937 g(rd());
-
-    //  std::shuffle(successResults.begin(), successResults.end(), g);
-    //  predResults = successResults;
-    //}
-
-    // END Hack
-
-
     REXEC(0)
     {
       RLOG_CPP(0, "Printing predictions");
@@ -354,7 +363,9 @@ void ActionComponent::actionThread(std::string text)
     domain.foveatedEntity = aGaze->getGazeTarget();
     RLOG_CPP(0, "Now gazing at " << domain.foveatedEntity);
     getEntity()->publish("PtuLookAtCommand", domain.foveatedEntity);
-    return;
+    //return;
+    // We let the function continue here so that the graphics is reflecting
+    // the PUT motion. It might not be the same as the one that really happens.
   }
 
 
@@ -449,7 +460,7 @@ void ActionComponent::onRender()
     src += 12;
   }
 
-  animationTic += 1;// \todo(MG) was 10
+  animationTic += 1;
 
   if (animationTic >= nRows)
   {

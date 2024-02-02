@@ -30,42 +30,52 @@
 
 *******************************************************************************/
 
-#ifndef RCS_TTSCOMPONENT_H
-#define RCS_TTSCOMPONENT_H
+#ifndef AFF_ACTIONPANTILTGAZE_H
+#define AFF_ACTIONPANTILTGAZE_H
 
-#include "ComponentBase.h"
 
-#include <thread>
+#include "ActionBase.h"
+
 
 
 namespace aff
 {
 
-class TTSComponent : public ComponentBase
+class ActionPanTilt : public ActionBase
 {
 public:
 
-  TTSComponent(EntityBase* parent);
-  virtual ~TTSComponent();
+  ActionPanTilt(const ActionScene& domain,
+                const RcsGraph* graph,
+                std::vector<std::string> params);
 
-private:
+  virtual ~ActionPanTilt();
+  std::unique_ptr<ActionBase> clone() const override;
 
-  void onStart();
-  void onStop();
-  void onSpeak(std::string text);
-  void onEmergencyStop();
-  void localThread();
+  std::string getGazeTarget() const;
 
-  bool threadRunning;
-  std::string textToSpeak;
-  std::mutex mtx;
-  std::thread ttsThread;
+  //protected:
 
-  // Avoid copying this class
-  TTSComponent(const TTSComponent&);
-  TTSComponent& operator=(const TTSComponent&);
+  std::vector<std::string> createTasksXML() const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  std::vector<std::string> createTasksPanTiltXML() const;
+  tropic::TCS_sptr createTrajectoryPanTilt(double t_start, double t_end) const;
+  double getDurationHint() const;
+  std::string explain() const;
+  std::vector<std::string> getManipulators() const;
+
+  std::string gazeTarget;
+  std::string gazeTargetInstance;
+  std::string cameraFrame;
+  std::string taskGaze;
+  std::string explanation;
+  std::vector<std::string> usedManipulators;
+  bool isGazeTargetInHand;
+  bool keepTasksActiveAfterEnd;
 };
 
-}
+}   // namespace aff
 
-#endif   // RCS_TTSCOMPONENT_H
+
+
+#endif // AFF_ACTIONPANTILTGAZE_H

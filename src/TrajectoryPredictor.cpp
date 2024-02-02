@@ -124,7 +124,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
   // intitialization time. It may be that there are no collisions, and
   // therefore minDist=DBL_MAX and the minDistBdy1 and 2 are "NULL"
   int minDistPair = -1;
-  RcsCollisionMdl* cmdl = controller->getCollisionMdl();
+  const RcsCollisionMdl* cmdl = controller->getCollisionMdl();
   result.minDist = RcsCollisionMdl_getMinDistPair(cmdl, &minDistPair);
   result.minDistBdy1 = (minDistPair==-1) ? "NULL" : RCSBODY_NAME_BY_ID(cmdl->graph, cmdl->pair[minDistPair].b1);
   result.minDistBdy2 = (minDistPair==-1) ? "NULL" : RCSBODY_NAME_BY_ID(cmdl->graph, cmdl->pair[minDistPair].b2);
@@ -400,7 +400,9 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
 
   result.bodyTransforms.resize(tStack->size);
   memcpy(result.bodyTransforms.data(), tStack->ele, tStack->size*sizeof(double));
-  //RLOG(0, "scaleJointSpeeds = %f", scaleJointSpeeds);
+
+  // We add a clone so that we can call this classes methods several times.
+  result.graph = RcsGraph_clone(graph);
 
   return result;
 }

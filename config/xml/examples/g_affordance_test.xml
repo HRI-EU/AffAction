@@ -68,21 +68,13 @@
   </Body>
 
 
-  <AffordanceModel body="glass_1" id="id_6332b31ef325ac88b0b6f706">
+  <AffordanceModel body="glass_1">
     <PowerGraspable name="glass_1" frame="cola_bottle_1_grip" />
     <Pourable name="glass_1_tip" frame="glass_1_tip" />
     <Containable name="glass_1_inside" frame="glass_1_inside" />
     <Containable name="glass_1_inside2" frame="glass_1_inside2" />
     <Supportable name="glass_1_bottom" frame="glass_1_bottom" />
   </AffordanceModel>
-
-
-
-
-
-
-
-
 
 
 
@@ -160,7 +152,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator name="hand_left" id="id_635a7122a1ae9f128d1b7b45" type="hand">
+  <Manipulator body="hand_left" types="hand">
     <Joints names="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left"/>
     <PowergraspCapability frame="hand_left_powergrasp" />
     <PalmgraspCapability frame="hand_left_palmgrasp" />

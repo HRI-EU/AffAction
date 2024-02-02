@@ -62,22 +62,96 @@ physically interact with an affordance model.
 namespace aff
 {
 
+auto space_fold = [](std::string a, std::string b)
+{
+  return std::move(a) + ' ' + b;
+};
+
+std::string join_strings(const std::vector<std::string>& strings)
+{
+  return std::accumulate(std::next(strings.begin()), strings.end(), strings[0], space_fold);
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+SceneEntity::SceneEntity()
+{
+}
+
+SceneEntity::SceneEntity(const xmlNodePtr node)
+{
+  bdyName = Rcs::getXMLNodePropertySTLString(node, "body");
+  RCHECK_MSG(!bdyName.empty(), "Found SceneEntity without body name");
+  name = bdyName;
+  instanceId = bdyName;
+  Rcs::getXMLNodePropertySTLString(node, "name", name);
+  Rcs::getXMLNodePropertySTLString(node, "instance_id", instanceId);
+  types = Rcs::getXMLNodePropertyVecSTLString(node, "types");
+
+  // Add name and instanceId as additional types.
+  if (std::find(types.begin(), types.end(), name) == types.end())
+  {
+    types.push_back(name);
+  }
+
+  if (std::find(types.begin(), types.end(), instanceId) == types.end())
+  {
+    types.push_back(instanceId);
+  }
+
+  RLOG(5, "Adding SceneEntity with name=%s bdyName=%s instanceId=%s types=%s",
+       name.c_str(), bdyName.c_str(), instanceId.c_str(), join_strings(types).c_str());
+}
+
+SceneEntity::~SceneEntity()
+{
+}
+
+const RcsBody* SceneEntity::body(const RcsGraph* graph) const
+{
+  RcsBody* b = RcsGraph_getBodyByName(graph, bdyName.c_str());
+  RCHECK_MSG(b, "SceneEntity %s (body %s) has no body attached",
+             name.c_str(), bdyName.c_str());
+  return b;
+}
+
+bool SceneEntity::isCollideable(const RcsGraph* graph) const
+{
+  const RcsBody* body = RcsGraph_getBodyByName(graph, bdyName.c_str());
+  return RcsBody_numDistanceShapes(body) > 0 ? true : false;
+}
+
+bool SceneEntity::isOfType(const std::string& type) const
+{
+  if (std::find(types.begin(), types.end(), type) == types.end())
+  {
+    return false;
+  }
+
+  return true;
+}
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 AffordanceEntity::AffordanceEntity()
 {
 }
 
 AffordanceEntity& AffordanceEntity::operator= (const AffordanceEntity& copyFromMe)
 {
-  //  RLOG(0, "**** Calling ASSIGNMENT of AffordanceEntity");
   if (this == &copyFromMe)
   {
     return *this;
   }
 
-  name = copyFromMe.name;
-  bdyName = copyFromMe.bdyName;
-  id = copyFromMe.id;
-  type = copyFromMe.type;
+  SceneEntity::operator=(copyFromMe);
+
   for (size_t i=0; i<affordances.size(); ++i)
   {
     delete affordances[i];
@@ -92,23 +166,8 @@ AffordanceEntity& AffordanceEntity::operator= (const AffordanceEntity& copyFromM
   return *this;
 }
 
-AffordanceEntity::AffordanceEntity(const xmlNodePtr node)
+AffordanceEntity::AffordanceEntity(const xmlNodePtr node) : SceneEntity(node)
 {
-  bdyName = Rcs::getXMLNodePropertySTLString(node, "body");
-  RCHECK_MSG(!bdyName.empty(), "Found AffordanceEntity without body name");
-  name = bdyName;
-  id = bdyName;
-  Rcs::getXMLNodePropertySTLString(node, "name", name);
-  Rcs::getXMLNodePropertySTLString(node, "id", id);
-  Rcs::getXMLNodePropertySTLString(node, "type", type);
-  if (type.empty())
-  {
-    type = name;
-  }
-
-  RLOG(5, "Adding AffordanceModel with name=%s bdyName=%s id=%s type=%s",
-       name.c_str(), bdyName.c_str(), id.c_str(), type.c_str());
-
   xmlNodePtr child = node->children;
 
   while (child)
@@ -185,7 +244,7 @@ AffordanceEntity::AffordanceEntity(const xmlNodePtr node)
     else if (isXMLNodeNameNoCase(child, "Openable"))
     {
       Openable* affordance = new Openable(child);
-      RLOG_CPP(0, "Assigning '" << bdyName << "' to Openable");
+      RLOG_CPP(1, "Assigning '" << bdyName << "' to Openable - fix me");
       affordance->frame = bdyName;   // \todo(MG): fix it. We need a frame to pass the check
       affordances.push_back(affordance);
 
@@ -196,8 +255,7 @@ AffordanceEntity::AffordanceEntity(const xmlNodePtr node)
 
 }
 
-AffordanceEntity::AffordanceEntity(const AffordanceEntity& other) :
-  name(other.name), bdyName(other.bdyName), id(other.id), type(other.type)
+AffordanceEntity::AffordanceEntity(const AffordanceEntity& other) : SceneEntity(other)
 {
   for (size_t i=0; i<other.affordances.size(); ++i)
   {
@@ -266,12 +324,6 @@ bool AffordanceEntity::check(const RcsGraph* graph) const
   }
 
   return success;
-}
-
-bool AffordanceEntity::isCollideable(const RcsGraph* graph) const
-{
-  const RcsBody* body = RcsGraph_getBodyByName(graph, bdyName.c_str());
-  return RcsBody_numDistanceShapes(body)>0 ? true : false;
 }
 
 /*******************************************************************************

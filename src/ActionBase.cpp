@@ -32,6 +32,14 @@
 
 #include "ActionBase.h"
 
+// For prediction tree
+#include <ConcurrentExecutor.h>
+#include <PredictionTree.h>
+#include <ActionFactory.h>
+#include <Rcs_utilsCPP.h>
+#include <algorithm>
+
+
 #include <TaskFactory.h>
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
@@ -167,7 +175,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(const RcsGraph* graph_
   // for (const auto& m : domain.manipulators)
   // {
   //   MatNd* tmpMask = MatNd_create(graph->nJ, 1);
-  //   const RcsBody* effector = RcsGraph_getBodyByName(graph, m.name.c_str());
+  //   const RcsBody* effector = RcsGraph_getBodyByName(graph, m.bdyName.c_str());
   //   RCHECK(effector);
   //   RcsGraph_computeJointRecursionMask(graph, effector, tmpMask);
   //   for (size_t i = 0; i < graph->nJ; ++i)
@@ -233,6 +241,18 @@ std::string ActionBase::getActionCommand() const
   }
 
   return cmd;
+}
+
+void ActionBase::print() const
+{
+  auto xmlTasks = createTasksXML();
+
+  for (const auto& t : xmlTasks)
+  {
+    std::cout << t << std::endl;
+  }
+
+  std::cout << "Action default duration: " << getDurationHint() << std::endl;
 }
 
 std::vector<double> ActionBase::getOptimState() const
@@ -311,6 +331,207 @@ const AffordanceEntity* ActionBase::raycastSurface(const ActionScene& domain,
 
   return surface;
 }
+
+
+
+//agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box; pose default")
+std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
+                                                        RcsGraph* graph,
+                                                        const RcsBroadPhase* broadphase,
+                                                        std::vector<std::string> actions,
+                                                        size_t stepsToPlan,
+                                                        size_t maxNumThreads,
+                                                        double dt,
+                                                        std::string& errMsg)
+{
+  std::vector<std::string> predictedActions;  // Action sequence which will be returned
+  std::unique_ptr<PredictionTree> predictionTree = std::make_unique<PredictionTree>();
+  PredictionTreeNode* currentPredictionNode = predictionTree->root;
+  RcsGraph* localGraph = RcsGraph_clone(graph); // Create a local copy of the graph to work with
+  const RcsGraph* lookaheadGraph = localGraph;
+
+  // Print sequence
+  RLOG(1, "planActionSequence: Sequence to plan:");
+  for (size_t i = 0; i < actions.size(); i++)
+  {
+    RLOG_CPP(1, "Action #" << i << ": `" << actions[i] << "'");
+  }
+
+  // Limit the number of steps to lookahead to the sequence length.
+  // Predicting less that sequence length steps will guarantee a succesfull
+  // execution of the sequence up to that number of actions.
+  stepsToPlan = std::min(stepsToPlan, actions.size());
+
+  for (size_t s = 0; s < stepsToPlan; s++)
+  {
+    // Start predicting the desired number of steps ahead
+    std::string text = actions[s];
+    REXEC(1)
+    {
+      RLOG_CPP(0, "Current action #" << s << " `" << text << "'");
+      predictionTree->printNodesAtEachDepth();
+    }
+
+    std::vector<PredictionTreeNode*> currentStepNodes = predictionTree->getNodesAtDepth(s, true);
+    RLOG_CPP(1, "Current depth: " << s << "; Number of branches to explore: " << currentStepNodes.size());
+
+    if (currentStepNodes.size() == 0)
+    {
+      // In this case, there are no successfull leaf nodes to expand.
+      // The sequence will fail after 's' steps in this case.
+      RLOG_CPP(0, "Sequence prediction failing after " << s << " steps! No action will be performed!");
+      break;
+    }
+
+    std::string explanation;// = "Success";
+    std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
+    std::unique_ptr<ActionBase> action;
+
+    for (const auto& currentPredictionNode : currentStepNodes)
+    {
+      // Load the graph from the
+      if (s > 0)
+      {
+        lookaheadGraph = currentPredictionNode->graph;
+        RCHECK(lookaheadGraph);
+      }
+
+      // We are here if a '+' has been detected in the command string. This is a
+      // parallel action where the actions that are separated by the '+' sign get
+      // instantiated by the MultiStringAction.
+      if (actionStrings.size()>1)
+      {
+        actionStrings.insert(actionStrings.begin(), "multi_string");
+        action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, actionStrings, explanation));
+        errMsg += explanation;
+      }
+      // This is the "normal" action that only has space-separated words.
+      else
+      {
+        std::vector<std::string> words = Rcs::String_split(text, " ");
+        action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, words, explanation));
+        errMsg += explanation;
+      }
+
+      // Early exit if the action could not be created. The particular reason
+      // depends on the action and is returned in the explanation string.
+      if ((!action) || (action->getNumSolutions()==0))
+      {
+        RLOG(0, "Could not create action! Early exit triggered! Explanation: %s", explanation.c_str());
+        break;
+      }
+
+      double minCost = DBL_MAX;
+      std::string minMessage;
+      std::vector<TrajectoryPredictor::PredictionResult> predResults(action->getNumSolutions());
+      std::vector<std::future<void>> futures;
+
+      // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
+      size_t nThreads = std::thread::hardware_concurrency();
+
+      if (maxNumThreads != 0)
+      {
+        nThreads = std::min(nThreads, maxNumThreads);
+      }
+
+      ConcurrentExecutor predictExecutor(std::min(nThreads, action->getNumSolutions()));
+
+      // enque each solution to be predicted
+      for (size_t i = 0; i < action->getNumSolutions(); ++i)
+      {
+        // Create a new unique_ptr<ActionBase> for each lambda
+        const ActionBase* aPtr = action.get();
+
+        futures.push_back(predictExecutor.enqueue([i, &domain, broadphase, lookaheadGraph, aPtr, dt, &predResults]
+        {
+          const double scaleDurationHint = 1.0;
+          auto localAction = aPtr->clone();
+          RLOG_CPP(0, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
+          localAction->initialize(domain, lookaheadGraph, i);
+          double dt_predict = Timer_getSystemTime();
+          predResults[i] = localAction->predict(lookaheadGraph, broadphase,
+                                                scaleDurationHint*localAction->getDurationHint(), dt);
+          predResults[i].idx = i;
+          predResults[i].actionText = localAction->getActionCommand();
+          dt_predict = Timer_getSystemTime() - dt_predict;
+          predResults[i].message += " command: " + localAction->getActionCommand();
+          RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
+               predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
+               1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost,
+               predResults[i].message.c_str());
+        }));
+      }
+
+      // wait for the predictions to finish
+      for (auto& future : futures)
+      {
+        future.wait();
+      }
+
+      // sort predictions
+      RLOG_CPP(0, "Done threaded prediction - Sorting " << predResults.size() << " predictions");
+      std::sort(predResults.begin(), predResults.end(), TrajectoryPredictor::PredictionResult::lesser);
+
+      // print prediction results
+      RLOG_CPP(0, "Printing predictions");
+      for (const auto& r : predResults)
+      {
+        if (r.idx != -1)
+        {
+          const int verbosityLevel = RcsLogLevel;
+          r.print(verbosityLevel);
+          RLOG(0, "Adding: `%s`", r.actionText.c_str());
+          currentPredictionNode->addChild(r);
+        }
+      }
+      RLOG_CPP(0, predResults.size() << " predictions have been added to the prediction tree");
+    }   // for (const auto& currentPredictionNode : currentStepNodes)
+
+  }   // for (size_t s = 0; s < stepsToPlan; s++)
+
+  RcsGraph_destroy(localGraph);
+
+  REXEC(0)
+  {
+    predictionTree->printTreeVisual(predictionTree->root, 0);
+  }
+
+  const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
+
+  if (treeDepth < stepsToPlan)
+  {
+    RLOG(0, "Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
+    return predictedActions;
+  }
+  else
+  {
+    std::pair<double, std::vector<aff::PredictionTreeNode*>> bestPath = predictionTree->findSmallestCostPath(treeDepth);
+
+    RLOG(0, "Best route for the next %d actions: ", treeDepth);
+
+    for (const auto& node : bestPath.second)
+    {
+      RLOG_CPP(0, node->actionText << " : " << node->quality);
+      predictedActions.push_back(node->actionText);
+    }
+
+    RLOG_CPP(0, "best path total cost: " << bestPath.first);
+  }
+
+  REXEC(0)
+  {
+    RLOG(0, "\nCorrected actions: ");
+    for (const auto& action : predictedActions)
+    {
+      std::cout << action << ";";
+    }
+    std::cout << std::endl;
+  }
+
+  return predictedActions;
+}
+
+
 
 
 }   // namespace aff

@@ -35,11 +35,20 @@
 &#xA;  Configuration file to load the unit testing scenario.
 &#xA;  "
 >
+
+    <!-- Action sequences -->
+    <ActionSequence name="0" text="get block_1; put block_1 table_r_far" />
+    <ActionSequence name="1" text="get block_1 hand_left; put block_1 table_r_far" />
+    <ActionSequence name="2" text="get block_1 hand_right; put block_1 table_r_far" />
+    <ActionSequence name="3" text="get block; gaze block; put block table_r_far" />
+    <ActionSequence name="4" text="get block_2; get block_1; put block_1 table_l_far; put block_2 table_r_far" />
+    <ActionSequence name="5" text="get block_2; get block_1; put block_1 table_l_far; put block_2 table_r_far; get block_1; get block_2; put block_1 table_c; put block_2 block_1" />
+
     <!-- Robot with hands including affordances -->
     <xi:include href="../../Affaction/TwoArmJaco7/g_robo.xml"/>
 
     <!-- table with few supportables -->
-    <xi:include href="./resources/g_table_few.xml"/>
+    <xi:include href="./resources/g_table_far.xml"/>
 
     <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
         <joint_state joint="j2s7s300_joint_1_right" position="20"/>
@@ -85,8 +94,8 @@
     -->
 
     <!-- block_1 -->
-
-    <Body name="block_1" prev="table_c" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="RED">
+    
+    <Body name="block_1" prev="table" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="RED">
         <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
@@ -99,161 +108,60 @@
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="block_1" types="block bowl">
+    <AffordanceModel body="block_1" type="bowl">
         <Stackable frame="block_1"/>
         <Supportable frame="block_1_top"/>
         <PowerGraspable frame="block_1_grip"/>
+        <PalmGraspable frame="block_1_grip"/>
     </AffordanceModel>
 
-    <Manipulator body="head_kinect_link" types="head">
+    <!-- block_2 -->
+    
+    <Body name="block_2" prev="block_1_top" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
+        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_2_top" prev="block_2" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="block_2_grip" prev="block_2" transform="0 0 0.05 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <AffordanceModel body="block_2" type="bowl">
+        <Stackable frame="block_2"/>
+        <Supportable frame="block_2_top"/>
+        <PowerGraspable frame="block_2_grip"/>
+        <PalmGraspable frame="block_2_grip"/>
+    </AffordanceModel>
+
+    <!-- <Manipulator name="head_kinect_link" id="id_123456" type="head">
         <GazeCapability frame="head_kinect_rgb_link" />
-    </Manipulator>
+    </Manipulator> -->
 
-
-    <!--
-        ***********************************************************************
-
-        Bob
-
-        `./bin/TestLLM': ./bin/TestLLMSim
-        -dir config/xml/Affaction/examples/
-        -f g_aruco.xml
-        -tracking
-        -jsonFile config/xml/Affaction/data/skeleton.json
-
-        ***********************************************************************
-    -->
-
-    <Body name="bob" prev="lab" rigid_body_joints="0 0 0 0 0 0">
-        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
-               transform="0 0 0.1 180 0 0" color="RED"/>
-    </Body>
-
-    <Body name="bob_hand_left" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
+    <!-- block_3 -->
+    
+    <Body name="block_3" prev="table_l" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
         <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Body name="bob_hand_right" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
-        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+    <Body name="block_3_top" prev="block_3" transform="0 0 0.1 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Body name="bob_head" prev="bob" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="BLUE">
-        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
+    <Body name="block_3_grip" prev="block_3" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Manipulator body="bob_hand_left" types="hand_left hand">
-    </Manipulator>
-
-    <Manipulator body="bob_hand_right" types="hand_right hand">
-    </Manipulator>
-
-    <Manipulator body="bob_head" types="head">
-    </Manipulator>
-
-    <!--
-    ***********************************************************************
-
-    Dave
-
-    ***********************************************************************
-    -->
-
-    <Body name="dave" prev="lab" rigid_body_joints="0 0 0 0 0 0">
-        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
-               transform="0 0 0.1 180 0 0" color="RED"/>
-    </Body>
-
-    <Body name="dave_hand_left" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
-        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="dave_hand_right" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
-        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="dave_head" prev="dave" mass="0.2" physics="dynamic" rigid_body_joints="0 0 0 0 0 0" color="GREEN">
-        <Shape type="BOX" extents="0.1 0.1 0.1" transform="0 0 0.05 0 0 0" graphics="true" distance="true" physics="true"/>
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Manipulator body="dave_hand_left" types="hand_left hand">
-    </Manipulator>
-
-    <Manipulator body="dave_hand_right" types="hand_right hand">
-    </Manipulator>
-
-    <Manipulator body="dave_head" types="head">
-    </Manipulator>
-
-
-    <!--
-        ***********************************************************************
-
-        Agent defintion
-
-        Old:
-        <Component manipulator="hand_left" type="hand_left">
-
-        Todo:
-        +++ add tracker type (azure/bodysuit/stereolabs etc)
-        +++ keep type abstract (call it azure_tracker)
-        +++ replace `type=...` with `tracker=azure_kinect`
-
-        ***********************************************************************
-    -->
-
-    <Agent types="robot" name="Robot" tracker="azure_kinect">
-        <Component manipulator="hand_left"/> <!-- affaction/config/xml/TwoArmJaco7/g_hand_left.xml -->
-        <Component manipulator="hand_right"/> <!-- affaction/config/xml/TwoArmJaco7/g_hand_right.xml -->
-        <Component manipulator="head_kinect_link"/> <!-- affaction/config/xml/TwoArmJaco7/g_scitos_base.xml -->
-    </Agent>
-
-    <Agent types="human" name="Bob" tracker="azure_kinect" defaultPos="0 1 0.5" defaultRadius="0.5">
-        <Component manipulator="bob_hand_left"/>
-        <Component manipulator="bob_hand_right"/>
-        <Component manipulator="bob_head"/>
-    </Agent>
-
-    <Agent types="human" name="Dave" tracker="azure_kinect" defaultPos="0 1 0.5" defaultRadius="0.5">
-        <Component manipulator="dave_hand_left"/>
-        <Component manipulator="dave_hand_right"/>
-        <Component manipulator="dave_head"/>
-    </Agent>
-
-    <!--
-    <Agent types="human" name="Dave">
-        <Component manipulator="other_undefined_hand" type="hand"/>
-    </Agent> -->
-
-    <!--
-        block_1
-        block 2
-           .
-           .
-           .
-    -->
-
-    <!--
-        ***********************************************************************
-
-        Test cases
-
-        ***********************************************************************
-    -->
-
-    <ActionSequence name="test_example_1" text="gaze block; get block; put block table"/>
-
-    <!--
-        <ActionSequence name="test_1" text="gaze block_1; get block_1;"/>
-        <ActionSequence name="test_1" text="gaze block_2; get block_2"/>
-           .
-           .
-           .
-    -->
+    <AffordanceModel body="block_3" type="bowl">
+        <Stackable frame="block_3"/>
+        <Supportable frame="block_3_top"/>
+        <PincerGraspable frame="block_3_grip"/>
+        <PowerGraspable frame="block_3_grip"/>
+        <PalmGraspable frame="block_3_grip"/>
+    </AffordanceModel>
 
 </Graph>

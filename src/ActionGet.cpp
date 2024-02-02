@@ -69,7 +69,6 @@ namespace aff
 REGISTER_ACTION(ActionGet, "get");
 REGISTER_ACTION(ActionGet, "id_6355842184f61faabb83cb1b");
 
-
 ActionGet::ActionGet() :
   graspType(GraspType::Other), liftHeight(DEFAULT_LIFTHEIGHT), preGraspDist(DEFAULT_PREGRASPDIST),
   shoulderBase(0.0), handOver(false), isObjCollidable(false)
@@ -106,13 +105,36 @@ ActionGet::ActionGet(const ActionScene& domain,
 
   std::string objectToGet = params[0];
   std::string manipulator = params.size()>1?params[1]:std::string();
-  init(domain, graph, objectToGet, manipulator, whereFrom);
+  std::string graspToUse = params.size()>2?params[2]:std::string();
+
+  init(domain, graph, objectToGet, manipulator, graspToUse, whereFrom);
+}
+
+std::string ActionGet::getActionCommand() const
+{
+  std::string actionCommand;
+
+  actionCommand += "get ";
+  actionCommand += objectName + " ";
+  auto get_manipulators = getManipulators();
+  if (get_manipulators.empty())
+  {
+    actionCommand += "invalid_manipulator ";
+  }
+  else
+  {
+    actionCommand += get_manipulators[0] + " ";  // This should contain only 1 maniplator everytime
+  }
+  actionCommand += graspTypeToString(graspType);
+
+  return actionCommand;
 }
 
 void ActionGet::init(const ActionScene& domain,
                      const RcsGraph* graph,
                      const std::string& objectToGet,
                      const std::string& manipulator,
+                     const std::string& graspToUse,
                      const std::string& whereFrom)
 {
   RLOG_CPP(1, "Calling get with manipulator='" << manipulator
@@ -131,9 +153,10 @@ void ActionGet::init(const ActionScene& domain,
 
     if (nttsToGet.empty())
     {
-      std::string reasonMsg = " REASON: The " + objectToGet +
-                              " is unknown. SUGGESTION: Use an object name that is defined in the environment";
-      throw ActionException(errorMsg + reasonMsg, ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectToGet + " is unknown.",
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // We go through all entities with the same name.
@@ -146,9 +169,10 @@ void ActionGet::init(const ActionScene& domain,
       // \todo(MG): This code is duplicate to further below.
       if ((!manipulator.empty()) && (!specifiedHand))
       {
-        std::string reasonMsg = " REASON: Can't find a hand with the name " + manipulator;
-        std::string suggestionMsg = " SUGGESTION: Use a hand name that is defined in the environment";
-        throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+        throw ActionException(ActionException::ParamNotFound,
+                              "Can't find a hand with the name " + manipulator,
+                              "Use a hand name that is defined in the environment",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
 
       // We are done if:
@@ -156,7 +180,7 @@ void ActionGet::init(const ActionScene& domain,
       // - the object is grasped, and no hand to grasp it has been specified (parameter "manipulator" is empty)
       if (graspingHand && ((graspingHand == specifiedHand) || (!specifiedHand)))
       {
-        throw ActionException("SUCCESS DEVELOPER: Object is already held in the hand", ActionException::NoError);
+        throw ActionException(ActionException::NoError, "", "", "Object is already held in the hand");
       }
       // If not, we take the first one we find.
       else
@@ -190,12 +214,12 @@ void ActionGet::init(const ActionScene& domain,
 
       if (!fromHand)
       {
-        std::string reasonMsg = " REASON: The " + whereFrom + " is neither a hand nor a part of the environment";
-        std::string suggestionMsg = " SUGGESTION: Use an object name or a hand that is defined in the environment";
-        throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+        std::string reasonMsg = "The " + whereFrom + " is neither a hand nor a part of the environment";
+        std::string suggestionMsg = "Use an object name or a hand that is defined in the environment";
+        throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
       }
 
-      fromBdyName = fromHand->name;
+      fromBdyName = fromHand->bdyName;
     }
 
     const RcsBody* bdyFrom = RcsGraph_getBodyByName(graph, fromBdyName.c_str());
@@ -214,9 +238,9 @@ void ActionGet::init(const ActionScene& domain,
 
     if (!entityToGet)
     {
-      std::string reasonMsg = " REASON: The " + whereFrom + " is empty";
-      std::string suggestionMsg = " SUGGESTION: Use an alternative object";
-      throw ActionException(errorMsg + reasonMsg, ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + whereFrom + " is empty",
+                            "Use an alternative object");
     }
 
   }
@@ -229,14 +253,21 @@ void ActionGet::init(const ActionScene& domain,
 
   if (graspables.empty())
   {
-    std::string reasonMsg = " REASON: " + objectToGet + " cannot be grasped";
-    throw ActionException(errorMsg + reasonMsg, ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          objectToGet + " cannot be grasped");
   }
 
   // ResolveBodyName changes the objectName in certain cases (e.g. generic bodies)
   objectName = entityToGet->bdyName;
   const RcsBody* objBdy = resolveBodyName(graph, objectName);
-  RCHECK_MSG(objBdy, "Couldn't resolve object body \"%s\". Is it part of the graph?", objectName.c_str());
+
+  if (!objBdy)
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "Couldn't resolve object body \"" + objectName + "\".",
+                          "Make sure it is part of the scenegraph",
+                          "RcsBody not found in graph");
+  }
 
   // Adjust lift height: First we compute an axis-aligned bounding box around
   // the body to get. We raycast upwards from its top. This avoids
@@ -257,7 +288,7 @@ void ActionGet::init(const ActionScene& domain,
   if (surfaceBdy && !RcsBody_isChild(graph, surfaceBdy, objBdy))
   {
     this->liftHeight = Math_clip(this->liftHeight, 0.0, std::min(this->liftHeight, dMin-LIFT_SAFETY_DISTANCE));
-    RLOG(0, "Reducing lift height to %f because of %s", this->liftHeight, surfaceBdy->name);
+    RLOG(1, "Reducing lift height to %f because of %s", this->liftHeight, surfaceBdy->name);
   }
 
 
@@ -278,23 +309,29 @@ void ActionGet::init(const ActionScene& domain,
     // If a manipulator has been passed but cannot be found, we consider this as an error.
     if (!hand)
     {
-      std::string reasonMsg = " REASON: Can't find a hand with the name " + manipulator;
-      std::string suggestionMsg = " SUGGESTION: Use a hand name that is defined in the environment";
-      throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+      throw ActionException(ActionException::ParamNotFound,
+                            "Can't find a hand with the name " + manipulator,
+                            "Use a hand name that is defined in the environment");
     }
 
     if (!hand->isEmpty(graph))
     {
       auto heldObjects = hand->getGraspedEntities(domain, graph);
-      RCHECK(!heldObjects.empty());
-      std::string reasonMsg = " REASON: The hand " + manipulator + " is already holding the " + heldObjects[0]->name;
+
+      if (heldObjects.empty())
+      {
+        throw ActionException(ActionException::UnknownError, "Internal error", "",
+                              "Internal error: the hand is not empty, but no grasped entity was found");
+      }
+
+      std::string reasonMsg = "The hand " + manipulator + " is already holding the " + heldObjects[0]->name;
       if (heldObjects.size()>1)
       {
         reasonMsg = " and some other objects";
       }
 
-      std::string suggestionMsg = " SUGGESTION: Free your hand before performing this command, or use another hand";
-      throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+      std::string suggestionMsg = "Free your hand before performing this command, or use another hand";
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
     }
 
     freeManipulators.push_back(hand);
@@ -302,29 +339,80 @@ void ActionGet::init(const ActionScene& domain,
 
   if (freeManipulators.empty())
   {
-    std::string reasonMsg = " REASON: All hands are already full";
-    std::string suggestionMsg = " SUGGESTION: Free one or all your hands before performing this command";
-    std::string devMsg = std::string(" DEVELOPER: ") + std::string(__FILENAME__) + " line " +
-                         std::to_string(__LINE__);
-    throw ActionException(errorMsg + reasonMsg + suggestionMsg + devMsg,
-                          ActionException::KinematicallyImpossible);
+    std::string reasonMsg = "All hands are already full";
+    std::string suggestionMsg = "Free one or all your hands before performing this command";
+    throw ActionException(ActionException::KinematicallyImpossible, reasonMsg, suggestionMsg,
+                          std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
   }
 
   // From here on we have one or several manipulators that can be tentatively used
   // to get the object. We now go through each of them and compile a list of pairs
   // matching each manipulator's capability to the object affordances.
+  //  OR
+  // If we have an explicit capability to be used, compile a list of pair only with
+  // that capability.
+
+
+  // \todo (MG): We should also collect entities matching different types and
+  // add them to the affordance map. Currently, the first found type is used, and not all matching ones.
+
+
   for (const Manipulator* hand : freeManipulators)
   {
-    auto graspMap_i = match<Graspable>(entityToGet, hand);
+    std::vector<std::tuple<aff::Affordance*, aff::Capability*>> graspMap_i;
+    if (graspToUse.empty())
+    {
+      graspMap_i = match<Graspable>(entityToGet, hand);
+    }
+    else
+    {
+      // TODO (CP) There might a prettier way to deal with this
+      // Problem `match` is a template function
+      if (graspToUse == "PowerGrasp")
+      {
+        graspMap_i = match<PowerGraspable>(entityToGet, hand);
+      }
+      else if (graspToUse == "PincerGrasp")
+      {
+        graspMap_i = match<PincerGraspable>(entityToGet, hand);
+      }
+      else if (graspToUse == "PalmGrasp")
+      {
+        graspMap_i = match<PalmGraspable>(entityToGet, hand);
+      }
+      else if (graspToUse == "BallGrasp")
+      {
+        graspMap_i = match<BallGraspable>(entityToGet, hand);
+      }
+      else if (graspToUse == "CircularGrasp")
+      {
+        graspMap_i = match<CircularGraspable>(entityToGet, hand);
+      }
+      else if (graspToUse == "TwistGrasp")
+      {
+        graspMap_i = match<TwistGraspable>(entityToGet, hand);
+      }
+      else
+      {
+        // Resort to default mathing if grasp type is not found in the list above
+        RLOG(0, "Grasp type `%s` is not supported or invalid!", graspToUse.c_str());
+        graspMap_i = match<Graspable>(entityToGet, hand);
+      }
+    }
+
     affordanceMap.insert(affordanceMap.end(), graspMap_i.begin(), graspMap_i.end());
   }
+
+
+
+
 
   // If this vector is empty, there's no capability that can get the object in any way.
   // How sad that we have to stop here.
   if (affordanceMap.empty())
   {
-    std::string reasonMsg = " REASON: I don't have the capability of grasping the " + objectToGet;
-    throw ActionException(errorMsg + reasonMsg, ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "I don't have the capability of grasping the " + objectToGet);
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -343,7 +431,7 @@ void ActionGet::init(const ActionScene& domain,
     // We also reset the lift height so that we don't get increased height
     // per each hand-over.
     this->liftHeight = objBdy->A_BI.org[2];
-    RLOG(0, "\"%s\" to grasp is held in hand", entityToGet->name.c_str());
+    RLOG(1, "\"%s\" to grasp is held in hand", entityToGet->name.c_str());
 
 #if 0
     const double frameRadius = 0.05;
@@ -372,8 +460,8 @@ void ActionGet::init(const ActionScene& domain,
   // the grasp affordances have been removed above.
   if (affordanceMap.empty())
   {
-    std::string reasonMsg = " REASON: It is too difficult to hand the " + objectToGet + " over to the other hand";
-    throw ActionException(errorMsg + reasonMsg, ActionException::KinematicallyImpossible);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "It is too difficult to hand the " + objectToGet + " over to the other hand");
   }
 #endif
 
@@ -439,8 +527,8 @@ bool ActionGet::initialize(const ActionScene& domain,
 
   // Find the shoulder link where the arms branch
   {
-    const RcsBody* bdyPtr = RcsGraph_getBodyByName(graph, hand->name.c_str());
-    RCHECK_MSG(bdyPtr, "Hand body \"%s\" not found", hand->name.c_str());
+    const RcsBody* bdyPtr = RcsGraph_getBodyByName(graph, hand->bdyName.c_str());
+    RCHECK_MSG(bdyPtr, "Hand body \"%s\" not found", hand->bdyName.c_str());
     bdyPtr = RCSBODY_BY_ID(graph, bdyPtr->parentId);
     RCHECK_MSG(bdyPtr, "Hand body first parent not found");
     while (bdyPtr->parentId !=1)
@@ -618,11 +706,11 @@ ActionGet::createTrajectory(double t_start,
   a1->addActivation(t_end+afterTime, false, 0.5, taskObjPosY);
 
   // HACK
-  if (shoulderBase != 0.0)
-  {
-    a1->add(t_end, -0.35, 0.0, 0.0, 7, taskObjPosX + " 0");
-    a1->add(t_end, shoulderBase<0.0?-0.3:0.3, 0.0, 0.0, 7, taskObjPosY + " 0");
-  }
+  // if (shoulderBase != 0.0)
+  // {
+  //   a1->add(t_end, -0.35, 0.0, 0.0, 7, taskObjPosX + " 0");
+  //   a1->add(t_end, shoulderBase<0.0?-0.3:0.3, 0.0, 0.0, 7, taskObjPosY + " 0");
+  // }
 
   // If the object is handed over, we keep the hand-over hand at its position
   if (!taskHandOverHand.empty())
@@ -1049,8 +1137,9 @@ public:
 
     std::string objectToGet = params[0];
     std::string manipulator = params.size()>1?params[1]:std::string();
+    std::string graspToUse = params.size()>2?params[2]:std::string();
 
-    init(domain, graph, objectToGet, manipulator, whereFrom);
+    init(domain, graph, objectToGet, manipulator, graspToUse, whereFrom);
   }
 
 };

@@ -47,8 +47,9 @@ public:
   ActionPose(const ActionScene& domain,
              const RcsGraph* graph,
              std::vector<std::string> params);
-  ActionPose(const RcsGraph* graph, const std::string& mdlState, int timeStamp);
   virtual ~ActionPose();
+
+  void init(const RcsGraph* graph, const std::string& mdlState, int timeStamp);
   std::unique_ptr<ActionBase> clone() const override;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::string explain() const;

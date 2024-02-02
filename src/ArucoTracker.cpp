@@ -47,6 +47,9 @@
 static const double default_marker_length = 1.0;
 
 
+
+namespace aff
+{
 /*! \brief Given a hierarchy of transforms where I is the world frame, B is
  *         a body frame, P is the bodie's parent frame and M is a marker frame
  *         that is a child of the body, and knowing the transforms T_MI, T_MB
@@ -281,7 +284,7 @@ computeDofsFromAruco_new(const RcsGraph* graph,
 
 
 /*******************************************************************************
-  We require the camera to be a child of the base marker, for instane:
+  We require the camera to be a child of the base marker, for instance:
 
   <Body name="aruco_base" rigid_body_joints="0 0 0.8 0 0 0" color="PEWTER">
     <Shape type="BOX" extents="0.14 0.14 0.001" graphics="true" textureFile="aruco/4x4marker_0.jpg"/>
@@ -632,3 +635,5 @@ bool ArucoTracker::isCalibrating() const
 {
   return calibration ? calibration->isCalibrating() : false;
 }
+
+}   // namespace

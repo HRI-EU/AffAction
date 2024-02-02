@@ -41,46 +41,72 @@ namespace aff
 
 class ActionScene;
 
-class Agent
+class Agent : public SceneEntity
 {
 public:
-  std::string name;
-  std::string type;
+
   std::vector<std::string> manipulators;
 
   Agent(const xmlNodePtr node, const ActionScene* scene);
+  Agent(const Agent& other);
+  Agent& operator = (const Agent&);
+  virtual ~Agent();
+
   static Agent* createAgent(const xmlNodePtr node, ActionScene* scene);
   virtual void print() const;
-  virtual ~Agent();
+  virtual Agent* clone() const;
   virtual std::string isLookingAt() const;
+  virtual bool canReachTo(const ActionScene* scene,
+                          const RcsGraph* graph,
+                          const double position[3]) const;
+  std::vector<const AffordanceEntity*> getObjectsInReach(const ActionScene* scene,
+                                                         const RcsGraph* graph) const;
+  virtual bool isVisible() const;
+  virtual bool check(const ActionScene* scene,
+                     const RcsGraph* graph) const;
+  virtual std::vector<const Manipulator*> getManipulatorsOfType(const ActionScene* scene,
+                                                                const std::string& type) const;
 };
 
 class RobotAgent : public Agent
 {
 public:
   RobotAgent(const xmlNodePtr node, const ActionScene* scene);
+  RobotAgent(const RobotAgent& other);
+  RobotAgent& operator = (const RobotAgent&);
   virtual ~RobotAgent();
-  int getPanTilt(const RcsGraph* graph, const std::string& gazeTarget,
-                 double panTilt[2], size_t maxIter, double eps,
-                 double err[2]) const;
+  static int getPanTilt(const RcsGraph* graph, const std::string& gazeTarget,
+                        double panTilt[2], size_t maxIter, double eps,
+                        double err[2]);
+  Agent* clone() const;
+  bool canReachTo(const ActionScene* scene,
+                  const RcsGraph* graph,
+                  const double position[3]) const;
+  bool check(const ActionScene* scene,
+             const RcsGraph* graph) const;
 };
 
 class HumanAgent : public Agent
 {
 public:
-  bool isVisible;
   double lastTimeSeen;
+  bool visible;
   std::string tracker;
   std::vector<HTr> markers;   // Vector of tracked body links
-  double defaultPos[3];
   double defaultRadius;
+  double defaultPos[3];
   std::string gazeTarget;
   std::string gazeTargetPrev;
   double gazeDirection[3];
   double headPosition[3];
 
-  HumanAgent(const xmlNodePtr node, const ActionScene* scene);
+  HumanAgent(const xmlNodePtr node,
+             const ActionScene* scene);
+  HumanAgent(const HumanAgent& other);
+  HumanAgent& operator = (const HumanAgent&);
   virtual ~HumanAgent();
+
+  Agent* clone() const;
   void setMarkers(const std::vector<HTr>& newMarkers);
   void setVisibility(const bool newVisibilty);
   void projectMarkersOnManipulators(const RcsGraph* graph);
@@ -90,6 +116,10 @@ public:
   bool getGazeDirection(double dir[3]) const;
   bool getHeadUpAxis(double dir[3]) const;
   std::string isLookingAt() const;
+  bool isVisible() const;
+  bool canReachTo(const ActionScene* scene,
+                  const RcsGraph* graph,
+                  const double position[3]) const;
 };
 
 } // namespace aff

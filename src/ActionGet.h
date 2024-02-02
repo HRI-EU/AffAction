@@ -56,6 +56,7 @@ public:
             const RcsGraph* graph,
             const std::string& object,
             const std::string& hand,
+            const std::string& graspTypeStr,
             const std::string& whereFrom);
 
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
@@ -67,6 +68,7 @@ public:
   std::vector<std::string> getManipulators() const;
   virtual size_t getNumSolutions() const;
   virtual double getDurationHint() const;
+  virtual std::string getActionCommand() const;
 
   // Interface for optimization
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,

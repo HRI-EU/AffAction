@@ -34,8 +34,8 @@
         <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true"/>
     </Body>
-    
-    <!-- 
+
+    <!--
         ***********************************************************************
 
         row centers
@@ -68,7 +68,7 @@
          <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="GREEN" />
     </Body>
 
-    <!-- 
+    <!--
         ***********************************************************************
 
         left side
@@ -258,7 +258,7 @@
          <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
 
-    <!-- 
+    <!--
         ***********************************************************************
 
         right side
@@ -448,7 +448,7 @@
          <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
 
-    <!-- 
+    <!--
         ***********************************************************************
 
         table affordance model
@@ -456,7 +456,7 @@
         ***********************************************************************
     -->
 
-    <AffordanceModel body="table" type="furniture">
+    <AffordanceModel body="table" types="furniture">
         <!-- centers -->
         <Supportable frame="table" />
         <Supportable frame="table_c1" extentsX="0.1" extentsY="0.1" />
@@ -470,7 +470,7 @@
         <!-- left side -->
         <Supportable frame="table_l1_1" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l1_2" extentsX="0.1" extentsY="0.1" />
-        <Supportable frame="table_l1_3" extentsX="0.1" extentsY="0.1" /> 
+        <Supportable frame="table_l1_3" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l1_4" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l1_5" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l1_6" extentsX="0.1" extentsY="0.1" />
@@ -530,11 +530,11 @@
         <Supportable frame="table_l7_6" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l7_7" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_l7_8" extentsX="0.1" extentsY="0.1" />
-        
+
         <!-- right side -->
         <Supportable frame="table_r1_1" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r1_2" extentsX="0.1" extentsY="0.1" />
-        <Supportable frame="table_r1_3" extentsX="0.1" extentsY="0.1" /> 
+        <Supportable frame="table_r1_3" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r1_4" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r1_5" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r1_6" extentsX="0.1" extentsY="0.1" />
@@ -594,7 +594,7 @@
         <Supportable frame="table_r7_6" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r7_7" extentsX="0.1" extentsY="0.1" />
         <Supportable frame="table_r7_8" extentsX="0.1" extentsY="0.1" />
-        
+
     </AffordanceModel>
 
 </Graph>
