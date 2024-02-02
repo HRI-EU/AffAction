@@ -368,11 +368,6 @@ IF (UNIX)
   TARGET_LINK_LIBRARIES(TestLLMSim X11)
 ENDIF()
 
-IF (USE_AFFACTION_ROS)
-  ADD_EXECUTABLE(PtuActionClient src/PtuActionClient.cpp)
-  TARGET_LINK_LIBRARIES(PtuActionClient AffAction)
-ENDIF(USE_AFFACTION_ROS)
-
 ################################################################################
 # Python module with pybind11
 ################################################################################

@@ -273,7 +273,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
 bool ExampleActionsECS::initParameters()
 {
-  xmlFileName = "g_topReport_4.xml";
+  xmlFileName = "g_group_5.xml";
   config_directory = "config/xml/Affaction/examples";
   speedUp = 3;
 
