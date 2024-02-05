@@ -316,7 +316,7 @@ void ExampleLLMSim::onTextCommand(std::string text)
   {
     std::thread feedbackThread([this]()
     {
-      std::string fb = sceneQuery->getSceneState();
+      std::string fb = sceneQuery->getSceneState().dump();
       if (connected && useWebsocket)
       {
         this->server.send(hdl, fb, websocketpp::frame::opcode::TEXT);
