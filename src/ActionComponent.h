@@ -58,6 +58,9 @@ public:
   bool getLimitCheck() const;
   bool getMultiThreaded() const;
 
+  void setFinalPoseRunning(bool enable);
+  bool isFinalPoseRunning() const;
+
   // Utility functions for trimming a string
   static std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
   static std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ");
@@ -87,6 +90,7 @@ private:
   RcsGraph* animationGraph;
   int animationTic;
   int animationIdx;
+  bool startingFinalPose;
 
   // Avoid copying this class
   ActionComponent(const ActionComponent&);

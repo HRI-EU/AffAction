@@ -112,7 +112,6 @@ bool ExampleLLMSim::initAlgo()
   entity.subscribe("TextCommand", &ExampleLLMSim::onTextCommand, this);
   entity.subscribe("Stop", &ExampleLLMSim::onStopWebSocket, this);
   entity.subscribe("Start", &ExampleLLMSim::onStartWebSocket, this);
-  entity.subscribe("Process", &ExampleLLMSim::process, this);
 
   if (useWebsocket)
   {
@@ -185,11 +184,6 @@ bool ExampleLLMSim::parseArgs(Rcs::CmdLineParser* parser)
   }
 
   return res;
-}
-
-void ExampleLLMSim::process()
-{
-  entity.process();
 }
 
 void ExampleLLMSim::onStartWebSocket()
@@ -285,8 +279,13 @@ void ExampleLLMSim::onActionResult(bool success, double quality, std::string res
   {
     RLOG(0, "ActionStack is empty, unfreezing perception");
     entity.publish("FreezePerception", false);
-    entity.publish<std::string, std::string>("RenderCommand", "BackgroundColor", "");
     processingAction = false;
+    actionC->setFinalPoseRunning(false);
+  }
+
+  if ((actionStack.size()==1) && STRNEQ(actionStack[0].c_str(), "pose", 4))
+  {
+    actionC->setFinalPoseRunning(true);
   }
 
   // In valgrind mode, we only perform one action, since this might run with valgrind

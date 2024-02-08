@@ -114,6 +114,7 @@ public:
   const ActionScene* getScene() const;
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
+  bool isFinalPoseRunning() const;
 
   std::vector<std::pair<std::string,std::string>> getCompletedActionStack() const;
 
@@ -138,6 +139,8 @@ private:
   void onActionSequence(std::string text);
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
+  void onChangeBackgroundColorFreeze(bool freeze);
+  void process();
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;

@@ -143,6 +143,16 @@ ActionGaze::ActionGaze(const ActionScene& scene,
     // BAD: using the first available `head` with `GazeCapability` in the scene atm. OK with only 1 robot in the scene.
     if (!cameraFrame.empty())
     {
+      auto agent = Agent::getAgentOwningManipulator(&scene, h->name);
+      if (agent)
+      {
+        this->agentName = agent->name;
+      }
+      else
+      {
+        this->agentName = "Unknown agent for manipulator " + h->name;
+      }
+
       break;
     }
   }
@@ -170,7 +180,7 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   // Task naming
   this->taskGaze = "Gaze-" + cameraFrame + "-" + gazeTargetInstance;
 
-  explanation = "I'm gazing at the " + gazeTarget;
+  explanation = agentName + " is gazing at the " + gazeTarget;
 }
 
 ActionGaze::~ActionGaze()

@@ -211,6 +211,23 @@ std::vector<const AffordanceEntity*> Agent::getObjectsInReach(const ActionScene*
   return reachableNtts;
 }
 
+// \todo(MG): Check if manipulator is owned by several agents
+
+/*static */ Agent* Agent::getAgentOwningManipulator(const ActionScene* scene,
+                                                    const std::string& manipulatorName)
+{
+  for (const auto& a : scene->agents)
+  {
+    if (std::find(a->manipulators.begin(), a->manipulators.end(), manipulatorName) != a->manipulators.end())
+    {
+      return a;
+    }
+
+  }
+
+  return nullptr;
+}
+
 RobotAgent::RobotAgent(const xmlNodePtr node,
                        const ActionScene* scene) : Agent(node, scene)
 {

@@ -72,7 +72,6 @@ public:
   virtual bool parseArgs(Rcs::CmdLineParser* parser);
   virtual void onActionResult(bool success, double quality, std::string resMsg);
   virtual void onTextCommand(std::string text);
-  virtual void process();
 
   void runThread(double freq);
 

@@ -343,6 +343,8 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
+  entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
+  entity.subscribe("Process", &ExampleActionsECS::process, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -880,10 +882,11 @@ void ExampleActionsECS::step()
   char timeStr[256];
   double endTime = trajC->getMotionEndTime();
   snprintf(timeStr, 256, "Time: %.3f   dt: %.1f dt_max: %.1f %.1f msec\n"
-           "failCount: %zu queue: %zu (max: %zu)  End time: %.3f %.3f",
+           "failCount: %zu queue: %zu (max: %zu)  End time: %.3f %.3f"
+           "\nFinal pose: %s",
            entity.getTime(), dtProcess * 1.0e3, dt_max * 1.0e3, dt_max2 * 1.0e3,
            failCount, entity.queueSize(), entity.getMaxQueueSize(),
-           endTime, trajTime);
+           endTime, trajTime, isFinalPoseRunning() ? "YES" : "NO");
   entity.publish("SetTextLine", std::string(timeStr), 0);
 
   if (endTime > 0.0)
@@ -1265,7 +1268,6 @@ void ExampleActionsECS::startThreaded()
   t1.detach();
 }
 
-
 std::vector<std::pair<std::string,std::string>> ExampleActionsECS::getCompletedActionStack() const
 {
   std::lock_guard<std::mutex> lock(actionStackMtx);
@@ -1294,6 +1296,23 @@ void ExampleActionsECS::printCompletedActionStack() const
     RMSG("completedActionStack[%zu]: Action='%s' result='%s'",
          i, completedActionStack[i].first.c_str(), completedActionStack[i].second.c_str());
   }
+}
+
+void ExampleActionsECS::onChangeBackgroundColorFreeze(bool freeze)
+{
+  std::string color = freeze ? "BLACK" : "";
+  entity.publish<std::string, std::string>("RenderCommand", "BackgroundColor", color);
+}
+
+void ExampleActionsECS::process()
+{
+  entity.process();
+}
+
+bool ExampleActionsECS::isFinalPoseRunning() const
+{
+  RCHECK(actionC);
+  return actionC->isFinalPoseRunning();
 }
 
 }   // namespace aff

@@ -62,6 +62,7 @@ public:
   std::string explain() const;
   std::vector<std::string> getManipulators() const;
 
+  std::string agentName;
   std::string gazeTarget;
   std::string gazeTargetInstance;
   std::string cameraFrame;

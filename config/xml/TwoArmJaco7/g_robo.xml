@@ -65,7 +65,7 @@
     <GazeCapability frame="head_kinect_lens" />
   </Manipulator>
 
-    <Agent types="robot" name="Johnnie" >
+    <Agent body="Johnnie" types="robot" name="Johnnie" >
        <Component manipulator="hand_left" />
        <Component manipulator="hand_left" />
        <Component manipulator="head" />

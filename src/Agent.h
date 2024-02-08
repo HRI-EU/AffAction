@@ -66,6 +66,8 @@ public:
                      const RcsGraph* graph) const;
   virtual std::vector<const Manipulator*> getManipulatorsOfType(const ActionScene* scene,
                                                                 const std::string& type) const;
+  static Agent* getAgentOwningManipulator(const ActionScene* scene,
+                                          const std::string& manipulatorName);
 };
 
 class RobotAgent : public Agent

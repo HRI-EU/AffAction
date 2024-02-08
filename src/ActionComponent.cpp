@@ -83,7 +83,7 @@ std::string& ActionComponent::trim(std::string& str, const std::string& chars)
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
                                  const RcsBroadPhase* broadphase_) :
   ComponentBase(parent), graph(graph_), broadphase(broadphase_), limitsEnabled(true),
-  animationGraph(NULL), animationTic(0), animationIdx(-1)
+  animationGraph(NULL), animationTic(0), animationIdx(-1), startingFinalPose(false)
 {
   subscribe("TextCommand", &ActionComponent::onTextCommand);
   subscribe("Print", &ActionComponent::onPrint);
@@ -308,11 +308,8 @@ void ActionComponent::actionThread(std::string text)
     // with the onRender method, so we are quick about it with swapping, and
     // make it mutually exclusive.
     std::lock_guard<std::mutex> lock(renderMtx);
-    // renderMtx.lock();
     animationIdx = -1;
     std::swap(predictions, predResults);
-    // renderMtx.unlock();
-
   }   // if (predictMe)
 
 
@@ -363,9 +360,9 @@ void ActionComponent::actionThread(std::string text)
     domain.foveatedEntity = aGaze->getGazeTarget();
     RLOG_CPP(0, "Now gazing at " << domain.foveatedEntity);
     getEntity()->publish("PtuLookAtCommand", domain.foveatedEntity);
-    //return;
+    // return;
     // We let the function continue here so that the graphics is reflecting
-    // the PUT motion. It might not be the same as the one that really happens.
+    // the PTU motion. It might not be the same as the one that really happens.
   }
 
 
@@ -388,8 +385,10 @@ void ActionComponent::actionThread(std::string text)
   tropic::TCS_sptr tSet = action->createTrajectory(delay, scaleDurationHint*action->getDurationHint()+delay);
 
   // From here on, the action will start going.
-  getEntity()->publish("FreezePerception", true);
-  getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", "BLACK");
+  if (!startingFinalPose)
+  {
+    getEntity()->publish("FreezePerception", true);
+  }
   getEntity()->publish("ChangeTaskVector", taskVec, action->getManipulators());
   getEntity()->publish("CheckAndSetTrajectory", tSet);
 }
@@ -480,6 +479,16 @@ void ActionComponent::onSetDebugRendering(bool enable)
     animationIdx = -1;
   }
 
+}
+
+void ActionComponent::setFinalPoseRunning(bool enable)
+{
+  startingFinalPose = enable;
+}
+
+bool ActionComponent::isFinalPoseRunning() const
+{
+  return startingFinalPose;
 }
 
 }   // namespace aff

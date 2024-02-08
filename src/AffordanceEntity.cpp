@@ -82,7 +82,7 @@ SceneEntity::SceneEntity()
 SceneEntity::SceneEntity(const xmlNodePtr node)
 {
   bdyName = Rcs::getXMLNodePropertySTLString(node, "body");
-  RCHECK_MSG(!bdyName.empty(), "Found SceneEntity without body name");
+  RCHECK_MSG(!bdyName.empty(), "Found SceneEntity without body name: %s", node->name);
   name = bdyName;
   instanceId = bdyName;
   Rcs::getXMLNodePropertySTLString(node, "name", name);
