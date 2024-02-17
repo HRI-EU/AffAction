@@ -320,6 +320,12 @@ bool isAgentBusy(const std::string& agentName,
         continue;
       }
 
+      // Ignore bodies with no collideable shapes
+      if (RcsBody_numDistanceShapes(nttBdy)==0)
+      {
+	continue;
+      }
+      
       // Ignore very large objects like a table
       double ignoreLarge = false;
       {
