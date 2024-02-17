@@ -489,14 +489,15 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
 
   }   // for (size_t s = 0; s < stepsToPlan; s++)
 
-  RcsGraph_destroy(localGraph);
-
   REXEC(0)
   {
     predictionTree->printTreeVisual(predictionTree->root, 0);
   }
 
   const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
+
+  RLOG(0, "Finally destroying graph '%s'", localGraph->cfgFile);
+  RcsGraph_destroy(localGraph);
 
   if (treeDepth < stepsToPlan)
   {

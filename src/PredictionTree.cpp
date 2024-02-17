@@ -57,7 +57,8 @@ PredictionTreeNode::~PredictionTreeNode()
   }
 }
 
-PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent, const TrajectoryPredictor::PredictionResult* pr)
+PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent, const TrajectoryPredictor::PredictionResult* pr) :
+  success(false), quality(0.0), idx(-1), parent(nullptr), graph(nullptr)
 {
   if (pr != nullptr)
   {

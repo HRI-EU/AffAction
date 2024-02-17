@@ -342,6 +342,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
+  entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequence, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
   entity.subscribe("Process", &ExampleActionsECS::process, this);
@@ -920,6 +921,42 @@ void ExampleActionsECS::onQuit()
 {
   entity.publish("Stop");
   runLoop = false;
+}
+
+static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
+					std::string sequenceCommand,
+					size_t maxNumThreads)
+{
+  std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
+  auto res = ex->sceneQuery2->planActionSequence(seq, seq.size(), maxNumThreads);
+
+  if (res.empty())
+  {
+    RLOG_CPP(0, "Could not find solution");
+    ex->processingAction = false;
+    ex->clearCompletedActionStack();
+    return;
+  }
+
+  RLOG_CPP(0, "Sequence has " << res.size() << " steps");
+
+  std::string newCmd;
+  for (size_t i = 0; i < res.size(); ++i)
+  {
+    newCmd += res[i];
+    newCmd += ";";
+  }
+
+  RLOG_CPP(0, "Command : " << newCmd);
+  ex->entity.publish("ActionSequence", newCmd);
+}
+
+void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
+{
+    processingAction = true;
+    const size_t maxNumthreads = 0;   // 0 means auto-select
+    std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads);
+    t1.detach();
 }
 
 void ExampleActionsECS::onActionSequence(std::string text)

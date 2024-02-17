@@ -137,6 +137,7 @@ private:
   void onQuit();
   void onPrint();
   void onActionSequence(std::string text);
+  void onPlanActionSequence(std::string text);
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
   void onChangeBackgroundColorFreeze(bool freeze);
