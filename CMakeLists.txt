@@ -406,8 +406,7 @@ COPY_DLL(AffAction)
 ################################################################################
 # Copy / link config directories
 ################################################################################
-COPY_CONFIG_DIR("${CMAKE_CURRENT_SOURCE_DIR}/config/xml" "${PROJECT_BINARY_DIR}/config/xml" "Affaction")
-COPY_CONFIG_DIR("${CMAKE_CURRENT_SOURCE_DIR}/config/textures" "${PROJECT_BINARY_DIR}/config" "textures")
+COPY_CONFIG_DIR("${CMAKE_CURRENT_SOURCE_DIR}/config" "${PROJECT_BINARY_DIR}/config/xml" "AffAction")
 
 ################################################################################
 # Target export script

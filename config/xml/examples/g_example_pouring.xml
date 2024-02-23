@@ -47,10 +47,10 @@
 
 
 
-	<Body name="table" prev="lab" rigid_body_joints="0.58 0 0.8 0 0 0" physics="kinematic" >
+    <Body name="table" prev="lab" rigid_body_joints="0.58 0 0.7 0 0 0" physics="kinematic" >
         <Shape type="FRAME" scale="0.2"/>
-        <Shape type="BOX" extents="0.6 0.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
-               distance="true" textureFile="textures/table.jpg"/>
+        <Shape type="BOX" extents="0.8 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
+               distance="true" textureFile="Smile/textures/table.jpg"/>
     </Body>
 
     <AffordanceModel body="table">
@@ -70,7 +70,7 @@
         <Shape type="FRAME" marker="true" markerName="aruco_3" extents="0.0415 0.0415 0" scale="0.1"
                transform="0.0325 0 0.118 0 90 0"/>
         <Shape type="BOX" extents="0.0415 0.0415 0.0001" graphics="true" distance="false"
-               textureFile="aruco/4x4marker_3.jpg" transform="0.0325 0 0.118 0 90 0"/>
+               textureFile="Smile/textures/aruco/4x4marker_3.jpg" transform="0.0325 0 0.118 0 90 0"/>
       </Body>
 
       <Body name="coke_tip" prev="coke" was_transform="0 0 0.227 180 0 0" transform="0 0 0.227 0 0 0" >
@@ -108,7 +108,7 @@
         <Shape type="FRAME" marker="true" markerName="aruco_4" extents="0.0415 0.0415 0" scale="0.1"
                transform="0.027 0 0.03 0 90 0"/>
         <Shape type="BOX" extents="0.0415 0.0415 0.0001" graphics="true" distance="false"
-               textureFile="aruco/4x4marker_4.jpg" transform="0.027 0 0.03 0 90 0"/>
+               textureFile="Smile/textures/aruco/4x4marker_4.jpg" transform="0.027 0 0.03 0 90 0"/>
         <Shape type="MESH" meshFile="Smile/object_models/glass_1/glass_1.stl" scale="1 1 1.2" />
     </Body>
 

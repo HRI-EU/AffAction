@@ -28,7 +28,7 @@
 -->
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
-       resourcePath="${SIT}/Data/RobotMeshes/1.0/data config/xml/SmileActions/object_models config/xml/SmileActions/textures"
+       resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
        name="JacoDefaultPoseArmsHigh"
        usage="
 &#xA;  Configuration file to load the two-arm Jaco robot with arms mounted at the shoulders.
@@ -38,15 +38,15 @@
 
     <!-- The Aruco markers are 1cm away from the borders of the table. -->
     <Body name="aruco_base" rigid_body_joints="0 0 0.7 0 0 0" color="PEWTER">
+      
         <!-- This shown frame corresponds to the RCS_world, i.e. the origin of RCS. -->
         <Shape type="FRAME" scale="0.5" transform="0 0 -0.7 0 0 0" />
-
-        <Shape type="BOX" extents="0.14 0.14 0.001" graphics="untrue" distance="false" textureFile="aruco/4x4marker_0.jpg" transform="0 0.67 0 0 0 0"/>
+        <Shape type="BOX" extents="0.14 0.14 0.001" graphics="true" distance="false" textureFile="Smile/textures/aruco/4x4marker_0.jpg" transform="0 0.67 0 0 0 0"/>
         <Shape type="FRAME" marker="true" markerName="aruco_0" extents="0.14 0.14 0" transform="0 0.67 0 0 0 0" scale="0.2"/>
     </Body>
 
     <Body name="lab" prev="aruco_base" physics="kinematic" transform="-0.8 0 -0.7 0 0 0">
-        <Shape type="BOX" extents="6.0 6.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER"
+        <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg" 
                graphics="true" physics="true" distance="false"/>
         <Shape type="FRAME" scale="0.5"/>
     </Body>

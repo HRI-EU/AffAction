@@ -274,7 +274,7 @@ ExampleActionsECS::~ExampleActionsECS()
 bool ExampleActionsECS::initParameters()
 {
   xmlFileName = "g_group_5.xml";
-  config_directory = "config/xml/Affaction/examples";
+  config_directory = "config/xml/AffAction/xml/examples";
   speedUp = 3;
 
   return true;
@@ -924,8 +924,8 @@ void ExampleActionsECS::onQuit()
 }
 
 static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
-					std::string sequenceCommand,
-					size_t maxNumThreads)
+                                        std::string sequenceCommand,
+                                        size_t maxNumThreads)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
   auto res = ex->sceneQuery2->planActionSequence(seq, seq.size(), maxNumThreads);
@@ -953,10 +953,10 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
 void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
 {
-    processingAction = true;
-    const size_t maxNumthreads = 0;   // 0 means auto-select
-    std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads);
-    t1.detach();
+  processingAction = true;
+  const size_t maxNumthreads = 0;   // 0 means auto-select
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads);
+  t1.detach();
 }
 
 void ExampleActionsECS::onActionSequence(std::string text)

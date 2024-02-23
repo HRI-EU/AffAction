@@ -168,21 +168,15 @@
     <Body name="head_kinect_lens" prev="head_kinect_link"  physics="none">
     </Body>
 
-    <xxBody name="respeaker" prev="head_kinect_link" transform="0 -0.1 0 90 0 0" physics="none">
-        <Shape type="FRAME" scale="0.2"/>
-        <Shape type="CYLINDER" radius="0.05" length="0.01" distance="false" graphics="true" physics="false" color="BLACK_RUBBER" />
-    </xxBody>
-	
-	        <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
+    <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="CYLINDER" radius="0.05" length="0.01" distance="false" graphics="true" physics="false" color="BLACK_RUBBER" />
     </Body>
 
-
-
     <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none" >
-        <Shape type="SSL" radius="0.025" length="0.5" color="GREEN" transform="0 0 0 0 90 0" graphics="true" distance="false" physics="false" />
-        <!-- <Shape type="FRAME" scale="0.5"/> -->
+            <xShape type="SSL" radius="0.02" length="0.4" color="GREEN" transform="0 0 0 0 90 0" graphics="true" distance="false" physics="false"/>
+            <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" transform="0.4 0 0 0 -90 0" graphics="true" distance="false" physics="false"/>
+            <Shape type="FRAME" scale="1.5"/>
     </Body>
 
     <Body name="head_kinect_rgb_link" prev="head_kinect_link" transform="0.1 -0.035 0.035 0 0 0" physics="none">
