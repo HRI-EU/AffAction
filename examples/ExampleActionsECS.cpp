@@ -1083,10 +1083,16 @@ void ExampleActionsECS::onActionSequence(std::string text)
         }
       }
     }
+
+    if (words[0] == "s")
+    {
+      entity.publish("PlanActionSequence", text);
+      return;
+    }
   }
 
   // From here on, any sequence has been expanded
-  RLOG_CPP(0, "Sequence expanded to '" << text << "'");
+  RLOG_CPP(1, "Sequence expanded to '" << text << "'");
 
   // // From here on, any sequence has been expanded
   actionStack = Rcs::String_split(text, ";");

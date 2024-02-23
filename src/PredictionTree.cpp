@@ -267,7 +267,7 @@ void PredictionTree::findSmallestCostPathRecursive(const PredictionTreeNode* nod
   {
     for (size_t i=0; i<currentPath.size(); ++i)
     {
-      RLOG(0, "currentPath[%zu] = %s", i, currentPath[i]->actionText.c_str());
+      RLOG(1, "currentPath[%zu] = %s", i, currentPath[i]->actionText.c_str());
     }
 
     // Check if the current path has a smaller cost than the best path found so far
@@ -275,14 +275,14 @@ void PredictionTree::findSmallestCostPathRecursive(const PredictionTreeNode* nod
     {
       bestPath.first = currentCost;
       bestPath.second = currentPath;
-      RLOG_CPP(0, "Current solution has cost: " << currentCost << " *** new winner ***");
+      RLOG_CPP(1, "Current solution has cost: " << currentCost << " *** new winner ***");
     }
     else
     {
-      RLOG_CPP(0, "Current solution has cost: " << currentCost);
+      RLOG_CPP(1, "Current solution has cost: " << currentCost);
     }
 
-    RLOG(0, "Popping '%s'", currentPath.back()->actionText.c_str());
+    RLOG(1, "Popping '%s'", currentPath.back()->actionText.c_str());
     currentPath.pop_back();
     return;
   }
@@ -294,7 +294,7 @@ void PredictionTree::findSmallestCostPathRecursive(const PredictionTreeNode* nod
   }
 
   // Remove the current node from the current path (backtrack)
-  RLOG(0, "Popping '%s'", currentPath.back()->actionText.c_str());
+  RLOG(1, "Popping '%s'", currentPath.back()->actionText.c_str());
   currentPath.pop_back();
 }
 

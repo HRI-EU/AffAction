@@ -152,7 +152,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(const RcsGraph* graph_
   t_clone = Timer_getSystemTime();
   aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt);
   t_clone = Timer_getSystemTime() - t_clone;
-  RLOG(0, "Prediction took %.2f msec", 1.0e3 * t_clone);
+  RLOG(1, "Prediction took %.2f msec", 1.0e3 * t_clone);
 
 #if 0
   // const ActionGet* ag = dynamic_cast<const ActionGet*>(this);
@@ -368,7 +368,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
     std::string text = actions[s];
     REXEC(1)
     {
-      RLOG_CPP(0, "Current action #" << s << " `" << text << "'");
+      RLOG_CPP(1, "Current action #" << s << " `" << text << "'");
       predictionTree->printNodesAtEachDepth();
     }
 
@@ -446,7 +446,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
         {
           const double scaleDurationHint = 1.0;
           auto localAction = aPtr->clone();
-          RLOG_CPP(0, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
+          RLOG_CPP(1, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, lookaheadGraph, i);
           double dt_predict = Timer_getSystemTime();
           predResults[i] = localAction->predict(lookaheadGraph, broadphase,
@@ -455,7 +455,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
           predResults[i].actionText = localAction->getActionCommand();
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].message += " command: " + localAction->getActionCommand();
-          RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
+          RLOG(1, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
                predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
                1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost,
                predResults[i].message.c_str());
@@ -469,22 +469,22 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
       }
 
       // sort predictions
-      RLOG_CPP(0, "Done threaded prediction - Sorting " << predResults.size() << " predictions");
+      RLOG_CPP(1, "Done threaded prediction - Sorting " << predResults.size() << " predictions");
       std::sort(predResults.begin(), predResults.end(), TrajectoryPredictor::PredictionResult::lesser);
 
       // print prediction results
-      RLOG_CPP(0, "Printing predictions");
+      RLOG_CPP(1, "Printing predictions");
       for (const auto& r : predResults)
       {
         if (r.idx != -1)
         {
           const int verbosityLevel = RcsLogLevel;
-          r.print(verbosityLevel);
-          RLOG(0, "Adding: `%s`", r.actionText.c_str());
+          r.print(1);
+          RLOG(1, "Adding: `%s`", r.actionText.c_str());
           currentPredictionNode->addChild(r);
         }
       }
-      RLOG_CPP(0, predResults.size() << " predictions have been added to the prediction tree");
+      RLOG_CPP(1, predResults.size() << " predictions have been added to the prediction tree");
     }   // for (const auto& currentPredictionNode : currentStepNodes)
 
   }   // for (size_t s = 0; s < stepsToPlan; s++)
@@ -496,7 +496,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
 
   const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
 
-  RLOG(0, "Finally destroying graph '%s'", localGraph->cfgFile);
+  RLOG(1, "Finally destroying graph '%s'", localGraph->cfgFile);
   RcsGraph_destroy(localGraph);
 
   if (treeDepth < stepsToPlan)
@@ -508,15 +508,15 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
   {
     std::pair<double, std::vector<aff::PredictionTreeNode*>> bestPath = predictionTree->findSmallestCostPath(treeDepth);
 
-    RLOG(0, "Best route for the next %d actions: ", treeDepth);
+    RLOG(1, "Best route for the next %d actions: ", treeDepth);
 
     for (const auto& node : bestPath.second)
     {
-      RLOG_CPP(0, node->actionText << " : " << node->quality);
+      RLOG_CPP(1, node->actionText << " : " << node->quality);
       predictedActions.push_back(node->actionText);
     }
 
-    RLOG_CPP(0, "best path total cost: " << bestPath.first);
+    RLOG_CPP(1, "best path total cost: " << bestPath.first);
   }
 
   REXEC(0)
