@@ -912,7 +912,7 @@ std::string ExampleActionsECS::help()
   s << ActionFactory::printToString();
   s << Rcs::RcsGraph_printUsageToString(xmlFileName);
   s << Rcs::RcsShape_distanceFunctionsToString();
-  s << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
+  s << std::endl << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
 
   return s.str();
 }
