@@ -33,7 +33,7 @@
 
     <Group prev="lab">
 
-        <xi:include href="g_scitos_base.xml"/>
+        <xi:include href="g_item_base.xml"/>
 
         <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" was_transform="-0.115 0 1.155 0 0 0">
             <Shape type="FRAME" scale="0.3"/>
