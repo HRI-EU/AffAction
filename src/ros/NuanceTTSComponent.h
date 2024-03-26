@@ -30,8 +30,8 @@
 
 *******************************************************************************/
 
-#ifndef AFF_NUANCE_TTSCOMPONENT_H
-#define AFF_NUANCE_TTSCOMPONENT_H
+#ifndef AFF_NUANCETTSCOMPONENT_H
+#define AFF_NUANCETTSCOMPONENT_H
 
 #include "ComponentBase.h"
 
@@ -70,4 +70,4 @@ private:
 
 }
 
-#endif   // AFF_NUANCE_TTSCOMPONENT_H
+#endif   // AFF_NUANCETTSCOMPONENT_H

@@ -102,7 +102,7 @@ ActionGaze::ActionGaze(const ActionScene& scene,
 
   }
 
-  // ´Check if gaze target is a native RcsBody name
+  // Check if gaze target is a native RcsBody name
   if (gazeTarget.empty())
   {
     const RcsBody* gazeBdy = RcsGraph_getBodyByName(graph, params[0].c_str());
