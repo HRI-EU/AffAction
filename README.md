@@ -206,6 +206,20 @@ The project is composed of three parts:
   - bin/TestLLMSim -port 35000 (that's the default)
   - with command line options printed to console: bin/TestLLMSim -h 
 
+## Python virtual environment
+
+### How to create
+```
+python -m virtualenv venv_affaction
+source venv_affaction/bin/activate
+pip install -r requirements.txt
+```
+
+### How to activate
+```
+source venv_affaction/bin/activate
+```
+
 ## Python websocket client
 
   - cd SmileActions/python
