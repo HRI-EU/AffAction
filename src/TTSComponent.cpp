@@ -88,9 +88,8 @@ void TTSComponent::onSpeak(std::string text)
 {
   RLOG(0, "Saying: %s", text.c_str());
 
-  mtx.lock();
+  std::lock_guard<std::mutex> lock(mtx);
   this->textToSpeak = text;
-  mtx.unlock();
 }
 
 void TTSComponent::onEmergencyStop()
@@ -100,39 +99,7 @@ void TTSComponent::onEmergencyStop()
 }
 
 // If port is set to -1, this thread runs espeak on the local machine
-#if !defined (_MSC_VER)
-void TTSComponent::localThread()
-{
-
-  while (this->threadRunning)
-  {
-    mtx.lock();
-    std::string text = this->textToSpeak;
-    this->textToSpeak.clear();
-    mtx.unlock();
-
-    if (text.length() > 0)
-    {
-
-      //std::string consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
-      std::string consCmd = "espeak " + std::string("\"") + text + std::string("\"");
-      int err = system(consCmd.c_str());
-
-      if (err == -1)
-      {
-        RMSG("Couldn't call spd-say");
-      }
-      else
-      {
-        RLOG(0, "--- Saying \"%s\"", text.c_str());
-        RLOG(0, "Console command \"%s\"", consCmd.c_str());
-      }
-    }
-  }
-
-}
-
-#else
+#if defined (_MSC_VER)
 
 void TTSComponent::localThread()
 {
@@ -155,18 +122,24 @@ void TTSComponent::localThread()
 
   while (this->threadRunning)
   {
-    mtx.lock();
-    std::string text = this->textToSpeak;
-    this->textToSpeak.clear();
-    mtx.unlock();
+    std::string text;
+    {
+      std::lock_guard<std::mutex> lock(mtx);
+      text = this->textToSpeak;
+      this->textToSpeak.clear();
+    }
 
-    // The text to be converted to speech
-    std::wstring widestr = std::wstring(text.begin(), text.end());
-    const wchar_t* textToSpeak = widestr.c_str();
+    if (!text.empty())
+    {
+      // The text to be converted to speech
+      std::wstring widestr = std::wstring(text.begin(), text.end());
+      const wchar_t* textToSpeak = widestr.c_str();
 
-    // Speak the text
-    pVoice->Speak(textToSpeak, 0, NULL);
-    pVoice->WaitUntilDone(INFINITE);
+      // Speak the text
+      pVoice->Speak(textToSpeak, 0, NULL);
+      pVoice->WaitUntilDone(INFINITE);
+    }
+
   }
 
   // Release the voice object
@@ -174,6 +147,38 @@ void TTSComponent::localThread()
 
   // Uninitialize COM
   CoUninitialize();
+}
+#else
+
+void TTSComponent::localThread()
+{
+
+  while (this->threadRunning)
+  {
+    std::string text;
+    {
+      std::lock_guard<std::mutex> lock(mtx);
+      text = this->textToSpeak;
+      this->textToSpeak.clear();
+    }
+
+    if (!text.empty())
+    {
+      //std::string consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
+      std::string consCmd = "espeak " + std::string("\"") + text + std::string("\"");
+      int err = system(consCmd.c_str());
+
+      if (err == -1)
+      {
+        RMSG("Couldn't call spd-say (%s)", consCmd.c_str());
+      }
+      else
+      {
+        RLOG(1, "Console command \"%s\"", consCmd.c_str());
+      }
+    }
+  }
+
 }
 #endif
 

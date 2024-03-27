@@ -195,8 +195,8 @@ The project is composed of three parts:
   cd affaction
   mkdir build
   cd build
-  cmake ..
-  make 
+  cmake .. 
+  make -j24
 ```
 
   - This should build several executables into the bin directory
@@ -205,23 +205,4 @@ The project is composed of three parts:
 
   - bin/TestLLMSim -port 35000 (that's the default)
   - with command line options printed to console: bin/TestLLMSim -h 
-
-## Python virtual environment
-
-### How to create
-```
-python -m virtualenv venv_affaction
-source venv_affaction/bin/activate
-pip install -r requirements.txt
-```
-
-### How to activate
-```
-source venv_affaction/bin/activate
-```
-
-## Python websocket client
-
-  - cd SmileActions/python
-  - python smile_websocket.py "put cola_bottle_1"
 

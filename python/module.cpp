@@ -395,6 +395,11 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return ex.lastResultMsg;
   })
+  .def("callEvent", [](aff::ExampleLLMSim& ex, std::string eventName)
+  {
+    ex.entity.publish(eventName);
+    ex.entity.process();
+  })
   .def("reset", [](aff::ExampleLLMSim& ex)
   {
     ex.entity.publish("ActionSequence", std::string("reset"));
