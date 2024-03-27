@@ -446,6 +446,25 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     return ex.sceneQuery->getSceneState().dump();
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns empty json if there are no objects or a json in the form:
+  // {"objects": ['iphone', 'red_glass', 'fanta_bottle'] }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_objects", [](aff::ExampleLLMSim& ex) -> nlohmann::json
+  {
+    return ex.sceneQuery->getObjects();
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns empty json if there are no objects or a json in the form:
+  // {"agents": ['Daniel', 'Felix', 'Robot'] }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_agents", [](aff::ExampleLLMSim& ex) -> nlohmann::json
+  {
+    return ex.sceneQuery->getAgents();
+  })
+
   .def("get_scene_entities", &aff::ExampleLLMSim::getSceneEntities)
   .def("step", &aff::ExampleActionsECS::step)
   .def("stop", &aff::ExampleActionsECS::stop)

@@ -55,6 +55,16 @@ public:
 
   ConcurrentSceneQuery(const ExampleActionsECS* sim);
   virtual ~ConcurrentSceneQuery();
+
+  /*! \brief Returns empty json if there are no objects or a json in the form:
+   *         {"objects": ['iphone', 'red_glass', 'fanta_bottle'] }
+   */
+  nlohmann::json getObjects();
+
+  /*! \brief Returns empty json if there are no objects or a json in the form:
+   *         {"agents": ['Daniel', 'Felix', 'Robot'] }
+   */
+  nlohmann::json getAgents();
   nlohmann::json getSceneState();
   nlohmann::json getOccludedObjectsForAgent(const std::string& agentName);
   nlohmann::json getObjectOccludersForAgent(const std::string& agentName,

@@ -38,6 +38,8 @@
 #include <Rcs_typedef.h>
 #include <Rcs_timer.h>
 
+#include <unordered_set>
+
 
 
 namespace aff
@@ -211,6 +213,44 @@ std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgen
        RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), err[0], err[1], iter, 1.0e3*t_calc);
 
   return std::vector<double>(panTilt, panTilt+2);
+}
+
+nlohmann::json ConcurrentSceneQuery::getObjects()
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json;
+  json["objects"] = std::vector<nlohmann::json>();
+
+  // Only add each item once in case of duplicate names.
+  std::unordered_set<std::string> ntts;
+  for (const auto& e : scene.entities)
+  {
+    ntts.insert(e.name);
+  }
+
+  // Assemble the json
+  for (const auto& n : ntts)
+  {
+    json["objects"].push_back(n);
+  }
+
+  return json;
+}
+
+nlohmann::json ConcurrentSceneQuery::getAgents()
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json;
+  json["agents"] = std::vector<nlohmann::json>();
+
+  for (const auto& a : scene.agents)
+  {
+    json["agents"].push_back(a->name);
+  }
+
+  return json;
 }
 
 }   // namespace aff
