@@ -303,7 +303,7 @@ TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/examples>
     $<BUILD_INTERFACE:${WEBSOCKET_INCLUDE_DIR}>
     $<BUILD_INTERFACE:$ENV{SIT}/External/asio-1.12.1/include>
-    $<INSTALL_INTERFACE:include>)
+    $<INSTALL_INTERFACE:include/AffAction>)
 
 TARGET_LINK_LIBRARIES(AffAction Tropic RcsGraphics RcsGui RcsPhysics)
 
@@ -381,15 +381,23 @@ ADD_SUBDIRECTORY (doc)
 ###############################################################################
 # Install the libraries and the binaries
 ###############################################################################
-INSTALL(TARGETS AffAction EXPORT AffActionExport DESTINATION lib)
-INSTALL(TARGETS TestLLMSim TestAffordance RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
+#INSTALL(TARGETS AffAction EXPORT AffActionExport DESTINATION lib)
+INSTALL(TARGETS AffAction EXPORT AffActionExport
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/AffAction)
+
+INSTALL(TARGETS TestLLMSim TestAffordance 
+        RUNTIME DESTINATION bin 
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/AffAction)
 
 ###############################################################################
 # Install the headers
 ###############################################################################
 INSTALL(
  DIRECTORY src/
- DESTINATION include
+ DESTINATION include/AffAction
  FILES_MATCHING PATTERN "*.h"
 )
 

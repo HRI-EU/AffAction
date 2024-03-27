@@ -57,17 +57,15 @@ ENDIF()
 # Install resources directories
 set(CONFIG_INSTALL_DIR "config")
 INSTALL(
-  DIRECTORY config/object_models
-            config/qr_codes
-            config/aruco_markers
+  DIRECTORY config/data
             config/textures
-            config/SingleJaco6
-  DESTINATION ${CONFIG_INSTALL_DIR}
+            config/xml
+  DESTINATION ${CONFIG_INSTALL_DIR}/xml/AffAction
   )
 
 # Install xml files
-file(GLOB xml_files "config/*.xml")
-install(FILES ${xml_files} DESTINATION ${CONFIG_INSTALL_DIR})
+#file(GLOB xml_files "config/*.xml")
+#install(FILES ${xml_files} DESTINATION ${CONFIG_INSTALL_DIR})
 
 # Install exports file
 INSTALL(
@@ -87,7 +85,5 @@ CONFIGURE_PACKAGE_CONFIG_FILE(
 INSTALL(
   FILES "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}ConfigVersion.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/install_files/${PACKAGE_NAME}Config.cmake"
-#        cmake/Externals.cmake
-#        cmake/FindQwt.cmake
   DESTINATION ${EXPORT_INSTALL_DEST}
 )

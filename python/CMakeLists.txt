@@ -84,3 +84,8 @@ ELSE(pybind11_FOUND)
   ENDIF(pybind11_FOUND)
   
 ENDIF()
+
+INSTALL(TARGETS pyAffaction
+        RUNTIME DESTINATION bin 
+        LIBRARY DESTINATION bin
+        ARCHIVE DESTINATION lib/AffAction)
