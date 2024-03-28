@@ -46,5 +46,6 @@ sim.useWebsocket = False
 sim.speedUp = 3
 sim.noLimits = False
 sim.verbose = False
+sim.xmlFileName = "g_group_6.xml"
 sim.init(True)
 sim.run()
