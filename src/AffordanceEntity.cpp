@@ -116,6 +116,14 @@ const RcsBody* SceneEntity::body(const RcsGraph* graph) const
   return b;
 }
 
+RcsBody* SceneEntity::body(RcsGraph* graph)
+{
+  RcsBody* b = RcsGraph_getBodyByName(graph, bdyName.c_str());
+  RCHECK_MSG(b, "SceneEntity %s (body %s) has no body attached",
+             name.c_str(), bdyName.c_str());
+  return b;
+}
+
 bool SceneEntity::isCollideable(const RcsGraph* graph) const
 {
   const RcsBody* body = RcsGraph_getBodyByName(graph, bdyName.c_str());

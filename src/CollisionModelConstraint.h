@@ -111,31 +111,36 @@ public:
         {
           if (STREQ(BODY->name, bdyNames[i].c_str()))
           {
-            RLOG(5, "1 Body \"%s\" does %s",
-                 BODY->name, switchesOn ? "collide" : "not collide");
+            bool wfToggle = false;  // Will be set true if the wireframe flag is toggled
+
             for (unsigned int j=0; j<BODY->nShapes; ++j)
             {
-              RLOG(5, "Going through shape %s", RcsShape_name(BODY->shapes[j].type));
+              RcsShape* sh = &BODY->shapes[j];
 
-              //snprintf(BODY->shapes[j].color, RCS_MAX_NAMELEN, switchesOn ? "RED" : "GREEN");
-
-              RcsShape_setComputeType(&BODY->shapes[j], RCSSHAPE_COMPUTE_WIREFRAME, !switchesOn);
-
-              // We only switch on those shapes that have been distance shapes
-              // from the time point of initialization.
-
-              if (BODY->shapes[j].type==RCSSHAPE_MESH || BODY->shapes[j].type==RCSSHAPE_REFFRAME)
-                //if (/* switchesOn && */ (!distCalcIndices[i][j]))
+              // We ignore meshes and frames. We only switch on those shapes that
+              // have been distance shapes from the time point of initialization.
+              // They have been assigned the contact flag (as a HACK).
+              if ((sh->type == RCSSHAPE_MESH) || (sh->type == RCSSHAPE_REFFRAME) ||
+                  (!RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_CONTACT)))
               {
-                RLOG(5, "IGNORING shape %s", RcsShape_name(BODY->shapes[j].type));
                 continue;
               }
 
-              RLOG(5, "2 Body \"%s\" does %s",
-                   BODY->name, switchesOn ? "collide" : "not collide");
-              RcsShape_setComputeType(&BODY->shapes[j], RCSSHAPE_COMPUTE_DISTANCE, switchesOn);
-              //snprintf(BODY->shapes[j].color, RCS_MAX_NAMELEN, switchesOn ? "RED" : "GREEN");
+              RcsShape_setComputeType(sh, RCSSHAPE_COMPUTE_DISTANCE, switchesOn);
+              wfToggle = true;
             }
+
+            // If the wireframe flag has been toggled, the wireframe mode will be
+            // changed for all shapes with a contact flag. Meshes are excluded.
+            if (wfToggle)
+            {
+              for (unsigned int j=0; j<BODY->nShapes; ++j)
+              {
+                RcsShape_setComputeType(&BODY->shapes[j], RCSSHAPE_COMPUTE_WIREFRAME,
+                                        !switchesOn);
+              }
+            }
+
           }
         }
       }
@@ -163,41 +168,9 @@ public:
     return std::max(toggleTime, ConstraintSet::getEndTime());
   }
 
-  void setGraph(RcsGraph* newGraph)
-  {
-    GraphConstraint::setGraph(newGraph);
-
-    // In addition, we memorize the original distance calculation of each
-    // shape so that we can reset them to their original state.
-    distCalcIndices.resize(bdyNames.size());
-
-    RCSGRAPH_FOREACH_BODY(this->graph)
-    {
-      for (size_t i=0; i<bdyNames.size(); ++i)
-      {
-        if (STREQ(BODY->name, bdyNames[i].c_str()))
-        {
-          distCalcIndices[i].resize(BODY->nShapes);
-
-          for (unsigned int j=0; j<BODY->nShapes; ++j)
-          {
-            distCalcIndices[i][j] = RcsShape_isOfComputeType(&BODY->shapes[j], RCSSHAPE_COMPUTE_DISTANCE) ? true : false;
-          }
-
-        }   // if (STREQ(BODY->name, bdyNames[i].c_str()))
-
-      }   // for (size_t i=0; i<bdyNames.size(); ++i)
-
-    }   // RCSGRAPH_FOREACH_BODY(this->graph)
-
-  }
-
-
-
 protected:
 
   std::vector<std::string> bdyNames;
-  std::vector<std::vector<bool>> distCalcIndices;
   double toggleTime;
   bool switchesOn;
   bool active;

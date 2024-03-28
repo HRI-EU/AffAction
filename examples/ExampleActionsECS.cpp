@@ -273,7 +273,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
 bool ExampleActionsECS::initParameters()
 {
-  xmlFileName = "g_group_5.xml";
+  xmlFileName = "g_group_6.xml";
   config_directory = "config/xml/AffAction/xml/examples";
   speedUp = 3;
 
@@ -426,6 +426,44 @@ bool ExampleActionsECS::initAlgo()
   actionC = std::make_unique<aff::ActionComponent>(&entity, controller->getGraph(), controller->getBroadPhase());
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
+
+#if 1
+  // Misuse contacts shape flag for Collision trajectory constraint
+  for (size_t i=0; i<actionC->getDomain()->entities.size(); ++i)
+  {
+    RcsBody* ntt = actionC->getDomain()->entities[i].body(controller->getGraph());
+
+    // If we find one or more shapes that have the distance flag active, we
+    // set this flag to true, and set all shapes to be resizeable (except for
+    // meshes), so that they can be visualized as wireframe when not collideable.
+    bool hasToggleShape = false;
+    for (unsigned int i=0; i<ntt->nShapes; ++i)
+    {
+      RcsShape* sh = &ntt->shapes[i];
+      if (RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_DISTANCE))
+      {
+        RcsShape_setComputeType(sh, RCSSHAPE_COMPUTE_CONTACT, true);
+        hasToggleShape = true;
+      }
+    }
+
+    if (hasToggleShape)
+    {
+      for (unsigned int i=0; i<ntt->nShapes; ++i)
+      {
+        RcsShape* sh = &ntt->shapes[i];
+        if (sh->type == RCSSHAPE_MESH)
+        {
+          continue;
+        }
+        RcsShape_setComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE, true);
+      }
+    }
+
+  }
+#endif
+
+  // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
   graphC->setEnableRender(false);//\todo MG CHECK
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,

@@ -74,6 +74,7 @@ public:
   /*! \brief Returns the RcsBody matching bdyName.
    */
   const RcsBody* body(const RcsGraph* graph) const;
+  RcsBody* body(RcsGraph* graph);
 };
 
 class AffordanceEntity : public SceneEntity
