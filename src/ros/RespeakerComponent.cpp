@@ -74,6 +74,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_quaternion.h>
 #include <Rcs_body.h>
+#include <Rcs_shape.h>
 
 #if defined (USE_ROS)
 #include <audio_msgs/AudioDataStamped.h>
@@ -267,6 +268,10 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
   // We show a cylinder pointing into the sound direction
   RcsBody* soundBeam = RcsGraph_getBodyByName(graph, "sound_beam");
   RCHECK(soundBeam);
+  for (unsigned int i = 0; i < soundBeam->nShapes; ++i)
+  {
+    RcsShape_setComputeType(&soundBeam->shapes[i], RCSSHAPE_COMPUTE_GRAPHICS);
+  }
   int jidx = RcsBody_getJointIndex(graph, soundBeam);
   RCHECK(jidx>=0);
   HTr tmp;
