@@ -42,6 +42,7 @@ namespace py = pybind11;
 #include <ExampleLLMSim.h>
 #include <ActionFactory.h>
 #include <HardwareComponent.h>
+#include <LandmarkZmqComponent.hpp>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -208,11 +209,11 @@ PYBIND11_MODULE(pyAffaction, m)
     std::cerr << "\n\n" + starLine;
     if (success)
     {
-      std::cerr << "\n* TestLLMSim initialized\n";
+      std::cerr << "\n* LLMSim initialized\n";
     }
     else
     {
-      std::cerr << "\n* Failed to initialize TestLLMSim\n";
+      std::cerr << "\n* Failed to initialize LLMSim\n";
     }
     std::cerr << starLine << "\n";
 
@@ -388,7 +389,7 @@ PYBIND11_MODULE(pyAffaction, m)
     t_calc = Timer_getSystemTime() - t_calc;
 
     std::string starLine(80, '*');
-    std::cerr << "\n\n" + starLine + "\n* TestLLMSim exits with "
+    std::cerr << "\n\n" + starLine + "\n* LLMSim exits with "
               << ex.getNumFailedActions() << " failed actions";
     std::cerr << " after " << std::to_string(t_calc) << " seconds\n";
     std::cerr << starLine << "\n";
@@ -613,12 +614,51 @@ PYBIND11_MODULE(pyAffaction, m)
     if (c)
     {
       ex.addComponent(c);
-      // return c->setParameter("DebugViewer", (void*)ex.viewer.get());
       aff::LandmarkBase* lmc = dynamic_cast<aff::LandmarkBase*>(c);
       RCHECK(lmc);
       lmc->enableDebugGraphics(ex.viewer.get());
       return true;
     }
+
+    return true;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Adds a component to listen to the landmarks publishers through ROS, which
+  // is for instance the Azure Kinect, and later also the Mediapipe components
+  //////////////////////////////////////////////////////////////////////////////
+  .def("addLandmarkZmq", [](aff::ExampleLLMSim& ex)
+  {
+    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
+
+    RLOG(0, "Adding trackers");
+    std::string connection="tcp://localhost:5555";
+    double r_agent = DBL_MAX;
+    // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
+
+    //lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.entity, connection));
+    auto lmc = new aff::LandmarkZmqComponent(&ex.entity, connection);// MEM leak
+    lmc->setScenePtr(ex.controller->getGraph(), ex.actionC->getDomain());
+
+    const RcsBody* cam = RcsGraph_getBodyByName(ex.controller.get()->getGraph(), "camera");
+    RCHECK(cam);
+    lmc->addArucoTracker(cam->name, "aruco_base");
+
+    // Add skeleton tracker and ALL agents in the scene
+    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
+    lmc->enableDebugGraphics(ex.viewer.get());
+    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
+
+    // Initialize all tracker camera transforms from the xml file
+    lmc->setCameraTransform(&cam->A_BI);
+
+    ex.viewer->setKeyCallback('W', [&ex](char k)
+    {
+      RLOG(0, "Calibrate camera");
+      ex.entity.publish("EstimateCameraPose", 20);
+    }, "Calibrate camera");
+
+    RLOG(0, "Done adding trackers");
 
     return true;
   })

@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     ex.viewer->setKeyCallback('W', [&ex](char k)
     {
       RLOG(0, "Calibrate camera");
-      ex.entity.publish("EstimateCameraPose");
+      ex.entity.publish("EstimateCameraPose", 20);
     }, "Calibrate camera");
 
     RLOG(0, "Done adding trackers");

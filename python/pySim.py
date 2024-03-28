@@ -39,6 +39,8 @@ elif platform.system() == "Windows":
 
 from pyAffaction import *
 
+setLogLevel(-1)
+
 sim = LlmSim()
 sim.noTextGui = True
 sim.unittest = False
