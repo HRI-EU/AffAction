@@ -1104,8 +1104,6 @@ std::unique_ptr<ActionBase> ActionGet::clone() const
 /*******************************************************************************
  *
  ******************************************************************************/
-
-
 class ActionGetAndHold : public ActionGet
 {
 public:
@@ -1145,5 +1143,108 @@ public:
 };
 
 REGISTER_ACTION(ActionGetAndHold, "get_and_hold");
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionMagicGet : public ActionGet
+{
+public:
+
+  ActionMagicGet(const ActionScene& domain,
+                 const RcsGraph* graph,
+                 std::vector<std::string> params) : ActionGet()
+  {
+    defaultDuration = 0.1;
+
+    if (params.size()<2)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The action magic_get requires at least two parameters.",
+                            "Call it with the object to get and the getting agent.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    objectName = params[0];
+    std::vector<const AffordanceEntity*> nttsToGet = domain.getAffordanceEntities(objectName);
+
+    if (nttsToGet.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectName + " is unknown.",
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    affordanceFrame = nttsToGet[0]->bdyName;
+
+    std::string agentThatGets = params[1];
+    const Agent* agent = domain.getAgent(agentThatGets);
+
+    if (!agent)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The agent " + agentThatGets + " was not found in the scene",
+                            "Check if this agent is available, or you misspelled its name.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    std::vector<const Manipulator*> manipulators = agent->getManipulatorsOfType(&domain, "hand");
+
+    if (manipulators.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The agent " + agentThatGets + " has no manipulators of type hand",
+                            "Choose another agent, or add a hand manipulator in the config file.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    capabilityFrame = manipulators[0]->bdyName;
+  }
+
+  virtual std::vector<std::string> createTasksXML() const
+  {
+    std::vector<std::string> tasks;
+
+    // Dummy task with no meaning, just needed for the activation points
+    std::string xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
+                          "controlVariable=\"XYZ\" effector=\"" + capabilityFrame + "\" />";
+    tasks.push_back(xmlTask);
+
+    return tasks;
+  }
+
+  virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const
+  {
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    auto cbc = std::make_shared<tropic::ConnectBodyConstraint>(t_start, objectName, capabilityFrame);
+    cbc->setConnectTransform(HTr_identity());
+    a1->add(cbc);
+
+    a1->addActivation(t_start, true, 0.5, taskObjHandPos);
+    a1->addActivation(t_end, false, 0.5, taskObjHandPos);
+
+    return a1;
+  }
+
+  size_t getNumSolutions() const
+  {
+    return 1;
+  }
+
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
+  {
+    return (solutionRank==0) ? true : false;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionMagicGet>(*this);
+  }
+
+};
+
+REGISTER_ACTION(ActionMagicGet, "magic_get");
 
 }   // namespace aff

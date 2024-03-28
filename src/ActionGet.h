@@ -61,7 +61,7 @@ public:
 
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  virtual tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
 
   void print() const;
   std::string explain() const;
