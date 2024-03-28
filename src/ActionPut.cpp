@@ -52,7 +52,6 @@
 namespace aff
 {
 REGISTER_ACTION(ActionPut, "put");
-REGISTER_ACTION(ActionPut, "power_put");
 
 ActionPut::ActionPut() :
   putDown(false), isObjCollidable(false), isPincerGrasped(false),
@@ -775,12 +774,22 @@ public:
 
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
   {
-    return (solutionRank==0) ? true : false;
+    if (solutionRank >= getNumSolutions())
+    {
+      return false;
+    }
+
+    return true;
   }
 
   std::unique_ptr<ActionBase> clone() const
   {
     return std::make_unique<ActionMagicPut>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    return ActionBase::getActionCommand();
   }
 
 };

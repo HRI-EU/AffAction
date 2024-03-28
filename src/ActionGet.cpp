@@ -67,7 +67,6 @@ namespace aff
  *
  ******************************************************************************/
 REGISTER_ACTION(ActionGet, "get");
-REGISTER_ACTION(ActionGet, "id_6355842184f61faabb83cb1b");
 
 ActionGet::ActionGet() :
   graspType(GraspType::Other), liftHeight(DEFAULT_LIFTHEIGHT), preGraspDist(DEFAULT_PREGRASPDIST),
@@ -1235,12 +1234,22 @@ public:
 
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
   {
-    return (solutionRank==0) ? true : false;
+    if (solutionRank >= getNumSolutions())
+    {
+      return false;
+    }
+
+    return true;
   }
 
   std::unique_ptr<ActionBase> clone() const
   {
     return std::make_unique<ActionMagicGet>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    return ActionBase::getActionCommand();
   }
 
 };
