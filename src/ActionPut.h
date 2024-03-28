@@ -45,9 +45,10 @@ class ActionPut : public ActionBase
 {
 public:
 
-  ActionPut(const ActionScene& domain,
-            const RcsGraph* graph,
-            std::vector<std::string> params);
+  ActionPut(),
+            ActionPut(const ActionScene& domain,
+                      const RcsGraph* graph,
+                      std::vector<std::string> params);
 
   virtual ~ActionPut();
   std::unique_ptr<ActionBase> clone() const;

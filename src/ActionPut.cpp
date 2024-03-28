@@ -53,13 +53,16 @@ namespace aff
 {
 REGISTER_ACTION(ActionPut, "put");
 REGISTER_ACTION(ActionPut, "power_put");
-REGISTER_ACTION(ActionPut, "id_6355823084f61faabb83cb1a");
+
+ActionPut::ActionPut() :
+  putDown(false), isObjCollidable(false), isPincerGrasped(false),
+  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2)
+{
+}
 
 ActionPut::ActionPut(const ActionScene& domain,
                      const RcsGraph* graph,
-                     std::vector<std::string> params) :
-  putDown(false), isObjCollidable(false), isPincerGrasped(false),
-  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2)
+                     std::vector<std::string> params) : ActionPut()
 {
   auto it = std::find(params.begin(), params.end(), "frame");
   if (it != params.end())
@@ -670,5 +673,118 @@ std::unique_ptr<ActionBase> ActionPut::clone() const
 {
   return std::make_unique<ActionPut>(*this);
 }
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionMagicPut : public ActionPut
+{
+public:
+
+  ActionMagicPut(const ActionScene& domain,
+                 const RcsGraph* graph,
+                 std::vector<std::string> params) : ActionPut()
+  {
+    defaultDuration = 0.1;
+
+    if (params.size()<2)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The action magic_get requires at least two parameters.",
+                            "Call it with the object to put and the location.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    objName = params[0];
+    auto nttsToPut = domain.getAffordanceEntities(objName);
+
+    if (nttsToPut.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objName + " to put down is unknown.",
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    objName = nttsToPut[0]->bdyName;
+
+    surfaceFrameName = params[1];
+    auto surfNtts = domain.getAffordanceEntities(surfaceFrameName);
+
+    if (surfNtts.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The surface " + surfaceFrameName + " to stack on is unknown.",
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    auto supportables = getAffordances<Supportable>(surfNtts[0]);
+
+    if (supportables.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "Nothing can be put on the surface " + surfaceFrameName + ".",
+                            "Use a surface with a Supportable affordance.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    surfaceFrameName = supportables[0]->frame;
+  }
+
+  virtual std::vector<std::string> createTasksXML() const
+  {
+    std::vector<std::string> tasks;
+
+    // Dummy task with no meaning, just needed for the activation points
+    std::string xmlTask = "<Task name=\"dummy\" controlVariable=\"XYZ\" effector=\"" +
+                          surfaceFrameName + "\" />";
+    tasks.push_back(xmlTask);
+
+    return tasks;
+  }
+
+  virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const
+  {
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    auto cbc = std::make_shared<tropic::ConnectBodyConstraint>(t_start, objName, surfaceFrameName);
+    cbc->setConnectTransform(HTr_identity());
+    a1->add(cbc);
+
+    a1->addActivation(t_start, true, 0.5, "dummy");
+    a1->addActivation(t_end, false, 0.5, "dummy");
+
+    return a1;
+  }
+
+  size_t getNumSolutions() const
+  {
+    return 1;
+  }
+
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
+  {
+    return (solutionRank==0) ? true : false;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionMagicPut>(*this);
+  }
+
+};
+
+REGISTER_ACTION(ActionMagicPut, "magic_put");
 
 }   // namespace aff
