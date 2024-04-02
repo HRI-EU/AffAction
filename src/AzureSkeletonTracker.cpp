@@ -509,39 +509,75 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
         const aff::Manipulator* m = scene->getManipulator(mName);
         RCHECK(m);
 
-        if (std::find(m->types.begin(), m->types.end(), "head") != m->types.end())
+        if (m->isOfType("head"))
         {
           bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
-            double* q_rbj = &graph->q->ele[jidx];
-            lpFiltTrf(q_rbj, &human->markers[HEAD], tmc);
-            HTr gaze;
-            HTr_from6DVector(&gaze, q_rbj);
-            const double* gazePos = gaze.org;
-            const double* gazeDir = gaze.rot[1];
+            // \todo: Same as below.
+            const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
+            const HTr* A_MI = &human->markers[HEAD];   // marker transform in world
+            HTr A_PM;   // Transform from manipulator's raw percept to its parent
+            HTr_invTransform(&A_PM, A_MI, A_PI);
+            lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
+
+            const double* gazePos = bdy->A_BI.org;   // \todo(MG): That's one step behind
+            const double* gazeDir = bdy->A_BI.rot[1];
             Vec3d_copy(human->headPosition, gazePos);
             Vec3d_copy(human->gazeDirection, gazeDir);
+
+
+            // RLOG(0, "FIXME");
+            // double* q_rbj = &graph->q->ele[jidx];
+            // lpFiltTrf(q_rbj, &human->markers[HEAD], tmc);
+            // HTr gaze;
+            // HTr_from6DVector(&gaze, q_rbj);
+            // const double* gazePos = gaze.org;
+            // const double* gazeDir = gaze.rot[1];
+            // Vec3d_copy(human->headPosition, gazePos);
+            // Vec3d_copy(human->gazeDirection, gazeDir);
           }
 
         }
-        else if (std::find(m->types.begin(), m->types.end(), "hand_left") != m->types.end())
+        else if (m->isOfType("hand_left"))
         {
           bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
-            lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_LEFT], tmc);
+            // A_PI is the Manipulator's parent transform
+            const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
+            const HTr* A_MI = &human->markers[HANDTIP_LEFT];   // marker transform in world
+            HTr A_PM;   // Transform from manipulator's raw percept to its parent
+            HTr_invTransform(&A_PM, A_MI, A_PI);
+            lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
+
+            //lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_LEFT], tmc);
           }
         }
-        else if (std::find(m->types.begin(), m->types.end(), "hand_right") != m->types.end())
+        else if (m->isOfType("hand_right"))
         {
           bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
           const int jidx = RcsBody_getJointIndex(graph, bdy);
           if (jidx!=-1)
           {
-            lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_RIGHT], tmc);
+            // The marker transforms are represented in world coordinates.
+            // In order to consider that the manipulator might have a parent
+            // different to the world frame, we transform the raw percepts
+            // into the (M)anipulator's (P)arent frame.
+            if (bdy->parentId!=-1)
+            {
+              const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;   // Manipulator's parent transform
+              const HTr* A_MI = &human->markers[HANDTIP_RIGHT];   // marker transform in world
+              HTr A_PM;   // Transform from manipulator's raw percept to its parent
+              HTr_invTransform(&A_PM, A_MI, A_PI);
+              lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
+            }
+            else
+            {
+              lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_RIGHT], tmc);
+            }
           }
         }
 
