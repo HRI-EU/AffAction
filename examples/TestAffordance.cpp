@@ -54,7 +54,7 @@ int main(int argc, char** argv)
   // Rcs_addResourcePath("config/xml/SmileActions");
   // auto scene = ActionScene::parse("config/xml/SmileActions/g_affordance_test.xml");
   Rcs_addResourcePath("config/xml/SmileSimulator");
-  auto scene = ActionScene::parse("config/xml/SmileSimulator/g_scenario_pizza.xml");
+  ActionScene scene("config/xml/SmileSimulator/g_scenario_pizza.xml");
   scene.print();
 
   // Test assignment operator

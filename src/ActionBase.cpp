@@ -121,7 +121,8 @@ size_t ActionBase::addTasks(Rcs::ControllerBase* controller) const
   return nTasksAdded;
 }
 
-TrajectoryPredictor::PredictionResult ActionBase::predict(const RcsGraph* graph_,
+TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
+                                                          const RcsGraph* graph_,
                                                           const RcsBroadPhase* broadphase,
                                                           double duration,
                                                           double dt) const
@@ -151,6 +152,10 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(const RcsGraph* graph_
   // Perform the actual prediction
   t_clone = Timer_getSystemTime();
   aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt);
+
+  // Add an action-specific cost. It is 0 per default, and can be used by
+  // actions to bias the solution.
+  result.actionCost = actionCost(scene, graph);
   t_clone = Timer_getSystemTime() - t_clone;
   RLOG(1, "Prediction took %.2f msec", 1.0e3 * t_clone);
 
@@ -449,7 +454,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
           RLOG_CPP(1, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, lookaheadGraph, i);
           double dt_predict = Timer_getSystemTime();
-          predResults[i] = localAction->predict(lookaheadGraph, broadphase,
+          predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase,
                                                 scaleDurationHint*localAction->getDurationHint(), dt);
           predResults[i].idx = i;
           predResults[i].actionText = localAction->getActionCommand();
@@ -532,6 +537,11 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
   return predictedActions;
 }
 
+double ActionBase::actionCost(const ActionScene& domain,
+                              const RcsGraph* graph) const
+{
+  return 0.0;
+}
 
 
 

@@ -59,7 +59,7 @@ public:
   std::vector<std::string> types;
 
   SceneEntity();
-  SceneEntity(const xmlNodePtr node);
+  SceneEntity(const xmlNodePtr node, const std::string& groupSuffix);
   virtual ~SceneEntity();
 
   /*! \brief Returns true if one of the SceneEntitie's types equals the
@@ -85,7 +85,7 @@ public:
 
   AffordanceEntity();
   AffordanceEntity& operator = (const AffordanceEntity&);
-  AffordanceEntity(const xmlNodePtr node);
+  AffordanceEntity(const xmlNodePtr node, const std::string& groupSuffix);
   AffordanceEntity(const AffordanceEntity& other);
   virtual ~AffordanceEntity();
   void print() const;

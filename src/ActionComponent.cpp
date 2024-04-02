@@ -62,27 +62,9 @@ const double scaleDtPrediction = 1.0;   // Higher makes predictions compute fast
 namespace aff
 {
 
-// Utility functions for trimming a string
-std::string& ActionComponent::ltrim(std::string& str, const std::string& chars)
-{
-  str.erase(0, str.find_first_not_of(chars));
-  return str;
-}
-
-std::string& ActionComponent::rtrim(std::string& str, const std::string& chars)
-{
-  str.erase(str.find_last_not_of(chars) + 1);
-  return str;
-}
-
-std::string& ActionComponent::trim(std::string& str, const std::string& chars)
-{
-  return ActionComponent::ltrim(ActionComponent::rtrim(str, chars), chars);
-}
-
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
                                  const RcsBroadPhase* broadphase_) :
-  ComponentBase(parent), graph(graph_), broadphase(broadphase_), limitsEnabled(true),
+  ComponentBase(parent), domain(graph_->cfgFile), graph(graph_), broadphase(broadphase_), limitsEnabled(true),
   animationGraph(NULL), animationTic(0), animationIdx(-1), startingFinalPose(false)
 {
   subscribe("TextCommand", &ActionComponent::onTextCommand);
@@ -92,9 +74,12 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
   subscribe("SetDebugRendering", &ActionComponent::onSetDebugRendering);
   subscribe("Stop", &ActionComponent::onStop);
 
-  this->domain = ActionScene::parse(graph->cfgFile);
+  //this->domain = ActionScene::parse(graph->cfgFile);
+  RLOG(0, "Initialize kinematics");
   domain.initializeKinematics(graph);
+  RLOG(0, "Checking");
   RCHECK(domain.check(graph));
+  RLOG(0, "Done");
 
   if (File_exists("action_sequence.txt"))
   {
@@ -221,13 +206,13 @@ void ActionComponent::actionThread(std::string text)
           RLOG_CPP(0, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, graph, i);
           double dt_predict = Timer_getSystemTime();
-          predResults[i] = localAction->predict(graph, broadphase, scaleDurationHint*localAction->getDurationHint(), getEntity()->getDt());
+          predResults[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(), getEntity()->getDt());
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].message += " command: " + localAction->getActionCommand();
-          RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
+          RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
                predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
-               1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost,
+               1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost, predResults[i].actionCost,
                predResults[i].message.c_str());
         }));
       }
@@ -248,7 +233,7 @@ void ActionComponent::actionThread(std::string text)
         RLOG_CPP(1, "Starting prediction " << i << " from " << action->getNumSolutions());
         action->initialize(domain, graph, i);
         double dt_predict = Timer_getSystemTime();
-        predResults[i] = action->predict(graph, broadphase, scaleDurationHint*action->getDurationHint(), getEntity()->getDt());
+        predResults[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(), getEntity()->getDt());
         predResults[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
         RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
@@ -262,9 +247,9 @@ void ActionComponent::actionThread(std::string text)
     {
       if (predResults[i].success)
       {
-        if (predResults[i].quality() < minCost)
+        if (predResults[i].cost() < minCost)
         {
-          minCost = predResults[i].quality();
+          minCost = predResults[i].cost();
 
           // Uncomment the next line for early exit. It means that in the case
           // of only failures, the ranking is not correct, since we don't

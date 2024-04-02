@@ -64,7 +64,7 @@ PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent, const Traject
   {
     this->graph = pr->graph;
     this->actionText = pr->actionText;
-    this->quality = pr->quality();
+    this->quality = pr->cost();
     this->success = pr->success;
     this->idx = pr->idx;
   }

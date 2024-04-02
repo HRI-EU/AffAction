@@ -156,7 +156,9 @@ public:
   std::string getName() const;
   void setActionParams(const std::vector<std::string>& params);
   virtual std::string getActionCommand() const;
-  void print() const;
+  virtual void print() const;
+  virtual double actionCost(const ActionScene& domain,
+                            const RcsGraph* graph) const;
 
   static std::vector<std::string> planActionSequence(ActionScene& domain,
                                                      RcsGraph* graph,
@@ -170,7 +172,11 @@ public:
   // Interface for prediction
   virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   virtual size_t getNumSolutions() const;
-  virtual TrajectoryPredictor::PredictionResult predict(const RcsGraph* graph, const RcsBroadPhase* broadphase, double duration, double dt) const;
+  virtual TrajectoryPredictor::PredictionResult predict(ActionScene& scene,
+                                                        const RcsGraph* graph,
+                                                        const RcsBroadPhase* broadphase,
+                                                        double duration,
+                                                        double dt) const;
 
 protected:
 

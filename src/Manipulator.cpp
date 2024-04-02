@@ -66,43 +66,51 @@ Manipulator::Manipulator() : reach(0.0)
 {
 }
 
-Manipulator::Manipulator(const xmlNodePtr node) : SceneEntity(node), reach(0.0)
+Manipulator::Manipulator(const xmlNodePtr node, const std::string& groupSuffix) : SceneEntity(node, groupSuffix), reach(0.0)
 {
   xmlNodePtr child = node->children;
 
   while (child)
   {
+    Capability* c = nullptr;
+
     if (isXMLNodeNameNoCase(child, "Joints"))
     {
       fingerJoints = Rcs::getXMLNodePropertyVecSTLString(child, "names");
     }
     else if (isXMLNodeNameNoCase(child, "PowergraspCapability"))
     {
-      capabilities.push_back(new PowergraspCapability(child));
+      c = new PowergraspCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "PincergraspCapability"))
     {
-      capabilities.push_back(new PincergraspCapability(child));
+      c = new PincergraspCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "TwistgraspCapability"))
     {
-      capabilities.push_back(new TwistgraspCapability(child));
+      c = new TwistgraspCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "CirculargraspCapability"))
     {
-      capabilities.push_back(new CirculargraspCapability(child));
+      c = new CirculargraspCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "PalmgraspCapability"))
     {
-      capabilities.push_back(new PalmgraspCapability(child));
+      c = new PalmgraspCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "FingerpushCapability"))
     {
-      capabilities.push_back(new FingerpushCapability(child));
+      c = new FingerpushCapability(child);
     }
     else if (isXMLNodeNameNoCase(child, "GazeCapability"))
     {
-      capabilities.push_back(new GazeCapability(child));
+      c = new GazeCapability(child);
+    }
+
+    if (c)
+    {
+      c->frame += groupSuffix;
+      capabilities.push_back(c);
     }
 
     child = child->next;
@@ -121,6 +129,7 @@ Manipulator::Manipulator(const Manipulator& other) : SceneEntity(other),
     capabilities.push_back(ci);
   }
 
+  RLOG_CPP(1, "Done copying manipulator " << name);
 }
 
 Manipulator& Manipulator::operator= (const Manipulator& copyFromMe)
@@ -459,12 +468,11 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
   }
 
   // Now we have a grasping hand
-  const RcsBody* ee = RcsGraph_getBodyByName(graph, bdyName.c_str());
-  RCHECK(ee);
+  const RcsBody* ee = body(graph);
 
   // Find "driving" joint of the body
   RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, ee);
-
+  RCHECK_MSG(jnt, "Body '%s' has no joint", bdyName.c_str());
 
   this->reach = Vec3d_distance(ee->A_BI.org, jnt->A_JI.org);
   for (const auto& capability : graspCapabilities)

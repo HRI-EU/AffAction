@@ -47,13 +47,14 @@ public:
 
   struct PredictionResult
   {
-    PredictionResult(): idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), elbowNS(0.0), wristNS(0.0), graph(nullptr)
+    PredictionResult(): idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0), elbowNS(0.0), wristNS(0.0), graph(nullptr)
     {
     }
 
-    double quality() const
+    double cost() const
     {
-      return jlCost + collCost;
+      // Both terms are normalized between 0 and 1, therefore only hald the sum.
+      return (jlCost + collCost + 8.0 * actionCost) / 10.0;
     }
 
     // The lesser function for sorting a vector of results. The failure -
@@ -70,7 +71,7 @@ public:
         return false;
       }
 
-      return a.quality() < b.quality();
+      return a.cost() < b.cost();
     }
 
     void print(int verbosityLevel=1) const
@@ -98,7 +99,8 @@ public:
         std::cout << "minDist: " << minDist << std::endl;
         std::cout << "jlCost: " << jlCost << std::endl;
         std::cout << "collCost: " << collCost << std::endl;
-        std::cout << "quality: " << quality() << std::endl;
+        std::cout << "actionCost: " << actionCost << std::endl;
+        std::cout << "cost: " << cost() << std::endl;
         std::cout << "message: " << message << std::endl;
         std::cout << "minDistBdy1: " << minDistBdy1 << std::endl;
         std::cout << "minDistBdy2: " << minDistBdy2 << std::endl;
@@ -110,7 +112,7 @@ public:
       }
       else
       {
-        std::cout << "cost: " << jlCost+collCost;
+        std::cout << "cost: " << cost();
       }
       std::cout << std::endl;
     }
@@ -120,6 +122,7 @@ public:
     double minDist;
     double jlCost;
     double collCost;
+    double actionCost;
     double elbowNS, wristNS;
     std::string message;
     std::string minDistBdy1, minDistBdy2;

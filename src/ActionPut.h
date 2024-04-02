@@ -63,6 +63,8 @@ public:
   void print() const;
   size_t getNumSolutions() const;
   double getDurationHint() const;
+  double actionCost(const ActionScene& domain,
+                    const RcsGraph* graph) const;
 
 protected:
 
@@ -98,6 +100,8 @@ protected:
 
   std::string explanation;
   std::string whereOn;   // Optional keyword specifying the name of the Supportable to put the object on.
+  std::string nearTo;    // Keyword specifying the name of an entity or agent near to which the object is to be put.
+  std::string farFrom;   // Keyword specifying the name of an entity or agent far of which the object is to be put.
 
   std::vector<std::string> usedManipulators;
   std::vector<double> handOpen;
@@ -107,6 +111,7 @@ protected:
   bool isPincerGrasped;
   double supportRegionX, supportRegionY;
   unsigned int polarAxisIdx;
+  double distance;
 
   // Point in the frame of the surface object on which the object will be put.
   double downProjection[3];

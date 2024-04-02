@@ -47,12 +47,12 @@ public:
 
   std::vector<std::string> manipulators;
 
-  Agent(const xmlNodePtr node, const ActionScene* scene);
+  Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
   Agent(const Agent& other);
   Agent& operator = (const Agent&);
   virtual ~Agent();
 
-  static Agent* createAgent(const xmlNodePtr node, ActionScene* scene);
+  static Agent* createAgent(const xmlNodePtr node, const std::string& groupSuffix, ActionScene* scene);
   virtual void print() const;
   virtual Agent* clone() const;
   virtual std::string isLookingAt() const;
@@ -73,7 +73,7 @@ public:
 class RobotAgent : public Agent
 {
 public:
-  RobotAgent(const xmlNodePtr node, const ActionScene* scene);
+  RobotAgent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
   RobotAgent(const RobotAgent& other);
   RobotAgent& operator = (const RobotAgent&);
   virtual ~RobotAgent();
@@ -103,15 +103,16 @@ public:
   double headPosition[3];
 
   HumanAgent(const xmlNodePtr node,
+             const std::string& groupSuffix,
              const ActionScene* scene);
   HumanAgent(const HumanAgent& other);
   HumanAgent& operator = (const HumanAgent&);
   virtual ~HumanAgent();
 
   Agent* clone() const;
-  void setMarkers(const std::vector<HTr>& newMarkers);
+  //void setMarkers(const std::vector<HTr>& newMarkers);
   void setVisibility(const bool newVisibilty);
-  void projectMarkersOnManipulators(const RcsGraph* graph);
+  //void projectMarkersOnManipulators(const RcsGraph* graph);
   bool hasHead() const;
   bool getHeadTransform(HTr* A_HI) const;
   bool getHeadPosition(double pos[3]) const;

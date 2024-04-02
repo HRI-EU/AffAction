@@ -202,8 +202,6 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
     const double phase = (motionDuration > 0.0) ? 1.0 - (endTime / motionDuration) : 0.0;
     const double phaseScale = sin(M_PI * phase);
 
-
-
     int ikRes = computeIK(ikSolver, a_des, x_des,
                           dt, blending*alpha, lambda, qFilt, phaseScale,
                           speedLimitCheck, jointLimitCheck,
@@ -382,6 +380,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
 
   result.jlCost /= tStack->m;   // Normalize by number of steps
   result.collCost /= tStack->m;   // Normalize by number of steps
+
+  // Normalize the costs to a range between 0 and 1. The result will be
+  // 0 for a cost=0, and 1 for a cost=inf
+  result.jlCost = (result.jlCost) / (1.0+result.jlCost);
+  result.collCost = (result.collCost) / (1.0+result.collCost);
+
 
   t_calc = Timer_getTime() - t_calc;
 

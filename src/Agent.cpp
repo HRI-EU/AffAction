@@ -53,7 +53,7 @@
 namespace aff
 {
 
-Agent::Agent(const xmlNodePtr node, const ActionScene* scene) : SceneEntity(node)
+Agent::Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene) : SceneEntity(node, groupSuffix)
 {
   xmlNodePtr child = node->children;
 
@@ -62,6 +62,7 @@ Agent::Agent(const xmlNodePtr node, const ActionScene* scene) : SceneEntity(node
     if (isXMLNodeNameNoCase(child, "Component"))
     {
       std::string manipulatorName = Rcs::getXMLNodePropertySTLString(child, "manipulator");
+      manipulatorName += groupSuffix;
 
       if (!manipulatorName.empty())
       {
@@ -110,7 +111,7 @@ std::string Agent::isLookingAt() const
   return std::string();
 }
 
-Agent* Agent::createAgent(const xmlNodePtr node, ActionScene* scene)
+Agent* Agent::createAgent(const xmlNodePtr node, const std::string& groupSuffix, ActionScene* scene)
 {
   Agent* agent = nullptr;
 
@@ -118,11 +119,11 @@ Agent* Agent::createAgent(const xmlNodePtr node, ActionScene* scene)
 
   if (std::find(types.begin(), types.end(), "robot") != types.end())
   {
-    agent =  new RobotAgent(node, scene);
+    agent =  new RobotAgent(node, groupSuffix, scene);
   }
   else if (std::find(types.begin(), types.end(), "human") != types.end())
   {
-    agent = new HumanAgent(node, scene);
+    agent = new HumanAgent(node, groupSuffix, scene);
   }
   else
   {
@@ -229,7 +230,9 @@ std::vector<const AffordanceEntity*> Agent::getObjectsInReach(const ActionScene*
 }
 
 RobotAgent::RobotAgent(const xmlNodePtr node,
-                       const ActionScene* scene) : Agent(node, scene)
+                       const std::string& groupSuffix,
+                       const ActionScene* scene) :
+  Agent(node, groupSuffix, scene)
 {
 }
 
@@ -413,8 +416,9 @@ bool RobotAgent::canReachTo(const ActionScene* scene,
 }
 
 HumanAgent::HumanAgent(const xmlNodePtr node,
+                       const std::string& groupSuffix,
                        const ActionScene* scene) :
-  Agent(node, scene), lastTimeSeen(0.0), visible(false)
+  Agent(node, groupSuffix, scene), lastTimeSeen(0.0), visible(false)
 {
   Vec3d_setZero(defaultPos);
   defaultRadius = DBL_MAX;

@@ -48,6 +48,149 @@
 #define fingersClosed (0.7)
 #define t_fingerMove  (2.0)
 
+#define IS_NEAR_THRESHOLD (0.4)
+
+
+namespace aff
+{
+template<typename T>
+static void eraseAffordancesNearerOrFartherAgent(const ActionScene& domain,
+                                                 const RcsGraph* graph,
+                                                 const std::string& nearTo,
+                                                 double d_limit,
+                                                 bool eraseIfRechable,
+                                                 std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
+{
+  const Agent* nearToAgent = domain.getAgent(nearTo);
+
+  if (!nearToAgent)
+  {
+    return;
+  }
+
+  const RcsBody* agentFrame = nearToAgent->body(graph);
+  auto it = affordanceMap.begin();
+
+  while (it != affordanceMap.end())
+  {
+    const Affordance* stackable = std::get<0>(*it);
+    const RcsBody* putFrame = stackable->getFrame(graph);
+    bool reachable;
+
+    if (d_limit == 0.0)
+    {
+      reachable = nearToAgent->canReachTo(&domain, graph, putFrame->A_BI.org);
+    }
+    else
+    {
+      reachable = Vec3d_distance(agentFrame->A_BI.org, putFrame->A_BI.org) <= d_limit ? true : false;
+    }
+
+    if (eraseIfRechable)
+    {
+      it = reachable ? affordanceMap.erase(it) : it + 1;
+    }
+    else
+    {
+      it = reachable ? it + 1 : affordanceMap.erase(it);
+    }
+  }
+
+}
+
+template<typename T>
+static void eraseAffordancesNearerOrFartherNtt(const ActionScene& domain,
+                                               const RcsGraph* graph,
+                                               const std::string& nearTo,
+                                               double d_limit,
+                                               bool trueForFarther,
+                                               std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
+{
+  // Erase the Affordances of type T that are not near to an entity
+  auto nearToNtts = domain.getAffordanceEntities(nearTo);
+
+  // This early exit is important, since the below loop assumes
+  // at least one entry.
+  if (nearToNtts.empty())
+  {
+    return;
+  }
+
+  // Memorize the frames of all entities that are to be checked against
+  // closeness. We store them up front to avoid searching them in each
+  // iteration of the affordanceMap.
+  std::vector<const RcsBody*> nttFrames;
+  for (const auto& ntt : nearToNtts)
+  {
+    nttFrames.push_back(ntt->body(graph));
+  }
+
+  auto it = affordanceMap.begin();
+  while (it != affordanceMap.end())
+  {
+    const Affordance* affordance = std::get<0>(*it);
+    const T* supportable = dynamic_cast<const T*>(affordance);
+
+    // We only consider affordances with the given template type
+    if (!supportable)
+    {
+      it++;
+      continue;
+    }
+
+    // Here we go through all relevant entity frames, and check if any of
+    // the entities is below the limit distance. If it is the case, we can
+    // safely keep the affordance and do an early exit of the loop.
+    const RcsBody* putFrame = supportable->getFrame(graph);
+    bool eraseSupportable = trueForFarther;
+    double di;
+    for (const auto& nttFrame : nttFrames)
+    {
+      di = Vec3d_distance(nttFrame->A_BI.org, putFrame->A_BI.org);
+      if (di <= d_limit)
+      {
+        eraseSupportable = !trueForFarther;
+        break;
+      }
+    }
+
+    RLOG(0, "%s - %s is %s (d=%f, limit=%f)",
+         nttFrames[0]->name, putFrame->name,
+         (eraseSupportable ? "erased" : "not erased"), di, d_limit);
+    it = eraseSupportable ? affordanceMap.erase(it) : it + 1;
+  }
+
+}
+
+// Prune T's that are farther away than d_limit
+static void eraseSupportablesFarther(const ActionScene& domain,
+                                     const RcsGraph* graph,
+                                     const std::string& ntt,
+                                     double d_limit,
+                                     std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
+{
+  eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntt, d_limit,
+                                                  true, affordanceMap);
+
+  eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, ntt, d_limit,
+                                                    false, affordanceMap);
+}
+
+// Prune T's that are closer than d_limit
+static void eraseSupportablesNearer(const ActionScene& domain,
+                                    const RcsGraph* graph,
+                                    const std::string& ntt,
+                                    double d_limit,
+                                    std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
+{
+  eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntt, d_limit,
+                                                  false, affordanceMap);
+
+  eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, ntt, d_limit,
+                                                    true, affordanceMap);
+}
+
+}   // namespace
 
 namespace aff
 {
@@ -55,7 +198,7 @@ REGISTER_ACTION(ActionPut, "put");
 
 ActionPut::ActionPut() :
   putDown(false), isObjCollidable(false), isPincerGrasped(false),
-  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2)
+  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2), distance(0.0)
 {
 }
 
@@ -76,6 +219,30 @@ ActionPut::ActionPut(const ActionScene& domain,
   {
     defaultDuration = std::stod(*(it+1));
     params.erase(it+1);
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "distance");
+  if (it != params.end())
+  {
+    distance = std::stod(*(it + 1));
+    params.erase(it + 1);
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "near");
+  if (it != params.end())
+  {
+    nearTo = *(it + 1);
+    params.erase(it + 1);
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "far");
+  if (it != params.end())
+  {
+    farFrom = *(it + 1);
+    params.erase(it + 1);
     params.erase(it);
   }
 
@@ -187,7 +354,6 @@ void ActionPut::init(const ActionScene& domain,
                             "There is nothing under the " + objectToPut + " where I can put it on.",
                             "Specify another object to put it on");
     }
-
     else
     {
       putDown = true;
@@ -213,18 +379,22 @@ void ActionPut::init(const ActionScene& domain,
     auto it = affordanceMap.begin();
     while (it != affordanceMap.end())
     {
-      // If element is even number then delete it
-      const Affordance* stackable = std::get<0>(*it);
-      if (stackable->frame!=whereOn)
-      {
-        // Due to deletion in loop, iterator became invalidated. So reset the iterator to next item.
-        it = affordanceMap.erase(it);
-      }
-      else
-      {
-        it++;
-      }
+      const Stackable* stackable = dynamic_cast<const Stackable*>(std::get<0>(*it));
+      it = (stackable&&(stackable->frame==whereOn)) ? affordanceMap.erase(it) : it+1;
     }
+  }
+
+  // Erase the Supportables that are farther away from an entity or agent than d_limit
+  double d_limit = (distance == 0.0) ? IS_NEAR_THRESHOLD : distance;
+  if (!nearTo.empty())
+  {
+    eraseSupportablesFarther(domain, graph, nearTo, d_limit, affordanceMap);
+  }
+
+  // Erase the Supportables that are more close to an entity or agent than d_limit
+  if (!farFrom.empty())
+  {
+    eraseSupportablesNearer(domain, graph, farFrom, d_limit, affordanceMap);
   }
 
   // If the map is empty after removing all non-frame Supportables, we give up.
@@ -671,6 +841,40 @@ size_t ActionPut::getNumSolutions() const
 std::unique_ptr<ActionBase> ActionPut::clone() const
 {
   return std::make_unique<ActionPut>(*this);
+}
+
+double ActionPut::actionCost(const ActionScene& domain,
+                             const RcsGraph* graph) const
+{
+  // \todo(MG): Needs to be re-worked to handle agents consistentls
+  if (!nearTo.empty())
+  {
+    double d_min = std::numeric_limits<double>::max();
+    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, surfaceFrameName.c_str());
+    std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(nearTo);
+    for (const auto& ntt : ntts)
+    {
+      const RcsBody* nttLocation = ntt->body(graph);
+      d_min = std::min(d_min, Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org));
+    }
+
+    return d_min / (1.0 + d_min);
+  }
+  else if (!farFrom.empty())
+  {
+    double d_max = 0.0;
+    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, surfaceFrameName.c_str());
+    std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(farFrom);
+    for (const auto& ntt : ntts)
+    {
+      const RcsBody* nttLocation = ntt->body(graph);
+      d_max = std::max(d_max, Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org));
+    }
+
+    return 1.0 / (1.0 + d_max);
+  }
+
+  return 0.0;
 }
 
 

@@ -62,9 +62,6 @@ public:
   void print() const;
   bool check(const RcsGraph* graph) const;
   bool reload(const std::string& xmlFile);
-  static void parseRecursive(const xmlNodePtr parentNode, ActionScene* scene);
-  static void parseAgents(const xmlNodePtr parentNode, ActionScene* scene);
-  static ActionScene parse(const std::string& xmlFile);
   std::string printAffordancesToString() const;
   std::vector<const Manipulator*> getFreeManipulators(const RcsGraph* graph) const;
   std::vector<const Manipulator*> getOccupiedManipulators(const RcsGraph* graph) const;

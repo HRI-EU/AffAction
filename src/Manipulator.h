@@ -60,7 +60,7 @@ public:
   double reach;
 
   Manipulator();
-  Manipulator(const xmlNodePtr node);
+  Manipulator(const xmlNodePtr node, const std::string& groupSuffix);
   Manipulator(const Manipulator& other);
   Manipulator& operator = (const Manipulator&);
   virtual ~Manipulator();

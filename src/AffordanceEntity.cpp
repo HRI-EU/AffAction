@@ -79,10 +79,13 @@ SceneEntity::SceneEntity()
 {
 }
 
-SceneEntity::SceneEntity(const xmlNodePtr node)
+SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
 {
   bdyName = Rcs::getXMLNodePropertySTLString(node, "body");
+  RLOG_CPP(0, "Creting SceneEntity '" << bdyName << "' with suffix " << groupSuffix);
+  bdyName += groupSuffix;
   RCHECK_MSG(!bdyName.empty(), "Found SceneEntity without body name: %s", node->name);
+
   name = bdyName;
   instanceId = bdyName;
   Rcs::getXMLNodePropertySTLString(node, "name", name);
@@ -174,88 +177,95 @@ AffordanceEntity& AffordanceEntity::operator= (const AffordanceEntity& copyFromM
   return *this;
 }
 
-AffordanceEntity::AffordanceEntity(const xmlNodePtr node) : SceneEntity(node)
+AffordanceEntity::AffordanceEntity(const xmlNodePtr node, const std::string& groupSuffix) :
+  SceneEntity(node, groupSuffix)
 {
   xmlNodePtr child = node->children;
 
   while (child)
   {
+    Affordance* a = nullptr;
+
     if (isXMLNodeNameNoCase(child, "PowerGraspable"))
     {
-      affordances.push_back(new PowerGraspable(child));
+      a = new PowerGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "PincerGraspable"))
     {
-      affordances.push_back(new PincerGraspable(child));
+      a = new PincerGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "PalmGraspable"))
     {
-      affordances.push_back(new PalmGraspable(child));
+      a = new PalmGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "BallGraspable"))
     {
-      affordances.push_back(new BallGraspable(child));
+      a = new BallGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "CircularGraspable"))
     {
-      affordances.push_back(new CircularGraspable(child));
+      a = new CircularGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "TwistGraspable"))
     {
-      affordances.push_back(new TwistGraspable(child));
+      a = new TwistGraspable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Twistable"))
     {
-      affordances.push_back(new Twistable(child));
+      a = new Twistable(child);
     }
     else if (isXMLNodeNameNoCase(child, "PushSwitchable"))
     {
-      affordances.push_back(new PushSwitchable(child));
+      a = new PushSwitchable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Supportable"))
     {
-      Supportable* s = new Supportable(child);
-      affordances.push_back(s);
+      a = new Supportable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Stackable"))
     {
-      affordances.push_back(new Stackable(child));
+      a = new Stackable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Containable"))
     {
-      affordances.push_back(new Containable(child));
+      a = new Containable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Pourable"))
     {
-      affordances.push_back(new Pourable(child));
+      a = new Pourable(child);
     }
     else if (isXMLNodeNameNoCase(child, "PointPushable"))
     {
-      affordances.push_back(new PointPushable(child));
+      a = new PointPushable(child);
     }
     else if (isXMLNodeNameNoCase(child, "PointPokable"))
     {
-      affordances.push_back(new PointPokable(child));
+      a = new PointPokable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Hingeable"))
     {
-      affordances.push_back(new Hingeable(child));
+      a = new Hingeable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Dispensible"))
     {
-      affordances.push_back(new Dispensible(child));
+      a = new Dispensible(child);
     }
     else if (isXMLNodeNameNoCase(child, "Wettable"))
     {
-      affordances.push_back(new Wettable(child));
+      a = new Wettable(child);
     }
     else if (isXMLNodeNameNoCase(child, "Openable"))
     {
-      Openable* affordance = new Openable(child);
+      a = new Openable(child);
       RLOG_CPP(1, "Assigning '" << bdyName << "' to Openable - fix me");
-      affordance->frame = bdyName;   // \todo(MG): fix it. We need a frame to pass the check
-      affordances.push_back(affordance);
+      a->frame = bdyName.substr(0, bdyName.length()- groupSuffix.length());   // \todo(MG): fix it. We need a frame to pass the check
+      RLOG_CPP(1, "Corrected frame is '" << a->frame << "'");
+    }
 
+    if (a)
+    {
+      a->frame += groupSuffix;
+      affordances.push_back(a);
     }
 
     child = child->next;
@@ -320,9 +330,8 @@ bool AffordanceEntity::check(const RcsGraph* graph) const
     }
     else
     {
-      if (//(affordanceFrm->parentId!=ntt->id) &&
-        (affordanceFrm->id!=ntt->id) &&
-        (!RcsBody_isChild(graph, affordanceFrm, ntt)))
+      if (ntt && ((affordanceFrm->id!=ntt->id) &&
+                  (!RcsBody_isChild(graph, affordanceFrm, ntt))))
       {
         RLOG(1, "Affordance frame '%s' is not a child of or '%s'",
              affordanceFrm->name, ntt->name);
@@ -495,7 +504,7 @@ void sort(const RcsGraph* graph,
 
   for (size_t i=0; i<qPairs.size(); ++i)
   {
-    RLOG(0, "Solution %zu: %s - %s = %f", i,
+    RLOG(0, "Solution %zu: %s - %s with cost %f", i,
          std::get<0>(qPairs[i])->frame.c_str(),
          std::get<1>(qPairs[i])->frame.c_str(),
          std::get<2>(qPairs[i]));

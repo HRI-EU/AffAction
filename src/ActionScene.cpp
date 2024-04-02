@@ -44,6 +44,79 @@
 
 #include <algorithm>
 #include <exception>
+#include <functional>
+
+
+
+namespace aff
+{
+
+static void MyParseSceneEntity(const xmlNodePtr node, aff::ActionScene* scene, std::string groupSuffix)
+{
+  if (node->type != XML_ELEMENT_NODE)
+  {
+    return;
+  }
+
+  if (isXMLNodeName(node, "AffordanceModel"))
+  {
+    std::string amName = Rcs::getXMLNodePropertySTLString(node, "name");
+    RLOG_CPP(0, "AffordanceModel: name: '" << amName << "' group suffix: '" << groupSuffix << "'");
+    scene->entities.emplace_back(AffordanceEntity(node, groupSuffix));
+  }
+  else if (isXMLNodeName(node, "Manipulator"))
+  {
+    std::string mName = Rcs::getXMLNodePropertySTLString(node, "name");
+    RLOG_CPP(0, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
+    scene->manipulators.emplace_back(Manipulator(node, groupSuffix));
+  }
+
+}
+
+static void MyParseAgents(const xmlNodePtr node, ActionScene* scene, std::string groupSuffix)
+{
+  if (node->type == XML_ELEMENT_NODE)
+  {
+    if (isXMLNodeName(node, "Agent"))
+    {
+      scene->agents.emplace_back(Agent::createAgent(node, groupSuffix, scene));
+    }
+  }
+}
+
+static void MyParseRecursive(const xmlNodePtr node, aff::ActionScene* self, std::string suffix,
+                             std::function<void(const xmlNodePtr, ActionScene*, std::string)> parse)
+{
+
+  if (node == NULL)
+  {
+    return;
+  }
+  else if (isXMLNodeName(node, "Graph"))
+  {
+    MyParseRecursive(node->children, self, suffix, parse);
+    MyParseRecursive(node->next, self, suffix, parse);
+  }
+  else if (isXMLNodeName(node, "Group"))
+  {
+    std::string grpSfx = Rcs::getXMLNodePropertySTLString(node, "name");
+    MyParseRecursive(node->children, self, suffix + grpSfx, parse);
+    MyParseRecursive(node->next, self, suffix, parse);
+  }
+  else // can be a Manipulator, Body or junk
+  {
+    parse(node, self, suffix);
+    MyParseRecursive(node->next, self, suffix, parse);
+  }
+
+}
+
+}   // namespace
+
+
+
+
+
 
 /*
 
@@ -73,10 +146,14 @@ ActionScene::ActionScene(const std::string& xmlFile)
     node = parseXMLMemory(xmlFile.c_str(), xmlFile.length()+1, &doc);
   }
 
+  std::string groupSuffix;
   if (node)
   {
-    parseRecursive(node, this);
-    parseAgents(node, this);
+    RLOG(0, "Parsing entities");
+    MyParseRecursive(node, this, groupSuffix, MyParseSceneEntity);
+    RLOG(0, "Parsing agents");
+    MyParseRecursive(node, this, groupSuffix, MyParseAgents);
+    RLOG(0, "Done parsing");
   }
   else
   {
@@ -138,7 +215,13 @@ bool ActionScene::reload(const std::string& xmlFile)
 {
   entities.clear();
   manipulators.clear();
+  for (size_t i = 0; i < agents.size(); ++i)
+  {
+    delete agents[i];
+  }
+  agents.clear();
   foveatedEntity.clear();
+  std::string groupSuffix;
 
   char cfgFile[RCS_MAX_FILENAMELEN] = "";
   bool fileExists = Rcs_getAbsoluteFileName(xmlFile.c_str(), cfgFile);
@@ -154,8 +237,8 @@ bool ActionScene::reload(const std::string& xmlFile)
 
   if (node)
   {
-    parseRecursive(node, this);
-    parseAgents(node, this);
+    MyParseRecursive(node, this, groupSuffix, MyParseSceneEntity);
+    MyParseRecursive(node, this, groupSuffix, MyParseAgents);
   }
   else
   {
@@ -193,6 +276,7 @@ void ActionScene::print() const
 
 bool ActionScene::check(const RcsGraph* graph) const
 {
+  RLOG(1, "ActionScene::check()");
   bool success = true;
 
   for (auto& e : entities)
@@ -210,67 +294,9 @@ bool ActionScene::check(const RcsGraph* graph) const
     success = a->check(this, graph) && success;
   }
 
+  RLOG(1, "Done ActionScene::check()");
+
   return success;
-}
-
-void ActionScene::parseRecursive(const xmlNodePtr parentNode, ActionScene* scene)
-{
-
-  for (xmlNodePtr node = parentNode; node; node = node->next)
-  {
-    if (node->type == XML_ELEMENT_NODE)
-    {
-      if (xmlStrcmp(node->name, BAD_CAST "AffordanceModel")==0)
-      {
-        scene->entities.emplace_back(AffordanceEntity(node));
-      }
-      else if (xmlStrcmp(node->name, BAD_CAST "Manipulator")==0)
-      {
-        scene->manipulators.emplace_back(Manipulator(node));
-      }
-
-    }
-
-    parseRecursive(node->children, scene);
-  }
-}
-
-void ActionScene::parseAgents(const xmlNodePtr parentNode, ActionScene* scene)
-{
-  // To be called after `parseRecursive`
-  // Requires Manipulators to be already initialized
-  for (xmlNodePtr node = parentNode; node; node = node->next)
-  {
-    if (node->type == XML_ELEMENT_NODE)
-    {
-      if (xmlStrcmp(node->name, BAD_CAST "Agent")==0)
-      {
-        scene->agents.emplace_back(Agent::createAgent(node, scene));
-      }
-    }
-    parseAgents(node->children, scene);
-  }
-}
-
-ActionScene ActionScene::parse(const std::string& xmlFile)
-{
-  ActionScene scene;
-  xmlDocPtr doc = NULL;
-  xmlNodePtr node = parseXMLFile(xmlFile.c_str(), "Graph", &doc);
-
-  if (node)
-  {
-    parseRecursive(node, &scene);
-    parseAgents(node, &scene);
-  }
-  else
-  {
-    RLOG(4, "Failed to read xml file \"%s\"", xmlFile.c_str());
-  }
-
-  xmlFreeDoc(doc);
-
-  return std::move(scene);
 }
 
 std::string ActionScene::printAffordancesToString() const
@@ -639,11 +665,45 @@ Agent* ActionScene::getAgent(const std::string& name)
 
 void ActionScene::initializeKinematics(const RcsGraph* graph)
 {
+  // For each manipulator, determine the joint that branches of its
+  // kinematic chain. It is used to compute the "reach", which is the
+  // accumulated length of all chain links.
   for (auto& m : manipulators)
   {
+    RLOG_CPP(0, "Computing base joint name of " << m.bdyName);
     m.computeBaseJointName(this, graph);
+    RLOG_CPP(0, "Done computing base joint name of " << m.bdyName);
+  }
+
+  // We assume that the defaultPos is given in relative coordinates to the
+  // agent's parent. We make sure that it is transformed into world coordinates
+  for (auto& a : agents)
+  {
+    HumanAgent* human = dynamic_cast<HumanAgent*>(a);
+    if (!human)
+    {
+      continue;
+    }
+
+    const RcsBody* parent = RCSBODY_BY_ID(graph, human->body(graph)->parentId);
+    if (parent)
+    {
+      RLOG_CPP(0, "Transforming defaultPos of agent " << human->bdyName);
+      Vec3d_transformSelf(human->defaultPos, &parent->A_BI);
+    }
   }
 
 }
 
 } // namespace aff
+
+
+
+
+
+
+
+
+
+
+
