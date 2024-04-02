@@ -276,6 +276,7 @@ src/TaskGuiComponent.cpp
 src/TextEditComponent.cpp
 src/ActionComponent.cpp
 src/HardwareComponent.cpp
+src/WebsocketActionComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
