@@ -76,6 +76,7 @@ public:
   std::string xmlFileName;
   std::string config_directory;
   std::string sequenceCommand;
+  std::string lastResultMsg;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda;
@@ -85,7 +86,6 @@ public:
   bool plot, valgrind, unittest, withRobot;
   bool singleThreaded, verbose, processingAction, lookahead;
   double dtProcess, dtEvents;
-  size_t failCount;
 
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<TextEditComponent> textGui;
@@ -101,20 +101,24 @@ public:
 
   ExampleActionsECS(int argc, char** argv);
   virtual ~ExampleActionsECS();
+
+  // From ExampleBase
   virtual bool initParameters();
   virtual bool parseArgs(Rcs::CmdLineParser* parser);
   virtual bool initAlgo();
   virtual bool initGraphics();
   virtual bool initGuis();
   virtual void run();
-  virtual void startThreaded();
   virtual void step();
   virtual std::string help();
+
+  virtual void startThreaded();
   ActionScene* getScene();
   const ActionScene* getScene() const;
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
   bool isFinalPoseRunning() const;
+  size_t getNumFailedActions() const;
 
   std::vector<std::pair<std::string,std::string>> getCompletedActionStack() const;
 
@@ -127,6 +131,8 @@ protected:
   bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
   void printCompletedActionStack() const;
+
+  size_t failCount;
   std::vector<std::pair<std::string,std::string>> completedActionStack;
   mutable std::mutex actionStackMtx;
   std::vector<ComponentBase*> hwc;
@@ -134,6 +140,7 @@ protected:
 
 private:
 
+  // Subscribed callbacks
   void onQuit();
   void onPrint();
   void onActionSequence(std::string text);
@@ -141,7 +148,8 @@ private:
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
   void onChangeBackgroundColorFreeze(bool freeze);
-  void process();
+  void onActionResult(bool success, double quality, std::string resMsg);
+  void onProcess();
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;

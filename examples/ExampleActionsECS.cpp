@@ -342,10 +342,11 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
+  entity.subscribe<bool, double, std::string>("ActionResult", &ExampleActionsECS::onActionResult, this);
   entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequence, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
-  entity.subscribe("Process", &ExampleActionsECS::process, this);
+  entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -525,7 +526,21 @@ bool ExampleActionsECS::initGraphics()
   viewer = std::make_unique<aff::GraphicsWindow>(&entity, false);
   viewer->add(new NamedMouseDragger(controller->getGraph()));
   viewer->setTitle("ExampleActionsECS");
-  viewer->setCameraTransform(-3.923553, -3.427215, 3.719906, -0.253100, 0.551730, 0.595891);
+  //viewer->setCameraTransform(-3.923553, -3.427215, 3.719906, -0.253100, 0.551730, 0.595891);
+
+  // Check if there is a body named 'initial_camera_view'.
+  double q_cam[6];
+  VecNd_set6(q_cam, -2.726404, -2.515165, 3.447799,   -0.390124, 0.543041, 0.795294);
+
+  const RcsBody* camera_body = RcsGraph_getBodyByName(graphC->getGraph(), "default_camera_view");
+  if (camera_body)
+  {
+    RLOG(1, "Setting initial view based on body 'initial_camera_view'.");
+    HTr_to6DVector(q_cam, &camera_body->A_BI);
+  }
+
+  viewer->setCameraTransform(q_cam[0], q_cam[1], q_cam[2], q_cam[3], q_cam[4], q_cam[5]);
+
 #if defined(_MSC_VER)
   viewer->setWindowSize(12, 36, 1000, 750);
 #else
@@ -809,6 +824,12 @@ bool ExampleActionsECS::initGraphics()
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
   entity.publish("RenderCommand", std::string("IK"), std::string("unsetGhostMode"));
   //entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+
+  if (!hwc.empty())
+  {
+    entity.publish("BackgroundColor", std::string("PEWTER"));
+  }
+
   entity.process();
 
   return true;
@@ -1225,6 +1246,16 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
 // This only handles the "reset" keyword
 void ExampleActionsECS::onTextCommand(std::string text)
 {
+  if (text=="get_state")
+  {
+    std::thread feedbackThread([this]()
+    {
+      std::string fb = sceneQuery->getSceneState().dump();
+      entity.publish("SendWebsocket", fb);
+    });
+    feedbackThread.detach();
+  }
+
   if (getRobotEnabled())
   {
     RLOG(0, "Skipping reset during real robot operation");
@@ -1295,6 +1326,78 @@ void ExampleActionsECS::onTextCommand(std::string text)
     }
 
     return;
+  }
+
+}
+
+void ExampleActionsECS::onActionResult(bool success, double quality, std::string resMsg)
+{
+  if (verbose)
+  {
+    RMSG_CPP(resMsg);
+  }
+  entity.publish("SetTextLine", resMsg, 1);
+
+  lastResultMsg = resMsg;
+
+  // This needs to be done independent of failure or success
+  if (!actionStack.empty())
+  {
+    addToCompletedActionStack(actionStack[0], resMsg);
+
+    if (verbose)
+    {
+      printCompletedActionStack();
+    }
+
+    actionStack.erase(actionStack.begin());
+  }
+
+  if (!success)
+  {
+    failCount++;
+
+    if (unittest)
+    {
+      if (!actionStack.empty())
+      {
+        // \todo: Check why this works
+        //RPAUSE_MSG("Calling reset");
+        entity.publish("TextCommand", std::string("reset"));
+        actionStack.insert(actionStack.begin(), "reset");
+      }
+    }
+    else
+    {
+      actionStack.clear();
+    }
+    RLOG_CPP(0, "Clearing action stack, number of failed actions: " << failCount);
+  }
+
+  // After the last action command of a sequence has been finished (the
+  // trajectory has ended), or we face a failure, we "unfreeze" the perception
+  // and accept updates from the perceived scene.
+  if (actionStack.empty())
+  {
+    RLOG(0, "ActionStack is empty, unfreezing perception");
+    entity.publish("FreezePerception", false);
+    processingAction = false;
+    actionC->setFinalPoseRunning(false);
+  }
+
+  if ((actionStack.size()==1) && STRNEQ(actionStack[0].c_str(), "pose", 4))
+  {
+    actionC->setFinalPoseRunning(true);
+  }
+
+  // In valgrind mode, we only perform one action, since this might run with valgrind
+  if (valgrind || (unittest && actionStack.empty()))
+  {
+    ExampleBase::stop();
+  }
+  else
+  {
+    entity.publish("SendWebsocket", resMsg);
   }
 
 }
@@ -1385,7 +1488,7 @@ void ExampleActionsECS::onChangeBackgroundColorFreeze(bool freeze)
   entity.publish<std::string, std::string>("RenderCommand", "BackgroundColor", color);
 }
 
-void ExampleActionsECS::process()
+void ExampleActionsECS::onProcess()
 {
   entity.process();
 }
@@ -1394,6 +1497,11 @@ bool ExampleActionsECS::isFinalPoseRunning() const
 {
   RCHECK(actionC);
   return actionC->isFinalPoseRunning();
+}
+
+size_t ExampleActionsECS::getNumFailedActions() const
+{
+  return failCount;
 }
 
 }   // namespace aff

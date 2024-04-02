@@ -47,15 +47,6 @@ public:
   ExampleLLMSim();
   ExampleLLMSim(int argc, char** argv);
   virtual ~ExampleLLMSim();
-  virtual bool initAlgo();
-  virtual bool initGraphics();
-  size_t getNumFailedActions() const;
-
-  virtual void onActionResult(bool success, double quality, std::string resMsg);
-  virtual void onTextCommand(std::string text);
-
-  size_t numFailedActions = 0;
-  std::string lastResultMsg;
 };
 
 }   // namespace aff
