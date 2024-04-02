@@ -125,6 +125,23 @@ bool Affordance::check(const RcsGraph* graph) const
   return true;
 }
 
+RcsBody* Affordance::getFrame(const RcsGraph* graph)
+{
+  RcsBody* b = RcsGraph_getBodyByName(graph, frame.c_str());
+  RCHECK_MSG(b, "SceneEntity %s (body %s) has no body attached",
+             className.c_str(), frame.c_str());
+  return b;
+
+}
+
+const RcsBody* Affordance::getFrame(const RcsGraph* graph) const
+{
+  RcsBody* b = RcsGraph_getBodyByName(graph, frame.c_str());
+  RCHECK_MSG(b, "SceneEntity %s (body %s) has no body attached",
+             className.c_str(), frame.c_str());
+  return b;
+
+}
 
 
 std::map<std::string,Affordance::Type> Affordance::typeMap =

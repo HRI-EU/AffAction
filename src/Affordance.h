@@ -94,6 +94,8 @@ public:
   virtual std::string classname() const;
   virtual void print() const;
   virtual bool check(const RcsGraph* graph) const;
+  RcsBody* getFrame(const RcsGraph* graph);
+  const RcsBody* getFrame(const RcsGraph* graph) const;
 };
 
 class Graspable : public Affordance
