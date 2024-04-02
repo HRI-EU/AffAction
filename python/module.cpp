@@ -291,7 +291,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // For the robot agent: If the result is true, it does not necessarily mean
   // that it can be grasped
   //////////////////////////////////////////////////////////////////////////////
-  .def("isReachable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objectName)
+  .def("isReachable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objectName) -> bool
   {
     auto agent = ex.getScene()->getAgent(agentName);
     if (!agent)
@@ -344,7 +344,6 @@ PYBIND11_MODULE(pyAffaction, m)
     sim->initParameters();
     sim->noTextGui = true;
     sim->unittest = true;
-    sim->useWebsocket = false;
     sim->speedUp = 1e8;
     sim->sequenceCommand = actionCommand;
     sim->xmlFileName = ex.xmlFileName;
@@ -365,7 +364,6 @@ PYBIND11_MODULE(pyAffaction, m)
     sim->initParameters();
     sim->noTextGui = true;
     sim->unittest = true;
-    sim->useWebsocket = false;
     sim->speedUp = 1e8;
     sim->sequenceCommand = "get " + objName;
     sim->xmlFileName = ex.xmlFileName;
@@ -466,7 +464,6 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.sceneQuery->getAgents();
   })
 
-  .def("get_scene_entities", &aff::ExampleLLMSim::getSceneEntities)
   .def("step", &aff::ExampleActionsECS::step)
   .def("stop", &aff::ExampleActionsECS::stop)
   .def("isRunning", &aff::ExampleActionsECS::isRunning)
@@ -579,7 +576,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return false;
     }
 
-    aff::ComponentBase* respeaker = getComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-respeaker");
+    aff::ComponentBase* respeaker = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-respeaker");
     if (respeaker)
     {
       respeaker->setParameter("PublishDialogueWithRaisedHandOnly", listenWitHandRaisedOnly);
@@ -610,7 +607,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("addLandmarkROS", [](aff::ExampleLLMSim& ex)
   {
     RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
-    aff::ComponentBase* c = getComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-landmarks_ros");
+    aff::ComponentBase* c = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-landmarks_ros");
     if (c)
     {
       ex.addComponent(c);
@@ -670,7 +667,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("addPTU", [](aff::ExampleLLMSim& ex)
   {
     RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
-    aff::ComponentBase* c = getComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-ptu");
+    aff::ComponentBase* c = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-ptu");
     if (c)
     {
       ex.addHardwareComponent(c);
@@ -685,19 +682,19 @@ PYBIND11_MODULE(pyAffaction, m)
   // Currently, 2 modes are supported: the Nuance TTS which requires the
   // corresponding ROS node to run, and a native Unix espeak TTS.
   //////////////////////////////////////////////////////////////////////////////
-  .def("addTTS", [](aff::ExampleLLMSim& ex, std::string type)
+  .def("addTTS", [](aff::ExampleLLMSim& ex, std::string type) -> bool
   {
     if (type == "nuance")
     {
-      auto c = getComponent(ex.entity, ex.controller->getGraph(),
-                            ex.getScene(), "-nuance_tts");
+      auto c = createComponent(ex.entity, ex.controller->getGraph(),
+                               ex.getScene(), "-nuance_tts");
       ex.addComponent(c);
       return c ? true : false;
     }
     else if (type == "native")
     {
-      auto c = getComponent(ex.entity, ex.controller->getGraph(),
-                            ex.getScene(), "-tts");
+      auto c = createComponent(ex.entity, ex.controller->getGraph(),
+                               ex.getScene(), "-tts");
       ex.addComponent(c);
       return c ? true : false;
     }
@@ -706,12 +703,24 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Adds a component to connect to a websocket client. The component receives
+  // action commands, and sends back the state.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("addWebsocket", [](aff::ExampleLLMSim& ex) -> bool
+  {
+    auto c = createComponent(ex.entity, ex.controller->getGraph(),
+                             ex.getScene(), "-websocket");
+    ex.addComponent(c);
+    return c ? true : false;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to the left Jaco7 Gen2 arm
   //////////////////////////////////////////////////////////////////////////////
   .def("addJacoLeft", [](aff::ExampleLLMSim& ex)
   {
-    auto c = aff::getComponent(ex.entity, ex.controller->getGraph(),
-                               ex.getScene(), "-jacoShm7l");
+    auto c = aff::createComponent(ex.entity, ex.controller->getGraph(),
+                                  ex.getScene(), "-jacoShm7l");
     ex.addHardwareComponent(c);
     return c ? true : false;
   })
@@ -721,8 +730,8 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addJacoRight", [](aff::ExampleLLMSim& ex)
   {
-    auto c = aff::getComponent(ex.entity, ex.controller->getGraph(),
-                               ex.getScene(), "-jacoShm7r");
+    auto c = aff::createComponent(ex.entity, ex.controller->getGraph(),
+                                  ex.getScene(), "-jacoShm7r");
     ex.addHardwareComponent(c);
     return c ? true : false;
   })
@@ -732,12 +741,12 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
   //////////////////////////////////////////////////////////////////////////////
-  .def_property("useWebsocket", &aff::ExampleLLMSim::getUseWebsocket, &aff::ExampleLLMSim::setUseWebsocket)
   .def_readwrite("unittest", &aff::ExampleLLMSim::unittest)
   .def_readwrite("noTextGui", &aff::ExampleLLMSim::noTextGui)
   .def_readwrite("sequenceCommand", &aff::ExampleLLMSim::sequenceCommand)
   .def_readwrite("speedUp", &aff::ExampleLLMSim::speedUp)
   .def_readwrite("xmlFileName", &aff::ExampleLLMSim::xmlFileName)
+  .def_readwrite("configDirectory", &aff::ExampleLLMSim::config_directory)
   .def_readwrite("noLimits", &aff::ExampleLLMSim::noLimits)
   .def_readwrite("noCollCheck", &aff::ExampleLLMSim::noCollCheck)   // Set before init()
   .def_readwrite("noTrajCheck", &aff::ExampleLLMSim::noTrajCheck)

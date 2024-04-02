@@ -33,6 +33,7 @@
 #include "HardwareComponent.h"
 #include "JacoShmComponent.h"
 #include "TTSComponent.h"
+#include "WebsocketActionComponent.h"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -106,27 +107,27 @@ static void initROS(double rosDt)
 #endif
 }
 
-std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
-                                                  const RcsGraph* graph,
-                                                  const ActionScene* scene,
-                                                  bool dryRun)
+std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
+                                                     const RcsGraph* graph,
+                                                     const ActionScene* scene,
+                                                     bool dryRun)
 {
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
 
   if (argP.hasArgument("-jacoShm7r", "Start with Jaco7 Shm right") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-jacoShm7r"));
+    components.push_back(createComponent(entity, graph, scene, "-jacoShm7r"));
   }
 
   if (argP.hasArgument("-jacoShm7l", "Start with Jaco7 Shm left") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-jacoShm7l"));
+    components.push_back(createComponent(entity, graph, scene, "-jacoShm7l"));
   }
 
   if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-ptu"));
+    components.push_back(createComponent(entity, graph, scene, "-ptu"));
   }
 
   for (size_t i=0; i< components.size(); ++i)
@@ -137,32 +138,37 @@ std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
   return components;
 }
 
-std::vector<ComponentBase*> getComponents(EntityBase& entity,
-                                          const RcsGraph* graph,
-                                          const ActionScene* scene,
-                                          bool dryRun)
+std::vector<ComponentBase*> createComponents(EntityBase& entity,
+                                             const RcsGraph* graph,
+                                             const ActionScene* scene,
+                                             bool dryRun)
 {
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
 
   if (argP.hasArgument("-respeaker", "Start with Respeaker") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-respeaker"));
+    components.push_back(createComponent(entity, graph, scene, "-respeaker"));
   }
 
   if (argP.hasArgument("-tts", "Start with native text-to-speech") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-tts"));
+    components.push_back(createComponent(entity, graph, scene, "-tts"));
+  }
+
+  if (argP.hasArgument("-websocket", "Start with websocket connection on port 35000") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-websocket"));
   }
 
   if (argP.hasArgument("-nuance_tts", "Start with Nuance ROS text-to-speech") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-nuance_tts"));
+    components.push_back(createComponent(entity, graph, scene, "-nuance_tts"));
   }
 
   if (argP.hasArgument("-landmarks_ros", "Start with ROS landmarks component") && (!dryRun))
   {
-    components.push_back(getComponent(entity, graph, scene, "-landmarks_ros"));
+    components.push_back(createComponent(entity, graph, scene, "-landmarks_ros"));
   }
 
   for (size_t i = 0; i < components.size(); ++i)
@@ -173,15 +179,19 @@ std::vector<ComponentBase*> getComponents(EntityBase& entity,
   return components;
 }
 
-ComponentBase* getComponent(EntityBase& entity,
-                            const RcsGraph* graph,
-                            const ActionScene* scene,
-                            const std::string& componentName)
+ComponentBase* createComponent(EntityBase& entity,
+                               const RcsGraph* graph,
+                               const ActionScene* scene,
+                               const std::string& componentName)
 {
 
   if (componentName == "-tts")
   {
     return new TTSComponent(&entity);
+  }
+  else if (componentName == "-websocket")
+  {
+    return new WebsocketActionComponent(&entity);
   }
 
 #if defined USE_ROS

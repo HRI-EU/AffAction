@@ -41,20 +41,20 @@
 namespace aff
 {
 
-std::vector<ComponentBase*> getComponents(EntityBase& entity,
-                                          const RcsGraph* graph,
-                                          const ActionScene* scene,
-                                          bool dryRun);
+std::vector<ComponentBase*> createComponents(EntityBase& entity,
+                                             const RcsGraph* graph,
+                                             const ActionScene* scene,
+                                             bool dryRun);
 
-std::vector<ComponentBase*> getHardwareComponents(EntityBase& entity,
-                                                  const RcsGraph* graph,
-                                                  const ActionScene* scene,
-                                                  bool dryRun);
+std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
+                                                     const RcsGraph* graph,
+                                                     const ActionScene* scene,
+                                                     bool dryRun);
 
-ComponentBase* getComponent(EntityBase& entity,
-                            const RcsGraph* graph,
-                            const ActionScene* scene,
-                            const std::string& componentName);
+ComponentBase* createComponent(EntityBase& entity,
+                               const RcsGraph* graph,
+                               const ActionScene* scene,
+                               const std::string& componentName);
 }
 
 #endif   // RCS_HARDWARECOMPONENT_H
