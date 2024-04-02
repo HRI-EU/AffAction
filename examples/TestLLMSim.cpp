@@ -105,9 +105,9 @@ int main(int argc, char** argv)
     argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
 
     lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.entity, connection));
-    lmc->setScenePtr(ex.controller->getGraph(), ex.actionC->getDomain());
+    lmc->setScenePtr(ex.getGraph(), ex.getScene());
 
-    const RcsBody* cam = RcsGraph_getBodyByName(ex.controller.get()->getGraph(), "camera");
+    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), "camera");
     RCHECK(cam);
     lmc->addArucoTracker(cam->name, "aruco_base");
 

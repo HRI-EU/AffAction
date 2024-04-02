@@ -87,18 +87,6 @@ public:
   bool singleThreaded, verbose, processingAction, lookahead;
   double dtProcess, dtEvents;
 
-  std::unique_ptr<Rcs::ControllerBase> controller;
-  std::unique_ptr<TextEditComponent> textGui;
-  std::unique_ptr<ActionComponent> actionC;
-  std::unique_ptr<GraphComponent> graphC;
-  std::unique_ptr<TrajectoryComponent> trajC;
-  std::unique_ptr<IKComponent> ikc;
-  std::unique_ptr<GraphicsWindow> viewer;
-  std::unique_ptr<TaskGuiComponent> taskGui;
-  std::unique_ptr<ConcurrentSceneQuery> sceneQuery;
-  std::unique_ptr<ConcurrentSceneQuery> sceneQuery2;
-  std::unique_ptr<ConcurrentSceneQuery> panTiltQuery;
-
   ExampleActionsECS(int argc, char** argv);
   virtual ~ExampleActionsECS();
 
@@ -113,32 +101,45 @@ public:
   virtual std::string help();
 
   virtual void startThreaded();
+
+  // Accessors
   ActionScene* getScene();
   const ActionScene* getScene() const;
+  RcsGraph* getGraph();
+  const RcsGraph* getGraph() const;
+  RcsBroadPhase* getBroadPhase();
+  const RcsBroadPhase* getBroadPhase() const;
+
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
   bool isFinalPoseRunning() const;
   size_t getNumFailedActions() const;
 
   std::vector<std::pair<std::string,std::string>> getCompletedActionStack() const;
-
   void clearCompletedActionStack();
-  mutable std::mutex stepMtx;
+  void lockStepMtx() const;
+  void unlockStepMtx() const;
 
-protected:
+  std::unique_ptr<ActionComponent> actionC;
+  std::unique_ptr<GraphComponent> graphC;
+  std::unique_ptr<GraphicsWindow> viewer;
+  std::unique_ptr<ConcurrentSceneQuery> sceneQuery;
+  std::unique_ptr<ConcurrentSceneQuery> sceneQuery2;
+  std::unique_ptr<ConcurrentSceneQuery> panTiltQuery;
+
+
+private:
+
+  std::unique_ptr<Rcs::ControllerBase> controller;
+  std::unique_ptr<TextEditComponent> textGui;
+  std::unique_ptr<TrajectoryComponent> trajC;
+  std::unique_ptr<IKComponent> ikc;
+  std::unique_ptr<TaskGuiComponent> taskGui;
 
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
   void printCompletedActionStack() const;
-
-  size_t failCount;
-  std::vector<std::pair<std::string,std::string>> completedActionStack;
-  mutable std::mutex actionStackMtx;
-  std::vector<ComponentBase*> hwc;
-  std::vector<ComponentBase*> components;
-
-private:
 
   // Subscribed callbacks
   void onQuit();
@@ -158,6 +159,13 @@ private:
   ES::SubscriberCollectionDecay<const MatNd*, const MatNd*>* setTaskCommand;
   ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand;
   ES::SubscriberCollectionDecay<>* setRenderCommand;
+
+  size_t failCount;
+  std::vector<std::pair<std::string,std::string>> completedActionStack;
+  mutable std::mutex actionStackMtx;
+  mutable std::mutex stepMtx;
+  std::vector<ComponentBase*> hwc;
+  std::vector<ComponentBase*> components;
 
   RcsGraph* graphToInitializeWith;
 };

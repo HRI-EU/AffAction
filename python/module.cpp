@@ -187,7 +187,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("init", [](aff::ExampleLLMSim& ex, bool debug=false)
+  .def("init", [](aff::ExampleLLMSim& ex, bool debug=false) -> bool
   {
     bool success = ex.initAlgo();
 
@@ -226,7 +226,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("sync", [](aff::ExampleLLMSim& ex, py::object obj)
   {
     aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
-    RcsGraph_copy(ex.controller->getGraph(), sim->controller->getGraph());
+    RcsGraph_copy(ex.getGraph(), sim->getGraph());
     ex.getScene()->agents = sim->getScene()->agents;
     ex.step();
   })
@@ -314,8 +314,8 @@ PYBIND11_MODULE(pyAffaction, m)
 
     for (const auto& ntt : ntts)
     {
-      const double* pos = ntt->body(ex.controller->getGraph())->A_BI.org;
-      if (agent->canReachTo(ex.getScene(), ex.controller->getGraph(), pos))
+      const double* pos = ntt->body(ex.getGraph())->A_BI.org;
+      if (agent->canReachTo(ex.getScene(), ex.getGraph(), pos))
       {
         return true;
       }
@@ -338,7 +338,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Simulates the action command in a copy of the simulator class.
   //////////////////////////////////////////////////////////////////////////////
-  .def("simulate", [](aff::ExampleLLMSim& ex, std::string actionCommand)
+  .def("simulate", [](aff::ExampleLLMSim& ex, std::string actionCommand) -> bool
   {
     auto sim = std::unique_ptr<aff::ExampleLLMSim>(new aff::ExampleLLMSim());
     sim->initParameters();
@@ -350,15 +350,15 @@ PYBIND11_MODULE(pyAffaction, m)
     sim->config_directory = ex.config_directory;
     sim->verbose = ex.verbose;
     sim->initAlgo();
-    ex.stepMtx.lock();
-    RcsGraph_copy(sim->controller->getGraph(), ex.controller->getGraph());
+    ex.lockStepMtx();
+    RcsGraph_copy(sim->getGraph(), ex.getGraph());
     sim->getScene()->agents = ex.getScene()->agents;
-    ex.stepMtx.unlock();
+    ex.unlockStepMtx();
     sim->start();
 
     return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
   })
-  .def("isGraspable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objName)
+  .def("isGraspable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objName) -> bool
   {
     auto sim = std::unique_ptr<aff::ExampleLLMSim>(new aff::ExampleLLMSim());
     sim->initParameters();
@@ -370,16 +370,16 @@ PYBIND11_MODULE(pyAffaction, m)
     sim->config_directory = ex.config_directory;
     sim->verbose = ex.verbose;
     sim->initAlgo();
-    ex.stepMtx.lock();
-    RcsGraph_copy(sim->controller->getGraph(), ex.controller->getGraph());
+    ex.lockStepMtx();
+    RcsGraph_copy(sim->getGraph(), ex.getGraph());
     sim->getScene()->agents = ex.getScene()->agents;
-    ex.stepMtx.unlock();
+    ex.unlockStepMtx();
     sim->start();
 
     return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
   })
 
-  .def("run", [](aff::ExampleLLMSim& ex, std::string actionCommand)
+  .def("run", [](aff::ExampleLLMSim& ex, std::string actionCommand) -> std::string
   {
     double t_calc = Timer_getSystemTime();
     ex.sequenceCommand = actionCommand;
@@ -413,7 +413,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.entity.process();
   })
-  .def("showGraphicsWindow", [](aff::ExampleLLMSim& ex)
+  .def("showGraphicsWindow", [](aff::ExampleLLMSim& ex) -> bool
   {
     bool success = ex.initGraphics();
 
@@ -425,11 +425,12 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return success;
   })
-  .def("showGuis", [](aff::ExampleLLMSim& ex)
+  .def("showGuis", [](aff::ExampleLLMSim& ex) -> bool
   {
-    return ex.initGuis();;
+    return ex.initGuis();
   })
-  .def("hideGraphicsWindow", [](aff::ExampleLLMSim& ex)
+
+  .def("hideGraphicsWindow", [](aff::ExampleLLMSim& ex) -> bool
   {
     if (!ex.viewer)
     {
@@ -441,7 +442,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return true;
   })
 
-  .def("get_state", [](aff::ExampleLLMSim& ex)
+  .def("get_state", [](aff::ExampleLLMSim& ex) -> std::string
   {
     return ex.sceneQuery->getSceneState().dump();
   })
@@ -568,7 +569,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("addRespeaker", [](aff::ExampleLLMSim& ex,
                           bool listenWitHandRaisedOnly,
                           bool gazeAtSpeaker,
-                          bool speakOut)
+                          bool speakOut) -> bool
   {
     if (!ex.actionC)
     {
@@ -576,7 +577,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return false;
     }
 
-    aff::ComponentBase* respeaker = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-respeaker");
+    aff::ComponentBase* respeaker = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-respeaker");
     if (respeaker)
     {
       respeaker->setParameter("PublishDialogueWithRaisedHandOnly", listenWitHandRaisedOnly);
@@ -604,10 +605,10 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to listen to the landmarks publishers through ROS, which
   // is for instance the Azure Kinect, and later also the Mediapipe components
   //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkROS", [](aff::ExampleLLMSim& ex)
+  .def("addLandmarkROS", [](aff::ExampleLLMSim& ex) -> bool
   {
     RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-landmarks_ros");
+    aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-landmarks_ros");
     if (c)
     {
       ex.addComponent(c);
@@ -624,7 +625,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to listen to the landmarks publishers through ROS, which
   // is for instance the Azure Kinect, and later also the Mediapipe components
   //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkZmq", [](aff::ExampleLLMSim& ex)
+  .def("addLandmarkZmq", [](aff::ExampleLLMSim& ex) -> bool
   {
     RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
 
@@ -633,11 +634,11 @@ PYBIND11_MODULE(pyAffaction, m)
     double r_agent = DBL_MAX;
     // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
 
-    //lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.entity, connection));
-    auto lmc = new aff::LandmarkZmqComponent(&ex.entity, connection);// MEM leak
-    lmc->setScenePtr(ex.controller->getGraph(), ex.actionC->getDomain());
+    auto lmc = new aff::LandmarkZmqComponent(&ex.entity, connection);
+    ex.addComponent(lmc);   // Takes care of deletion
+    lmc->setScenePtr(ex.getGraph(), ex.getScene());
 
-    const RcsBody* cam = RcsGraph_getBodyByName(ex.controller.get()->getGraph(), "camera");
+    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), "camera");
     RCHECK(cam);
     lmc->addArucoTracker(cam->name, "aruco_base");
 
@@ -664,10 +665,10 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to connect to the PTU action server ROS node, and to being
   // able to send pan / tilt commands to the PTU
   //////////////////////////////////////////////////////////////////////////////
-  .def("addPTU", [](aff::ExampleLLMSim& ex)
+  .def("addPTU", [](aff::ExampleLLMSim& ex) -> bool
   {
     RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.entity, ex.controller->getGraph(), ex.getScene(), "-ptu");
+    aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-ptu");
     if (c)
     {
       ex.addHardwareComponent(c);
@@ -686,14 +687,14 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     if (type == "nuance")
     {
-      auto c = createComponent(ex.entity, ex.controller->getGraph(),
+      auto c = createComponent(ex.entity, ex.getGraph(),
                                ex.getScene(), "-nuance_tts");
       ex.addComponent(c);
       return c ? true : false;
     }
     else if (type == "native")
     {
-      auto c = createComponent(ex.entity, ex.controller->getGraph(),
+      auto c = createComponent(ex.entity, ex.getGraph(),
                                ex.getScene(), "-tts");
       ex.addComponent(c);
       return c ? true : false;
@@ -708,7 +709,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addWebsocket", [](aff::ExampleLLMSim& ex) -> bool
   {
-    auto c = createComponent(ex.entity, ex.controller->getGraph(),
+    auto c = createComponent(ex.entity, ex.getGraph(),
                              ex.getScene(), "-websocket");
     ex.addComponent(c);
     return c ? true : false;
@@ -717,9 +718,9 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to the left Jaco7 Gen2 arm
   //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoLeft", [](aff::ExampleLLMSim& ex)
+  .def("addJacoLeft", [](aff::ExampleLLMSim& ex) -> bool
   {
-    auto c = aff::createComponent(ex.entity, ex.controller->getGraph(),
+    auto c = aff::createComponent(ex.entity, ex.getGraph(),
                                   ex.getScene(), "-jacoShm7l");
     ex.addHardwareComponent(c);
     return c ? true : false;
@@ -728,9 +729,9 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to the right Jaco7 Gen2 arm
   //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoRight", [](aff::ExampleLLMSim& ex)
+  .def("addJacoRight", [](aff::ExampleLLMSim& ex) -> bool
   {
-    auto c = aff::createComponent(ex.entity, ex.controller->getGraph(),
+    auto c = aff::createComponent(ex.entity, ex.getGraph(),
                                   ex.getScene(), "-jacoShm7r");
     ex.addHardwareComponent(c);
     return c ? true : false;
@@ -772,7 +773,7 @@ PYBIND11_MODULE(pyAffaction, m)
     aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
     RLOG_CPP(1, sim->help());
     auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
-    lm->setScenePtr(sim->controller->getGraph(), sim->actionC->getDomain());
+    lm->setScenePtr(sim->getGraph(), sim->getScene());
 
     sim->entity.subscribe("PostUpdateGraph", &aff::LandmarkBase::onPostUpdateGraph, lm.get());
     sim->entity.subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
@@ -833,53 +834,6 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return data;
   })
-#if 0
-  .def("getPanTilt", [](aff::LandmarkBase& lm, std::string roboAgent, std::string gazeTarget)
-  {
-    const aff::Agent* robo_ = lm.getScene()->getAgent(roboAgent);
-    const aff::RobotAgent* robo = dynamic_cast<const aff::RobotAgent*>(robo_);
-    if (!robo)
-    {
-      RLOG(0, "Robo agent '%s' not found", roboAgent.c_str());
-      double buf = 0.0;
-      MatNd tmp = MatNd_fromPtr(0, 0, &buf);
-      return pybind11::detail::MatNd_toNumpy(&tmp);
-    }
-
-    double panTilt[2], err[2];
-    size_t maxIter = 100;
-    double eps = 1.0e-8;
-
-    double t_calc = Timer_getSystemTime();
-    int iter = robo->getPanTilt(lm.getGraph(), gazeTarget.c_str(), panTilt, maxIter, eps, err);
-
-    // Can't retrieve joints / bodies etc.
-    if (iter==-1)
-    {
-      RLOG(0, "Pan tilt computation failed due to missing joints / bodies / graph");
-      double buf = 0.0;
-      MatNd tmp = MatNd_fromPtr(0, 0, &buf);
-      return pybind11::detail::MatNd_toNumpy(&tmp);
-    }
-
-    // Couldn't converge to precision given in eps
-    if ((err[0]>eps) || (err[1]>eps))
-    {
-      RLOG(0, "Pan tilt computation did not converge");
-      double buf = 0.0;
-      MatNd tmp = MatNd_fromPtr(0, 0, &buf);
-      return pybind11::detail::MatNd_toNumpy(&tmp);
-    }
-
-    t_calc = Timer_getSystemTime() - t_calc;
-
-    RLOG(0, "pan=%.1f tilt=%.1f err=%f %f took %d iterations and %.1f msec",
-         RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), err[0], err[1], iter, 1.0e3*t_calc);
-
-    MatNd tmp = MatNd_fromPtr(2, 1, panTilt);
-    return pybind11::detail::MatNd_toNumpy(&tmp);
-  })
-#endif
   ;
 
 

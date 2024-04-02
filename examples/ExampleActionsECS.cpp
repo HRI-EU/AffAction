@@ -1441,6 +1441,26 @@ const ActionScene* ExampleActionsECS::getScene() const
   return actionC ? actionC->getDomain() : nullptr;
 }
 
+RcsGraph* ExampleActionsECS::getGraph()
+{
+  return controller->getGraph();
+}
+
+const RcsGraph* ExampleActionsECS::getGraph() const
+{
+  return controller->getGraph();
+}
+
+RcsBroadPhase* ExampleActionsECS::getBroadPhase()
+{
+  return controller->getBroadPhase();
+}
+
+const RcsBroadPhase* ExampleActionsECS::getBroadPhase() const
+{
+  return controller->getBroadPhase();
+}
+
 void ExampleActionsECS::startThreaded()
 {
   std::thread t1([&]
@@ -1502,6 +1522,16 @@ bool ExampleActionsECS::isFinalPoseRunning() const
 size_t ExampleActionsECS::getNumFailedActions() const
 {
   return failCount;
+}
+
+void ExampleActionsECS::lockStepMtx() const
+{
+  stepMtx.lock();
+}
+
+void ExampleActionsECS::unlockStepMtx() const
+{
+  stepMtx.unlock();
 }
 
 }   // namespace aff

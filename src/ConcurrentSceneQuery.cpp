@@ -49,9 +49,10 @@ ConcurrentSceneQuery::ConcurrentSceneQuery(const ExampleActionsECS* sim_) :
   sim(sim_), graph(NULL), broadphase(NULL)
 {
   RCHECK(sim);
-  std::lock_guard<std::mutex> lock(sim->stepMtx);
-  graph = RcsGraph_clone(sim->controller->getGraph());
+  sim->lockStepMtx();
+  graph = RcsGraph_clone(sim->getGraph());
   scene = *(sim->getScene());
+  sim->unlockStepMtx();
 }
 
 ConcurrentSceneQuery::~ConcurrentSceneQuery()
@@ -62,15 +63,16 @@ ConcurrentSceneQuery::~ConcurrentSceneQuery()
 
 void ConcurrentSceneQuery::update(bool withBroadphase)
 {
-  std::lock_guard<std::mutex> lock(sim->stepMtx);
-  RcsGraph_copy(this->graph, sim->controller->getGraph());
+  sim->lockStepMtx();
+  RcsGraph_copy(this->graph, sim->getGraph());
   this->scene = *(sim->getScene());
 
   if (withBroadphase)
   {
     RcsBroadPhase_destroy(this->broadphase);
-    this->broadphase = RcsBroadPhase_clone(sim->controller->getBroadPhase(), graph);
+    this->broadphase = RcsBroadPhase_clone(sim->getBroadPhase(), graph);
   }
+  sim->unlockStepMtx();
 }
 
 nlohmann::json ConcurrentSceneQuery::getSceneState()
