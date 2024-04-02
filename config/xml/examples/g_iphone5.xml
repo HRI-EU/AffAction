@@ -27,20 +27,15 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+<Graph>
 
-  <xi:include href="g_robot_arms_high.xml" />
-  <xi:include href="g_hand_left.xml"/>
-  <xi:include href="g_hand_right.xml"/>
-
-  <Manipulator body="head_kinect_link" types="head">
-    <GazeCapability frame="head_kinect_lens" />
-  </Manipulator>
-
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-     <Component manipulator="hand_left" />
-     <Component manipulator="hand_left" />
-     <Component manipulator="head" />
-  </Agent>
+  <!-- The model for an iPhone 5. -->
+  <Body name="iphone" physics="dynamic" >
+    <Shape type="BOX" distance="true" extents="0.115 0.06 0.01" graphics="true" physics="true" transform="0 0 0.005 0 0 0" />
+    <Shape type="FRAME" extents="0.04 0.04 0" marker="true" markerName="aruco_45" scale="0.1" transform="0.0175 0 0.01 0 0 -90" />
+  </Body>
+  
+  <AffordanceModel body="iphone" types="mobile_phone">
+  </AffordanceModel>
 
 </Graph>

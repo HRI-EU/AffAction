@@ -29,9 +29,13 @@
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
        resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
-       name="JacoDefaultPoseArmsHigh">
+       name="JacoDefaultPoseArmsHigh"
+       usage="
+&#xA;  Configuration file to load the two-arm Jaco robot with arms mounted at the shoulders.
+&#xA;  "
+>
 
-    <Group prev="lab">
+    <Group>
 
         <xi:include href="g_item_base.xml"/>
 
@@ -39,7 +43,6 @@
             <Shape type="FRAME" scale="0.3"/>
             <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
         </Body>
-
 
         <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
             <noShape type="FRAME" scale="0.1"/>

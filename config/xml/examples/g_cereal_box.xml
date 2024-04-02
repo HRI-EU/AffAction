@@ -27,20 +27,33 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+<Graph>
 
-  <xi:include href="g_robot_arms_high.xml" />
-  <xi:include href="g_hand_left.xml"/>
-  <xi:include href="g_hand_right.xml"/>
+  <!-- The model for a box. The marker is assumed to be in the top center. -->
+  <Body name="box_of" physics="dynamic" >
+    <Shape distance="true" extents="0.057 0.19 0.243" graphics="true" physics="true" transform="0 0 0.1215 0 0 0" type="BOX"/>
+    <Shape extents="0.04 0.04 0" marker="true" distance="false" markerName="aruco_42" scale="0.1" transform="0 0 0.243 0 0 0" type="FRAME"/>
+  </Body>
+  
+  <Body name="top_box_of" prev="box_of" transform="0 0 0.243 0 0 0">
+    <Shape type="FRAME" scale="0.1"/>
+   </Body>
 
-  <Manipulator body="head_kinect_link" types="head">
-    <GazeCapability frame="head_kinect_lens" />
-  </Manipulator>
+  <Body name="grip1_box_of" prev="box_of" transform="0 -0.1 0.15 0 0 90">
+    <Shape type="FRAME" scale="0.1"/>
+  </Body>
 
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-     <Component manipulator="hand_left" />
-     <Component manipulator="hand_left" />
-     <Component manipulator="head" />
-  </Agent>
+  <Body name="grip2_box_of" prev="box_of" transform="0 0.1  0.15 0 0 -90">
+    <Shape type="FRAME" scale="0.1"/>
+  </Body>
+
+  <AffordanceModel body="box_of" name="box_of" types="box">
+    <Supportable frame="top_box_of"/>
+    <Pourable frame="top_box_of"/>
+    <Containable frame="top_box_of"/>
+    <Stackable frame="box_of"/>
+    <PalmGraspable frame="grip1_box_of" />
+    <PalmGraspable frame="grip2_box_of" />
+  </AffordanceModel>
 
 </Graph>

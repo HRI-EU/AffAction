@@ -27,20 +27,34 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+<Graph>
 
-  <xi:include href="g_robot_arms_high.xml" />
-  <xi:include href="g_hand_left.xml"/>
-  <xi:include href="g_hand_right.xml"/>
+	<Body name="bottle_of" physics="dynamic" >
+		<Shape color="RED" distance="true" graphics="false" length="0.185" physics="true" radius="0.0325" transform="0 0 0.0325 0 0 0" type="SSL"/>
+		<Shape distance="false" graphics="true" length="0.17" physics="false" radius="0.0325" transform="0 0 0.085 0 0 0" type="CYLINDER"/>
+		<Shape distance="false" graphics="true" length="0.08" physics="false" radius="0.0175" transform="0 0 0.21000000000000002 0 0 0" type="CYLINDER"/>
+		<Shape extents="0.04 0.04 0" marker="true" markerName="aruco_26" scale="0.1" transform="0.0325 0 0.071 90 90 0" type="FRAME"/>
+	</Body>
+	<Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.26 0 0 0">
+		<Shape scale="0.1" type="FRAME"/>
+	</Body>
+	<Body name="grip_bottle_of" prev="bottle_of" transform="0 0 0.1 0 0 0">
+		<Shape scale="0.1" type="FRAME"/>
+	</Body>
+	<Body name="inside_bottle_of" prev="bottle_of" transform="0 0 0.01 0 0 0">
+		<Shape scale="0.1" type="FRAME"/>
+	</Body>
+	<AffordanceModel body="bottle_of" name="bottle_of" types="bottle">
+		<Stackable frame="bottle_of"/>
+		<Pourable frame="tip_bottle_of"/>
+		<Twistable frame="tip_bottle_of"/>
+		<PowerGraspable frame="grip_bottle_of"/>
+		<PointPokable frame="tip_bottle_of"/>
+		<Containable frame="tip_bottle_of" max_volume="0.5">
+			<Ingredient name="" volume="0"/>
+		</Containable>
+		<Openable open="true"/>
+	</AffordanceModel>
 
-  <Manipulator body="head_kinect_link" types="head">
-    <GazeCapability frame="head_kinect_lens" />
-  </Manipulator>
-
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-     <Component manipulator="hand_left" />
-     <Component manipulator="hand_left" />
-     <Component manipulator="head" />
-  </Agent>
 
 </Graph>
