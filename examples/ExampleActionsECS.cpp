@@ -316,8 +316,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
-  getHardwareComponents(entity, NULL, NULL, dryRun);
-  getComponents(entity, NULL, NULL, dryRun);
+  createHardwareComponents(entity, NULL, NULL, dryRun);
+  createComponents(entity, NULL, NULL, dryRun);
 
   return true;
 }
@@ -485,8 +485,8 @@ bool ExampleActionsECS::initAlgo()
   graphToInitializeWith = RcsGraph_clone(controller->getGraph());
 
   // Initialize robot components from command line
-  this->hwc = getHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
-  this->components = getComponents(entity, controller->getGraph(), actionC->getDomain(), false);
+  this->hwc = createHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
+  this->components = createComponents(entity, controller->getGraph(), actionC->getDomain(), false);
 
   if (!hwc.empty())
   {
@@ -1138,7 +1138,7 @@ void ExampleActionsECS::onActionSequence(std::string text)
   // Strip individual actions from white spaces etc.
   for (auto& action : actionStack)
   {
-    ActionComponent::trim(action);
+    Rcs::String_trim(action);
   }
 
   // In case of action sequences, perform lookahead predictions.

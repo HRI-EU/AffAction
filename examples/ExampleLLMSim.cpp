@@ -31,20 +31,12 @@
 *******************************************************************************/
 
 #include "ExampleLLMSim.h"
-#include "ActionFactory.h"
-#include "SceneJsonHelpers.h"
 
 #include <ExampleFactory.h>
-#include <Rcs_resourcePath.h>
-#include <Rcs_cmdLine.h>
 #include <Rcs_macros.h>
-#include <Rcs_body.h>
 #include <Rcs_typedef.h>
-#include <Rcs_math.h>
-#include <Rcs_shape.h>
-#include <Rcs_timer.h>
 
-#include <unordered_set>
+#include <thread>
 
 
 
@@ -65,7 +57,6 @@ ExampleLLMSim::ExampleLLMSim(int argc, char** argv) :
 
 ExampleLLMSim::~ExampleLLMSim()
 {
-  onStopWebSocket();
 }
 
 bool ExampleLLMSim::initGraphics()
@@ -103,129 +94,10 @@ bool ExampleLLMSim::initAlgo()
 {
   ExampleActionsECS::initAlgo();
 
-  if (unittest)
-  {
-    useWebsocket = false;
-  }
-
   entity.subscribe<bool, double, std::string>("ActionResult", &ExampleLLMSim::onActionResult, this);
   entity.subscribe("TextCommand", &ExampleLLMSim::onTextCommand, this);
-  entity.subscribe("Stop", &ExampleLLMSim::onStopWebSocket, this);
-  entity.subscribe("Start", &ExampleLLMSim::onStartWebSocket, this);
-
-  if (useWebsocket)
-  {
-    // configure ws server
-    RLOG(0, "Configuring websocket server");
-    this->server.clear_access_channels(websocketpp::log::alevel::all);
-    this->server.clear_error_channels(websocketpp::log::elevel::all);
-    this->server.set_error_channels(websocketpp::log::elevel::warn |
-                                    websocketpp::log::elevel::rerror |
-                                    websocketpp::log::elevel::fatal);
-    this->server.set_message_handler([this](websocketpp::connection_hdl hdl, WebsocketServer::message_ptr msg)
-    {
-      RLOG(0, "Received msg: '%s'", msg->get_payload().c_str());
-      entity.publish("ActionSequence", msg->get_payload());
-    });
-    this->server.set_fail_handler([this](websocketpp::connection_hdl hdl)
-    {
-      RLOG(0, "Websocket connection failed!");
-    });
-    this->server.set_open_handler([this](websocketpp::connection_hdl hdl)
-    {
-      this->hdl = hdl;
-      this->connected = true;
-      RLOG(0, "Connected to %s", this->server.get_con_from_hdl(hdl)->get_host().c_str());
-    });
-    this->server.set_close_handler([this](websocketpp::connection_hdl hdl)
-    {
-      this->connected = false;
-      RLOG(0, "Connection to %s closed", this->server.get_con_from_hdl(hdl)->get_host().c_str());
-      this->hdl.reset();
-    });
-
-
-
-    // init websocket server
-    RLOG(0, "Initializing websocket server");
-    this->server.init_asio();
-    this->server.set_reuse_addr(true);
-    this->server.listen(asio::ip::tcp::v4(), this->port);
-    this->server.start_accept();
-  }
 
   return true;
-}
-
-std::string ExampleLLMSim::help()
-{
-  std::stringstream s;
-
-  s << ExampleActionsECS::help();
-
-  std::string usage = "Websocket action server \n"
-                      "   This example requires to start a websocket server\n";
-
-  s << usage;
-
-  return s.str();
-}
-
-bool ExampleLLMSim::parseArgs(Rcs::CmdLineParser* parser)
-{
-  parser->getArgument("-port", &port, "Websocket port (default: %d)", port);
-  parser->getArgument("-useWebsocket", &useWebsocket, "Use websocket (default: %s)", useWebsocket ? "true" : "false");
-  bool res = ExampleActionsECS::parseArgs(parser);
-
-  if (parser->hasArgument("-h"))
-  {
-    std::cout << help() << std::endl;
-    res = false;
-  }
-
-  return res;
-}
-
-void ExampleLLMSim::onStartWebSocket()
-{
-  if (started)
-  {
-    return;
-  }
-
-  started = true;
-
-  if (useWebsocket)
-  {
-    bgThread = std::thread(&ExampleLLMSim::runThread, this, 12.0);
-  }
-
-}
-
-void ExampleLLMSim::onStopWebSocket()
-{
-
-  if (useWebsocket)
-  {
-    if (connected)
-    {
-      this->connected = false;
-      this->server.stop_listening();
-      this->server.close(this->hdl, websocketpp::close::status::going_away, "Robot shut down");
-      this->server.poll();   // must process the stop events submitted above
-    }
-
-    if (started)
-    {
-      started = false;
-      bgThread.join();
-    }
-  }
-  else
-  {
-    started = false;
-  }
-
 }
 
 void ExampleLLMSim::onActionResult(bool success, double quality, std::string resMsg)
@@ -293,9 +165,9 @@ void ExampleLLMSim::onActionResult(bool success, double quality, std::string res
   {
     ExampleBase::stop();
   }
-  else if (connected && useWebsocket)
+  else
   {
-    this->server.send(hdl, resMsg, websocketpp::frame::opcode::TEXT);
+    entity.publish("SendWebsocket", resMsg);
   }
 
   // HACK \todo(MG): Unify this
@@ -316,100 +188,15 @@ void ExampleLLMSim::onTextCommand(std::string text)
     std::thread feedbackThread([this]()
     {
       std::string fb = sceneQuery->getSceneState().dump();
-      if (connected && useWebsocket)
-      {
-        this->server.send(hdl, fb, websocketpp::frame::opcode::TEXT);
-      }
+      entity.publish("SendWebsocket", fb);
     });
     feedbackThread.detach();
-  }
-}
-
-void ExampleLLMSim::runThread(double freq)
-{
-  while (started)
-  {
-    this->server.poll();
-    std::this_thread::sleep_for(std::chrono::duration<double>(1.0 / freq));
   }
 }
 
 size_t ExampleLLMSim::getNumFailedActions() const
 {
   return numFailedActions;
-}
-
-std::string ExampleLLMSim::getSceneEntities() const
-{
-  std::string res = "These entities are in the scene: ";
-  const ActionScene* scene = getScene();
-
-  // Only add each item once in case of duplicate names.
-  std::unordered_set<std::string> ntts;
-
-  for (const auto& e : scene->entities)
-  {
-    ntts.insert(e.name);
-  }
-
-  for (const auto& n : ntts)
-  {
-    res += n + ", ";
-  }
-
-#if 1
-  // Add agents \todo(MG): Names not resolved properly
-  if (!scene->agents.empty())
-  {
-    res += " These agents are in the scene: ";
-
-    for (const auto& a : scene->agents)
-    {
-      if (!a->types.empty())
-      {
-        res += a->types[0] + ", ";
-      }
-    }
-
-  }
-
-  // Add agent's reachability
-  if (!scene->agents.empty())
-  {
-
-    for (const auto& a : scene->agents)
-    {
-      if (!a->types.empty())
-      {
-        auto ntts = a->getObjectsInReach(scene, controller->getGraph());
-        if (ntts.empty())
-        {
-          res += a->name + " can not reach any object ";
-        }
-        else
-        {
-          res += a->name + " can reach these objects: ";
-          for (const auto& n : ntts)
-          {
-            res += n->name + ", ";
-          }
-        }
-      }
-    }
-  }
-#endif
-
-  return res;
-}
-
-void ExampleLLMSim::setUseWebsocket(bool enable)
-{
-  useWebsocket = enable;
-}
-
-bool ExampleLLMSim::getUseWebsocket() const
-{
-  return useWebsocket;
 }
 
 

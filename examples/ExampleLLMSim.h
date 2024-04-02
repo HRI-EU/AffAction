@@ -36,21 +36,9 @@
 
 #include "ExampleActionsECS.h"
 
-#define ASIO_STANDALONE
-
-#if defined (_MSC_VER)
-#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
-#endif
-#include <websocketpp/config/asio_no_tls.hpp>
-#include <websocketpp/server.hpp>
-
-#include <thread>
-
 
 namespace aff
 {
-
-typedef websocketpp::server<websocketpp::config::asio> WebsocketServer;
 
 class ExampleLLMSim : public ExampleActionsECS
 {
@@ -59,30 +47,14 @@ public:
   ExampleLLMSim();
   ExampleLLMSim(int argc, char** argv);
   virtual ~ExampleLLMSim();
-  virtual void onStartWebSocket();
-  virtual void onStopWebSocket();
-  virtual std::string getSceneEntities() const;
-  virtual std::string help();
   virtual bool initAlgo();
   virtual bool initGraphics();
   size_t getNumFailedActions() const;
-  void setUseWebsocket(bool enable);
-  bool getUseWebsocket() const;
 
-  virtual bool parseArgs(Rcs::CmdLineParser* parser);
   virtual void onActionResult(bool success, double quality, std::string resMsg);
   virtual void onTextCommand(std::string text);
 
-  void runThread(double freq);
-
-  WebsocketServer server;
-  websocketpp::connection_hdl hdl; /// TODO: Support multiple connections?
-  bool connected = false;
-  bool started = false;
-  bool useWebsocket = true;
-  unsigned int port = 35000;
   size_t numFailedActions = 0;
-  std::thread bgThread;
   std::string lastResultMsg;
 };
 
