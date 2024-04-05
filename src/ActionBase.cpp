@@ -140,7 +140,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   controller.setCollisionMdl(cMdl);
 
   t_clone = Timer_getSystemTime() - t_clone;
-  RLOG(1, "Graph cloning took %.2f msec", 1.0e3 * t_clone);
+  RLOG(5, "Graph cloning took %.2f msec", 1.0e3 * t_clone);
 
   addTasks(&controller);
   auto tc = std::make_unique<tropic::TrajectoryController<tropic::ViaPointTrajectory1D>>(&controller, 1.0);
@@ -151,13 +151,16 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
 
   // Perform the actual prediction
   t_clone = Timer_getSystemTime();
-  aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt);
+  bool earlyExit = true;
+  aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt, earlyExit);
 
   // Add an action-specific cost. It is 0 per default, and can be used by
   // actions to bias the solution.
   result.actionCost = actionCost(scene, graph);
+  result.actionText = getActionCommand();
+
   t_clone = Timer_getSystemTime() - t_clone;
-  RLOG(1, "Prediction took %.2f msec", 1.0e3 * t_clone);
+  RLOG(4, "Prediction took %.2f msec", 1.0e3 * t_clone);
 
 #if 0
   // const ActionGet* ag = dynamic_cast<const ActionGet*>(this);
@@ -201,7 +204,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   //   RLOG_CPP(0, ee);
   // }
 
-  REXEC(1)
+  REXEC(4)
   {
     RMSG("Prediction result:");
     result.print();
@@ -457,7 +460,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
           predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase,
                                                 scaleDurationHint*localAction->getDurationHint(), dt);
           predResults[i].idx = i;
-          predResults[i].actionText = localAction->getActionCommand();
+          //predResults[i].actionText = localAction->getActionCommand();  // inside predict()
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].message += " command: " + localAction->getActionCommand();
           RLOG(1, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",

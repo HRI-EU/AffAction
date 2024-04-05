@@ -81,12 +81,6 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
   RCHECK(domain.check(graph));
   RLOG(0, "Done");
 
-  if (File_exists("action_sequence.txt"))
-  {
-    RLOG(1, "File action_sequence.txt exists - deleting");
-    remove("action_sequence.txt");
-  }
-
   this->animationGraph = RcsGraph_clone(graph_);
 }
 
@@ -177,60 +171,55 @@ void ActionComponent::actionThread(std::string text)
 
   if (predictMe)
   {
-    double minCost = DBL_MAX;
-    std::string minMessage;
     std::vector<TrajectoryPredictor::PredictionResult> predResults(action->getNumSolutions());
 
     if (getMultiThreaded())
     {
-      RLOG_CPP(0, "Using multi-threaded prediction");
-
       std::vector<std::future<void>> futures;
 
       // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
-      ConcurrentExecutor predictExecutor(
-        (size_t)std::thread::hardware_concurrency() > action->getNumSolutions() ?
-        action->getNumSolutions() : (size_t)std::thread::hardware_concurrency());
+      size_t maxThreads = std::min((size_t)std::thread::hardware_concurrency(), action->getNumSolutions());
+      ConcurrentExecutor predictExecutor(maxThreads);
 
       // enque each solution to be predicted
       for (size_t i = 0; i < action->getNumSolutions(); ++i)
       {
-        // Create a new unique_ptr<ActionBase> for each lambda
-        //auto localAction = action->clone();
         const ActionBase* aPtr = action.get();
 
-        //futures.push_back(predictExecutor.enqueue([i, this, localAction = std::move(localAction), &predResults]
         futures.push_back(predictExecutor.enqueue([i, this, aPtr, &predResults]
         {
           auto localAction = aPtr->clone();
-          RLOG_CPP(0, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, graph, i);
+          RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
+                localAction->getActionCommand().c_str());
           double dt_predict = Timer_getSystemTime();
           predResults[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(), getEntity()->getDt());
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].message += " command: " + localAction->getActionCommand();
-          RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
-               predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
-               1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost, predResults[i].actionCost,
-               predResults[i].message.c_str());
+          RLOGS(1, "%s for prediction %zu from %zu",
+                (predResults[i].success ? "SUCCESS" : "FAILURE"), i, localAction->getNumSolutions()-1);
+          RLOGS(2, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
+                predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
+                1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost, predResults[i].actionCost,
+                predResults[i].message.c_str());
         }));
       }
 
       // wait for the predictions to finish
+      size_t count = 0;
       for (auto& future : futures)
       {
         future.wait();
       }
+
     }
     else
     {
       // predict each solution sequentially
       for (size_t i = 0; i < action->getNumSolutions(); ++i)
       {
-        RLOG_CPP(1, "Using single-threaded prediction");
-
-        RLOG_CPP(1, "Starting prediction " << i << " from " << action->getNumSolutions());
+        RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
         action->initialize(domain, graph, i);
         double dt_predict = Timer_getSystemTime();
         predResults[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(), getEntity()->getDt());
@@ -240,22 +229,6 @@ void ActionComponent::actionThread(std::string text)
              predResults[i].success ? "SUCCESS" : "FAILURE", action->getName().c_str(), i,
              1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost,
              predResults[i].message.c_str());
-      }
-    }
-
-    for (size_t i = 0; i < action->getNumSolutions(); ++i)
-    {
-      if (predResults[i].success)
-      {
-        if (predResults[i].cost() < minCost)
-        {
-          minCost = predResults[i].cost();
-
-          // Uncomment the next line for early exit. It means that in the case
-          // of only failures, the ranking is not correct, since we don't
-          // consider the same time range for all actions.
-          // break;
-        }
       }
     }
 
@@ -269,7 +242,7 @@ void ActionComponent::actionThread(std::string text)
       {
         if (r.idx != -1)
         {
-          const int verbosityLevel = 0;
+          const int verbosityLevel = 2;
           r.print(verbosityLevel);
         }
       }

@@ -92,7 +92,12 @@ SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
   Rcs::getXMLNodePropertySTLString(node, "instance_id", instanceId);
   types = Rcs::getXMLNodePropertyVecSTLString(node, "types");
 
-  // Add name and instanceId as additional types.
+  // Add bdyName, name and instanceId as additional types.
+  if (std::find(types.begin(), types.end(), bdyName) == types.end())
+  {
+    types.push_back(bdyName);
+  }
+
   if (std::find(types.begin(), types.end(), name) == types.end())
   {
     types.push_back(name);

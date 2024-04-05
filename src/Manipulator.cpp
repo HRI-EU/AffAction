@@ -324,7 +324,7 @@ std::tuple<Capability*, Affordance*, double> Manipulator::getGrasp(const RcsGrap
 
   }
 
-  RLOG(0, "Returning %s - %s: %f", c_min ? c_min->frame.c_str() : "NULL", a_min ? a_min->frame.c_str() : "NULL", d_min);
+  NLOG(0, "Returning %s - %s: %f", c_min ? c_min->frame.c_str() : "NULL", a_min ? a_min->frame.c_str() : "NULL", d_min);
   return std::tuple<Capability*, Affordance*,double>(c_min, a_min, d_min);
 }
 

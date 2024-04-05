@@ -55,6 +55,85 @@ using namespace tropic;
 namespace aff
 {
 
+TrajectoryPredictor::PredictionResult::PredictionResult() : idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0), elbowNS(0.0), wristNS(0.0), graph(nullptr)
+{
+}
+
+double TrajectoryPredictor::PredictionResult::cost() const
+{
+  // Both terms are normalized between 0 and 1, therefore only hald the sum.
+  return (jlCost + collCost + 8.0 * actionCost) / 10.0;
+}
+
+// The lesser function for sorting a vector of results. The failure -
+// success comparisons ensure that the first-ranked solutions are valid.
+bool TrajectoryPredictor::PredictionResult::lesser(const PredictionResult& a, const PredictionResult& b)
+{
+  if (a.success && !b.success)
+  {
+    return true;
+  }
+
+  if (!a.success && b.success)
+  {
+    return false;
+  }
+
+  return a.cost() < b.cost();
+}
+
+void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
+{
+  if (verbosityLevel < 0)
+  {
+    return;
+  }
+
+  std::cout << "[" << __FILENAME__ << ": " << "(" << __LINE__ << ")]: ";
+  std::cout << "PredictionResult " << std::to_string(idx) << ": ";
+
+  if (success)
+  {
+    std::cout << "SUCCESS ";
+  }
+  else
+  {
+    std::cout << "FAILURE ";
+  }
+
+  if (verbosityLevel >= 1)
+  {
+    std::cout << "cost: " << cost();
+  }
+
+  if (verbosityLevel >= 2)
+  {
+    std::cout << " action: '" << actionText << "'";
+  }
+
+  if (verbosityLevel >= 3)
+  {
+    std::cout << std::endl;
+    std::cout << "minDist: " << minDist << std::endl;
+    std::cout << "jlCost: " << jlCost << std::endl;
+    std::cout << "collCost: " << collCost << std::endl;
+    std::cout << "actionCost: " << actionCost << std::endl;
+    std::cout << "message: " << message << std::endl;
+    std::cout << "minDistBdy1: " << minDistBdy1 << std::endl;
+    std::cout << "minDistBdy2: " << minDistBdy2 << std::endl;
+    std::cout << "jMask: " << std::endl;
+    for (size_t i = 0; i < jMask.size(); ++i)
+    {
+      std::cout << jMask[i];
+    }
+  }
+
+  std::cout << std::endl;
+}
+
+
+
+
 TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_) :
   tc(NULL), ikSolver(NULL), predSteps(0), tStack(NULL)
 {
@@ -76,7 +155,7 @@ TrajectoryPredictor::~TrajectoryPredictor()
 // and performs various checks for each time step. The sampling time interval
 // is passed through the value dt.
 // The function returns a struct with various information.
-TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
+TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bool earlyExit)
 {
   PredictionResult result;
   double t_calc = Timer_getTime();
@@ -323,7 +402,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
 
           result.success = false;
 
-          REXEC(1)
+          REXEC(4)
           {
             RLOG(0, "At index %d:", errIdx);
             controller->printX(dx_err, a_des);
@@ -365,9 +444,13 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
     // comparable if the time horizon differs.
     if (!result.success && successPrev)
     {
-      RLOG(1, "Predictor failed at t=%f - quitting", t);
-      RLOG_CPP(1, "Result: " << result.message);
-      //break;
+      RLOG(4, "Predictor failed at t=%f - quitting", t);
+      RLOG_CPP(4, "Result: " << result.message);
+
+      if (earlyExit)
+      {
+        break;
+      }
     }
 
     if (Timer_getTime()-t_calc > 5.0)
@@ -389,9 +472,9 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt)
 
   t_calc = Timer_getTime() - t_calc;
 
-  RLOG(1, "Trajectory %s after %d steps, took %.3f sec",
+  RLOG(4, "Trajectory %s after %d steps, took %.3f sec",
        result.success ? "ok" : "failed", tStack->m, 1.0*t_calc);
-  RLOG_CPP(1, "Result: " << result.message);
+  RLOG_CPP(4, "Result: " << result.message);
 
   MatNd_destroyN(3, a_des, x_des, a_prev);
 

@@ -47,75 +47,15 @@ public:
 
   struct PredictionResult
   {
-    PredictionResult(): idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0), elbowNS(0.0), wristNS(0.0), graph(nullptr)
-    {
-    }
+    PredictionResult();
 
-    double cost() const
-    {
-      // Both terms are normalized between 0 and 1, therefore only hald the sum.
-      return (jlCost + collCost + 8.0 * actionCost) / 10.0;
-    }
+    double cost() const;
 
     // The lesser function for sorting a vector of results. The failure -
     // success comparisons ensure that the first-ranked solutions are valid.
-    static bool lesser(const PredictionResult& a, const PredictionResult& b)
-    {
-      if (a.success && !b.success)
-      {
-        return true;
-      }
+    static bool lesser(const PredictionResult& a, const PredictionResult& b);
 
-      if (!a.success && b.success)
-      {
-        return false;
-      }
-
-      return a.cost() < b.cost();
-    }
-
-    void print(int verbosityLevel=1) const
-    {
-      if (verbosityLevel<0)
-      {
-        return;
-      }
-
-      std::cout << "[" << __FILE__ << ": " << __FUNCTION__ << "("  << __LINE__ << ")]: ";
-      std::cout << "PredictionResult " << std::to_string(idx) << ": ";
-
-      if (success)
-      {
-        std::cout << "SUCCESS ";
-      }
-      else
-      {
-        std::cout << "FAILURE ";
-      }
-
-      if (verbosityLevel == 1)
-      {
-        std::cout << std::endl;
-        std::cout << "minDist: " << minDist << std::endl;
-        std::cout << "jlCost: " << jlCost << std::endl;
-        std::cout << "collCost: " << collCost << std::endl;
-        std::cout << "actionCost: " << actionCost << std::endl;
-        std::cout << "cost: " << cost() << std::endl;
-        std::cout << "message: " << message << std::endl;
-        std::cout << "minDistBdy1: " << minDistBdy1 << std::endl;
-        std::cout << "minDistBdy2: " << minDistBdy2 << std::endl;
-        std::cout << "jMask: " << std::endl;
-        for (size_t i = 0; i < jMask.size(); ++i)
-        {
-          std::cout << jMask[i];
-        }
-      }
-      else
-      {
-        std::cout << "cost: " << cost();
-      }
-      std::cout << std::endl;
-    }
+    void print(int verbosityLevel = 1) const;
 
     int idx;   // Store the index if inside a vector. Not so good.
     bool success;
@@ -148,7 +88,7 @@ public:
    */
   void setTrajectory(tropic::TCS_sptr tSet);
 
-  PredictionResult predict(double dt);
+  PredictionResult predict(double dt, bool earlyExit=true);
   void getPredictionArray(MatNd* tPred) const;
   bool check(bool jointLimits=true, bool collisions=true,
              bool speedLimits=true) const;

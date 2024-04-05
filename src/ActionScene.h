@@ -82,6 +82,8 @@ public:
 
   const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
                                                     const AffordanceEntity* child) const;
+  const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
+                                                    const RcsBody* child) const;
   const Manipulator* getManipulator(const std::string& manipulatorName) const;
   const Manipulator* getManipulator(const Capability* capability) const;
   std::vector<const Manipulator*> getManipulatorsOfType(const std::string& type) const;
@@ -248,6 +250,20 @@ std::vector<T*> getAffordances(const AffordanceEntity* object)
     {
       res.push_back(dst);
     }
+  }
+
+  return res;
+}
+
+template<typename T>
+std::vector<Affordance*> getAffordances(const ActionScene* scene)
+{
+  std::vector<Affordance*> res;
+
+  for (auto& e : scene->entities)
+  {
+    auto aVec = getAffordances<T>(&e);
+    res.insert(res.end(), aVec.begin(), aVec.end());
   }
 
   return res;

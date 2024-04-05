@@ -45,7 +45,7 @@ class ActionPut : public ActionBase
 {
 public:
 
-  ActionPut(),
+  ActionPut();
             ActionPut(const ActionScene& domain,
                       const RcsGraph* graph,
                       std::vector<std::string> params);
@@ -65,9 +65,13 @@ public:
   double getDurationHint() const;
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph) const;
+  std::string getActionCommand() const;
 
 protected:
 
+  double actionCost(const ActionScene& domain,
+                    const RcsGraph* graph,
+                    const std::string& place) const;
   void init(const ActionScene& domain,
             const RcsGraph* graph,
             const std::string& objAffordance,
@@ -102,6 +106,7 @@ protected:
   std::string whereOn;   // Optional keyword specifying the name of the Supportable to put the object on.
   std::string nearTo;    // Keyword specifying the name of an entity or agent near to which the object is to be put.
   std::string farFrom;   // Keyword specifying the name of an entity or agent far of which the object is to be put.
+  std::string detailedActionCommand;
 
   std::vector<std::string> usedManipulators;
   std::vector<double> handOpen;

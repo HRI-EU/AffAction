@@ -56,18 +56,11 @@ namespace aff
 template<typename T>
 static void eraseAffordancesNearerOrFartherAgent(const ActionScene& domain,
                                                  const RcsGraph* graph,
-                                                 const std::string& nearTo,
+                                                 const Agent* nearToAgent,
                                                  double d_limit,
                                                  bool eraseIfRechable,
                                                  std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
 {
-  const Agent* nearToAgent = domain.getAgent(nearTo);
-
-  if (!nearToAgent)
-  {
-    return;
-  }
-
   const RcsBody* agentFrame = nearToAgent->body(graph);
   auto it = affordanceMap.begin();
 
@@ -101,20 +94,12 @@ static void eraseAffordancesNearerOrFartherAgent(const ActionScene& domain,
 template<typename T>
 static void eraseAffordancesNearerOrFartherNtt(const ActionScene& domain,
                                                const RcsGraph* graph,
-                                               const std::string& nearTo,
+                                               const std::vector<const AffordanceEntity*>& nearToNtts,
                                                double d_limit,
-                                               bool trueForFarther,
+                                               bool trueForNearer,
                                                std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
 {
-  // Erase the Affordances of type T that are not near to an entity
-  auto nearToNtts = domain.getAffordanceEntities(nearTo);
-
-  // This early exit is important, since the below loop assumes
-  // at least one entry.
-  if (nearToNtts.empty())
-  {
-    return;
-  }
+  bool trueForFarther = !trueForNearer;
 
   // Memorize the frames of all entities that are to be checked against
   // closeness. We store them up front to avoid searching them in each
@@ -143,20 +128,19 @@ static void eraseAffordancesNearerOrFartherNtt(const ActionScene& domain,
     // safely keep the affordance and do an early exit of the loop.
     const RcsBody* putFrame = supportable->getFrame(graph);
     bool eraseSupportable = trueForFarther;
-    double di;
     for (const auto& nttFrame : nttFrames)
     {
-      di = Vec3d_distance(nttFrame->A_BI.org, putFrame->A_BI.org);
+      double di = Vec3d_distance(nttFrame->A_BI.org, putFrame->A_BI.org);
       if (di <= d_limit)
       {
         eraseSupportable = !trueForFarther;
+        RLOG(0, "%s - %s is %s (d=%f, limit=%f)",
+             nttFrames[0]->name, putFrame->name,
+             (eraseSupportable ? "erased" : "not erased"), di, d_limit);
         break;
       }
     }
 
-    RLOG(0, "%s - %s is %s (d=%f, limit=%f)",
-         nttFrames[0]->name, putFrame->name,
-         (eraseSupportable ? "erased" : "not erased"), di, d_limit);
     it = eraseSupportable ? affordanceMap.erase(it) : it + 1;
   }
 
@@ -169,11 +153,22 @@ static void eraseSupportablesFarther(const ActionScene& domain,
                                      double d_limit,
                                      std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
 {
-  eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntt, d_limit,
-                                                  true, affordanceMap);
+  std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(ntt);
 
-  eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, ntt, d_limit,
+  if (!ntts.empty())
+  {
+    eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntts, d_limit,
                                                     false, affordanceMap);
+  }
+
+  const Agent* agent = domain.getAgent(ntt);
+
+  if (agent)
+  {
+    eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, agent, d_limit,
+                                                      false, affordanceMap);
+  }
+
 }
 
 // Prune T's that are closer than d_limit
@@ -183,11 +178,21 @@ static void eraseSupportablesNearer(const ActionScene& domain,
                                     double d_limit,
                                     std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
 {
-  eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntt, d_limit,
-                                                  false, affordanceMap);
+  std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(ntt);
 
-  eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, ntt, d_limit,
+  if (!ntts.empty())
+  {
+    eraseAffordancesNearerOrFartherNtt<Supportable>(domain, graph, ntts, d_limit,
                                                     true, affordanceMap);
+  }
+
+  const Agent* agent = domain.getAgent(ntt);
+
+  if (agent)
+  {
+    eraseAffordancesNearerOrFartherAgent<Supportable>(domain, graph, agent, d_limit,
+                                                      true, affordanceMap);
+  }
 }
 
 }   // namespace
@@ -257,6 +262,20 @@ void ActionPut::init(const ActionScene& domain,
   RLOG_CPP(1, "Calling put with object='" << objectToPut << "' surface='"
            << surfaceToPutOn << "'");
 
+  if (!nearTo.empty() && domain.getSceneEntities(nearTo).empty())
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
+                          "Put it near another object in the environment");
+  }
+
+  if (!farFrom.empty() && domain.getSceneEntities(farFrom).empty())
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
+                          "Put it far away of another object in the environment");
+  }
+
   if (objectToPut == surfaceToPutOn)
   {
     throw ActionException(ActionException::ParamNotFound,
@@ -312,7 +331,7 @@ void ActionPut::init(const ActionScene& domain,
   // frame from which we retract the hand after we opened the fingers.
   auto graspCapability = graspingHand->getGraspingCapability(graph, object);
   isPincerGrasped = dynamic_cast<const PincergraspCapability*>(graspCapability);
-  graspFrame = graspCapability->frame;//graspingHand->getGraspingFrame(graph, object);
+  graspFrame = graspCapability->frame;
   auto ca = graspingHand->getGrasp(graph, object);
 
   // Determine the frame of the object at which it is grasped. This is aligned with
@@ -342,6 +361,7 @@ void ActionPut::init(const ActionScene& domain,
   // If no surface name was specified, we search the surface by raycasting.
   if (!surface)
   {
+#if 0
     // Detect surface by down projecting a ray from the object's frame
     HTr surfTransform;
     std::string errMsg;
@@ -358,20 +378,61 @@ void ActionPut::init(const ActionScene& domain,
     {
       putDown = true;
     }
-  }
+#endif
 
-  // From here on, we have a valid object and surface. We determine all
-  // combinations of <Supportable, Stackable> affordances. We already know
-  // that the object is stackable
-  affordanceMap = match<Supportable, Stackable>(surface, object);
+    AffordanceEntity tmp;
+    tmp.affordances = getAffordances<Supportable>(&domain);
+    affordanceMap = match<Supportable, Stackable>(&tmp, object);
+    tmp.affordances.clear();
+
+    // Since we don't have a surface entity, the Supportable can possibly be a child of
+    // the Stackable, leading to put the object on a child of itself. This creates
+    // trouble which we resolve in the following.
+    auto it = affordanceMap.begin();
+    while (it != affordanceMap.end())
+    {
+      const Affordance* supportable = std::get<0>(*it);
+      const Affordance* stackable = std::get<1>(*it);
+      const RcsBody* supportBdy = RcsGraph_getBodyByName(graph, supportable->frame.c_str());
+      const RcsBody* stackBdy = RcsGraph_getBodyByName(graph, stackable->frame.c_str());
+      bool eraseMe = RcsBody_isChild(graph, supportBdy, stackBdy);
+      it = eraseMe ? affordanceMap.erase(it) : it + 1;
+    }
+
+  }
+  else
+  {
+    // From here on, we have a valid object and surface. We determine all
+    // combinations of <Supportable, Stackable> affordances. We already know
+    // that the object is stackable
+    affordanceMap = match<Supportable, Stackable>(surface, object);
+  }
 
   // If there are none, we give up.
   if (affordanceMap.empty())
   {
+    std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surface->name + " because it does not support it.",
+                          "I can't put the " + objectToPut + " on the " + surfaceName + " because it does not support it.",
                           "Specify another object to put it on");
   }
+
+  // Erase the Supportables that are out of reach
+  auto it = affordanceMap.begin();
+  while (it != affordanceMap.end())
+  {
+    const Supportable* place = dynamic_cast<const Supportable*>(std::get<0>(*it));
+    if (place)
+    {
+      bool canReach = graspingHand->canReachTo(&domain, graph, place->getFrame(graph)->A_BI.org);
+      it = (!canReach) ? affordanceMap.erase(it) : it + 1;
+    }
+    else
+    {
+      it++;
+    }
+  }
+  RLOG_CPP(0, "Done erase Supportables out of reach. Remaining: " << affordanceMap.size());
 
   // Erase the Supportables that don't match the "whereOn" name if it has been specified
   if (!whereOn.empty())
@@ -383,31 +444,38 @@ void ActionPut::init(const ActionScene& domain,
       it = (stackable&&(stackable->frame==whereOn)) ? affordanceMap.erase(it) : it+1;
     }
   }
+  RLOG_CPP(0, "Done erase Supportables on-top. Remaining: " << affordanceMap.size());
 
   // Erase the Supportables that are farther away from an entity or agent than d_limit
-  double d_limit = (distance == 0.0) ? IS_NEAR_THRESHOLD : distance;
   if (!nearTo.empty())
   {
+    bool isAgent = domain.getAgent(nearTo);
+    double d_limit = ((!isAgent) && (distance == 0.0)) ? IS_NEAR_THRESHOLD : distance;
     eraseSupportablesFarther(domain, graph, nearTo, d_limit, affordanceMap);
   }
+  RLOG_CPP(0, "Done erase Supportables farther than. Remaining: " << affordanceMap.size());
 
   // Erase the Supportables that are more close to an entity or agent than d_limit
   if (!farFrom.empty())
   {
+    bool isAgent = domain.getAgent(farFrom);
+    double d_limit = ((!isAgent) && (distance == 0.0)) ? IS_NEAR_THRESHOLD : distance;
     eraseSupportablesNearer(domain, graph, farFrom, d_limit, affordanceMap);
   }
+  RLOG_CPP(0, "Done erase Supportables nearer than. Remaining: " << affordanceMap.size());
 
   // If the map is empty after removing all non-frame Supportables, we give up.
   if (affordanceMap.empty())
   {
+    std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surface->name + "'s frame " + whereOn + ".",
+                          "I can't put the " + objectToPut + " on the " + surfaceName + "'s frame " + whereOn + ".",
                           "", "The affordance map is empty after removing all non-frame supportables");
   }
 
   // Erase the Supportables that are already occupied with a collideable
   {
-    // RLOG_CPP(-1, "BEFORE: " << affordanceMap.size());
+    //RLOG_CPP(0, "BEFORE: " << affordanceMap.size());
 
     auto it = affordanceMap.begin();
     while (it != affordanceMap.end())
@@ -463,20 +531,46 @@ void ActionPut::init(const ActionScene& domain,
 
     }
 
-    // RLOG_CPP(-1, "AFTER: " << affordanceMap.size());
+    //RLOG_CPP(0, "AFTER: " << affordanceMap.size());
   }
 
   // There's already something on all supportables
   if (affordanceMap.empty())
   {
+    std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surface->name + ". There is already something on it.",
+                          "I can't put the " + objectToPut + " on the " + surfaceName + ". There is already something on it.",
                           "Put the object somewhere else, or remove the blocking object.");
   }
 
-  // We have one or several matches and sort them according to their cost. Lower
-  // costs pairs are at the beginning.
-  sort(graph, affordanceMap, 1.0, 1.0);
+  // Create a vector of tuples with the third argument being the cost to be sorted for
+  RLOG(0, "Creating sortMap");
+  std::vector<std::tuple<Affordance*, Affordance*,double>> sortMap;
+  for (auto& pair : affordanceMap)
+  {
+    Affordance* place = std::get<0>(pair);
+    sortMap.push_back(std::make_tuple(place, std::get<1>(pair),
+                                      actionCost(domain, graph, place->frame)));
+  }
+
+  // Sort with lambda compare function, lower cost at the beginning
+  RLOG(0, "Sorting sortMap");
+  std::sort(sortMap.begin(), sortMap.end(),
+            [](std::tuple<Affordance*, Affordance*, double>& a,
+               std::tuple<Affordance*, Affordance*, double>& b)
+  {
+    return std::get<2>(a) < std::get<2>(b);
+  });
+
+  // Copy back to affordance map
+  RLOG(0, "Recomputing affordanceMap");
+  affordanceMap.clear();
+  for (auto& pair : sortMap)
+  {
+    RLOG_CPP(0, "Sorted: " << std::get<0>(pair)->frame << " - " << std::get<1>(pair)->frame << " : " << std::get<2>(pair));
+    affordanceMap.push_back(std::make_tuple(std::get<0>(pair), std::get<1>(pair)));
+  }
+  RLOG_CPP(0, "Done heuristic re-sorting affordance map with " << affordanceMap.size() << " entries");
 
   // Initialize with the best solution.
   bool successInit = initialize(domain, graph, 0);
@@ -517,6 +611,7 @@ bool ActionPut::initialize(const ActionScene& domain,
 
   // This is guaranteed to exist after the scene class's check
   const RcsBody* surfaceBdy = resolveBodyName(graph, surfaceFrameName);
+  RCHECK_MSG(surfaceBdy, "%s", surfaceFrameName.c_str());
 
   // This is the put position in the coordinates of the surface frame.
   Vec3d_invTransform(downProjection, &surfaceBdy->A_BI, surfaceBdy->A_BI.org);
@@ -546,6 +641,8 @@ bool ActionPut::initialize(const ActionScene& domain,
 
   explanation = "I'm putting the " + objName + " on the " + surfaceFrameName;
 
+  auto surfNtt = domain.getParentAffordanceEntity(graph, surfaceBdy);
+  detailedActionCommand = "put " + objName + " " + surfNtt->bdyName + " frame " + surfaceFrameName;
   return true;
 }
 
@@ -814,15 +911,7 @@ void ActionPut::print() const
   std::cout << "taskFingers: " << taskFingers << std::endl;
   std::cout << "explanation: " << explanation << std::endl;
 
-  REXEC(5)
-  {
-    auto xmlTasks = createTasksXML();
-
-    for (const auto& t : xmlTasks)
-    {
-      std::cout << t << std::endl;
-    }
-  }
+  ActionBase::print();
 
   for (size_t i = 0; i < affordanceMap.size(); ++i)
   {
@@ -846,35 +935,51 @@ std::unique_ptr<ActionBase> ActionPut::clone() const
 double ActionPut::actionCost(const ActionScene& domain,
                              const RcsGraph* graph) const
 {
-  // \todo(MG): Needs to be re-worked to handle agents consistentls
+  return actionCost(domain, graph, surfaceFrameName);
+}
+
+double ActionPut::actionCost(const ActionScene& domain,
+                             const RcsGraph* graph,
+                             const std::string& place) const
+{
+  double cost = 0.0;
+
   if (!nearTo.empty())
   {
-    double d_min = std::numeric_limits<double>::max();
-    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, surfaceFrameName.c_str());
-    std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(nearTo);
+    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, place.c_str());
+    RCHECK_MSG(putLocation, "'%s' unknown", place.c_str());
+    auto ntts = domain.getSceneEntities(nearTo);
+    RLOG(0, "Found %zu SceneEntities", ntts.size());
+    double sumD = 0.0;
     for (const auto& ntt : ntts)
     {
       const RcsBody* nttLocation = ntt->body(graph);
-      d_min = std::min(d_min, Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org));
+      sumD += Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org);
+      RLOG(0, "Adding action cost for %s - %s: %f", nttLocation->name, place.c_str(), sumD);
     }
-
-    return d_min / (1.0 + d_min);
+    cost += sumD / (1.0 + sumD);
   }
-  else if (!farFrom.empty())
+
+  if (!farFrom.empty())
   {
-    double d_max = 0.0;
-    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, surfaceFrameName.c_str());
-    std::vector<const AffordanceEntity*> ntts = domain.getAffordanceEntities(farFrom);
+    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, place.c_str());
+    RCHECK_MSG(putLocation, "'%s' unknown", place.c_str());
+    auto ntts = domain.getSceneEntities(farFrom);
+    double sumD = 0.0;
     for (const auto& ntt : ntts)
     {
       const RcsBody* nttLocation = ntt->body(graph);
-      d_max = std::max(d_max, Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org));
+      sumD += Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org);
     }
-
-    return 1.0 / (1.0 + d_max);
+    cost += 1.0 / (1.0 + sumD);
   }
 
-  return 0.0;
+  return cost;
+}
+
+std::string ActionPut::getActionCommand() const
+{
+  return detailedActionCommand;
 }
 
 
@@ -900,6 +1005,7 @@ public:
   {
     defaultDuration = 0.1;
 
+#if 1
     if (params.size()<2)
     {
       throw ActionException(ActionException::ParamNotFound,
@@ -943,6 +1049,7 @@ public:
     }
 
     surfaceFrameName = supportables[0]->frame;
+#endif
   }
 
   virtual std::vector<std::string> createTasksXML() const
@@ -994,6 +1101,7 @@ public:
   std::string getActionCommand() const
   {
     return ActionBase::getActionCommand();
+    //return "magic_" + ActionPut::getActionCommand();
   }
 
 };

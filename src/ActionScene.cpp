@@ -371,17 +371,11 @@ std::vector<const AffordanceEntity*> ActionScene::getAffordanceEntities(const st
 {
   std::vector<const AffordanceEntity*> foundOnes;
 
-  if (name.empty())
+  for (const auto& ntt : entities)
   {
-    return foundOnes;
-  }
-
-  // Add entities whose types contains the requested name.
-  for (size_t i=0; i<entities.size(); ++i)
-  {
-    if (std::find(entities[i].types.begin(), entities[i].types.end(), name) != entities[i].types.end())
+    if (ntt.isOfType(name))
     {
-      foundOnes.push_back(&entities[i]);
+      foundOnes.push_back(&ntt);
     }
   }
 
@@ -392,23 +386,29 @@ std::vector<const SceneEntity*> ActionScene::getSceneEntities(const std::string&
 {
   std::vector<const SceneEntity*> res;
 
-  auto v1 = getAffordanceEntities(name);
-
-  if (!v1.empty())
+  for (const auto& e : entities)
   {
-    res.assign(v1.begin(), v1.end());
+    if (e.isOfType(name))
+    {
+      res.push_back(&e);
+    }
   }
 
-  auto v2 = getAgent(name);
-  if (v2)
+  for (const auto& a : agents)
   {
-    res.push_back(v2);
+    if (a->isOfType(name))
+    {
+      res.push_back(a);
+    }
   }
 
-  auto v3 = getManipulator(name);
-  if (v3)
+  // Add manipulators whose types contains the requested name.
+  for (const auto& m : manipulators)
   {
-    res.push_back(v3);
+    if (m.isOfType(name))
+    {
+      res.push_back(&m);
+    }
   }
 
   return res;
@@ -425,8 +425,7 @@ std::vector<const AffordanceEntity*> ActionScene::getAllChildren(const RcsGraph*
     return foundOnes;
   }
 
-  RcsBody* bdy = RcsGraph_getBodyByName(graph, entity->bdyName.c_str());
-  RCHECK(bdy);   // Should never happen \todo(MG): Remove if tested
+  const RcsBody* bdy = entity->body(graph);
 
   RCSBODY_TRAVERSE_CHILD_BODIES(graph, bdy)
   {
@@ -531,6 +530,29 @@ const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* g
   }
 
   return parent;
+}
+
+const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
+                                                               const RcsBody* childBdy) const
+{
+  if (!childBdy)
+  {
+    RLOG_CPP(1, "RcsBody to be checked for retrieving parent is NULL");
+    return NULL;
+  }
+
+  for (const auto& parentCandidate : entities)
+  {
+    const RcsBody* parentCandidateBdy = RcsGraph_getBodyByName(graph, parentCandidate.bdyName.c_str());
+    RCHECK(parentCandidateBdy);
+
+    if (RcsBody_isChild(graph, childBdy, parentCandidateBdy))
+    {
+      return &parentCandidate;
+    }
+  }
+
+  return NULL;
 }
 
 const Manipulator* ActionScene::getManipulator(const std::string& name) const
