@@ -125,8 +125,6 @@ private:
   void onCheckAndSetTrajectory(tropic::TCS_sptr tSet);
   void onSetTrajectory(tropic::TCS_sptr tSet);
   void onSimulateTrajectory(tropic::TCS_sptr tSet);
-  void onTaskVectorChangeParallel(std::vector<std::string> taskVec,
-                                  std::vector<std::string> channels);
   void onTaskVectorChangeSequential(std::vector<std::string> taskVec,
                                     std::vector<std::string> channels);
   void onRender();

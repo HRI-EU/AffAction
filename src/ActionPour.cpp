@@ -50,7 +50,6 @@
 namespace aff
 {
 REGISTER_ACTION(ActionPour, "pour");
-REGISTER_ACTION(ActionPour, "id_635640f302a8c9f3ffa00811");
 
 ActionPour::ActionPour(const ActionScene& domain,
                        const RcsGraph* graph,

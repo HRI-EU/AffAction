@@ -49,10 +49,7 @@
 namespace aff
 {
 REGISTER_ACTION(ActionDoor, "open_door");
-REGISTER_ACTION(ActionDoor, "id_635a8d817388ce8eb5e5e32f");
-
 REGISTER_ACTION(ActionDoor, "close_door");
-REGISTER_ACTION(ActionDoor, "id_635a8e497388ce8eb5e5e330");
 
 
 

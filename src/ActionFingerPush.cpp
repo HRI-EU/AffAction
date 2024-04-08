@@ -60,8 +60,6 @@ namespace aff
 {
 REGISTER_ACTION(ActionFingerPush, "finger_push");
 REGISTER_ACTION(ActionFingerPush, "poke");
-REGISTER_ACTION(ActionFingerPush, "id_63558c7984f61faabb83cb1c"); // switch on
-REGISTER_ACTION(ActionFingerPush, "id_63563f7302a8c9f3ffa00810"); // switch off
 
 
 ActionFingerPush::ActionFingerPush(const ActionScene& domain,

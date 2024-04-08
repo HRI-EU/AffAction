@@ -270,6 +270,7 @@ void TrajectoryComponent::onPrint()
   for (const auto& ti : tc->getInternalController()->taskVec())
   {
     RLOG_CPP(0, "Task " << idx++ << " : " << ti->getName());
+    ti->print();
   }
   //tc->getInternalController()->print();
 
@@ -506,111 +507,6 @@ void TrajectoryComponent::onTaskVectorChangeSequential(std::vector<std::string> 
   MatNd_realloc(x_des, tc->getInternalController()->getTaskDim(), 1);
 
   RLOG(1, "Done task replacement");
-}
-
-/*******************************************************************************
- * The array channels contains the effectors that the tasks are utilizing. We
- * maintain a map (effectorTaskMap) with keys being the effctors, and values
- * being all tasks that are using the correpsonding key.
- *
- * On an incoming new task vector, all tasks that currently live in the
- * argument channels, are deleted.
- ******************************************************************************/
-
-// TODO: Deal with tasks / trajectories that are already present - don't recreate them.
-// This could also resolve the issue with the permissive flag in the
-// TrajectoryController constructor.
-
-void TrajectoryComponent::onTaskVectorChangeParallel(std::vector<std::string> taskVec,
-                                                     std::vector<std::string> channels)
-{
-  RLOG_CPP(0, "Changing task vector: " << channels.size() << " manipulators");
-
-  for (const auto& effector : channels)
-  {
-    RLOG_CPP(0, "using manipulator '" << effector << "'");
-  }
-
-  const RcsGraph* tcGraph = tc->getInternalController()->getGraph();
-  std::vector<Rcs::Task*> tasks = Rcs::TaskFactory::createTasks(taskVec, tcGraph);
-
-  if (tasks.empty())
-  {
-    return;
-  }
-
-  // From this point on, the vector tasks contains valid tasks for the given
-  // taskVec. We delete all tasks and trajectories that are assigned to the
-  // channels of the new taskVec
-  for (const auto& channelName_i : channels)
-  {
-    auto effectorTaskVecPair = effectorTaskMap.find(channelName_i);
-
-    if (effectorTaskVecPair != effectorTaskMap.end())
-    {
-      for (auto& taskNameToDelete : effectorTaskVecPair->second)
-      {
-
-        // bool exists = false;
-        // for (auto tsk_i : tasks)
-        // {
-        //   RLOG_CPP(0, "Comparing " << taskNameToDelete << " - " << tsk_i->getName());
-        //   if (taskNameToDelete==tsk_i->getName())
-        //   {
-        //     exists = true;
-        //   }
-        // }
-
-        // if (exists)
-        // {
-        //   continue;
-        // }
-
-        // The trajectory must me deleted before the task, otherwise the
-        // task index (used for retrieving the trajectory index) is not
-        // valid any more.
-        bool ok2 = tc->eraseTrajectory(taskNameToDelete);
-        bool ok1 = tc->getInternalController()->eraseTask(taskNameToDelete);
-        RLOG_CPP(0, "Clearing task '" << taskNameToDelete << "' from channel '"
-                 << channelName_i << "': " << ok1 << ok2);
-      }
-
-      effectorTaskVecPair->second.clear();
-    }
-
-  }
-
-
-
-  // Update the effector - task map with the newly incoming effectors
-  for (const auto& tsk : tasks)
-  {
-    for (const auto& chi : channels)
-    {
-      effectorTaskMap[chi].push_back(tsk->getName());
-    }
-  }
-
-  // Here we should delete only the tasks that are in out channels
-  //tc->getInternalController()->eraseTasks();
-
-  for (auto t : tasks)
-  {
-    tc->getInternalController()->add(t);
-    tc->addTrajectory(t, 1.0);
-  }
-
-  // onPrint();
-
-
-  // From here on, all tasks are valid.
-  // tc->eraseTrajectories();
-  // tc->populateTrajectories(1.0);// \todo: horizon?
-
-  MatNd_realloc(a_des, tc->getInternalController()->getNumberOfTasks(), 1);
-  MatNd_realloc(x_des, tc->getInternalController()->getTaskDim(), 1);
-
-  RLOG(0, "Done task replacement");
 }
 
 void TrajectoryComponent::onResetAnimationTic()

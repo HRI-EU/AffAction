@@ -84,7 +84,7 @@ bool TrajectoryPredictor::PredictionResult::lesser(const PredictionResult& a, co
 
 void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
 {
-  if (verbosityLevel < 0)
+  if (verbosityLevel < 0 || RcsLogLevel < 0)
   {
     return;
   }
