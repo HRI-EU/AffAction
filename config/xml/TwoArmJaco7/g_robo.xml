@@ -30,8 +30,6 @@
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
 
   <xi:include href="g_robot_arms_high.xml" />
-  <xi:include href="g_hand_left.xml"/>
-  <xi:include href="g_hand_right.xml"/>
 
   <Manipulator body="head_kinect_link" types="head">
     <GazeCapability frame="head_kinect_lens" />

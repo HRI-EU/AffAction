@@ -68,7 +68,10 @@
             <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
         </Group>
 
-    </Group>
+		<xi:include href="g_hand_left.xml"/>
+		<xi:include href="g_hand_right.xml"/>
+
+	</Group>
 
     <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
         <joint_state joint="j2s7s300_joint_1_right" position="20"/>
