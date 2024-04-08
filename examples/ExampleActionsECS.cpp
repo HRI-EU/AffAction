@@ -319,6 +319,12 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   createHardwareComponents(entity, NULL, NULL, dryRun);
   createComponents(entity, NULL, NULL, dryRun);
 
+  if (parser->hasArgument("-h"))
+  {
+    std::cout << help() << std::endl;
+    return false;
+  }
+
   return true;
 }
 
@@ -427,6 +433,7 @@ bool ExampleActionsECS::initAlgo()
   actionC = std::make_unique<aff::ActionComponent>(&entity, controller->getGraph(), controller->getBroadPhase());
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
+  actionC->setEarlyExitPrediction(false);
 
 #if 1
   // Misuse contacts shape flag for Collision trajectory constraint
@@ -677,7 +684,7 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('o', [this](char k)
   {
     RLOG(0, "Launching ControllerGui");
-
+    controller->toXML("onPressedButtonO.xml");
     new Rcs::ControllerGui(controller.get(),
                            (MatNd*) trajC->getActivationPtr(),
                            (MatNd*) trajC->getTaskCommandPtr(),
@@ -823,7 +830,6 @@ bool ExampleActionsECS::initGraphics()
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
   entity.publish("RenderCommand", std::string("IK"), std::string("unsetGhostMode"));
-  //entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
 
   if (!hwc.empty())
   {

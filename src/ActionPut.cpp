@@ -205,25 +205,51 @@ ActionPut::ActionPut() :
   putDown(false), isObjCollidable(false), isPincerGrasped(false),
   supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2), distance(0.0)
 {
+  Vec3d_setZero(downProjection);
 }
 
 ActionPut::ActionPut(const ActionScene& domain,
                      const RcsGraph* graph,
                      std::vector<std::string> params) : ActionPut()
 {
+  parseArgs(domain, graph, params);
+
+  std::string objectToPut = params[0];
+  std::string surfaceToPutOn = params.size() > 1 ? params[1] : std::string();
+
+  if (objectToPut == surfaceToPutOn)
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToPut + " cannot be put on itself.",
+                          "Put it onto another object in the environment");
+  }
+
+  const AffordanceEntity* object = initHands(domain, graph, objectToPut);
+
+  initOptions(domain, graph, object, surfaceToPutOn);
+
+  // Initialize with the best solution.
+  bool successInit = initialize(domain, graph, 0);
+  RCHECK(successInit);
+}
+
+void ActionPut::parseArgs(const ActionScene& domain,
+                          const RcsGraph* graph,
+                          std::vector<std::string>& params)
+{
   auto it = std::find(params.begin(), params.end(), "frame");
   if (it != params.end())
   {
-    whereOn = *(it+1);
-    params.erase(it+1);
+    whereOn = *(it + 1);
+    params.erase(it + 1);
     params.erase(it);
   }
 
   it = std::find(params.begin(), params.end(), "duration");
   if (it != params.end())
   {
-    defaultDuration = std::stod(*(it+1));
-    params.erase(it+1);
+    defaultDuration = std::stod(*(it + 1));
+    params.erase(it + 1);
     params.erase(it);
   }
 
@@ -239,6 +265,14 @@ ActionPut::ActionPut(const ActionScene& domain,
   if (it != params.end())
   {
     nearTo = *(it + 1);
+
+    if (!nearTo.empty() && domain.getSceneEntities(nearTo).empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
+                            "Put it near another object in the environment");
+    }
+
     params.erase(it + 1);
     params.erase(it);
   }
@@ -247,44 +281,31 @@ ActionPut::ActionPut(const ActionScene& domain,
   if (it != params.end())
   {
     farFrom = *(it + 1);
+
+    if (!farFrom.empty() && domain.getSceneEntities(farFrom).empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
+                            "Put it far away of another object in the environment");
+    }
+
     params.erase(it + 1);
     params.erase(it);
   }
 
-  init(domain, graph, params[0], params.size() > 1 ? params[1] : std::string());
 }
 
-void ActionPut::init(const ActionScene& domain,
-                     const RcsGraph* graph,
-                     const std::string& objectToPut,
-                     const std::string& surfaceToPutOn)
+// This function assigns the following member variables:
+// - this->objName (initialize)
+// - this->isObjCollidable (used in createTrajectory)
+// - this->usedManipulators (first one is grasping hand)
+// - this->isPincerGrasped (tasks and trajectory generation)
+// - this->graspFrame (used in createTasks)
+// - this->objGraspFrame (used in createTasks)
+const AffordanceEntity* ActionPut::initHands(const ActionScene& domain,
+                                             const RcsGraph* graph,
+                                             const std::string& objectToPut)
 {
-  RLOG_CPP(1, "Calling put with object='" << objectToPut << "' surface='"
-           << surfaceToPutOn << "'");
-
-  if (!nearTo.empty() && domain.getSceneEntities(nearTo).empty())
-  {
-    throw ActionException(ActionException::ParamNotFound,
-                          "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
-                          "Put it near another object in the environment");
-  }
-
-  if (!farFrom.empty() && domain.getSceneEntities(farFrom).empty())
-  {
-    throw ActionException(ActionException::ParamNotFound,
-                          "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
-                          "Put it far away of another object in the environment");
-  }
-
-  if (objectToPut == surfaceToPutOn)
-  {
-    throw ActionException(ActionException::ParamNotFound,
-                          "The " + objectToPut + " cannot be put on itself.",
-                          "Put it onto another object in the environment");
-  }
-
-  Vec3d_setZero(downProjection);
-
   // Initialize object to put
   std::vector<const AffordanceEntity*> objects = domain.getAffordanceEntities(objectToPut);
 
@@ -292,7 +313,8 @@ void ActionPut::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToPut + " is unknown.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto gPair = domain.getGraspingHand(graph, objects);
@@ -303,25 +325,27 @@ void ActionPut::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::KinematicallyImpossible,
                           "The " + objectToPut + " is not held in the hand.",
-                          "First get the " + objectToPut + " in the hand before performing this command");
+                          "First get the " + objectToPut + " in the hand before performing this command",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   if (getAffordances<Stackable>(object).empty())
   {
     throw ActionException(ActionException::KinematicallyImpossible,
                           "I don't know how to place the " + objectToPut + " on a surface.",
-                          "Try to hand it over, or try something else");
+                          "Try to hand it over, or try something else",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  objName = object->bdyName;
-  isObjCollidable = object->isCollideable(graph);
-  usedManipulators.push_back(graspingHand->name);
+  this->objName = object->bdyName;
+  this->isObjCollidable = object->isCollideable(graph);
+  this->usedManipulators.push_back(graspingHand->name);
 
   // We keep the other manipulator if it is occupied
   auto occupiedManipulators = domain.getOccupiedManipulators(graph);
   for (auto m : occupiedManipulators)
   {
-    if (m->name!= graspingHand->name)
+    if (m->name != graspingHand->name)
     {
       usedManipulators.push_back(m->name);
     }
@@ -330,8 +354,15 @@ void ActionPut::init(const ActionScene& domain,
   // From here on we know that the object is held in a manipulator. We determine the
   // frame from which we retract the hand after we opened the fingers.
   auto graspCapability = graspingHand->getGraspingCapability(graph, object);
-  isPincerGrasped = dynamic_cast<const PincergraspCapability*>(graspCapability);
-  graspFrame = graspCapability->frame;
+
+  if (!graspCapability)
+  {
+    throw ActionException(ActionException::ParamInvalid, "Cannot grasp object", "",
+                          "graspCapability cannot grasp " + object->name);
+  }
+
+  this->isPincerGrasped = dynamic_cast<const PincergraspCapability*>(graspCapability);
+  this->graspFrame = graspCapability->frame;
   auto ca = graspingHand->getGrasp(graph, object);
 
   // Determine the frame of the object at which it is grasped. This is aligned with
@@ -345,8 +376,16 @@ void ActionPut::init(const ActionScene& domain,
                           "Internal error: graspingHand->getGrasp failed with entity " + object->name);
   }
 
-  objGraspFrame = a_grasp->frame;
+  this->objGraspFrame = a_grasp->frame;
 
+  return object;
+}
+
+void ActionPut::initOptions(const ActionScene& domain,
+                            const RcsGraph* graph,
+                            const AffordanceEntity* object,
+                            const std::string& surfaceToPutOn)
+{
   // Detect surface
   const AffordanceEntity* surface = domain.getAffordanceEntity(surfaceToPutOn);
 
@@ -354,32 +393,14 @@ void ActionPut::init(const ActionScene& domain,
   if ((!surface) && (!surfaceToPutOn.empty()))
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "The surface " + surfaceToPutOn + " to put the " + objectToPut + " on is unknown.",
-                          "Use an object name that is defined in the environment");
+                          "The surface '" + surfaceToPutOn + "' to put the '" + object->bdyName + "' on is unknown.",
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  // If no surface name was specified, we search the surface by raycasting.
+  // If no surface name was specified, we search through all the scene's Supportables
   if (!surface)
   {
-#if 0
-    // Detect surface by down projecting a ray from the object's frame
-    HTr surfTransform;
-    std::string errMsg;
-    surface = raycastSurface(domain, object, graph, &surfTransform, errMsg);
-
-    // If we still didn't find a surface, we give up.
-    if (!surface)
-    {
-      throw ActionException(ActionException::KinematicallyImpossible,
-                            "There is nothing under the " + objectToPut + " where I can put it on.",
-                            "Specify another object to put it on");
-    }
-    else
-    {
-      putDown = true;
-    }
-#endif
-
     AffordanceEntity tmp;
     tmp.affordances = getAffordances<Supportable>(&domain);
     affordanceMap = match<Supportable, Stackable>(&tmp, object);
@@ -413,26 +434,31 @@ void ActionPut::init(const ActionScene& domain,
   {
     std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surfaceName + " because it does not support it.",
+                          "I can't put the " + object->bdyName + " on the " + surfaceName + " because it does not support it.",
                           "Specify another object to put it on");
   }
 
-  // Erase the Supportables that are out of reach
-  auto it = affordanceMap.begin();
-  while (it != affordanceMap.end())
+  // Erase the Supportables that are out of reach. We check for the graspingHand, since
+  // derived classes (like magic_put or so) don't have a grasping hand.
+  const Manipulator* graspingHand = usedManipulators.empty() ? nullptr : domain.getManipulator(usedManipulators[0]);
+  if (graspingHand)
   {
-    const Supportable* place = dynamic_cast<const Supportable*>(std::get<0>(*it));
-    if (place)
+    auto it = affordanceMap.begin();
+    while (it != affordanceMap.end())
     {
-      bool canReach = graspingHand->canReachTo(&domain, graph, place->getFrame(graph)->A_BI.org);
-      it = (!canReach) ? affordanceMap.erase(it) : it + 1;
+      const Supportable* place = dynamic_cast<const Supportable*>(std::get<0>(*it));
+      if (place)
+      {
+        bool canReach = graspingHand->canReachTo(&domain, graph, place->getFrame(graph)->A_BI.org);
+        it = (!canReach) ? affordanceMap.erase(it) : it + 1;
+      }
+      else
+      {
+        it++;
+      }
     }
-    else
-    {
-      it++;
-    }
+    RLOG_CPP(0, "Done erase Supportables out of reach. Remaining: " << affordanceMap.size());
   }
-  RLOG_CPP(0, "Done erase Supportables out of reach. Remaining: " << affordanceMap.size());
 
   // Erase the Supportables that don't match the "whereOn" name if it has been specified
   if (!whereOn.empty())
@@ -440,11 +466,14 @@ void ActionPut::init(const ActionScene& domain,
     auto it = affordanceMap.begin();
     while (it != affordanceMap.end())
     {
-      const Stackable* stackable = dynamic_cast<const Stackable*>(std::get<0>(*it));
-      it = (stackable&&(stackable->frame==whereOn)) ? affordanceMap.erase(it) : it+1;
+      const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
+      const bool eraseMe = !(s && (s->frame == whereOn));
+      RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
+      it = eraseMe ? affordanceMap.erase(it) : it+1;
     }
   }
-  RLOG_CPP(0, "Done erase Supportables on-top. Remaining: " << affordanceMap.size());
+  RLOG_CPP(0, "Done erase Supportables on-top (frame: '" << whereOn << "'). Remaining: "
+           << affordanceMap.size());
 
   // Erase the Supportables that are farther away from an entity or agent than d_limit
   if (!nearTo.empty())
@@ -469,7 +498,7 @@ void ActionPut::init(const ActionScene& domain,
   {
     std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surfaceName + "'s frame " + whereOn + ".",
+                          "I can't put the " + object->bdyName + " on the " + surfaceName + "'s frame " + whereOn + ".",
                           "", "The affordance map is empty after removing all non-frame supportables");
   }
 
@@ -539,7 +568,7 @@ void ActionPut::init(const ActionScene& domain,
   {
     std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
-                          "I can't put the " + objectToPut + " on the " + surfaceName + ". There is already something on it.",
+                          "I can't put the " + object->bdyName + " on the " + surfaceName + ". There is already something on it.",
                           "Put the object somewhere else, or remove the blocking object.");
   }
 
@@ -570,11 +599,7 @@ void ActionPut::init(const ActionScene& domain,
     RLOG_CPP(0, "Sorted: " << std::get<0>(pair)->frame << " - " << std::get<1>(pair)->frame << " : " << std::get<2>(pair));
     affordanceMap.push_back(std::make_tuple(std::get<0>(pair), std::get<1>(pair)));
   }
-  RLOG_CPP(0, "Done heuristic re-sorting affordance map with " << affordanceMap.size() << " entries");
-
-  // Initialize with the best solution.
-  bool successInit = initialize(domain, graph, 0);
-  RCHECK(successInit);
+  RLOG_CPP(0, "Done initOptions() with heuristic re-sorting affordance map with " << affordanceMap.size() << " entries");
 }
 
 ActionPut::~ActionPut()
@@ -616,19 +641,23 @@ bool ActionPut::initialize(const ActionScene& domain,
   // This is the put position in the coordinates of the surface frame.
   Vec3d_invTransform(downProjection, &surfaceBdy->A_BI, surfaceBdy->A_BI.org);
 
-  // Assemble finger task name
-  fingerJoints.clear();
-  const Manipulator* graspingHand = domain.getManipulator(usedManipulators[0]);
-  for (auto& f : graspingHand->fingerJoints)
+  // Assemble finger task name. usedManipulators may be empty for derived classes
+  if (!usedManipulators.empty())
   {
-    fingerJoints += f;
-    fingerJoints += " ";
+    const Manipulator* graspingHand = domain.getManipulator(usedManipulators[0]);
+
+    fingerJoints.clear();
+    for (auto& f : graspingHand->fingerJoints)
+    {
+      fingerJoints += f;
+      fingerJoints += " ";
+    }
+
+    handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
   }
 
-  handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
-
   // Task naming
-  this->taskObjHandPos = /*objBottomName*/ objGraspFrame + "-" + graspFrame + "-XYZ";
+  this->taskObjHandPos = objGraspFrame + "-" + graspFrame + "-XYZ";
   this->taskHandSurfacePos = graspFrame + "-" + surfaceFrameName + "-XYZ";
   this->taskObjSurfacePosX = objBottomName + "-" + surfaceFrameName + "-X";
   this->taskObjSurfacePosY = objBottomName + "-" + surfaceFrameName + "-Y";
@@ -641,8 +670,10 @@ bool ActionPut::initialize(const ActionScene& domain,
 
   explanation = "I'm putting the " + objName + " on the " + surfaceFrameName;
 
-  auto surfNtt = domain.getParentAffordanceEntity(graph, surfaceBdy);
-  detailedActionCommand = "put " + objName + " " + surfNtt->bdyName + " frame " + surfaceFrameName;
+  //auto surfNtt = domain.getParentAffordanceEntity(graph, surfaceBdy);
+  auto surfNtt = domain.getAffordanceEntity(RCSBODY_NAME_BY_ID(graph, surfaceBdy->parentId));
+  detailedActionCommand = "put " + objName + " " + (surfNtt ? surfNtt->bdyName : "") + " frame " + surfaceFrameName;
+
   return true;
 }
 
@@ -1005,51 +1036,16 @@ public:
   {
     defaultDuration = 0.1;
 
-#if 1
-    if (params.size()<2)
-    {
-      throw ActionException(ActionException::ParamNotFound,
-                            "The action magic_get requires at least two parameters.",
-                            "Call it with the object to put and the location.",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
+    parseArgs(domain, graph, params);
 
     objName = params[0];
-    auto nttsToPut = domain.getAffordanceEntities(objName);
+    std::string surfaceToPutOn = params.size() > 1 ? params[1] : std::string();
+    const AffordanceEntity* object = domain.getAffordanceEntity(objName);
+    initOptions(domain, graph, object, surfaceToPutOn);
 
-    if (nttsToPut.empty())
-    {
-      throw ActionException(ActionException::ParamNotFound,
-                            "The " + objName + " to put down is unknown.",
-                            "Use an object name that is defined in the environment",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
-
-    objName = nttsToPut[0]->bdyName;
-
-    surfaceFrameName = params[1];
-    auto surfNtts = domain.getAffordanceEntities(surfaceFrameName);
-
-    if (surfNtts.empty())
-    {
-      throw ActionException(ActionException::ParamNotFound,
-                            "The surface " + surfaceFrameName + " to stack on is unknown.",
-                            "Use an object name that is defined in the environment",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
-
-    auto supportables = getAffordances<Supportable>(surfNtts[0]);
-
-    if (supportables.empty())
-    {
-      throw ActionException(ActionException::ParamNotFound,
-                            "Nothing can be put on the surface " + surfaceFrameName + ".",
-                            "Use a surface with a Supportable affordance.",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
-
-    surfaceFrameName = supportables[0]->frame;
-#endif
+    // Initialize with the best solution.
+    bool successInit = initialize(domain, graph, 0);
+    RCHECK(successInit);
   }
 
   virtual std::vector<std::string> createTasksXML() const
@@ -1078,21 +1074,6 @@ public:
     return a1;
   }
 
-  size_t getNumSolutions() const
-  {
-    return 1;
-  }
-
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
-  {
-    if (solutionRank >= getNumSolutions())
-    {
-      return false;
-    }
-
-    return true;
-  }
-
   std::unique_ptr<ActionBase> clone() const
   {
     return std::make_unique<ActionMagicPut>(*this);
@@ -1100,8 +1081,7 @@ public:
 
   std::string getActionCommand() const
   {
-    return ActionBase::getActionCommand();
-    //return "magic_" + ActionPut::getActionCommand();
+    return "magic_" + ActionPut::getActionCommand();
   }
 
 };

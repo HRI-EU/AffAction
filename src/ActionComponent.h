@@ -61,6 +61,9 @@ public:
   void setFinalPoseRunning(bool enable);
   bool isFinalPoseRunning() const;
 
+  void setEarlyExitPrediction(bool enable);
+  bool getEarlyExitPrediction() const;
+
 private:
 
   void onTextCommand(std::string text);
@@ -86,6 +89,7 @@ private:
   int animationTic;
   int animationIdx;
   bool startingFinalPose;
+  bool earlyExitPrediction;
 
   // Avoid copying this class
   ActionComponent(const ActionComponent&);

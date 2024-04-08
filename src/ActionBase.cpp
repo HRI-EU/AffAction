@@ -125,7 +125,8 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
                                                           const RcsGraph* graph_,
                                                           const RcsBroadPhase* broadphase,
                                                           double duration,
-                                                          double dt) const
+                                                          double dt,
+                                                          bool earlyExit) const
 {
   // Cloning graph and reading collision model takes approximately 20msec.
   double t_clone = Timer_getSystemTime();
@@ -151,7 +152,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
 
   // Perform the actual prediction
   t_clone = Timer_getSystemTime();
-  bool earlyExit = true;
+  //bool earlyExit = true;
   aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt, earlyExit);
 
   // Add an action-specific cost. It is 0 per default, and can be used by
@@ -362,6 +363,7 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
   RLOG(1, "planActionSequence: Sequence to plan:");
   for (size_t i = 0; i < actions.size(); i++)
   {
+    Rcs::String_trim(actions[i]);
     RLOG_CPP(1, "Action #" << i << ": `" << actions[i] << "'");
   }
 
@@ -457,8 +459,9 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
           RLOG_CPP(1, "Starting prediction " << i+1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, lookaheadGraph, i);
           double dt_predict = Timer_getSystemTime();
+          bool earlyExit = true;
           predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase,
-                                                scaleDurationHint*localAction->getDurationHint(), dt);
+                                                scaleDurationHint*localAction->getDurationHint(), dt, earlyExit);
           predResults[i].idx = i;
           //predResults[i].actionText = localAction->getActionCommand();  // inside predict()
           dt_predict = Timer_getSystemTime() - dt_predict;
@@ -497,39 +500,39 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
 
   }   // for (size_t s = 0; s < stepsToPlan; s++)
 
-  REXEC(0)
+  REXEC(-1)
   {
     predictionTree->printTreeVisual(predictionTree->root, 0);
   }
 
-  const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
 
   RLOG(1, "Finally destroying graph '%s'", localGraph->cfgFile);
   RcsGraph_destroy(localGraph);
 
+  const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
   if (treeDepth < stepsToPlan)
   {
-    RLOG(0, "Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
+    RMSG("Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
     return predictedActions;
   }
   else
   {
     std::pair<double, std::vector<aff::PredictionTreeNode*>> bestPath = predictionTree->findSmallestCostPath(treeDepth);
 
-    RLOG(1, "Best route for the next %d actions: ", treeDepth);
+    RMSG("Best route for the next %d actions: ", treeDepth);
 
     for (const auto& node : bestPath.second)
     {
-      RLOG_CPP(1, node->actionText << " : " << node->quality);
+      RMSG_CPP(node->actionText << " : " << node->quality);
       predictedActions.push_back(node->actionText);
     }
 
-    RLOG_CPP(1, "best path total cost: " << bestPath.first);
+    RMSG_CPP("best path total cost: " << bestPath.first);
   }
 
-  REXEC(0)
+  REXEC(-1)
   {
-    RLOG(0, "\nCorrected actions: ");
+    RMSG("\nCorrected actions: ");
     for (const auto& action : predictedActions)
     {
       std::cout << action << ";";

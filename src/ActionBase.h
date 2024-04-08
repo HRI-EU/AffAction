@@ -176,7 +176,8 @@ public:
                                                         const RcsGraph* graph,
                                                         const RcsBroadPhase* broadphase,
                                                         double duration,
-                                                        double dt) const;
+                                                        double dt,
+                                                        bool earlyExit) const;
 
 protected:
 

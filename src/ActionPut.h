@@ -72,9 +72,18 @@ protected:
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph,
                     const std::string& place) const;
-  void init(const ActionScene& domain,
+
+  void parseArgs(const ActionScene& domain,
             const RcsGraph* graph,
-            const std::string& objAffordance,
+                 std::vector<std::string>& params);
+
+  const AffordanceEntity* initHands(const ActionScene& domain,
+                                    const RcsGraph* graph,
+                                    const std::string& objAffordance);
+
+  void initOptions(const ActionScene& domain,
+                   const RcsGraph* graph,
+                   const AffordanceEntity* object,
             const std::string& surface);
 
   std::vector<std::string> createTasksXML() const;

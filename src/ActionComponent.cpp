@@ -65,7 +65,7 @@ namespace aff
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
                                  const RcsBroadPhase* broadphase_) :
   ComponentBase(parent), domain(graph_->cfgFile), graph(graph_), broadphase(broadphase_), limitsEnabled(true),
-  animationGraph(NULL), animationTic(0), animationIdx(-1), startingFinalPose(false)
+  animationGraph(NULL), animationTic(0), animationIdx(-1), startingFinalPose(false), earlyExitPrediction(true)
 {
   subscribe("TextCommand", &ActionComponent::onTextCommand);
   subscribe("Print", &ActionComponent::onPrint);
@@ -74,12 +74,8 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
   subscribe("SetDebugRendering", &ActionComponent::onSetDebugRendering);
   subscribe("Stop", &ActionComponent::onStop);
 
-  //this->domain = ActionScene::parse(graph->cfgFile);
-  RLOG(0, "Initialize kinematics");
   domain.initializeKinematics(graph);
-  RLOG(0, "Checking");
   RCHECK(domain.check(graph));
-  RLOG(0, "Done");
 
   this->animationGraph = RcsGraph_clone(graph_);
 }
@@ -133,7 +129,6 @@ void ActionComponent::onPrint()
 
 void ActionComponent::actionThread(std::string text)
 {
-
   RLOG(0, "actionThread text: `%s`", text.c_str());
 
   // Reentrancy lock
@@ -193,7 +188,8 @@ void ActionComponent::actionThread(std::string text)
           RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
                 localAction->getActionCommand().c_str());
           double dt_predict = Timer_getSystemTime();
-          predResults[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(), getEntity()->getDt());
+          predResults[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(),
+                                                getEntity()->getDt(), earlyExitPrediction);
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].message += " command: " + localAction->getActionCommand();
@@ -222,7 +218,8 @@ void ActionComponent::actionThread(std::string text)
         RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
         action->initialize(domain, graph, i);
         double dt_predict = Timer_getSystemTime();
-        predResults[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(), getEntity()->getDt());
+        predResults[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(),
+                                         getEntity()->getDt(), earlyExitPrediction);
         predResults[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
         RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
@@ -340,7 +337,7 @@ void ActionComponent::actionThread(std::string text)
   // step function does properly initialize the last few values for a
   // smooth initialization.
   const double delay = 5.0*getEntity()->getDt();
-  tropic::TCS_sptr tSet = action->createTrajectory(delay, scaleDurationHint*action->getDurationHint()+delay);
+  auto tSet = action->createTrajectory(delay, scaleDurationHint*action->getDurationHint()+delay);
 
   // From here on, the action will start going.
   if (!startingFinalPose)
@@ -447,6 +444,16 @@ void ActionComponent::setFinalPoseRunning(bool enable)
 bool ActionComponent::isFinalPoseRunning() const
 {
   return startingFinalPose;
+}
+
+void ActionComponent::setEarlyExitPrediction(bool enable)
+{
+  this->earlyExitPrediction = enable;
+}
+
+bool ActionComponent::getEarlyExitPrediction() const
+{
+  return this->earlyExitPrediction;
 }
 
 }   // namespace aff
