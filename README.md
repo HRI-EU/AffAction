@@ -206,3 +206,17 @@ The project is composed of three parts:
   - bin/TestLLMSim -port 35000 (that's the default)
   - with command line options printed to console: bin/TestLLMSim -h 
 
+## Todos
+
+  - inf in prediction cost
+  - used_manipulators
+  - separate prediction animation
+    - and add event so that tree prediction can be visualized
+  - open-world
+  - action trees
+  - pose actions more flexible
+  - remove explanation string
+  - SceneQuery factory class
+
+
+

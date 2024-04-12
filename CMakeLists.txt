@@ -246,6 +246,7 @@ src/ActionScrew.cpp
 src/ActionFingerPush.cpp
 src/ActionComposite.cpp
 src/Affordance.cpp
+src/AnimationSequence.cpp
 src/Capability.cpp
 src/ActionSequence.cpp
 src/AffordanceEntity.cpp
