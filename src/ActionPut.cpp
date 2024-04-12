@@ -237,18 +237,12 @@ void ActionPut::parseArgs(const ActionScene& domain,
                           const RcsGraph* graph,
                           std::vector<std::string>& params)
 {
+  parseParams(params);
+
   auto it = std::find(params.begin(), params.end(), "frame");
   if (it != params.end())
   {
     whereOn = *(it + 1);
-    params.erase(it + 1);
-    params.erase(it);
-  }
-
-  it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it + 1));
     params.erase(it + 1);
     params.erase(it);
   }
@@ -468,7 +462,7 @@ void ActionPut::initOptions(const ActionScene& domain,
     {
       const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
       const bool eraseMe = !(s && (s->frame == whereOn));
-      RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
+      // RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
       it = eraseMe ? affordanceMap.erase(it) : it+1;
     }
   }
@@ -672,8 +666,15 @@ bool ActionPut::initialize(const ActionScene& domain,
 
   //auto surfNtt = domain.getParentAffordanceEntity(graph, surfaceBdy);
   auto surfNtt = domain.getAffordanceEntity(RCSBODY_NAME_BY_ID(graph, surfaceBdy->parentId));
-  detailedActionCommand = "put " + objName + " " + (surfNtt ? surfNtt->bdyName : "") + " frame " + surfaceFrameName;
+  detailedActionCommand = "put " + objName;
+  if (surfNtt)
+  {
+    detailedActionCommand += " " + surfNtt->bdyName;
+  }
 
+  detailedActionCommand += " frame " + surfaceFrameName;
+  // We add the duration in the getActionCommand() function, since initialize() is not
+  // called after predict(), and we might adapt the duration after that.
   return true;
 }
 
@@ -1010,7 +1011,7 @@ double ActionPut::actionCost(const ActionScene& domain,
 
 std::string ActionPut::getActionCommand() const
 {
-  return detailedActionCommand;
+  return detailedActionCommand + " duration " + std::to_string(defaultDuration);
 }
 
 

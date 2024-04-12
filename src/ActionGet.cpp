@@ -78,6 +78,8 @@ ActionGet::ActionGet(const ActionScene& domain,
                      const RcsGraph* graph,
                      std::vector<std::string> params) : ActionGet()
 {
+  parseParams(params);
+
   auto it = std::find(params.begin(), params.end(), "from");
   if (it != params.end())
   {
@@ -90,14 +92,6 @@ ActionGet::ActionGet(const ActionScene& domain,
   if (it != params.end())
   {
     liftHeight = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
-  }
-
-  it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it+1));
     params.erase(it+1);
     params.erase(it);
   }
@@ -125,6 +119,8 @@ std::string ActionGet::getActionCommand() const
     actionCommand += get_manipulators[0] + " ";  // This should contain only 1 maniplator everytime
   }
   actionCommand += graspTypeToString(graspType);
+
+  actionCommand += " duration " + std::to_string(defaultDuration);
 
   return actionCommand;
 }

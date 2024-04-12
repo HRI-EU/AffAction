@@ -55,19 +55,15 @@ REGISTER_ACTION(ActionPose, "pose");
 
 ActionPose::ActionPose(const ActionScene& domain,
                        const RcsGraph* graph,
-                       std::vector<std::string> params)
+                       std::vector<std::string> params) : solutionIndex(-1)
 {
-
-  auto it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
-  }
+  parseParams(params);
 
   // Get the time stamp value as the second argument after the pose name.
-  int timeStamp = 0;
+  // The default of -1 means that no time stamp needs to be given in the
+  // model state description.
+  std::string mdlStateName = params[0];
+  int timeStamp = -1;
 
   if (params.size() > 1)
   {
@@ -77,14 +73,14 @@ ActionPose::ActionPose(const ActionScene& domain,
     }
     catch (const std::invalid_argument& e)
     {
-      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + params[0] + " is invalid.",
+      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + mdlStateName + " is invalid.",
                             "Check how you typed the time stamp parameter - it should be an integer value",
                             std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
                             ": time stamp is not an integer value: " + params[1] + " (" + e.what() + ")");
     }
     catch (const std::out_of_range& e)
     {
-      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + params[0] + " is out of range.",
+      throw ActionException(ActionException::ParamInvalid, "Time stamp for pose " + mdlStateName + " is out of range.",
                             "Check how you typed the time stamp parameter - it should be within the range of integer values",
                             std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
                             ": time stamp is not in the integer range: " + params[1] + " (" + e.what() + ")");
@@ -97,14 +93,49 @@ ActionPose::ActionPose(const ActionScene& domain,
     usedManipulators.push_back(m.name);
   }
 
-  init(graph, params[0], timeStamp);
+  auto mdlNames = Rcs::String_split(mdlStateName, ",");
+
+  for (const auto& mdl : mdlNames)
+  {
+    poses.push_back(createPose(graph, mdl, timeStamp));
+  }
+
+
+  explanation = "Moving to pose " + mdlStateName;
 }
 
-
-void ActionPose::init(const RcsGraph* graph,
-                      const std::string& mdlStateName,
-                      int timeStamp)
+ActionPose::~ActionPose()
 {
+}
+
+bool ActionPose::initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
+{
+  if (solutionRank >= poses.size())
+  {
+    return false;
+  }
+
+  solutionIndex = solutionRank;
+
+  //if (turbo)
+  //{
+  //  RLOG_CPP(0, "Model state: " << poses[solutionIndex].name);
+  //  double ratio = computeMaxVel(graph);
+  //  defaultDuration *= (ratio + 0.01);
+  // RLOG(0, "New duration: %f", defaultDuration);
+  //}
+
+  return true;
+}
+
+ActionPose::ModelPose ActionPose::createPose(const RcsGraph* graph,
+                                             const std::string& mdlStateName,
+                                             int timeStamp) const
+{
+  ModelPose pose;
+  pose.name = mdlStateName;
+  pose.timeStamp = timeStamp;
+
   MatNd* q = MatNd_create(graph->dof, 1);
   MatNd_setElementsTo(q, DBL_MAX);
   bool success = RcsGraph_getModelStateFromXML(q, graph, mdlStateName.c_str(), timeStamp);
@@ -132,31 +163,25 @@ void ActionPose::init(const RcsGraph* graph,
   RCSGRAPH_FOREACH_JOINT(graph)
   {
     const double q_des_i = MatNd_get(q, JNT->jointIndex, 0);
-    const double q_curr_i = MatNd_get(graph->q, JNT->jointIndex, 0);
 
-    if (JNT->constrained || (q_des_i==DBL_MAX))
+    if (JNT->constrained || (q_des_i == DBL_MAX))
     {
       continue;
     }
 
-    jnts.push_back(std::make_tuple(std::string(JNT->name), q_curr_i, q_des_i));
+    pose.jnts.push_back(std::make_tuple(std::string(JNT->name), q_des_i));
   }
-
 
   MatNd_destroy(q);
 
-  explanation = "Moving to pose " + mdlStateName;
-}
-
-ActionPose::~ActionPose()
-{
+  return pose;
 }
 
 std::vector<std::string> ActionPose::createTasksXML() const
 {
   std::vector<std::string> tasks;
 
-  for (const auto& ji : jnts)
+  for (const auto& ji : poses[solutionIndex].jnts)
   {
     std::string jntName = std::get<0>(ji);
     std::string xmlTask = "<Task name=\"" + jntName + "\" " +
@@ -171,22 +196,57 @@ tropic::TCS_sptr ActionPose::createTrajectory(double t_start, double t_end) cons
 {
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
-  for (const auto& ji : jnts)
+  for (const auto& ji : poses[solutionIndex].jnts)
   {
     std::string jntName = std::get<0>(ji);
-    double q_curr = std::get<1>(ji);
-    double q_des = std::get<2>(ji);
+    double q_des = std::get<1>(ji);
 
     a1->addActivation(t_start, true, 0.5, jntName);
     a1->addActivation(t_end+0.5, false, 0.5, jntName);
-    //a1->add(t_start, q_curr, 0.0, 0.0, 7, jntName + " 0");
     a1->add(t_end, q_des, 0.0, 0.0, 7, jntName + " 0");
     // We don't deactivate the tasks so that the pose persists
   }
 
-
-
   return a1;
+}
+
+std::vector<double> ActionPose::computeMaxVel(const RcsGraph* graph, double& maxVelRatio) const
+{
+  std::vector<double> maxVel;
+  double buf[2 * 5];
+  MatNd desc = MatNd_fromPtr(2, 5, buf);
+
+  for (const auto& ji : poses[solutionIndex].jnts)
+  {
+    std::string jntName = std::get<0>(ji);
+    double q_des = std::get<1>(ji);
+    const RcsJoint* jnt = RcsGraph_getJointByName(graph, jntName.c_str());
+    RCHECK_MSG(jnt, "%s", jntName.c_str());
+    double q_curr = graph->q->ele[jnt->jointIndex];
+    double qd_curr = graph->q_dot->ele[jnt->jointIndex];
+
+    MatNd_set(&desc, 0, 0, 0.0);
+    MatNd_set(&desc, 0, 1, q_curr);
+    MatNd_set(&desc, 0, 2, qd_curr);
+    MatNd_set(&desc, 0, 3, 0.0);
+    MatNd_set(&desc, 0, 4, 7);
+
+    MatNd_set(&desc, 1, 0, defaultDuration);
+    MatNd_set(&desc, 1, 1, q_des);
+    MatNd_set(&desc, 1, 2, 0.0);
+    MatNd_set(&desc, 1, 3, 0.0);
+    MatNd_set(&desc, 1, 4, 7);
+
+    Rcs::ViaPointSequence seq(&desc);
+    double t_vmax;
+    double vmax = seq.getMaxVelocity(t_vmax);
+    NLOG(0, "Joint %s: speed_limit: %f   max_speed: %f at t=%.3f (from %.3f)",
+         jnt->name, jnt->speedLimit, vmax, t_vmax, defaultDuration);
+    maxVel.push_back(vmax);
+    maxVelRatio = std::max(maxVelRatio, vmax/jnt->speedLimit);
+  }
+
+  return maxVel;
 }
 
 std::string ActionPose::explain() const
@@ -204,5 +264,23 @@ std::unique_ptr<ActionBase> ActionPose::clone() const
   return std::make_unique<ActionPose>(*this);
 }
 
+size_t ActionPose::getNumSolutions() const
+{
+  return poses.size();
+}
+
+std::string ActionPose::getActionCommand() const
+{
+  std::string aCmd = "pose " + poses[solutionIndex].name;
+
+  if (poses[solutionIndex].timeStamp != -1)
+  {
+    aCmd += " " + std::to_string(poses[solutionIndex].timeStamp);
+  }
+
+  aCmd += " duration " + std::to_string(defaultDuration);
+
+  return aCmd;
+}
 
 }   // namespace aff

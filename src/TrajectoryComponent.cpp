@@ -45,6 +45,7 @@
 #include <thread>
 #include <mutex>
 
+
 #define N_DOUBLES_IN_HTR   (sizeof(HTr)/sizeof(double))
 
 using namespace tropic;
@@ -59,15 +60,11 @@ TrajectoryComponent::TrajectoryComponent(EntityBase* parent,
                                          bool checkTrajectory_) :
   ComponentBase(parent), tc(NULL), motionEndTime(0.0),
   lastMotionEndTime(0.0), motionDuration(0.0), a_des(NULL), x_des(NULL),
-  tPred(NULL), animationGraph(NULL), animationTic(0),
-  enableTrajectoryCheck(checkTrajectory_), enableDbgRendering(true),
-  eStop(false)
+  enableTrajectoryCheck(checkTrajectory_), eStop(false)
 {
   this->a_des = MatNd_create((int) controller->getNumberOfTasks(), 1);
   this->x_des = MatNd_create((int) controller->getTaskDim(), 1);
   controller->computeX(this->x_des);
-
-  this->animationGraph = RcsGraph_clone(controller->getGraph());
 
   if (via)
   {
@@ -105,16 +102,9 @@ TrajectoryComponent::TrajectoryComponent(EntityBase* parent,
   subscribe("CheckAndSetTrajectory", &TrajectoryComponent::onCheckAndSetTrajectory);
   subscribe("SetTrajectory", &TrajectoryComponent::onSetTrajectory);
   subscribe("SimulateTrajectory", &TrajectoryComponent::onSimulateTrajectory);
-  subscribe("SetDebugRendering", &TrajectoryComponent::enableDebugRendering);
   subscribe("SetTrajectoryCheck", &TrajectoryComponent::onEnableTrajectoryCheck);
   subscribe("ChangeTaskVector", &TrajectoryComponent::onTaskVectorChangeSequential);
   subscribe("Print", &TrajectoryComponent::onPrint);
-  subscribe("ToggleFastPrediction", &TrajectoryComponent::onResetAnimationTic);
-
-  if (enableTrajectoryCheck)
-  {
-    subscribe("Render", &TrajectoryComponent::onRender);
-  }
 }
 
 TrajectoryComponent::~TrajectoryComponent()
@@ -125,8 +115,6 @@ TrajectoryComponent::~TrajectoryComponent()
   delete this->tc;
   MatNd_destroy(this->a_des);
   MatNd_destroy(this->x_des);
-  MatNd_destroy(this->tPred);
-  RcsGraph_destroy(this->animationGraph);
 }
 
 void TrajectoryComponent::stepTrajectory(RcsGraph* from)
@@ -137,12 +125,8 @@ void TrajectoryComponent::stepTrajectory(RcsGraph* from)
   const double phase = (motionDuration>0.0) ? 1.0 - (motionEndTime / motionDuration) : 0.0;
   const double phaseScale = sin(M_PI * phase);
 
-  //RLOG(0, "Phase is %f", phaseScale);
-
   tc->getPosition(0.0, this->x_des);
   tc->getActivation(this->a_des);
-
-  // RLOG(1, "lastMotionEndTime=%f   motionEndTime=%f", lastMotionEndTime, motionEndTime);
 
   if ((lastMotionEndTime > 0.0) && (motionEndTime == 0.0))
   {
@@ -209,14 +193,6 @@ void TrajectoryComponent::onInitFromState(const RcsGraph* target)
   tc->getController()->computeX(this->x_des);
   tc->clear();
   tc->init();
-
-  renderMtx.lock();
-  enableDebugRendering(false);
-  animationTic = 0;
-  RcsGraph_copy(animationGraph, target);
-  MatNd_destroy(tPred);
-  tPred = NULL;
-  renderMtx.unlock();
 }
 
 void TrajectoryComponent::onSimulateTrajectory(TCS_sptr tSet)
@@ -272,7 +248,6 @@ void TrajectoryComponent::onPrint()
     RLOG_CPP(0, "Task " << idx++ << " : " << ti->getName());
     ti->print();
   }
-  //tc->getInternalController()->print();
 
   RLOG_CPP(0, "TrajectoryController:");
   idx = 0;
@@ -280,7 +255,7 @@ void TrajectoryComponent::onPrint()
   {
     RLOG_CPP(0, "Trajectory " << idx++ << " : " << ti->getName());
   }
-  //tc->print();
+
 }
 
 void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
@@ -301,8 +276,6 @@ void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
   {
     RLOG(1, "Skipping trajectory check - has been disabled");
     getEntity()->publish("SetTrajectory", tSet);
-    // std::string resMsg = "Trajectory is valid but not checked";
-    // getEntity()->publish("TrajectoryResult", true, 0.0, resMsg);
     return;
   }
 
@@ -317,7 +290,7 @@ void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
   //        is provided with a separate graph (e.g. instantiated during
   //        construction) that will only be linked. However, this requires
   //        touching the ControllerBase and TrajectoryController classes.
-  std::shared_ptr<TrajectoryPredictor> pred = std::make_shared<TrajectoryPredictor>(tc);
+  auto pred = std::make_shared<TrajectoryPredictor>(tc);
 
   // Clears the predictor's trajectories and copies tSet
   pred->setTrajectory(tSet);
@@ -356,24 +329,10 @@ void TrajectoryComponent::checkerThread(TCS_sptr tSet, bool simulateOnly,
     result.print();
   }
 
-  // Copy over predicted q-array and reset the animation counter. When rendering
-  // the prediction model it should be in sync with the "real" motion. We need
-  // the mutex since this function runs concurrently with the onRender event.
-  // Why do we do such a weird pointer copy? Because the code inside the mutex
-  // can slow down the event loop in case of large memory sizes.
-  MatNd* newPredictions = MatNd_create(1, 1);
-  predictor->getPredictionArray(newPredictions);
-  renderMtx.lock();
-  MatNd* buf = this->tPred;
-  this->tPred = newPredictions;
-
-  // This rewinds the animation counter of the predicted model so that it will
-  // start over from the beginning for each new trajectory. \todo: Needs to
-  // be thought through for cases where several trajectories are published
-  // concurrently, for instance applied to different end effectors or so.
-  this->animationTic = 0;
-  renderMtx.unlock();
-  MatNd_destroy(buf);
+  // Visualize
+  std::vector<TrajectoryPredictor::PredictionResult> predictions;
+  predictions.push_back(result);
+  getEntity()->publish("AnimateSequence", predictions, 2);
 
   // Early exit without applying the trajectory if the predictor reports issues
   if (!trajOk)
@@ -399,64 +358,10 @@ void TrajectoryComponent::checkerThread(TCS_sptr tSet, bool simulateOnly,
   RLOG(0, "Simulated trajectory is valid");
 }
 
-void TrajectoryComponent::enableDebugRendering(bool enable)
-{
-  if ((enable==false) && (this->enableDbgRendering != enable))
-  {
-    getEntity()->publish<std::string,std::string>("RenderCommand", "Prediction",
-                                                  "erase");
-  }
-
-  this->enableDbgRendering = enable;
-}
-
 void TrajectoryComponent::onStop()
 {
   // Wait until the checkerThread has finished
   std::lock_guard<std::mutex> lock(checkerThreadMtx);
-  enableDebugRendering(false);
-}
-
-void TrajectoryComponent::onRender()
-{
-  renderMtx.lock();
-
-  if ((this->tPred==NULL) || (this->enableDbgRendering==false))
-  {
-    animationTic = 0;
-    renderMtx.unlock();
-    return;
-  }
-
-  double t_calc = Timer_getSystemTime();
-
-  // Copy all transforms from the prediction to the graph
-  double* src = MatNd_getRowPtr(tPred, animationTic);
-  RCSGRAPH_FOREACH_BODY(animationGraph)
-  {
-    memcpy(&BODY->A_BI, src, sizeof(HTr));
-    src += N_DOUBLES_IN_HTR;
-  }
-
-
-  animationTic += 10;
-
-  if (animationTic >= tPred->m)
-  {
-    animationTic = 0;
-  }
-  renderMtx.unlock();
-
-  getEntity()->publish<std::string,std::string>("RenderCommand", "Prediction",
-                                                "setGhostMode");
-  getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "Prediction",
-                                                    animationGraph);
-
-  t_calc = Timer_getSystemTime() - t_calc;
-  if (t_calc>0.005)
-  {
-    RLOG(0, "*************************onRender in trajectory took %.3f msec", t_calc*1.0e3);
-  }
 }
 
 double TrajectoryComponent::getMotionEndTime() const
@@ -507,11 +412,6 @@ void TrajectoryComponent::onTaskVectorChangeSequential(std::vector<std::string> 
   MatNd_realloc(x_des, tc->getInternalController()->getTaskDim(), 1);
 
   RLOG(1, "Done task replacement");
-}
-
-void TrajectoryComponent::onResetAnimationTic()
-{
-  animationTic = 0;
 }
 
 }   // namespace aff

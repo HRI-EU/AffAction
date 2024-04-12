@@ -151,6 +151,7 @@ public:
 
   virtual tropic::TCS_sptr createTrajectory() const;
   virtual double getDurationHint() const;
+  virtual void setDuration(double duration);
   virtual std::string explain() const;
   void setName(const std::string& name);
   std::string getName() const;
@@ -167,11 +168,13 @@ public:
                                                      size_t numStepsToPlan,
                                                      size_t maxNumThreads,
                                                      double dt,
+                                                     bool earlyExit,
                                                      std::string& errMsg);
 
   // Interface for prediction
   virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   virtual size_t getNumSolutions() const;
+  virtual bool turboMode() const;
   virtual TrajectoryPredictor::PredictionResult predict(ActionScene& scene,
                                                         const RcsGraph* graph,
                                                         const RcsBroadPhase* broadphase,
@@ -187,6 +190,7 @@ protected:
                                                  HTr* surfTransform,
                                                  std::string& errMsg) const;
 
+  virtual void parseParams(std::vector<std::string>& params);
 
   // Interface for optimization.
   virtual size_t getOptimDim() const;
@@ -196,6 +200,7 @@ protected:
 
   const RcsBody* resolveBodyName(const RcsGraph* graph, std::string& bdyName);
   double defaultDuration;
+  bool turbo;
 
 
 private:

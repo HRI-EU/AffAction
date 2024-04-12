@@ -101,12 +101,6 @@ public:
    */
   const MatNd* getTaskCommandPtr() const;
 
-  /*! \brief Enables or disables publishing the animation of the trajectory
-   *         prediction to the GraphicsWindow. The graphID in this case is
-   *         "Prediction".
-   */
-  void enableDebugRendering(bool enable);
-
   /*! \brief Returns the motion end time of the trajectory generator. If no
    *         via points are added, it is 0.
    */
@@ -127,10 +121,8 @@ private:
   void onSimulateTrajectory(tropic::TCS_sptr tSet);
   void onTaskVectorChangeSequential(std::vector<std::string> taskVec,
                                     std::vector<std::string> channels);
-  void onRender();
   void onStop();
   void onPrint();
-  void onResetAnimationTic();
 
   void checkerThread(tropic::TCS_sptr tSet, bool simulateOnly,
                      std::shared_ptr<TrajectoryPredictor> predictor);
@@ -142,22 +134,15 @@ private:
   double motionDuration;
   MatNd* a_des;
   MatNd* x_des;
-
-
-  MatNd* tPred;
-  RcsGraph* animationGraph;
-  unsigned int animationTic;
-  mutable std::mutex renderMtx;   // For threaded prediction accessing qPred
   bool enableTrajectoryCheck;
-  bool enableDbgRendering;
   bool eStop;
 
   std::mutex checkerThreadMtx;
 
   std::map<std::string, std::vector<std::string>> effectorTaskMap;
 
-  TrajectoryComponent(const TrajectoryComponent&);
-  TrajectoryComponent& operator=(const TrajectoryComponent&);
+  TrajectoryComponent(const TrajectoryComponent&) = delete;
+  TrajectoryComponent& operator=(const TrajectoryComponent&) = delete;
 };
 
 }

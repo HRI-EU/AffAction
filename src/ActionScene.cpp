@@ -61,13 +61,13 @@ static void MyParseSceneEntity(const xmlNodePtr node, aff::ActionScene* scene, s
   if (isXMLNodeName(node, "AffordanceModel"))
   {
     std::string amName = Rcs::getXMLNodePropertySTLString(node, "name");
-    RLOG_CPP(0, "AffordanceModel: name: '" << amName << "' group suffix: '" << groupSuffix << "'");
+    RLOG_CPP(5, "AffordanceModel: name: '" << amName << "' group suffix: '" << groupSuffix << "'");
     scene->entities.emplace_back(AffordanceEntity(node, groupSuffix));
   }
   else if (isXMLNodeName(node, "Manipulator"))
   {
     std::string mName = Rcs::getXMLNodePropertySTLString(node, "name");
-    RLOG_CPP(0, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
+    RLOG_CPP(5, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
     scene->manipulators.emplace_back(Manipulator(node, groupSuffix));
   }
 
@@ -692,9 +692,9 @@ void ActionScene::initializeKinematics(const RcsGraph* graph)
   // accumulated length of all chain links.
   for (auto& m : manipulators)
   {
-    RLOG_CPP(0, "Computing base joint name of " << m.bdyName);
+    RLOG_CPP(5, "Computing base joint name of " << m.bdyName);
     m.computeBaseJointName(this, graph);
-    RLOG_CPP(0, "Done computing base joint name of " << m.bdyName);
+    RLOG_CPP(5, "Done computing base joint name of " << m.bdyName);
   }
 
   // We assume that the defaultPos is given in relative coordinates to the
@@ -710,7 +710,7 @@ void ActionScene::initializeKinematics(const RcsGraph* graph)
     const RcsBody* parent = RCSBODY_BY_ID(graph, human->body(graph)->parentId);
     if (parent)
     {
-      RLOG_CPP(0, "Transforming defaultPos of agent " << human->bdyName);
+      RLOG_CPP(5, "Transforming defaultPos of agent " << human->bdyName);
       Vec3d_transformSelf(human->defaultPos, &parent->A_BI);
     }
   }

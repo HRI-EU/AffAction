@@ -36,7 +36,6 @@
 #include "ComponentBase.h"
 #include "ActionScene.h"
 
-#include <ControllerBase.h>
 #include <TrajectoryPredictor.h>
 
 
@@ -49,7 +48,7 @@ public:
 
   ActionComponent(EntityBase* parent, const RcsGraph* graph,
                   const RcsBroadPhase* broadphase);
-  virtual ~ActionComponent();
+  ~ActionComponent();
 
   const ActionScene* getDomain() const;
   ActionScene* getDomain();
@@ -57,10 +56,8 @@ public:
   void setMultiThreaded(bool enable);
   bool getLimitCheck() const;
   bool getMultiThreaded() const;
-
   void setFinalPoseRunning(bool enable);
   bool isFinalPoseRunning() const;
-
   void setEarlyExitPrediction(bool enable);
   bool getEarlyExitPrediction() const;
 
@@ -68,32 +65,22 @@ private:
 
   void onTextCommand(std::string text);
   void onPrint();
-  void onRender();
-  void onToggleFastPrediction();
-  void onSetDebugRendering(bool enable);
   void onStop();
-
   void actionThread(std::string text);
+
   ActionScene domain;
   const RcsGraph* graph;
   const RcsBroadPhase* broadphase;
   bool limitsEnabled;
   bool multiThreaded;
-
-  // For animation of predictions
-  std::vector<TrajectoryPredictor::PredictionResult> predictions;
-  mutable std::mutex renderMtx;
-  mutable std::mutex actionThreadMtx;
-
-  RcsGraph* animationGraph;
-  int animationTic;
-  int animationIdx;
   bool startingFinalPose;
   bool earlyExitPrediction;
 
+  mutable std::mutex actionThreadMtx;
+
   // Avoid copying this class
-  ActionComponent(const ActionComponent&);
-  ActionComponent& operator=(const ActionComponent&);
+  ActionComponent(const ActionComponent&) = delete;
+  ActionComponent& operator=(const ActionComponent&) = delete;
 };
 
 }

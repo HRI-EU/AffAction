@@ -72,7 +72,7 @@ void _planActionSequenceThreaded(aff::ExampleLLMSim& ex,
                                  size_t maxNumThreads)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto res = ex.sceneQuery2->planActionSequence(seq, seq.size(), maxNumThreads);
+  auto res = ex.sceneQuery2->planActionSequence(seq, maxNumThreads);
 
   if (res.empty())
   {

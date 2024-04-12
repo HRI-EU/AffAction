@@ -33,6 +33,7 @@
 #include "ExampleActionsECS.h"
 #include "ActionFactory.h"
 #include "ActionSequence.h"
+#include "AnimationSequence.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
 
@@ -185,7 +186,6 @@ public:
   {
     double F[3];
     getDragForce(F);
-    //RLOG(0, "Drag force is %f", Vec3d_getLength(F));
     return Rcs::BodyPointDragger::callback(ea, aa);
   }
 
@@ -433,7 +433,7 @@ bool ExampleActionsECS::initAlgo()
   actionC = std::make_unique<aff::ActionComponent>(&entity, controller->getGraph(), controller->getBroadPhase());
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
-  actionC->setEarlyExitPrediction(false);
+  actionC->setEarlyExitPrediction(true);
 
 #if 1
   // Misuse contacts shape flag for Collision trajectory constraint
@@ -476,7 +476,7 @@ bool ExampleActionsECS::initAlgo()
   graphC->setEnableRender(false);//\todo MG CHECK
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
-  trajC->enableDebugRendering(false);
+  //trajC->enableDebugRendering(false);
 
   // Inverse kinematics controller, no constraints, right inverse
   ikc = std::make_unique<aff::IKComponent>(&entity, controller.get(), ikType);
@@ -496,6 +496,7 @@ bool ExampleActionsECS::initAlgo()
   this->hwc = createHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
   this->components = createComponents(entity, controller->getGraph(), actionC->getDomain(), false);
 
+  addComponent(new AnimationSequence(&entity, controller->getGraph()));
   if (!hwc.empty())
   {
     setEnableRobot(true);
@@ -596,6 +597,12 @@ bool ExampleActionsECS::initGraphics()
     entity.publish("ToggleFastPrediction");
   }, "Increment prediction visualization");
 
+  viewer->setKeyCallback('T', [this](char k)
+  {
+    RLOG(0, "Zap visualization channel");
+    entity.publish("ZapAnimation");
+  }, "Zap through animation channels");
+
   viewer->setKeyCallback('b', [this](char k)
   {
     RLOG(0, "Toggling broadphase in graphics window");
@@ -674,12 +681,12 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Toggle pause modus");
 
-  viewer->setKeyCallback('T', [this](char k)
-  {
-    trajC->getTrajectoryController()->toXML("RobjectTrajectory.xml");
-    trajC->getTrajectoryController()->getController()->toXML("RobotController.xml");
+  //viewer->setKeyCallback('T', [this](char k)
+  //{
+  //  trajC->getTrajectoryController()->toXML("RobjectTrajectory.xml");
+  //  trajC->getTrajectoryController()->getController()->toXML("RobotController.xml");
 
-  }, "Write trajectory to file \"RobjectTrajectory.xml\" and controller to \"RobotController.xml\"");
+  //}, "Write trajectory to file \"RobjectTrajectory.xml\" and controller to \"RobotController.xml\"");
 
   viewer->setKeyCallback('o', [this](char k)
   {
@@ -993,9 +1000,43 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         size_t maxNumThreads)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto res = ex->sceneQuery2->planActionSequence(seq, seq.size(), maxNumThreads);
+  auto tree = ex->sceneQuery2->planActionTree(seq, maxNumThreads);
 
-  if (res.empty())
+  std::vector<std::string> predictedActions;
+
+  if (tree)
+  {
+    auto sln = tree->findSolutionPath();
+    for (const auto& nd : sln)
+    {
+      predictedActions.push_back(nd->action->getActionCommand());
+      RLOG_CPP(0, "Action: " << nd->action->getActionCommand() <<
+               " cost: " << nd->cost);
+    }
+  }
+
+  // Animation of all valid solution paths
+  if (tree)
+  {
+    std::vector<TrajectoryPredictor::PredictionResult> predictions(tree->getNumValidPaths());
+
+    for (size_t i = 0; i < predictions.size(); ++i)
+    {
+      predictions[i].success = true;
+      auto path = tree->findSolutionPath(i);
+      for (const auto& nd : path)
+      {
+        predictions[i].bodyTransforms.insert(predictions[i].bodyTransforms.end(),
+                                             nd->bodyTransforms.begin(),
+                                             nd->bodyTransforms.end());
+      }
+
+    }
+
+    ex->entity.publish("AnimateSequence", predictions, 0);
+  }
+
+  if (predictedActions.empty())
   {
     RLOG_CPP(0, "Could not find solution");
     ex->processingAction = false;
@@ -1003,12 +1044,12 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     return;
   }
 
-  RLOG_CPP(0, "Sequence has " << res.size() << " steps");
+  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps");
 
   std::string newCmd;
-  for (size_t i = 0; i < res.size(); ++i)
+  for (size_t i = 0; i < predictedActions.size(); ++i)
   {
-    newCmd += res[i];
+    newCmd += predictedActions[i];
     newCmd += ";";
   }
 

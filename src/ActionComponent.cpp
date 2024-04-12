@@ -64,25 +64,20 @@ namespace aff
 
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
                                  const RcsBroadPhase* broadphase_) :
-  ComponentBase(parent), domain(graph_->cfgFile), graph(graph_), broadphase(broadphase_), limitsEnabled(true),
-  animationGraph(NULL), animationTic(0), animationIdx(-1), startingFinalPose(false), earlyExitPrediction(true)
+  ComponentBase(parent), domain(graph_->cfgFile), graph(graph_),
+  broadphase(broadphase_), limitsEnabled(true), multiThreaded(true),
+  startingFinalPose(false), earlyExitPrediction(true)
 {
   subscribe("TextCommand", &ActionComponent::onTextCommand);
   subscribe("Print", &ActionComponent::onPrint);
-  subscribe("Render", &ActionComponent::onRender);
-  subscribe("ToggleFastPrediction", &ActionComponent::onToggleFastPrediction);
-  subscribe("SetDebugRendering", &ActionComponent::onSetDebugRendering);
   subscribe("Stop", &ActionComponent::onStop);
 
   domain.initializeKinematics(graph);
   RCHECK(domain.check(graph));
-
-  this->animationGraph = RcsGraph_clone(graph_);
 }
 
 ActionComponent::~ActionComponent()
 {
-  RcsGraph_destroy(this->animationGraph);
 }
 
 void ActionComponent::onStop()
@@ -162,110 +157,101 @@ void ActionComponent::actionThread(std::string text)
   }
 
 
-  bool predictMe = true;
+  std::vector<TrajectoryPredictor::PredictionResult> predictions(action->getNumSolutions());
 
-  if (predictMe)
+  if (getMultiThreaded())
   {
-    std::vector<TrajectoryPredictor::PredictionResult> predResults(action->getNumSolutions());
+    std::vector<std::future<void>> futures;
 
-    if (getMultiThreaded())
+    // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
+    size_t maxThreads = std::min((size_t)std::thread::hardware_concurrency(), action->getNumSolutions());
+    ConcurrentExecutor predictExecutor(maxThreads);
+
+    // enque each solution to be predicted
+    for (size_t i = 0; i < action->getNumSolutions(); ++i)
     {
-      std::vector<std::future<void>> futures;
+      const ActionBase* aPtr = action.get();
 
-      // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
-      size_t maxThreads = std::min((size_t)std::thread::hardware_concurrency(), action->getNumSolutions());
-      ConcurrentExecutor predictExecutor(maxThreads);
-
-      // enque each solution to be predicted
-      for (size_t i = 0; i < action->getNumSolutions(); ++i)
+      futures.push_back(predictExecutor.enqueue([i, this, aPtr, &predictions]
       {
-        const ActionBase* aPtr = action.get();
-
-        futures.push_back(predictExecutor.enqueue([i, this, aPtr, &predResults]
-        {
-          auto localAction = aPtr->clone();
-          localAction->initialize(domain, graph, i);
-          RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
-                localAction->getActionCommand().c_str());
-          double dt_predict = Timer_getSystemTime();
-          predResults[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(),
-                                                getEntity()->getDt(), earlyExitPrediction);
-          predResults[i].idx = i;
-          dt_predict = Timer_getSystemTime() - dt_predict;
-          predResults[i].message += " command: " + localAction->getActionCommand();
-          RLOGS(1, "%s for prediction %zu from %zu",
-                (predResults[i].success ? "SUCCESS" : "FAILURE"), i, localAction->getNumSolutions()-1);
-          RLOGS(2, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
-                predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
-                1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost, predResults[i].actionCost,
-                predResults[i].message.c_str());
-        }));
-      }
-
-      // wait for the predictions to finish
-      size_t count = 0;
-      for (auto& future : futures)
-      {
-        future.wait();
-      }
-
-    }
-    else
-    {
-      // predict each solution sequentially
-      for (size_t i = 0; i < action->getNumSolutions(); ++i)
-      {
-        RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
-        action->initialize(domain, graph, i);
+        auto localAction = aPtr->clone();
+        localAction->initialize(domain, graph, i);
+        RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
+              localAction->getActionCommand().c_str());
         double dt_predict = Timer_getSystemTime();
-        predResults[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(),
-                                         getEntity()->getDt(), earlyExitPrediction);
-        predResults[i].idx = i;
+        predictions[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(),
+                                              getEntity()->getDt(), earlyExitPrediction);
+        predictions[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
-        RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
-             predResults[i].success ? "SUCCESS" : "FAILURE", action->getName().c_str(), i,
-             1.0e3 * dt_predict, predResults[i].jlCost, predResults[i].collCost,
-             predResults[i].message.c_str());
-      }
+        predictions[i].message += " command: " + localAction->getActionCommand();
+        RLOGS(1, "%s for prediction %zu from %zu",
+              (predictions[i].success ? "SUCCESS" : "FAILURE"), i, localAction->getNumSolutions()-1);
+        RLOGS(2, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
+              predictions[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
+              1.0e3 * dt_predict, predictions[i].jlCost, predictions[i].collCost, predictions[i].actionCost,
+              predictions[i].message.c_str());
+      }));
     }
 
-    RLOG_CPP(0, "Sorting " << predResults.size() << " predictions");
-    std::sort(predResults.begin(), predResults.end(), TrajectoryPredictor::PredictionResult::lesser);
-
-    REXEC(0)
+    // wait for the predictions to finish
+    size_t count = 0;
+    for (auto& future : futures)
     {
-      RLOG_CPP(0, "Printing predictions");
-      for (const auto& r : predResults)
-      {
-        if (r.idx != -1)
-        {
-          const int verbosityLevel = 2;
-          r.print(verbosityLevel);
-        }
-      }
+      future.wait();
     }
 
-    // We ignore the action request if no valid prediction was found. We don't
-    // necessarily need to do this here, since there is a final check in the
-    // TrajectoryComponent. This is a bit more accessible, since we can "see"
-    // the trajectory with the 'd' key.
-    // if ((!predResults[0].success) && getLimitCheck())
-    // {
-    //   getEntity()->publish("ActionResult", false, 0.0, predResults[0].message);
-    //   return;
-    // }
+  }
+  else
+  {
+    // predict each solution sequentially
+    for (size_t i = 0; i < action->getNumSolutions(); ++i)
+    {
+      RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
+      action->initialize(domain, graph, i);
+      double dt_predict = Timer_getSystemTime();
+      predictions[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(),
+                                       getEntity()->getDt(), earlyExitPrediction);
+      predictions[i].idx = i;
+      dt_predict = Timer_getSystemTime() - dt_predict;
+      RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
+           predictions[i].success ? "SUCCESS" : "FAILURE", action->getName().c_str(), i,
+           1.0e3 * dt_predict, predictions[i].jlCost, predictions[i].collCost,
+           predictions[i].message.c_str());
+    }
+  }
 
-    // We initialize the action with the best prediction that was found.
-    RLOG_CPP(0, "Initializing with solution " << predResults[0].idx);
-    action->initialize(domain, graph, predResults[0].idx);
+  RLOG_CPP(0, "Sorting " << predictions.size() << " predictions");
+  std::sort(predictions.begin(), predictions.end(), TrajectoryPredictor::PredictionResult::lesser);
 
-    // Memorize the predictions for debug visualization. This runs concurrently
-    // with the onRender method, so we are quick about it with swapping, and
-    // make it mutually exclusive.
-    std::lock_guard<std::mutex> lock(renderMtx);
-    animationIdx = -1;
-    std::swap(predictions, predResults);
-  }   // if (predictMe)
+  REXEC(0)
+  {
+    RLOG_CPP(0, "Printing predictions");
+    for (const auto& r : predictions)
+    {
+      if (r.idx != -1)
+      {
+        const int verbosityLevel = 2;
+        r.print(verbosityLevel);
+      }
+    }
+  }
+
+  // We ignore the action request if no valid prediction was found. We don't
+  // necessarily need to do this here, since there is a final check in the
+  // TrajectoryComponent. This is a bit more accessible, since we can "see"
+  // the trajectory with the 'd' key.
+  // if ((!predResults[0].success) && getLimitCheck())
+  // {
+  //   getEntity()->publish("ActionResult", false, 0.0, predResults[0].message);
+  //   return;
+  // }
+
+  // We initialize the action with the best prediction that was found.
+  RLOG_CPP(0, "Initializing with solution " << predictions[0].idx);
+  action->initialize(domain, graph, predictions[0].idx);
+
+  // Debug visualization.
+  getEntity()->publish("AnimateSequence", predictions, 1);
 
 
 
@@ -376,64 +362,6 @@ bool ActionComponent::getLimitCheck() const
 bool ActionComponent::getMultiThreaded() const
 {
   return multiThreaded;
-}
-
-void ActionComponent::onToggleFastPrediction()
-{
-  animationTic = 0;
-  animationIdx++;
-  if (animationIdx>=predictions.size())
-  {
-    animationIdx = -1;
-    onSetDebugRendering(false);
-  }
-
-  RLOG(0, "Setting animationIdx to %d", animationIdx);
-}
-
-void ActionComponent::onRender()
-{
-  if ((animationIdx==-1) || (animationIdx>=predictions.size()))
-  {
-    animationIdx = -1;
-    animationTic = 0;
-    return;
-  }
-
-  std::lock_guard<std::mutex> guard(renderMtx);
-
-  // Copy all transforms from the prediction to the graph
-  size_t dblsPerRow = animationGraph->nBodies*12;
-  size_t nRows = predictions[animationIdx].bodyTransforms.size() / dblsPerRow;
-  MatNd predArr = MatNd_fromPtr(nRows, dblsPerRow, predictions[animationIdx].bodyTransforms.data());
-
-  double* src = MatNd_getRowPtr(&predArr, animationTic);
-  RCSGRAPH_FOREACH_BODY(animationGraph)
-  {
-    memcpy(&BODY->A_BI, src, sizeof(HTr));
-    src += 12;
-  }
-
-  animationTic += 1;
-
-  if (animationTic >= nRows)
-  {
-    animationTic = 0;
-  }
-
-  std::string col = predictions[animationIdx].success ? "setGhostModeGreen" : "setGhostModeRed";
-  getEntity()->publish<std::string,std::string>("RenderCommand", "FastPrediction", col);
-  getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "FastPrediction", animationGraph);
-}
-
-void ActionComponent::onSetDebugRendering(bool enable)
-{
-  if (enable==false)
-  {
-    getEntity()->publish<std::string,std::string>("RenderCommand", "FastPrediction", "erase");
-    animationIdx = -1;
-  }
-
 }
 
 void ActionComponent::setFinalPoseRunning(bool enable)

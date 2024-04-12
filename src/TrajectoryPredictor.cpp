@@ -31,6 +31,7 @@
 *******************************************************************************/
 
 #include "TrajectoryPredictor.h"
+#include "ActionBase.h"
 
 #include <IkSolverConstraintRMR.h>
 #include <Rcs_typedef.h>
@@ -55,7 +56,14 @@ using namespace tropic;
 namespace aff
 {
 
-TrajectoryPredictor::PredictionResult::PredictionResult() : idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0), elbowNS(0.0), wristNS(0.0), graph(nullptr)
+TrajectoryPredictor::PredictionResult::PredictionResult() :
+  idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
+  scaleJointSpeeds(1.0), elbowNS(0.0), wristNS(0.0), t_predict(0.0),
+  graph(nullptr), action(nullptr)
+{
+}
+
+TrajectoryPredictor::PredictionResult::~PredictionResult()
 {
 }
 
@@ -67,7 +75,8 @@ double TrajectoryPredictor::PredictionResult::cost() const
 
 // The lesser function for sorting a vector of results. The failure -
 // success comparisons ensure that the first-ranked solutions are valid.
-bool TrajectoryPredictor::PredictionResult::lesser(const PredictionResult& a, const PredictionResult& b)
+bool TrajectoryPredictor::PredictionResult::lesser(const PredictionResult& a,
+                                                   const PredictionResult& b)
 {
   if (a.success && !b.success)
   {
@@ -108,19 +117,17 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
 
   if (verbosityLevel >= 2)
   {
-    std::cout << " action: '" << actionText << "'";
-  }
-
-  if (verbosityLevel >= 3)
-  {
     std::cout << std::endl;
+    std::cout << "t_predict: " << t_predict << std::endl;
     std::cout << "minDist: " << minDist << std::endl;
     std::cout << "jlCost: " << jlCost << std::endl;
     std::cout << "collCost: " << collCost << std::endl;
     std::cout << "actionCost: " << actionCost << std::endl;
+    std::cout << "scaleJointSpeeds: " << scaleJointSpeeds << std::endl;
     std::cout << "message: " << message << std::endl;
     std::cout << "minDistBdy1: " << minDistBdy1 << std::endl;
     std::cout << "minDistBdy2: " << minDistBdy2 << std::endl;
+    std::cout << "animation frames: " << bodyTransforms.size() << std::endl;
     std::cout << "jMask: " << std::endl;
     for (size_t i = 0; i < jMask.size(); ++i)
     {
@@ -158,7 +165,7 @@ TrajectoryPredictor::~TrajectoryPredictor()
 TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bool earlyExit)
 {
   PredictionResult result;
-  double t_calc = Timer_getTime();
+  result.t_predict = Timer_getTime();
 
   const bool jointLimitCheck = true;
   const bool collisionCheck = true;
@@ -215,6 +222,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   {
     result.message = "FATAL_ERROR: Initial state is invalid";
     result.success = false;
+    result.t_predict = Timer_getTime() - result.t_predict;
     return result;
   }
 
@@ -234,6 +242,8 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   result.success = true;
 
   size_t count = 0;
+  double jointSpeedScaler = 0.0;
+
   // Simulate the whole trajectory. We simulate a bit longer than the actual
   // trajectory duration, since there can be issues later with the null space
   // motion.
@@ -288,6 +298,15 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
                           verbose, &jMaskArr, resMsg);
 
     scaleJointSpeeds = std::min(RcsGraph_checkJointSpeeds(graph, graph->q_dot, 1.0, RcsStateFull), scaleJointSpeeds);
+
+    // Determine joint speed scaling factor to exactly be at the speed limit
+    RCSGRAPH_FOREACH_JOINT(graph)
+    {
+      double q_dot = fabs(graph->q_dot->ele[JNT->jointIndex]);
+      jointSpeedScaler = std::max(jointSpeedScaler, q_dot / JNT->speedLimit);
+    }
+
+
 
     // computeIK does already several checks:
     //   - Determinant of Jacobian being zero
@@ -453,7 +472,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
       }
     }
 
-    if (Timer_getTime()-t_calc > 5.0)
+    if (Timer_getTime()-result.t_predict > 5.0)
     {
       RLOG(1, "Predictor takes pretty long: at t=%f", t);
     }
@@ -469,11 +488,13 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   result.jlCost = (result.jlCost) / (1.0+result.jlCost);
   result.collCost = (result.collCost) / (1.0+result.collCost);
 
+  // Multiplay duration with this value to get optimal speed
+  result.scaleJointSpeeds = jointSpeedScaler;
 
-  t_calc = Timer_getTime() - t_calc;
+
 
   RLOG(4, "Trajectory %s after %d steps, took %.3f sec",
-       result.success ? "ok" : "failed", tStack->m, 1.0*t_calc);
+       result.success ? "ok" : "failed", tStack->m, result.t_predict);
   RLOG_CPP(4, "Result: " << result.message);
 
   MatNd_destroyN(3, a_des, x_des, a_prev);
@@ -490,6 +511,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
   // We add a clone so that we can call this classes methods several times.
   result.graph = RcsGraph_clone(graph);
+  result.t_predict = Timer_getTime() - result.t_predict;
 
   return result;
 }

@@ -82,7 +82,7 @@ SceneEntity::SceneEntity()
 SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
 {
   bdyName = Rcs::getXMLNodePropertySTLString(node, "body");
-  RLOG_CPP(0, "Creting SceneEntity '" << bdyName << "' with suffix " << groupSuffix);
+  RLOG_CPP(5, "Creting SceneEntity '" << bdyName << "' with suffix " << groupSuffix);
   bdyName += groupSuffix;
   RCHECK_MSG(!bdyName.empty(), "Found SceneEntity without body name: %s", node->name);
 

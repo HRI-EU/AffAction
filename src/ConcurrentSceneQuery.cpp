@@ -106,14 +106,26 @@ bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double dist
   return aff::isAgentBusy(agentName, &scene, graph, distanceThreshold);
 }
 
-std::vector<std::string> ConcurrentSceneQuery::planActionSequence(const std::vector<std::string>& actions, size_t numStepsToPlan, size_t maxThreads)
+std::vector<std::string> ConcurrentSceneQuery::planActionSequence(const std::vector<std::string>& actions, size_t maxThreads)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
   std::string errMsg;
-  auto res =  ActionBase::planActionSequence(scene, graph, broadphase, actions, numStepsToPlan, maxThreads, sim->entity.getDt(), errMsg);
+  bool earlyExit = true;
+  auto res =  ActionBase::planActionSequence(scene, graph, broadphase, actions, actions.size(), maxThreads, sim->entity.getDt(), earlyExit, errMsg);
 
   return res;
+}
+
+std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTree(const std::vector<std::string>& actions, size_t maxThreads)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update(true);
+  std::string errMsg;
+  bool earlyExit = true;
+
+  return PredictionTree::planActionTree(scene, graph, broadphase, actions, actions.size(),
+                                        maxThreads, sim->entity.getDt(), earlyExit, errMsg);
 }
 
 std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgent,

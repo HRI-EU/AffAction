@@ -36,6 +36,7 @@
 
 
 #include "ActionScene.h"
+#include "PredictionTree.h"
 #include "json.hpp"
 
 #include <Rcs_broadphase.h>
@@ -74,8 +75,6 @@ public:
    *         abstract) actions.
    *
    *  \param[in] actions          Vector of (possibly abstract) actions.
-   *  \param[in] numStepsToPlan   Tree depth. Use actions.size() to plan the
-   *                              full tree
    *  \param[in] maxThreads       Upper limit on number of threads used. If it
    *                              is 0, then the function will automatically
    *                              detect the best possible value for the fastest
@@ -84,8 +83,9 @@ public:
    *          or empty vector if no valid solution could be found.
    */
   std::vector<std::string> planActionSequence(const std::vector<std::string>& actions,
-                                              size_t numStepsToPlan,
-                                              size_t maxThreads=0);
+                                              size_t maxThreads = 0);
+  std::unique_ptr<PredictionTree> planActionTree(const std::vector<std::string>& actions,
+                                                 size_t maxThreads = 0);
 
   bool isAgentBusy(const std::string& agentName, double distanceThreshold);
 

@@ -480,7 +480,7 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
     ee = RcsGraph_getBodyByName(graph, capability->frame.c_str());
     RCHECK(ee);
     this->reach = std::max(this->reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
-    RLOG_CPP(0, "Reach by " << ee->name << " is " << reach);
+    RLOG_CPP(5, "Reach by " << ee->name << " is " << reach);
   }
 
   // Traverse backwards from end effector and collect all unconstrained joints
@@ -507,7 +507,7 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
   }
 
   // Here we have a reach for the end effector
-  RLOG(0, "[%s]: basejointname is %s, Reach is %f",
+  RLOG(5, "[%s]: basejointname is %s, Reach is %f",
        name.c_str(), baseJointName.c_str(), reach);
 }
 

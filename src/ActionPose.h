@@ -49,18 +49,28 @@ public:
              std::vector<std::string> params);
   virtual ~ActionPose();
 
-  void init(const RcsGraph* graph, const std::string& mdlState, int timeStamp);
   std::unique_ptr<ActionBase> clone() const override;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::string explain() const;
   std::vector<std::string> getManipulators() const;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  size_t getNumSolutions() const;
+  std::string getActionCommand() const;
+  std::vector<double> computeMaxVel(const RcsGraph* graph, double& maxVelRatio) const;
 
 protected:
 
+  struct ModelPose
+  {
+    std::string name;
+    int timeStamp;
+    std::vector<std::tuple<std::string, double>> jnts;
+  };
   std::vector<std::string> createTasksXML() const;
+  ModelPose createPose(const RcsGraph* graph, const std::string& mdlState, int timeStamp) const;
 
-  // Joint name, current, desired
-  std::vector<std::tuple<std::string,double,double>> jnts;
+  int solutionIndex;
+  std::vector<ModelPose> poses;
   std::string explanation;
   std::vector<std::string> usedManipulators;
 };
