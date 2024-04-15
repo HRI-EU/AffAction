@@ -47,7 +47,7 @@
     <Shape type="FRAME" scale="0.1"/>
   </Body>
 
-  <AffordanceModel body="box_of" name="box_of" types="box">
+  <AffordanceModel body="box_of" types="box">
     <Supportable frame="top_box_of"/>
     <Pourable frame="top_box_of"/>
     <Containable frame="top_box_of"/>

@@ -74,7 +74,6 @@ void AffActionExampleInfo()
   Rcs::ExampleFactory::print();
 }
 
-
 namespace aff
 {
 
@@ -987,7 +986,8 @@ std::string ExampleActionsECS::help()
   s << Rcs::RcsGraph_printUsageToString(xmlFileName);
   s << Rcs::RcsShape_distanceFunctionsToString();
   s << std::endl << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
-  s << std::endl << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
+  s << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
+  s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
 
   return s.str();
 }
@@ -1019,6 +1019,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   }
 
   // Animation of all valid solution paths
+#if 0
   if (tree)
   {
     std::vector<TrajectoryPredictor::PredictionResult> predictions(tree->getNumValidPaths());
@@ -1038,6 +1039,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
     ex->entity.publish("AnimateSequence", predictions, 0);
   }
+#endif
 
   if (predictedActions.empty())
   {

@@ -35,7 +35,7 @@
 		<Shape distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" type="BOX"/>
 		<Shape scale="0.2" type="FRAME"/>
 	</Body>
-	<Body name="table_grid" prev="table" transform="-0.05 0 0.001 0 0 0" />
+	<Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />
 	<Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
 	</Body>
@@ -92,10 +92,9 @@
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
 	</Body>
 
-	<!--
-	<Body color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
+	<xxBody color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
+	</xxBody>
 	<Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
 	</Body>
@@ -117,9 +116,10 @@
 	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
 	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
+	<xxBody color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
 		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
+	</xxBody>
+	<!--
 -->
 
 	<AffordanceModel body="table" name="table" types="furniture">
@@ -143,15 +143,15 @@
 		<Supportable frame="table_grid_1_7"/>
 		<Supportable frame="table_grid_1_8"/>
 
-		<noSupportable frame="table_grid_2_0"/>
-		<noSupportable frame="table_grid_2_1"/>
-		<noSupportable frame="table_grid_2_2"/>
-		<noSupportable frame="table_grid_2_3"/>
-		<noSupportable frame="table_grid_2_4"/>
-		<noSupportable frame="table_grid_2_5"/>
-		<noSupportable frame="table_grid_2_6"/>
-		<noSupportable frame="table_grid_2_7"/>
-		<noSupportable frame="table_grid_2_8"/>	
+		<xxSupportable frame="table_grid_2_0"/>
+		<Supportable frame="table_grid_2_1"/>
+		<Supportable frame="table_grid_2_2"/>
+		<Supportable frame="table_grid_2_3"/>
+		<Supportable frame="table_grid_2_4"/>
+		<Supportable frame="table_grid_2_5"/>
+		<Supportable frame="table_grid_2_6"/>
+		<Supportable frame="table_grid_2_7"/>
+		<xxSupportable frame="table_grid_2_8"/>	
 	</AffordanceModel>
 
 

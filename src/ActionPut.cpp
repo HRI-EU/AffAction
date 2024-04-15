@@ -361,7 +361,7 @@ const AffordanceEntity* ActionPut::initHands(const ActionScene& domain,
 
   // Determine the frame of the object at which it is grasped. This is aligned with
   // the hand's grasping frame (not the orientation necessarily if powergrasped \todo(MG)).
-  RLOG_CPP(1, "Grasp frame distance is " << std::get<2>(ca));
+  RLOG_CPP(4, "Grasp frame distance is " << std::get<2>(ca));
   const Affordance* a_grasp = std::get<1>(ca);
 
   if (!a_grasp)
@@ -432,6 +432,8 @@ void ActionPut::initOptions(const ActionScene& domain,
                           "Specify another object to put it on");
   }
 
+  RLOG_CPP(1, "Affordance map has " << affordanceMap.size() << " entries");
+
   // Erase the Supportables that are out of reach. We check for the graspingHand, since
   // derived classes (like magic_put or so) don't have a grasping hand.
   const Manipulator* graspingHand = usedManipulators.empty() ? nullptr : domain.getManipulator(usedManipulators[0]);
@@ -445,6 +447,10 @@ void ActionPut::initOptions(const ActionScene& domain,
       {
         bool canReach = graspingHand->canReachTo(&domain, graph, place->getFrame(graph)->A_BI.org);
         it = (!canReach) ? affordanceMap.erase(it) : it + 1;
+        if (!canReach)
+        {
+          RLOG_CPP(4, "Erasing " << place->frame << " - out of reach");
+        }
       }
       else
       {
@@ -462,7 +468,7 @@ void ActionPut::initOptions(const ActionScene& domain,
     {
       const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
       const bool eraseMe = !(s && (s->frame == whereOn));
-      // RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
+      RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
       it = eraseMe ? affordanceMap.erase(it) : it+1;
     }
   }

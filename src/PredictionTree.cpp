@@ -391,13 +391,27 @@ void PredictionTree::printTreeVisual(const PredictionTreeNode* node, int indent)
   if (node==root)
   {
     auto sln = findSolutionPath();
-    RCHECK(sln.size()==incomingActionSequence.size());
+    if (!sln.empty() && (sln.size() != incomingActionSequence.size()))
+    {
+      RLOG(0, "Mismatch in solution size and incoming sequence: %zu %zu", sln.size(), incomingActionSequence.size());
+    }
 
     std::cout << std::endl << "Incoming sequence: " << std::endl;
     for (size_t i = 0; i < incomingActionSequence.size(); i++)
     {
-      std::cout << "  Action #" << i << ": `" << incomingActionSequence[i] << "'";
-      std::cout << "  becomes: '" << sln[i]->action->getActionCommand() << "'" << std::endl;
+      std::cout << "  Action #" << i << ": '" << incomingActionSequence[i] << "'";
+      // if (!sln.empty())
+      // {
+      //   std::cout << "  becomes: '" << sln[i]->action->getActionCommand() << "'";
+      // }
+      std::cout << std::endl;
+    }
+
+    std::cout << std::endl << "Solution path: " << std::endl;
+    for (size_t i = 0; i < sln.size(); i++)
+    {
+      std::cout << "  Resolved #" << i << ": `" << sln[i]->action->getActionCommand() << "'";
+      std::cout << std::endl;
     }
 
     std::cout << "Number of nodes: " << getNumNodes() << std::endl;
@@ -525,7 +539,7 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
   // Get all successful leaf nodes and order so that the best one is at the first index
   getLeafNodes(leafs, onlySuccessfulOnes);
 
-  if (index >= leafs.size())
+  if (leafs.empty() || index >= leafs.size())
   {
     return std::vector<PredictionTreeNode*>();
   }

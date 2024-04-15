@@ -48,7 +48,7 @@
     <Shape scale="0.1" type="FRAME"/>
   </Body>
   
-  <AffordanceModel body="bottle_of" name="bottle_of" types="bottle">
+  <AffordanceModel body="bottle_of" types="bottle">
     <Stackable frame="bottle_of"/>
     <Pourable frame="tip_bottle_of"/>
     <Twistable frame="tip_bottle_of"/>

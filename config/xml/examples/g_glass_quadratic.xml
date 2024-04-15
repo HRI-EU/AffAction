@@ -51,7 +51,7 @@
     <Shape scale="0.1" type="FRAME"/>
   </Body>
   
-  <AffordanceModel body="glass" name="glass" types="glass">
+  <AffordanceModel body="glass" types="glass">
     <Supportable frame="glass_top"/>
     <Stackable frame="glass"/>
     <Pourable frame="glass_tip"/>

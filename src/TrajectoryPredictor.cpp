@@ -506,6 +506,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     result.message = "SUCCESS";
   }
 
+  // \todo: This is a lot of memory for large trees
   result.bodyTransforms.resize(tStack->size);
   memcpy(result.bodyTransforms.data(), tStack->ele, tStack->size*sizeof(double));
 
