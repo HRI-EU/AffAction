@@ -451,7 +451,7 @@ void ActionPut::initOptions(const ActionScene& domain,
         it++;
       }
     }
-    RLOG_CPP(0, "Done erase Supportables out of reach. Remaining: " << affordanceMap.size());
+    RLOG_CPP(1, "Done erase Supportables out of reach. Remaining: " << affordanceMap.size());
   }
 
   // Erase the Supportables that don't match the "whereOn" name if it has been specified
@@ -466,7 +466,7 @@ void ActionPut::initOptions(const ActionScene& domain,
       it = eraseMe ? affordanceMap.erase(it) : it+1;
     }
   }
-  RLOG_CPP(0, "Done erase Supportables on-top (frame: '" << whereOn << "'). Remaining: "
+  RLOG_CPP(1, "Done erase Supportables on-top (frame: '" << whereOn << "'). Remaining: "
            << affordanceMap.size());
 
   // Erase the Supportables that are farther away from an entity or agent than d_limit
@@ -476,7 +476,7 @@ void ActionPut::initOptions(const ActionScene& domain,
     double d_limit = ((!isAgent) && (distance == 0.0)) ? IS_NEAR_THRESHOLD : distance;
     eraseSupportablesFarther(domain, graph, nearTo, d_limit, affordanceMap);
   }
-  RLOG_CPP(0, "Done erase Supportables farther than. Remaining: " << affordanceMap.size());
+  RLOG_CPP(1, "Done erase Supportables farther than. Remaining: " << affordanceMap.size());
 
   // Erase the Supportables that are more close to an entity or agent than d_limit
   if (!farFrom.empty())
@@ -485,7 +485,7 @@ void ActionPut::initOptions(const ActionScene& domain,
     double d_limit = ((!isAgent) && (distance == 0.0)) ? IS_NEAR_THRESHOLD : distance;
     eraseSupportablesNearer(domain, graph, farFrom, d_limit, affordanceMap);
   }
-  RLOG_CPP(0, "Done erase Supportables nearer than. Remaining: " << affordanceMap.size());
+  RLOG_CPP(1, "Done erase Supportables nearer than. Remaining: " << affordanceMap.size());
 
   // If the map is empty after removing all non-frame Supportables, we give up.
   if (affordanceMap.empty())
@@ -498,8 +498,6 @@ void ActionPut::initOptions(const ActionScene& domain,
 
   // Erase the Supportables that are already occupied with a collideable
   {
-    //RLOG_CPP(0, "BEFORE: " << affordanceMap.size());
-
     auto it = affordanceMap.begin();
     while (it != affordanceMap.end())
     {
@@ -515,47 +513,28 @@ void ActionPut::initOptions(const ActionScene& domain,
         continue;
       }
 
-      const RcsBody* supportFrame = RcsGraph_getBodyByName(graph, supportable->frame.c_str());
-      RCHECK(supportFrame);
-      // RLOG(-1, "Checking supportFrame %s", supportFrame->name);
-
       // Traverse children of support frame and look for collideable entities
+      const RcsBody* supportFrame = supportable->getFrame(graph);
       RcsBody* child = RCSBODY_BY_ID(graph, supportFrame->firstChildId);
       bool foundCollideable = false;
 
       while (child)
       {
         const AffordanceEntity* childNTT = domain.getAffordanceEntity(child->name);
-        // RLOG(-1, "Checking  %s %s", child->name, childNTT ? childNTT->bdyName.c_str() : "NULL");
 
         if (childNTT && childNTT->isCollideable(graph))
         {
           foundCollideable = true;
-          // RLOG(-1, "Found collideable %s", childNTT->bdyName.c_str());
           break;
         }
 
         child = RCSBODY_BY_ID(graph, child->nextId);
       }
 
-
-      if (foundCollideable)
-      {
-        // RLOG(-1, "Found collideable ntt %s - removing", child->name);
-        // Due to deletion in loop, iterator became invalidated. So reset the iterator to next item.
-        it = affordanceMap.erase(it);
-      }
-      else
-      {
-        it++;
-      }
-
-
-
+      it = foundCollideable ? affordanceMap.erase(it) : it + 1;
     }
-
-    //RLOG_CPP(0, "AFTER: " << affordanceMap.size());
   }
+  RLOG_CPP(1, "Done erase Supportables that are already occupied with a collideable. Remaining: " << affordanceMap.size());
 
   // There's already something on all supportables
   if (affordanceMap.empty())
@@ -567,7 +546,7 @@ void ActionPut::initOptions(const ActionScene& domain,
   }
 
   // Create a vector of tuples with the third argument being the cost to be sorted for
-  RLOG(0, "Creating sortMap");
+  RLOG(5, "Creating sortMap");
   std::vector<std::tuple<Affordance*, Affordance*,double>> sortMap;
   for (auto& pair : affordanceMap)
   {
@@ -577,7 +556,7 @@ void ActionPut::initOptions(const ActionScene& domain,
   }
 
   // Sort with lambda compare function, lower cost at the beginning
-  RLOG(0, "Sorting sortMap");
+  RLOG(5, "Sorting sortMap");
   std::sort(sortMap.begin(), sortMap.end(),
             [](std::tuple<Affordance*, Affordance*, double>& a,
                std::tuple<Affordance*, Affordance*, double>& b)
@@ -586,14 +565,16 @@ void ActionPut::initOptions(const ActionScene& domain,
   });
 
   // Copy back to affordance map
-  RLOG(0, "Recomputing affordanceMap");
+  RLOG(5, "Recomputing affordanceMap");
   affordanceMap.clear();
   for (auto& pair : sortMap)
   {
-    RLOG_CPP(0, "Sorted: " << std::get<0>(pair)->frame << " - " << std::get<1>(pair)->frame << " : " << std::get<2>(pair));
+    RLOG_CPP(1, "Sorted: " << std::get<0>(pair)->frame << " - "
+             << std::get<1>(pair)->frame << " : " << std::get<2>(pair));
     affordanceMap.push_back(std::make_tuple(std::get<0>(pair), std::get<1>(pair)));
   }
-  RLOG_CPP(0, "Done initOptions() with heuristic re-sorting affordance map with " << affordanceMap.size() << " entries");
+  RLOG_CPP(1, "Done initOptions() with heuristic re-sorting affordance map with "
+           << affordanceMap.size() << " entries");
 }
 
 ActionPut::~ActionPut()
@@ -661,8 +642,6 @@ bool ActionPut::initialize(const ActionScene& domain,
   this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
   this->taskSurfaceOri = surfaceFrameName + "-POLAR";
   this->taskFingers = graspFrame + "_fingers";
-
-  explanation = "I'm putting the " + objName + " on the " + surfaceFrameName;
 
   //auto surfNtt = domain.getParentAffordanceEntity(graph, surfaceBdy);
   auto surfNtt = domain.getAffordanceEntity(RCSBODY_NAME_BY_ID(graph, surfaceBdy->parentId));
@@ -909,11 +888,6 @@ double ActionPut::getDurationHint() const
   return timeScaling*ActionBase::getDurationHint();
 }
 
-std::string ActionPut::explain() const
-{
-  return explanation;
-}
-
 std::vector<std::string> ActionPut::getManipulators() const
 {
   return usedManipulators;
@@ -941,7 +915,6 @@ void ActionPut::print() const
   std::cout << "taskObjSurfacePolar: " << taskObjSurfacePolar << std::endl;
   std::cout << "taskHandObjPolar: " << taskHandObjPolar << std::endl;
   std::cout << "taskFingers: " << taskFingers << std::endl;
-  std::cout << "explanation: " << explanation << std::endl;
 
   ActionBase::print();
 
@@ -1011,7 +984,7 @@ double ActionPut::actionCost(const ActionScene& domain,
 
 std::string ActionPut::getActionCommand() const
 {
-  return detailedActionCommand + " duration " + std::to_string(defaultDuration);
+  return detailedActionCommand + " duration " + std::to_string(getDurationHint());
 }
 
 

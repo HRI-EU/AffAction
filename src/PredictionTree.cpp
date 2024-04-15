@@ -115,7 +115,7 @@ PredictionTreeNode* PredictionTreeNode::addChild(const TrajectoryPredictor::Pred
 //
 //=============================================================================
 
-PredictionTree::PredictionTree()
+PredictionTree::PredictionTree() : root(nullptr), t_calc(0.0)
 {
   root = new PredictionTreeNode();
   root->success = true;
@@ -140,6 +140,13 @@ void PredictionTree::getNodes(std::vector<PredictionTreeNode*>& collection, Pred
     getNodes(collection, child);
   }
 
+}
+
+size_t PredictionTree::getNumNodes() const
+{
+  std::vector<PredictionTreeNode*> collection;
+  getNodes(collection, nullptr);
+  return collection.size();
 }
 
 void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, bool onlySuccessfulOnes, PredictionTreeNode* node) const
@@ -380,6 +387,23 @@ void PredictionTree::printTreeVisual(const PredictionTreeNode* node, int indent)
   {
     printTreeVisual(child, indent + 6);
   }
+
+  if (node==root)
+  {
+    auto sln = findSolutionPath();
+    RCHECK(sln.size()==incomingActionSequence.size());
+
+    std::cout << std::endl << "Incoming sequence: " << std::endl;
+    for (size_t i = 0; i < incomingActionSequence.size(); i++)
+    {
+      std::cout << "  Action #" << i << ": `" << incomingActionSequence[i] << "'";
+      std::cout << "  becomes: '" << sln[i]->action->getActionCommand() << "'" << std::endl;
+    }
+
+    std::cout << "Number of nodes: " << getNumNodes() << std::endl;
+    std::cout << "Number of valid solution paths: " << getNumValidPaths() << std::endl;
+    std::cout << "Calculation time[sec]: " << t_calc << std::endl << std::endl;
+  }
 }
 
 
@@ -537,6 +561,16 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
                                                                std::string& errMsg)
 {
   std::unique_ptr<PredictionTree> predictionTree = std::make_unique<PredictionTree>();
+  predictionTree->t_calc = Timer_getSystemTime();
+
+  // Strip whitespaces from action commands
+  for (size_t i = 0; i < actions.size(); i++)
+  {
+    Rcs::String_trim(actions[i]);
+  }
+
+  predictionTree->incomingActionSequence = actions;
+
   PredictionTreeNode* currentPredictionNode = predictionTree->root;
   RcsGraph* localGraph = RcsGraph_clone(graph); // Create a local copy of the graph to work with
   const RcsGraph* lookaheadGraph = localGraph;
@@ -546,7 +580,6 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
   RLOG(1, "planActionSequence: Sequence to plan:");
   for (size_t i = 0; i < actions.size(); i++)
   {
-    Rcs::String_trim(actions[i]);
     RLOG_CPP(1, "Action #" << i << ": `" << actions[i] << "'");
   }
 
@@ -688,14 +721,16 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
 
   }   // for (size_t s = 0; s < stepsToPlan; s++)
 
+  RLOG(1, "Finally destroying graph '%s'", RcsGraph_getConfigFile(localGraph));
+  RcsGraph_destroy(localGraph);
+
+  predictionTree->t_calc = Timer_getSystemTime() - predictionTree->t_calc;
+
   REXEC(-1)
   {
     predictionTree->printTreeVisual(predictionTree->root, 0);
     predictionTree->toDotFile("PredictionTree.dot");
   }
-
-  RLOG(1, "Finally destroying graph '%s'", RcsGraph_getConfigFile(localGraph));
-  RcsGraph_destroy(localGraph);
 
   const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
   if (treeDepth < stepsToPlan)
@@ -703,6 +738,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
     RMSG("Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
     return nullptr;
   }
+
 
   return std::move(predictionTree);
 }

@@ -69,13 +69,13 @@ ActionComposite::ActionComposite(const ActionComposite& other)
 {
   for (const auto& action : other.actions)
   {
-      actions.push_back(action->clone());
+    actions.push_back(action->clone());
   }
 }
 
 std::unique_ptr<ActionBase> ActionComposite::clone() const
 {
-    return std::unique_ptr<ActionComposite>();
+  return std::unique_ptr<ActionComposite>();
 }
 
 void ActionComposite::addAction(ActionBase* action)
@@ -162,7 +162,6 @@ public:
 
   ActionDoubleGet(const ActionDoubleGet& other) : ActionComposite(other)
   {
-      explanation = other.explanation;
   }
 
   std::unique_ptr<ActionBase> clone() const override
@@ -254,15 +253,8 @@ public:
       throw std::invalid_argument("Failed to create ActionDoubleGet");
     }
 
-    explanation = "Getting " + params[0] + " and " + params[1];
   }
 
-  std::string explain() const
-  {
-    return explanation;
-  }
-
-  std::string explanation;
 };
 
 REGISTER_ACTION(ActionDoubleGet, "double_get");
@@ -283,7 +275,6 @@ public:
 
   ActionDoublePut(const ActionDoubleGet& other) : ActionComposite(other)
   {
-      explanation = other.explanation;
   }
 
   std::unique_ptr<ActionBase> clone() const override
@@ -334,15 +325,8 @@ public:
       throw std::invalid_argument("ERROR REASON: Failed to create sub-action.");
     }
 
-    explanation = "Putting down " + params[0] + " and " + params[1];
   }
 
-  std::string explain() const
-  {
-    return explanation;
-  }
-
-  std::string explanation;
 };
 
 REGISTER_ACTION(ActionDoublePut, "double_put");
@@ -363,7 +347,6 @@ public:
 
   ActionMultiString(const ActionDoubleGet& other) : ActionComposite(other)
   {
-      explanation = other.explanation;
   }
 
   std::unique_ptr<ActionBase> clone() const override
@@ -382,7 +365,8 @@ public:
       for (size_t i = 0; i < params.size(); ++i)
       {
         std::vector<std::string> words = Rcs::String_split(params[i], " ");
-        addAction(ActionFactory::create(domain, graph, words, explanation));
+        std::string errMsg;
+        addAction(ActionFactory::create(domain, graph, words, errMsg));
       }
     }
     catch (const ActionException& ex)
@@ -394,15 +378,7 @@ public:
       throw std::invalid_argument("Failed to create ActionMultiString");
     }
 
-    explanation = "Doing parallel multi-action";
   }
-
-  std::string explain() const
-  {
-    return explanation;
-  }
-
-  std::string explanation;
 
 };
 
@@ -424,7 +400,6 @@ public:
 
   ActionGazeAndGet(const ActionDoubleGet& other) : ActionComposite(other)
   {
-      explanation = other.explanation;
   }
 
   std::unique_ptr<ActionBase> clone() const override
@@ -452,12 +427,6 @@ public:
       throw std::invalid_argument("FATAL_ERROR REASON: Failed to create sub-action");
     }
 
-    explanation = "Doing parallel multi-action";
-  }
-
-  std::string explain() const
-  {
-    return actions[0]->explain();   // Same explanation as in "get"
   }
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
@@ -509,7 +478,6 @@ public:
     return actions[0]->initialize(domain, graph, solutionRank);
   }
 
-  std::string explanation;
 };
 
 REGISTER_ACTION(ActionGazeAndGet, "gaze_and_get");

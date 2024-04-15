@@ -242,8 +242,6 @@ bool ActionDoor::initialize(const ActionScene& domain,
   this->taskRelOri = handName + "-" + doorHandle + "-ABC";
   this->taskHinge = doorHingeJoint + "-Joint";
 
-  explanation = "I'm opening the " + std::string(handleParent->name);
-
   return true;
 }
 
@@ -320,11 +318,6 @@ tropic::TCS_sptr ActionDoor::createTrajectory(double t_start, double t_end) cons
 double ActionDoor::getDurationHint() const
 {
   return 20.0;
-}
-
-std::string ActionDoor::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionDoor::getManipulators() const

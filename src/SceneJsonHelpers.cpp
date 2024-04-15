@@ -415,9 +415,7 @@ nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
 
   for (const auto& m : heads)
   {
-    const RcsBody* head = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
-    RCHECK_MSG(head, "Couldn't find RcsBody \"%s\" for head manipulator \"%s\" of agent \"%s\"",
-               m->bdyName.c_str(), m->name.c_str(), agentName.c_str());
+    const RcsBody* head = m->body(graph);
     const double* eyePos = head->A_BI.org;
 
     std::vector<const AffordanceEntity*> ntts = scene->getAffordanceEntities(objectName);

@@ -94,7 +94,6 @@ ActionDrop::ActionDrop(const ActionScene& domain,
   this->taskInclination = graspingHand->name + "-InclinationY";
   this->taskPosition = graspingHand->name + "-XYZ";
   this->taskFingers = graspingHand->name + "_fingers";
-  this->explanation = "I'm dropping the " + objectToDrop;
 
   // We only allow dropping objects on "Supportables".
   const AffordanceEntity* surface = NULL;
@@ -249,11 +248,6 @@ double ActionDrop::getDurationHint() const
 size_t ActionDrop::getNumSolutions() const
 {
   return affordanceMap.size();
-}
-
-std::string ActionDrop::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionDrop::getManipulators() const

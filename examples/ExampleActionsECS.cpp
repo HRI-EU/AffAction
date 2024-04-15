@@ -66,6 +66,8 @@
 #include <iostream>
 #include <thread>
 
+#define NUM_SCENEQUERIES (5)
+
 
 void AffActionExampleInfo()
 {
@@ -241,6 +243,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   verbose = true;
   processingAction = false;
   lookahead = false;
+  turbo = true;
 
   dtProcess = 0.0;
   dtEvents = 0.0;
@@ -312,6 +315,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-lookahead", &lookahead, "Perform lookahead for whole sequences");
   parser->getArgument("-lookaheadCount", &lookaheadCount, "Number of actions to lookahead");
+  parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -476,7 +480,6 @@ bool ExampleActionsECS::initAlgo()
   graphC->setEnableRender(false);//\todo MG CHECK
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
-  //trajC->enableDebugRendering(false);
 
   // Inverse kinematics controller, no constraints, right inverse
   ikc = std::make_unique<aff::IKComponent>(&entity, controller.get(), ikType);
@@ -506,9 +509,9 @@ bool ExampleActionsECS::initAlgo()
   // Initialization sequence to initialize all graphs from the sensory state
   entity.initialize(graphC->getGraph());
 
-  this->sceneQuery = std::make_unique<ConcurrentSceneQuery>(this);
-  this->sceneQuery2 = std::make_unique<ConcurrentSceneQuery>(this);
-  this->panTiltQuery = std::make_unique<ConcurrentSceneQuery>(this);
+  this->sceneQuery = std::make_unique<SceneQueryPool>(this, NUM_SCENEQUERIES);
+
+  ActionBase::setTurboMode(turbo);
 
   RLOG_CPP(0, help());
 
@@ -534,7 +537,6 @@ bool ExampleActionsECS::initGraphics()
   viewer = std::make_unique<aff::GraphicsWindow>(&entity, false);
   viewer->add(new NamedMouseDragger(controller->getGraph()));
   viewer->setTitle("ExampleActionsECS");
-  //viewer->setCameraTransform(-3.923553, -3.427215, 3.719906, -0.253100, 0.551730, 0.595891);
 
   // Check if there is a body named 'initial_camera_view'.
   double q_cam[6];
@@ -807,7 +809,7 @@ bool ExampleActionsECS::initGraphics()
     RLOG(0, "Test pan tilt angle calculation");
 
     double t_calc = Timer_getSystemTime();
-    std::vector<double> panTilt = panTiltQuery->getPanTilt("robot", "id_6328686182f50bb1672483c3");
+    std::vector<double> panTilt = sceneQuery->instance()->getPanTilt("robot", "glass_blue");
 
 
     // Agent* robo_ = getScene()->getAgent("robot");
@@ -891,7 +893,7 @@ void ExampleActionsECS::run()
     seqCmd.push_back("get id_653a43c5b914a01674642a45");
     seqCmd.push_back("put id_653a43c5b914a01674642a45 id_659fdeb2adfdf5b78af73fed_close");
     seqCmd.push_back("pose default");
-    auto res = sceneQuery2->planActionSequence(seqCmd, seqCmd.size());
+    auto res = sceneQuery->instance()->planActionSequence(seqCmd, seqCmd.size());
     std::string newCmd;
     for (size_t i = 0; i < res.size(); ++i)
     {
@@ -985,6 +987,7 @@ std::string ExampleActionsECS::help()
   s << Rcs::RcsGraph_printUsageToString(xmlFileName);
   s << Rcs::RcsShape_distanceFunctionsToString();
   s << std::endl << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
+  s << std::endl << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
 
   return s.str();
 }
@@ -1000,7 +1003,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         size_t maxNumThreads)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto tree = ex->sceneQuery2->planActionTree(seq, maxNumThreads);
+  auto tree = ex->getQuery()->planActionTree(seq, maxNumThreads);
 
   std::vector<std::string> predictedActions;
 
@@ -1297,7 +1300,7 @@ void ExampleActionsECS::onTextCommand(std::string text)
   {
     std::thread feedbackThread([this]()
     {
-      std::string fb = sceneQuery->getSceneState().dump();
+      std::string fb = sceneQuery->instance()->getSceneState().dump();
       entity.publish("SendWebsocket", fb);
     });
     feedbackThread.detach();
@@ -1392,7 +1395,7 @@ void ExampleActionsECS::onActionResult(bool success, double quality, std::string
   {
     addToCompletedActionStack(actionStack[0], resMsg);
 
-    if (verbose)
+    REXEC(1)
     {
       printCompletedActionStack();
     }
@@ -1490,22 +1493,32 @@ const ActionScene* ExampleActionsECS::getScene() const
 
 RcsGraph* ExampleActionsECS::getGraph()
 {
-  return controller->getGraph();
+  return controller ? controller->getGraph() : nullptr;
 }
 
 const RcsGraph* ExampleActionsECS::getGraph() const
 {
-  return controller->getGraph();
+  return controller ? controller->getGraph() : nullptr;
 }
 
 RcsBroadPhase* ExampleActionsECS::getBroadPhase()
 {
-  return controller->getBroadPhase();
+  return controller ? controller->getBroadPhase() : nullptr;
 }
 
 const RcsBroadPhase* ExampleActionsECS::getBroadPhase() const
 {
-  return controller->getBroadPhase();
+  return controller ? controller->getBroadPhase() : nullptr;
+}
+
+std::shared_ptr<ConcurrentSceneQuery> ExampleActionsECS::getQuery()
+{
+  return sceneQuery ? sceneQuery->instance() : nullptr;
+}
+
+GraphicsWindow* ExampleActionsECS::getViewer()
+{
+  return viewer.get();
 }
 
 void ExampleActionsECS::startThreaded()

@@ -56,7 +56,6 @@ public:
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   double getDurationHint() const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,
                                         double duration) const;

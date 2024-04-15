@@ -249,11 +249,6 @@ std::vector<double> ActionPose::computeMaxVel(const RcsGraph* graph, double& max
   return maxVel;
 }
 
-std::string ActionPose::explain() const
-{
-  return explanation;
-}
-
 std::vector<std::string> ActionPose::getManipulators() const
 {
   return usedManipulators;
@@ -278,7 +273,7 @@ std::string ActionPose::getActionCommand() const
     aCmd += " " + std::to_string(poses[solutionIndex].timeStamp);
   }
 
-  aCmd += " duration " + std::to_string(defaultDuration);
+  aCmd += " duration " + std::to_string(getDurationHint());
 
   return aCmd;
 }

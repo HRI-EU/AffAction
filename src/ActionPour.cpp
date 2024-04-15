@@ -56,20 +56,14 @@ ActionPour::ActionPour(const ActionScene& domain,
                        std::vector<std::string> params) :
   glasInHand(false), bottleInRightHand(true), pouringVolume(0.1)
 {
+  defaultDuration = 20.0;
+  parseParams(params);
+
   if (params.size()<2)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Action has less than two parameters. At least two parameters are needed: The container to pour from, and the container to pour into.",
                           "Correct the action command.");
-  }
-
-  defaultDuration = 20.0;
-  auto it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
   }
 
   const std::string& objectToPourFrom = params[0];
@@ -240,8 +234,6 @@ void ActionPour::init(const ActionScene& domain,
     glasInHand = false;
   }
 
-  explanation = "I'm pouring " + std::to_string(this->pouringVolume) + " liters from the " +
-                pourFromAff->name + " into the " + pourToAff->name;
 }
 
 ActionPour::~ActionPour()
@@ -365,11 +357,6 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   }
 
   return a1;
-}
-
-std::string ActionPour::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionPour::getManipulators() const

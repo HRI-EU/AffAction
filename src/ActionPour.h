@@ -53,7 +53,6 @@ public:
   std::unique_ptr<ActionBase> clone() const override;
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
 
 protected:
@@ -78,8 +77,6 @@ protected:
   std::string taskGlasOri;
   std::string taskGlasPosX;
   std::string taskGlasPosZ;
-
-  std::string explanation;
 
   std::vector<std::string> usedManipulators;
   std::vector<std::string> particlesToPour;

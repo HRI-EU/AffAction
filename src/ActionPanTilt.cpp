@@ -54,6 +54,9 @@ ActionPanTilt::ActionPanTilt(const ActionScene& scene,
   isGazeTargetInHand(false),
   keepTasksActiveAfterEnd(true)
 {
+  defaultDuration = 3.0;
+  parseParams(params);
+
   if (params.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
@@ -170,8 +173,6 @@ ActionPanTilt::ActionPanTilt(const ActionScene& scene,
 
   // Task naming
   this->taskGaze = "Gaze-" + cameraFrame + "-" + gazeTargetInstance;
-
-  explanation = "I'm gazing at the " + gazeTarget;
 }
 
 ActionPanTilt::~ActionPanTilt()
@@ -244,16 +245,6 @@ tropic::TCS_sptr ActionPanTilt::createTrajectoryPanTilt(double t_start, double t
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {0.0, 0.0}, taskGaze));
 
   return a1;
-}
-
-double ActionPanTilt::getDurationHint() const
-{
-  return 3.0;
-}
-
-std::string ActionPanTilt::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionPanTilt::getManipulators() const

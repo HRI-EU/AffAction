@@ -53,7 +53,6 @@ public:
   std::unique_ptr<ActionBase> clone() const;
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
 
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
@@ -76,8 +75,6 @@ protected:
   std::string taskHandPos;
   std::string taskHandOri;
   std::string taskFingers;
-
-  std::string explanation;
 
   std::vector<std::string> usedManipulators;
 

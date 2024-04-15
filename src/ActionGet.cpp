@@ -120,7 +120,7 @@ std::string ActionGet::getActionCommand() const
   }
   actionCommand += graspTypeToString(graspType);
 
-  actionCommand += " duration " + std::to_string(defaultDuration);
+  actionCommand += " duration " + std::to_string(getDurationHint());
 
   return actionCommand;
 }
@@ -175,7 +175,10 @@ void ActionGet::init(const ActionScene& domain,
       // - the object is grasped, and no hand to grasp it has been specified (parameter "manipulator" is empty)
       if (graspingHand && ((graspingHand == specifiedHand) || (!specifiedHand)))
       {
-        throw ActionException(ActionException::NoError, "", "", "Object is already held in the hand");
+        throw ActionException(ActionException::NoError,
+                              "The " + objectToGet + " is already held in the hand.",
+                              "Continue with next action",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
       // If not, we take the first one we find.
       else
@@ -1024,12 +1027,6 @@ std::vector<std::string> ActionGet::createTasksXML() const
   return tasks;
 }
 
-std::string ActionGet::explain() const
-{
-  //return std::string("I'm getting the " + objectName + " with my " + capabilityFrame);
-  return std::string("I'm getting the " + objectName);
-}
-
 std::vector<std::string> ActionGet::getManipulators() const
 {
   return usedManipulators;
@@ -1055,7 +1052,7 @@ size_t ActionGet::getNumSolutions() const
 double ActionGet::getDurationHint() const
 {
   const double timeScaling = (graspType == GraspType::TopGrasp) ? 1.5 : 1.0;
-  return defaultDuration;
+  return timeScaling*defaultDuration;
 }
 
 std::string ActionGet::graspTypeToString(GraspType gType)

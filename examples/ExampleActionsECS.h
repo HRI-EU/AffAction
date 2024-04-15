@@ -71,22 +71,6 @@ class ExampleActionsECS : public Rcs::ExampleBase
 {
 public:
 
-  EntityBase entity;
-  double trajTime;
-  std::string xmlFileName;
-  std::string config_directory;
-  std::string sequenceCommand;
-  std::string lastResultMsg;
-  std::vector<std::string> actionStack;
-  IKComponent::IkSolverType ikType;
-  double dt, dt_max, dt_max2, alpha, lambda;
-  unsigned int speedUp, loopCount, lookaheadCount;
-  bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
-  bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
-  bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded, verbose, processingAction, lookahead;
-  double dtProcess, dtEvents;
-
   ExampleActionsECS(int argc, char** argv);
   virtual ~ExampleActionsECS();
 
@@ -109,6 +93,8 @@ public:
   const RcsGraph* getGraph() const;
   RcsBroadPhase* getBroadPhase();
   const RcsBroadPhase* getBroadPhase() const;
+  std::shared_ptr<ConcurrentSceneQuery> getQuery();
+  GraphicsWindow* getViewer();
 
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
@@ -120,17 +106,30 @@ public:
   void lockStepMtx() const;
   void unlockStepMtx() const;
 
-  std::unique_ptr<ActionComponent> actionC;
+  EntityBase entity;
+  double trajTime;
+  std::string xmlFileName;
+  std::string config_directory;
+  std::string sequenceCommand;
+  std::string lastResultMsg;
+  std::vector<std::string> actionStack;
+  IKComponent::IkSolverType ikType;
+  double dt, dt_max, dt_max2, alpha, lambda;
+  unsigned int speedUp, loopCount, lookaheadCount;
+  bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
+  bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
+  bool plot, valgrind, unittest, withRobot;
+  bool singleThreaded, verbose, processingAction, lookahead, turbo;
+  double dtProcess, dtEvents;
+
   std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<GraphicsWindow> viewer;
-  std::unique_ptr<ConcurrentSceneQuery> sceneQuery;
-  std::unique_ptr<ConcurrentSceneQuery> sceneQuery2;
-  std::unique_ptr<ConcurrentSceneQuery> panTiltQuery;
-
 
 private:
 
   std::unique_ptr<Rcs::ControllerBase> controller;
+  std::unique_ptr<SceneQueryPool> sceneQuery;
+  std::unique_ptr<ActionComponent> actionC;
   std::unique_ptr<TextEditComponent> textGui;
   std::unique_ptr<TrajectoryComponent> trajC;
   std::unique_ptr<IKComponent> ikc;

@@ -152,7 +152,6 @@ public:
   virtual tropic::TCS_sptr createTrajectory() const;
   virtual double getDurationHint() const;
   virtual void setDuration(double duration);
-  virtual std::string explain() const;
   void setName(const std::string& name);
   std::string getName() const;
   void setActionParams(const std::vector<std::string>& params);
@@ -160,6 +159,8 @@ public:
   virtual void print() const;
   virtual double actionCost(const ActionScene& domain,
                             const RcsGraph* graph) const;
+
+  static void setTurboMode(bool enable);
 
   static std::vector<std::string> planActionSequence(ActionScene& domain,
                                                      RcsGraph* graph,
@@ -210,6 +211,7 @@ private:
   std::string actionName;
   std::vector<std::string> actionParams;
   std::vector<double> optimState;
+  static bool defaultTurbo;
 };
 
 }   // namespace aff

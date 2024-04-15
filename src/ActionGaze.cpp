@@ -53,6 +53,9 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   isGazeTargetInHand(false),
   keepTasksActiveAfterEnd(true)
 {
+  defaultDuration = 3.0;
+  parseParams(params);
+
   if (params.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
@@ -179,8 +182,6 @@ ActionGaze::ActionGaze(const ActionScene& scene,
 
   // Task naming
   this->taskGaze = "Gaze-" + cameraFrame + "-" + gazeTargetInstance;
-
-  explanation = agentName + " is gazing at the " + gazeTarget;
 }
 
 ActionGaze::~ActionGaze()
@@ -225,16 +226,6 @@ tropic::TCS_sptr ActionGaze::createTrajectory(double t_start, double t_end) cons
   }
 
   return a1;
-}
-
-double ActionGaze::getDurationHint() const
-{
-  return 3.0;
-}
-
-std::string ActionGaze::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionGaze::getManipulators() const

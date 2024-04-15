@@ -58,14 +58,7 @@ ActionPass::ActionPass(const ActionScene& domain,
                        const RcsGraph* graph,
                        std::vector<std::string> params)
 {
-  auto it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
-  {
-    defaultDuration = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
-  }
-
+  parseParams(params);
   init(domain, graph, params[0], params.size() > 1 ? params[1] : std::string());
 }
 
@@ -231,8 +224,6 @@ void ActionPass::init(const ActionScene& domain,
   this->taskHandOri = graspingHand->name + "-Polar";
   this->taskFingers = graspingHand->name + "_fingers";
 
-  explanation = "I'm passing the " + object->bdyName + " to " + agent->name;
-
   // Initialize with the best solution.
   bool successInit = initialize(domain, graph, 0);
   RCHECK(successInit);
@@ -296,11 +287,6 @@ ActionPass::createTrajectory(double t_start, double t_end) const
   a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, objectRcsName, true));
 
   return a1;
-}
-
-std::string ActionPass::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionPass::getManipulators() const

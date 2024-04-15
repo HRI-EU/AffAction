@@ -210,13 +210,11 @@ The project is composed of three parts:
 
   - inf in prediction cost
   - used_manipulators
-  - separate prediction animation
-    - and add event so that tree prediction can be visualized
   - open-world
   - action trees
   - pose actions more flexible
   - remove explanation string
-  - SceneQuery factory class
+  - smart pointers for tree nodes and prediction results
 
 
 

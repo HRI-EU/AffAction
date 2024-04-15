@@ -72,7 +72,7 @@ void _planActionSequenceThreaded(aff::ExampleLLMSim& ex,
                                  size_t maxNumThreads)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto res = ex.sceneQuery2->planActionSequence(seq, maxNumThreads);
+  auto res = ex.getQuery()->planActionSequence(seq, maxNumThreads);
 
   if (res.empty())
   {
@@ -197,7 +197,7 @@ PYBIND11_MODULE(pyAffaction, m)
       ex.entity.publish("Render");
       ex.entity.process();
 
-      // ex.viewer->setKeyCallback('l', [&ex](char k)
+      // ex.getViewer()->setKeyCallback('l', [&ex](char k)
       // {
       //   RLOG(0, "Toggle talk flag");
       //   ex.entity.publish("ToggleASR");
@@ -237,7 +237,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("getOccludedObjectsForAgent", [](aff::ExampleLLMSim& ex, std::string agentName) -> nlohmann::json
   {
-    return ex.sceneQuery->getOccludedObjectsForAgent(agentName);
+    return ex.getQuery()->getOccludedObjectsForAgent(agentName);
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -246,7 +246,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("isOccludedBy", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objectName) -> nlohmann::json
   {
-    return ex.sceneQuery->getObjectOccludersForAgent(agentName, objectName);
+    return ex.getQuery()->getObjectOccludersForAgent(agentName, objectName);
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -255,7 +255,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("isBusy", [](aff::ExampleLLMSim& ex, std::string agentName) -> bool
   {
-    return ex.sceneQuery->isAgentBusy(agentName, 0.15);
+    return ex.getQuery()->isAgentBusy(agentName, 0.15);
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -265,7 +265,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     RLOG(0, "Pan tilt angle calculation");
 
-    if (!ex.panTiltQuery)
+    if (!ex.getQuery())
     {
       RLOG(0, "panTiltQuery not yet constructed");
       double buf = 0.0;
@@ -273,7 +273,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return pybind11::detail::MatNd_toNumpy(&tmp);
     }
 
-    std::vector<double> panTilt = ex.panTiltQuery->getPanTilt(roboAgent, gazeTarget);
+    std::vector<double> panTilt = ex.getQuery()->getPanTilt(roboAgent, gazeTarget);
 
     if (panTilt.empty())
     {
@@ -444,7 +444,7 @@ PYBIND11_MODULE(pyAffaction, m)
 
   .def("get_state", [](aff::ExampleLLMSim& ex) -> std::string
   {
-    return ex.sceneQuery->getSceneState().dump();
+    return ex.getQuery()->getSceneState().dump();
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -453,7 +453,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("get_objects", [](aff::ExampleLLMSim& ex) -> nlohmann::json
   {
-    return ex.sceneQuery->getObjects();
+    return ex.getQuery()->getObjects();
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -462,7 +462,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("get_agents", [](aff::ExampleLLMSim& ex) -> nlohmann::json
   {
-    return ex.sceneQuery->getAgents();
+    return ex.getQuery()->getAgents();
   })
 
   .def("step", &aff::ExampleActionsECS::step)
@@ -504,7 +504,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("predictActionSequence", [](aff::ExampleLLMSim& ex, std::string sequenceCommand) -> std::vector<std::string>
   {
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    return ex.sceneQuery2->planActionSequence(seq, seq.size());
+    return ex.getQuery()->planActionSequence(seq, seq.size());
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -526,7 +526,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("planActionSequence", [](aff::ExampleLLMSim& ex, std::string sequenceCommand, bool blocking) -> bool
   {
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    auto res = ex.sceneQuery->planActionSequence(seq, seq.size());
+    auto res = ex.getQuery()->planActionSequence(seq, seq.size());
 
     if (res.empty())
     {
@@ -571,7 +571,7 @@ PYBIND11_MODULE(pyAffaction, m)
                           bool gazeAtSpeaker,
                           bool speakOut) -> bool
   {
-    if (!ex.actionC)
+    if (!ex.getScene())
     {
       RLOG(0, "Initialize ExampleLLMSim before adding Respeaker - skipping");
       return false;
@@ -607,14 +607,14 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addLandmarkROS", [](aff::ExampleLLMSim& ex) -> bool
   {
-    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
     aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-landmarks_ros");
     if (c)
     {
       ex.addComponent(c);
       aff::LandmarkBase* lmc = dynamic_cast<aff::LandmarkBase*>(c);
       RCHECK(lmc);
-      lmc->enableDebugGraphics(ex.viewer.get());
+      lmc->enableDebugGraphics(ex.getViewer());
       return true;
     }
 
@@ -627,7 +627,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addLandmarkZmq", [](aff::ExampleLLMSim& ex) -> bool
   {
-    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
 
     RLOG(0, "Adding trackers");
     std::string connection="tcp://localhost:5555";
@@ -644,13 +644,13 @@ PYBIND11_MODULE(pyAffaction, m)
 
     // Add skeleton tracker and ALL agents in the scene
     int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    lmc->enableDebugGraphics(ex.viewer.get());
+    lmc->enableDebugGraphics(ex.getViewer());
     RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
 
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
 
-    ex.viewer->setKeyCallback('W', [&ex](char k)
+    ex.getViewer()->setKeyCallback('W', [&ex](char k)
     {
       RLOG(0, "Calibrate camera");
       ex.entity.publish("EstimateCameraPose", 20);
@@ -667,7 +667,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addPTU", [](aff::ExampleLLMSim& ex) -> bool
   {
-    RCHECK_MSG(ex.actionC, "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
     aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-ptu");
     if (c)
     {
@@ -791,7 +791,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("enableDebugGraphics", [](aff::LandmarkBase& lm, py::object obj)
   {
     aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
-    lm.enableDebugGraphics(sim->viewer.get());
+    lm.enableDebugGraphics(sim->getViewer());
   })
   .def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
   {

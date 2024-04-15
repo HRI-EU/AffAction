@@ -46,15 +46,14 @@ class ActionPut : public ActionBase
 public:
 
   ActionPut();
-            ActionPut(const ActionScene& domain,
-                      const RcsGraph* graph,
-                      std::vector<std::string> params);
+  ActionPut(const ActionScene& domain,
+            const RcsGraph* graph,
+            std::vector<std::string> params);
 
   virtual ~ActionPut();
   std::unique_ptr<ActionBase> clone() const;
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,
                                         double duration) const;
@@ -74,7 +73,7 @@ protected:
                     const std::string& place) const;
 
   void parseArgs(const ActionScene& domain,
-            const RcsGraph* graph,
+                 const RcsGraph* graph,
                  std::vector<std::string>& params);
 
   const AffordanceEntity* initHands(const ActionScene& domain,
@@ -84,7 +83,7 @@ protected:
   void initOptions(const ActionScene& domain,
                    const RcsGraph* graph,
                    const AffordanceEntity* object,
-            const std::string& surface);
+                   const std::string& surface);
 
   std::vector<std::string> createTasksXML() const;
 
@@ -111,7 +110,6 @@ protected:
   std::string taskSurfaceOri;   // In case the object to put on is in the robot's hand
   std::string taskFingers;
 
-  std::string explanation;
   std::string whereOn;   // Optional keyword specifying the name of the Supportable to put the object on.
   std::string nearTo;    // Keyword specifying the name of an entity or agent near to which the object is to be put.
   std::string farFrom;   // Keyword specifying the name of an entity or agent far of which the object is to be put.

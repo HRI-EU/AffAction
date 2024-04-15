@@ -73,7 +73,14 @@ const RcsBody* ActionBase::resolveBodyName(const RcsGraph* graph,
   return bdy;
 }
 
-ActionBase::ActionBase() : defaultDuration(10.0), turbo(false)
+bool ActionBase::defaultTurbo = false;
+
+void ActionBase::setTurboMode(bool enable)
+{
+  defaultTurbo = enable;
+}
+
+ActionBase::ActionBase() : defaultDuration(10.0), turbo(defaultTurbo)
 {
 }
 
@@ -245,11 +252,6 @@ tropic::TCS_sptr ActionBase::createTrajectory() const
   return createTrajectory(0.0, getDurationHint());
 }
 
-std::string ActionBase::explain() const
-{
-  return getActionCommand();
-}
-
 void ActionBase::setName(const std::string& name)
 {
   actionName = name;
@@ -288,6 +290,7 @@ void ActionBase::print() const
   }
 
   std::cout << "Action default duration: " << getDurationHint() << std::endl;
+  std::cout << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
 }
 
 std::vector<double> ActionBase::getOptimState() const

@@ -66,17 +66,13 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
                                    const RcsGraph* graph,
                                    std::vector<std::string> params)
 {
+  parseParams(params);
+
   if (params.empty())
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Action expects at least 1 parameter, but received 0");
   }
-
-
-
-
-
-
 
   {
     // Initialize object to push. It must have a PointPushable affordance
@@ -211,12 +207,6 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     }
   }
 
-  explanation = "I'm pushing the " + params[0];
-  if (params.size() > 1)
-  {
-    explanation += " with the ";
-    explanation += params[1];
-  }
 }
 
 ActionFingerPush::~ActionFingerPush()
@@ -305,11 +295,6 @@ tropic::TCS_sptr ActionFingerPush::createTrajectory(double t_start, double t_end
 double ActionFingerPush::getDurationHint() const
 {
   return 2.0*8.0;
-}
-
-std::string ActionFingerPush::explain() const
-{
-  return explanation;
 }
 
 std::vector<std::string> ActionFingerPush::getManipulators() const

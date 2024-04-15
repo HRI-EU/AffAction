@@ -64,7 +64,6 @@ public:
   virtual tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
 
   void print() const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
   virtual size_t getNumSolutions() const;
   virtual double getDurationHint() const;

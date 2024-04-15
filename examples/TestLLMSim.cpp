@@ -89,6 +89,17 @@ int main(int argc, char** argv)
 
   Rcs::CmdLineParser argP;
 
+  bool testSceneQuery = false;
+  argP.getArgument("-testSceneQuery", &testSceneQuery, "Test ConcurrentSceneQuery pool");
+
+  if (testSceneQuery)
+  {
+    aff::SceneQueryPool::test(&ex);
+    RPAUSE();
+  }
+
+
+
   bool withTracking = argP.hasArgument("-tracking", "Use tracking component");
   std::unique_ptr<aff::LandmarkZmqComponent> lmc;
 

@@ -58,8 +58,6 @@ public:
 
   std::vector<std::string> createTasksXML() const;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  double getDurationHint() const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
 
   std::string agentName;
@@ -67,7 +65,6 @@ public:
   std::string gazeTargetInstance;
   std::string cameraFrame;
   std::string taskGaze;
-  std::string explanation;
   std::vector<std::string> usedManipulators;
   bool isGazeTargetInHand;
   bool keepTasksActiveAfterEnd;

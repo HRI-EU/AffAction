@@ -56,7 +56,6 @@ public:
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   double getDurationHint() const;
-  std::string explain() const;
   std::vector<std::string> getManipulators() const;
   size_t getNumSolutions() const;
 
@@ -64,7 +63,6 @@ protected:
 
   std::vector<std::string> createTasksXML() const;
 
-  std::string explanation;
   std::string objectToDrop;
   std::string surfaceName;     // Name of surface to drop on
   std::string graspFrameName;  // Name of a grasp frame, for inclination task

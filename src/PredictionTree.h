@@ -114,6 +114,8 @@ class PredictionTree
 {
 public:
   PredictionTreeNode* root; /**< Pointer to the root node of the tree. */
+  double t_calc;
+  std::vector<std::string> incomingActionSequence;
 
   /**
    * @brief Default constructor.
@@ -139,6 +141,11 @@ public:
    * @brief Returns a vector of all tree nodes.
    */
   void getNodes(std::vector<PredictionTreeNode*>& collection, PredictionTreeNode* node=nullptr) const;
+
+  /**
+   * @brief Returns the number of tree nodes.
+   */
+  size_t getNumNodes() const;
 
   /**
    * @brief Returns a vector of all leaf nodes.
