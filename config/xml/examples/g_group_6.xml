@@ -29,6 +29,12 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
+  <ActionSequence name="1" text="get bottle_of_cola;pour bottle_of_cola glass_red;put bottle_of_cola;get glass_red;pass glass_red Felix" />
+  <ActionSequence name="2" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola far glass_blue;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
+  <ActionSequence name="3" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
+  <ActionSequence name="4" text="pose watchit_eye fast; pose watchit_point fast; pose default_up fast" />
+	
+
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
     <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
@@ -64,7 +70,7 @@
     <xi:include href="g_table.xml"/>
   </Group>
 
-  <Group prev="table" name="_cola" color="BLACK_RUBBER" rigid_body_joints="0 0 0 0 0 0" >
+  <Group prev="table_grid_0_4" name="_cola" color="BLACK_RUBBER" rigid_body_joints="0 0 0 0 0 0" >
     <xi:include href="g_bottle_rewe.xml"/>
   </Group>
 
