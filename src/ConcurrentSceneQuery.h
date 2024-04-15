@@ -42,6 +42,7 @@
 #include <Rcs_broadphase.h>
 
 #include <mutex>
+#include <memory>
 
 
 
@@ -49,6 +50,10 @@ namespace aff
 {
 
 class ExampleActionsECS;
+
+
+
+
 
 class ConcurrentSceneQuery
 {
@@ -102,6 +107,22 @@ private:
   RcsBroadPhase* broadphase;
   ActionScene scene;
   std::mutex reentrancyLock;
+};
+
+
+
+class SceneQueryPool
+{
+public:
+  SceneQueryPool(const ExampleActionsECS* sim, size_t nInstances);
+
+  std::shared_ptr<ConcurrentSceneQuery> instance();
+
+  static void test(const ExampleActionsECS* sim);
+
+private:
+  std::vector<std::shared_ptr<ConcurrentSceneQuery>> queries;
+  std::mutex mtx;
 };
 
 

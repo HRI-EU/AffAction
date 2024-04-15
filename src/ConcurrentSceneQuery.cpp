@@ -45,6 +45,50 @@
 namespace aff
 {
 
+
+SceneQueryPool::SceneQueryPool(const ExampleActionsECS* sim, size_t nInstances)
+{
+  for (size_t i = 0; i < nInstances; ++i)
+  {
+    queries.push_back(std::make_shared<ConcurrentSceneQuery>(sim));
+  }
+}
+
+std::shared_ptr<ConcurrentSceneQuery> SceneQueryPool::instance()
+{
+  std::lock_guard<std::mutex> lock(mtx);
+
+  for (size_t i = 0; i < queries.size(); ++i)
+  {
+    if (queries[i].use_count() == 1)
+    {
+      RLOG_CPP(0, "Returning query " << i);
+      return queries[i];
+    }
+  }
+
+  RLOG_CPP(0, "No query found");
+  return nullptr;
+}
+
+void SceneQueryPool::test(const ExampleActionsECS* sim)
+{
+  RLOG(0, "SceneQueryFactory::test()");
+  SceneQueryPool f(sim, 3);
+
+  {
+    auto sq1 = f.instance();
+    auto sq2 = f.instance();
+  }
+  auto sq3 = f.instance();
+  auto sq4 = f.instance();
+  auto sq5 = f.instance();
+  auto sq6 = f.instance();
+}
+
+
+
+
 ConcurrentSceneQuery::ConcurrentSceneQuery(const ExampleActionsECS* sim_) :
   sim(sim_), graph(NULL), broadphase(NULL)
 {
