@@ -233,7 +233,8 @@ PYBIND11_MODULE(pyAffaction, m)
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if the agent can see all objects or a json in the form:
-  // {"occluded": ["entity name 1", "entity name 2"] }
+  // for the agent: {"occluded": [{"name": "entity name 1", "instance_id": "entity id 1"},
+  //                              {"name": "entity name 2", "instance_id": "entity id 2"}]}
   //////////////////////////////////////////////////////////////////////////////
   .def("getOccludedObjectsForAgent", [](aff::ExampleLLMSim& ex, std::string agentName) -> nlohmann::json
   {
