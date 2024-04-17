@@ -70,11 +70,11 @@
     <xi:include href="g_table.xml"/>
   </Group>
 
-  <Group prev="table_grid_0_4" name="_cola" color="BLACK_RUBBER" rigid_body_joints="0 0 0 0 0 0" >
+  <Group prev="table_grid_1_4" name="_cola" color="BLACK_RUBBER" rigid_body_joints="0 0 0 0 0 0" >
     <xi:include href="g_bottle_rewe.xml"/>
   </Group>
 
-  <Group prev="table" name="_fanta" color="YELLOW" rigid_body_joints="0.15 -0.15 0 0 0 0" >
+  <Group prev="table_grid_2_3" name="_fanta" color="YELLOW" rigid_body_joints="true" >
     <xi:include href="g_bottle_rewe.xml"/>
   </Group>
 
@@ -86,7 +86,7 @@
     <xi:include href="g_glass_quadratic.xml"/>
   </Group>
 
-  <Group prev="table" name="_coke_zero" color="GREEN" rigid_body_joints="0.15 -0.3 0 0 0 0" >
+  <Group prev="table_grid_2_2" name="_coke_zero" color="GREEN" rigid_body_joints="true" >
     <xi:include href="g_bottle_half_liter.xml"/>
   </Group>
 
