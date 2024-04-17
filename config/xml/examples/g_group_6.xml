@@ -30,7 +30,7 @@
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
   <ActionSequence name="1" text="get bottle_of_cola;pour bottle_of_cola glass_red;put bottle_of_cola;get glass_red;pass glass_red Felix" />
-  <ActionSequence name="2" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola far glass_blue;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
+  <ActionSequence name="2" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola far glass_blue near box_of_cereal;get glass_blue;put glass_blue near Johnnie;get glass_blue;put glass_blue near Felix" />
   <ActionSequence name="3" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
   <ActionSequence name="4" text="pose watchit_eye fast; pose watchit_point fast; pose default_up fast" />
 	

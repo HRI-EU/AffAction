@@ -68,8 +68,8 @@
             <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
         </Group>
 
-		<xi:include href="g_hand_left.xml"/>
-		<xi:include href="g_hand_right.xml"/>
+	<xi:include href="g_hand_left.xml"/>
+	<xi:include href="g_hand_right.xml"/>
 
 	</Group>
 
