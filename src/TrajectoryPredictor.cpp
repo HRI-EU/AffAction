@@ -40,6 +40,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_body.h>
 #include <Rcs_joint.h>
+#include <Rcs_shape.h>
 #include <Rcs_kinematics.h>
 
 #include <algorithm>
@@ -50,6 +51,85 @@
 // 1m = 1rad for instance
 #define MAX_TRACKING_ERROR (0.05)
 #define N_DOUBLES_IN_HTR   (sizeof(HTr)/sizeof(double))
+
+/*******************************************************************************
+ * Clone graph without meshes and sensors.
+ ******************************************************************************/
+static RcsGraph* RcsGraph_cloneEssential(const RcsGraph* src)
+{
+  if (src==NULL)
+  {
+    return NULL;
+  }
+
+  RcsGraph* dst = RALLOC(RcsGraph);
+
+  if (!dst)
+  {
+    RLOG(1, "Failed to allocate memory for cloning graph");
+    return NULL;
+  }
+
+  // Copy the full memory block
+  memcpy(dst, src, sizeof(RcsGraph));
+
+  // Adjust pointers to local data
+  dst->q = MatNd_clone(src->q);
+  dst->q_dot = MatNd_clone(src->q_dot);
+  dst->bodies = RNALLOC(src->nBodies, RcsBody);
+  dst->joints = RNALLOC(src->dof, RcsJoint);
+
+  dst->nSensors = 0;
+  dst->sensors = NULL;//RNALLOC(src->nSensors, RcsSensor);
+
+  if ((!dst->q) || (!dst->q_dot) || (!dst->bodies) ||
+      (!dst->joints) /* || (!dst->sensors) */)
+  {
+    RLOG(1, "Failed to allocate memory for cloning graph");
+    RcsGraph_destroy(dst);
+    return NULL;
+  }
+
+  // Copy all joints, it's just a big memory block
+  memcpy(dst->joints, src->joints, src->dof*sizeof(RcsJoint));
+
+  // Same for bodies. We handle the copying of the shapes below.
+  memcpy(dst->bodies, src->bodies, src->nBodies * sizeof(RcsBody));
+
+  // Copy all bodies
+  for (unsigned int i=0; i<src->nBodies; ++i)
+  {
+    RcsBody* bdyDst = &dst->bodies[i];
+    const RcsBody* bdySrc = &src->bodies[i];
+
+    // Make a copy of all body shapes. We don't do a block copy to avoid
+    // shallow-copying of the meshes.
+    bdyDst->shapes = RNALLOC(bdySrc->nShapes, RcsShape);
+    for (unsigned int i = 0; i < bdyDst->nShapes; i++)
+    {
+      RcsMeshData* memMesh = bdySrc->shapes[i].mesh;
+      bdySrc->shapes[i].mesh = NULL;
+      RcsShape_copy(&bdyDst->shapes[i], &bdySrc->shapes[i]);
+      bdySrc->shapes[i].mesh = memMesh;
+    }
+
+  }   // RCSGRAPH_TRAVERSE_BODIES(src)
+
+
+  // Create the sensors
+  // for (unsigned int i=0; i<src->nSensors; ++i)
+  // {
+  //   RcsSensor_copy(&dst->sensors[i], &src->sensors[i]);
+  // }
+
+  // REXEC(4)
+  // {
+  //   // Check for consistency
+  //   RCHECK_MSG(RcsGraph_check(dst, NULL, NULL),
+  //              "Consistency check for graph \"%s\" failed", dst->cfgFile);
+  // }
+  return dst;
+}
 
 using namespace tropic;
 
@@ -142,7 +222,7 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
 
 
 TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_) :
-  tc(NULL), ikSolver(NULL), predSteps(0), tStack(NULL)
+  tc(NULL), ikSolver(NULL), tStack(NULL)
 {
   RCHECK(12 == N_DOUBLES_IN_HTR);   // Should be 12, just to be sure
   this->tc = new TrajectoryControllerBase(*tc_);
@@ -511,7 +591,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   memcpy(result.bodyTransforms.data(), tStack->ele, tStack->size*sizeof(double));
 
   // We add a clone so that we can call this classes methods several times.
-  result.graph = RcsGraph_clone(graph);
+  result.graph = RcsGraph_cloneEssential(graph);
   result.t_predict = Timer_getTime() - result.t_predict;
 
   return result;
@@ -550,11 +630,6 @@ bool TrajectoryPredictor::check(bool jointLimitCheck, bool collisionCheck,
   }
 
   return true;
-}
-
-void TrajectoryPredictor::getPredictionArray(MatNd* tPred) const
-{
-  MatNd_resizeCopy(tPred, tStack);
 }
 
 void TrajectoryPredictor::addElbowNullspace(const RcsGraph* graph, MatNd* dH)

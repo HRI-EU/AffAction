@@ -94,7 +94,6 @@ public:
   void setTrajectory(tropic::TCS_sptr tSet);
 
   PredictionResult predict(double dt, bool earlyExit=true);
-  void getPredictionArray(MatNd* tPred) const;
   bool check(bool jointLimits=true, bool collisions=true,
              bool speedLimits=true) const;
   void clearTrajectory();
@@ -114,7 +113,6 @@ public:
 
   tropic::TrajectoryControllerBase* tc;
   Rcs::IkSolverRMR* ikSolver;
-  int predSteps;
 
 private:
 
