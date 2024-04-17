@@ -55,6 +55,8 @@ public:
   double accumulatedCost; /**< Sum of cost up to this node. */
   int idx; /**< Solution index of the action. */
   int uniqueId; /**< Unique identifier for nodes in tree. */
+  int level; /**< 0 for root, increasing for each child level. */
+  bool isPredicted; /**< True if prediction of the node has run, false otherwise. */
   std::vector<double> bodyTransforms;
 
   PredictionTreeNode* parent; /**< Pointer to the parent node. */
@@ -76,7 +78,7 @@ public:
                      const TrajectoryPredictor::PredictionResult& predictionResult);
 
   /**
-   * @brief Disallow copying.
+   * @brief Disallow copying and assigning.
    */
   PredictionTreeNode& operator=(const PredictionTreeNode&) = delete;
   PredictionTreeNode(const PredictionTreeNode&) = delete;
@@ -90,6 +92,11 @@ public:
   * @brief Returns the unique action command with all parameters.
   */
   std::string actionCommand() const;
+
+  /**
+  * @brief Returns the size of the node in bytes.
+  */
+  size_t size(bool recursive) const;
 
   /**
    * @brief The lesser function for sorting a vector of results. Sorting
@@ -126,6 +133,11 @@ public:
    * @brief Destructor.
    */
   ~PredictionTree();
+
+  /**
+  * @brief Returns the size of the node in bytes.
+  */
+  size_t size() const;
 
   /**
    * @brief Prints the number of nodes at each depth of the tree.
@@ -216,7 +228,7 @@ public:
    * Nodes are added to the result vector if they are at the specified depth and meet the success condition.
    * If the tree is empty or the depth is invalid (negative), an empty vector is returned.
    */
-  std::vector<PredictionTreeNode*> getNodesAtDepth(int depth, bool successfulOnly) const;
+  std::vector<PredictionTreeNode*> getNodesAtDepth(size_t depth, bool successfulOnly) const;
 
   /**
    * @brief Finds the smallest cost path in the prediction tree up to a specified depth.
@@ -264,6 +276,22 @@ public:
                                                         double dt,
                                                         bool earlyExit,
                                                         std::string& errMsg);
+
+  void DFS(ActionScene& scene,
+           std::vector<PredictionTreeNode*>& leafs,
+           std::vector<std::string> actions,
+           size_t nThreads,
+           PredictionTreeNode* node);
+
+  static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
+                                                           RcsGraph* graph,
+                                                           const RcsBroadPhase* bp,
+                                                           std::vector<std::string> actions,
+                                                           size_t numStepsToPlan,
+                                                           size_t maxNumThreads,
+                                                           double dt,
+                                                           bool earlyExit,
+                                                           std::string& errMsg);
 
 private:
   /**

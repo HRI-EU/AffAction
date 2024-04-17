@@ -57,16 +57,18 @@ namespace aff
 
 PredictionTreeNode::PredictionTreeNode() :
   success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(-1),
-  parent(nullptr), graph(nullptr)
+  level(0), isPredicted(false), parent(nullptr), graph(nullptr)
 {
 }
 
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
   success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(-1),
-  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph)
+  isPredicted(false), bodyTransforms(success ? pr.bodyTransforms : std::vector<double>()),
+  parent(parent_), graph(pr.graph)
 {
   action = std::shared_ptr<ActionBase>(pr.action);
+  level = parent->level++;
 }
 
 PredictionTreeNode::~PredictionTreeNode()
@@ -110,6 +112,31 @@ PredictionTreeNode* PredictionTreeNode::addChild(const TrajectoryPredictor::Pred
   return newChild;
 }
 
+size_t PredictionTreeNode::size(bool recursive) const
+{
+  size_t nBytes = 0;
+
+  nBytes += sizeof(bool);
+  nBytes += 2*sizeof(double);
+  nBytes += 2*sizeof(int);
+  nBytes += bodyTransforms.size()*sizeof(double);
+  nBytes += sizeof(PredictionTreeNode*);
+  nBytes += children.size()*sizeof(PredictionTreeNode*);
+  nBytes += RcsGraph_sizeInBytes(graph);
+
+  if (recursive)
+  {
+    for (const auto& child : children)
+    {
+      nBytes += child->size(recursive);
+    }
+  }
+
+  return nBytes;
+}
+
+
+
 //=============================================================================
 //
 //
@@ -124,6 +151,14 @@ PredictionTree::PredictionTree() : root(nullptr), t_calc(0.0)
 PredictionTree::~PredictionTree()
 {
   delete root;
+}
+
+size_t PredictionTree::size() const
+{
+  RCHECK(root);
+  size_t nBytes = root->size(true);
+
+  return nBytes;
 }
 
 void PredictionTree::getNodes(std::vector<PredictionTreeNode*>& collection, PredictionTreeNode* node) const
@@ -178,15 +213,9 @@ size_t PredictionTree::getNumValidPaths() const
   return successfulLeafs.size();
 }
 
-std::vector<PredictionTreeNode*> PredictionTree::getNodesAtDepth(int depth, bool successfullOnly = true) const
+std::vector<PredictionTreeNode*> PredictionTree::getNodesAtDepth(size_t depth, bool successfullOnly = true) const
 {
   std::vector<PredictionTreeNode*> nodesAtDepth;
-
-  // Return an empty vector if the tree is empty or depth is invalid
-  if (root == nullptr || depth < 0)
-  {
-    return nodesAtDepth;
-  }
 
   // Use a queue for level-order traversal
   std::queue<PredictionTreeNode*> nodeQueue;
@@ -286,9 +315,9 @@ bool PredictionTree::toDotFile(const std::string& filename) const
 
   // File header
   fd << "digraph G {\nbgcolor=\"white\"\n";
-  fd << "graph [fontname=\"Arial\"];\n";
-  fd << "node [fontname=\"Arial\", fontsize=16];\n";
-  fd << "edge [fontname=\"Arial\"];\n";
+  fd << "graph [fontname=\"fixed\"];\n";
+  fd << "node [fontname=\"fixed\"];\n";
+  fd << "edge [fontname=\"fixed\"];\n";
   fd << "rankdir = \"LR\";\n";
 
   // Collect all nodes
@@ -627,7 +656,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
     std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
     std::unique_ptr<ActionBase> action;
 
-    for (const auto& currentPredictionNode : currentStepNodes)
+    for (PredictionTreeNode* currentPredictionNode : currentStepNodes)
     {
       // Load the graph from the
       if (s > 0)
@@ -728,10 +757,18 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
           r.print(1);
           auto child = currentPredictionNode->addChild(r);
           child->uniqueId = uniqueNodeId++;
+          RLOG(1, "Tree size[MB]: %.3f", 1.0e-6*predictionTree->size());
         }
       }
       RLOG_CPP(1, predResults.size() << " predictions have been added to the prediction tree");
     }   // for (const auto& currentPredictionNode : currentStepNodes)
+
+    // Here we are done with the current level's parent nodes. We therefore delete its graph
+    if (!currentStepNodes.empty())
+    {
+      RcsGraph_destroy(currentStepNodes[0]->graph);
+      currentStepNodes[0]->graph = nullptr;
+    }
 
   }   // for (size_t s = 0; s < stepsToPlan; s++)
 
@@ -758,7 +795,150 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
 }
 
 
+void PredictionTree::DFS(ActionScene& scene,
+                         std::vector<PredictionTreeNode*>& leafs,
+                         std::vector<std::string> actions,
+                         size_t nThreads,
+                         PredictionTreeNode* node)
+{
+  static size_t recurseLevel = 0;
+  RLOG_CPP(0, "\n\n***** Level " << node->level << " Recursion " << recurseLevel++);
 
+  // Roll back if number of threads has been matched
+  if (leafs.size()==nThreads)
+  {
+    return;
+  }
+
+  // When arriving here, the node has an action and a graph. It might not be initialized and predicted.
+  // if (!node->isPredicted)
+  // {
+  //   for (size_t i = 0; i < action->getNumSolutions(); ++i)
+  //   {
+  //   }
+
+  // }
+
+
+
+
+
+  // If the node has no action associated with it, we create it and resize the
+  // children's vector to the number of solutions.
+  if (!node->action)
+  {
+    std::string err;
+    std::vector<std::string> actionParams = Rcs::String_split(actions[node->level], " ");
+    if (node->parent)
+    {
+      node->graph = RcsGraph_clone(node->parent->graph);
+    }
+    RCHECK(node->graph);
+    RLOG_CPP(0, "Creating node for '" << actions[node->level] << "' on level " << node->level);
+    node->action = std::shared_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
+    RCHECK_MSG(node->action, "%s", err.c_str());
+    // RLOG_CPP(0, "Adding " << node->action->getNumSolutions() << " empty (nullptr) children");
+    // node->children.resize(node->action->getNumSolutions(), nullptr);
+  }
+
+  // Found a leaf node that has not yet been predicted
+  if (!node->isPredicted && node->parent && node->parent->isPredicted)
+  {
+    RLOG_CPP(0, "Adding leaf");
+    leafs.push_back(node);
+    return;
+  }
+
+  // Children may be nullptr
+  RLOG_CPP(0, "Going through " << node->children.size() << " children");
+  for (size_t i=0; i< node->children.size(); ++i)
+  {
+    if (!node->children[i])
+    {
+      node->children[i] = new PredictionTreeNode();
+      node->children[i]->parent = node;
+      node->children[i]->level = node->level++;
+      RLOG_CPP(0, "Creating new child" << i);
+    }   // solutions
+  }
+
+  for (auto& child : node->children)
+  {
+    DFS(scene, leafs, actions, nThreads, child);
+  }
+}
+
+
+std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT(ActionScene& domain,
+                                                                  RcsGraph* graph,
+                                                                  const RcsBroadPhase* broadphase,
+                                                                  std::vector<std::string> actions,
+                                                                  size_t stepsToPlan,
+                                                                  size_t maxNumThreads,
+                                                                  double dt,
+                                                                  bool earlyExit,
+                                                                  std::string& errMsg)
+{
+  for (const auto& a : actions)
+  {
+    RLOG_CPP(0, "action: " << a);
+  }
+
+  // Create tree
+  std::unique_ptr<PredictionTree> tree = std::make_unique<PredictionTree>();
+
+  // Create root node and initialize
+  std::string err;
+  std::vector<std::string> actionParams = Rcs::String_split(actions[0], " ");
+  tree->root->graph = RcsGraph_clone(graph);
+  tree->root->isPredicted = false;
+  tree->root->action = std::shared_ptr<ActionBase>(ActionFactory::create(domain, tree->root->graph, actionParams, err));
+  RCHECK_MSG(tree->root->action, "%s", err.c_str());
+
+  std::vector<PredictionTreeNode*> leafs;
+  tree->DFS(domain, leafs, actions, 10, tree->root);
+
+  RLOG_CPP(0, "Collected " << leafs.size() << " leafs");
+  RPAUSE();
+
+  // std::vector<PredictionTreeNode*> workingSet, doneSet, leafs;
+
+  // // Step 1: Construct tree
+  // std::vector<PredictionTreeNode*> parents;
+  // parents.push_back(tree->root);
+
+  // for (size_t s=0; s<actions.size(); ++s)
+  // {
+  //   std::string err;
+  //   std::vector<std::string> actionParams = Rcs::String_split(actions[s], " ");
+  //   ActionBase* action = ActionFactory::create(domain, nodeGraph, actionParams, err);
+
+  //   for (size_t p=0; p<parents.size(); ++p)
+  //   {
+  //     PredictionTreeNode* parent = parents[p];
+
+  //     for (size_t a = 0; a < action->getNumSolutions(); ++a)
+  //     {
+  //       PredictionTreeNode* actionNode = new PredictionTreeNode();
+  //       actionNode->parent = parent;
+  //       actionNode->action = std::shared_ptr<ActionBase>(action->clone());
+  //       actionNode->graph = RcsGraph_clone(parent->graph);
+  //       actionNode->action->initialize(domain, nodeGraph, a);
+  //     }   // solutions
+
+  //   }   // parents
+
+  // }   // actions
+
+
+
+
+
+
+
+
+  return tree;
+}
 
 
 
