@@ -960,13 +960,13 @@ double ActionPut::actionCost(const ActionScene& domain,
     const RcsBody* putLocation = RcsGraph_getBodyByName(graph, place.c_str());
     RCHECK_MSG(putLocation, "'%s' unknown", place.c_str());
     auto ntts = domain.getSceneEntities(nearTo);
-    RLOG(0, "Found %zu SceneEntities", ntts.size());
+    //RLOG(0, "Found %zu SceneEntities", ntts.size());
     double sumD = 0.0;
     for (const auto& ntt : ntts)
     {
       const RcsBody* nttLocation = ntt->body(graph);
       sumD += Vec3d_distance(putLocation->A_BI.org, nttLocation->A_BI.org);
-      RLOG(0, "Adding action cost for %s - %s: %f", nttLocation->name, place.c_str(), sumD);
+      //RLOG(0, "Adding action cost for %s - %s: %f", nttLocation->name, place.c_str(), sumD);
     }
     cost += sumD / (1.0 + sumD);
   }

@@ -66,6 +66,7 @@
 #include <iostream>
 #include <thread>
 
+
 #define NUM_SCENEQUERIES (5)
 
 
@@ -529,7 +530,7 @@ bool ExampleActionsECS::initGraphics()
   // not be cleaned up after exiting main.
   if (noViewer || valgrind)
   {
-    RLOG(0, "Running without graphics");
+    RLOG(1, "Running without graphics");
     return true;
   }
 
@@ -889,9 +890,9 @@ void ExampleActionsECS::run()
   {
     // get fanta_bottle;put fanta_bottle lego_box;pose default
     std::vector<std::string> seqCmd;
-    seqCmd.push_back("get id_653a43c5b914a01674642a45");
-    seqCmd.push_back("put id_653a43c5b914a01674642a45 id_659fdeb2adfdf5b78af73fed_close");
-    seqCmd.push_back("pose default");
+    seqCmd.push_back("get bottle_of_cola");
+    seqCmd.push_back("pour bottle_of_cola glass_blue");
+    seqCmd.push_back("put bottle_of_cola");
     auto res = sceneQuery->instance()->planActionSequence(seqCmd, seqCmd.size());
     std::string newCmd;
     for (size_t i = 0; i < res.size(); ++i)
@@ -1018,11 +1019,13 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     }
   }
 
-  // Animation of all valid solution paths
-#if 0
+  // Animation of all valid solution paths. We only show the first 3 so that we
+  // don't copy around huge amounts of memory.
+#if 1
   if (tree)
   {
-    std::vector<TrajectoryPredictor::PredictionResult> predictions(tree->getNumValidPaths());
+    size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)3);
+    std::vector<TrajectoryPredictor::PredictionResult> predictions(numSolutions);
 
     for (size_t i = 0; i < predictions.size(); ++i)
     {

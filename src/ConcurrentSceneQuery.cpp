@@ -62,12 +62,12 @@ std::shared_ptr<ConcurrentSceneQuery> SceneQueryPool::instance()
   {
     if (queries[i].use_count() == 1)
     {
-      RLOG_CPP(0, "Returning query " << i);
+      //RLOG_CPP(0, "Returning query " << i);
       return queries[i];
     }
   }
 
-  RLOG_CPP(0, "No query found");
+  //RLOG_CPP(0, "No query found");
   return nullptr;
 }
 
