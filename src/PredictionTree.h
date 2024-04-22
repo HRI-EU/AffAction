@@ -62,6 +62,7 @@ public:
   std::vector<PredictionTreeNode*> children; /**< Vector of child nodes. */
   RcsGraph* graph; /**< Pointer to the Rcs graph associated with the action. */
   std::string resolvedActionCommand;
+  int threadNumber;
   static size_t uniqueIdCount;
 
   /**
@@ -110,6 +111,8 @@ public:
    * @return Pointer to the newly created child node.
    */
   PredictionTreeNode* addChild(const TrajectoryPredictor::PredictionResult& pr);
+
+  void print() const;
 };
 
 /**
@@ -281,14 +284,14 @@ public:
            PredictionTreeNode* node,
            bool& finished);
 
-  void DFS_MT(ActionScene& scene,
-              const RcsBroadPhase* bp,
-              std::vector<std::string> actions,
-              double dt,
-              size_t nThreads,
-              bool earlyExit,
-              PredictionTreeNode* node,
-              bool& finished);
+  // void DFS_MT(ActionScene& scene,
+  //             const RcsBroadPhase* bp,
+  //             std::vector<std::string> actions,
+  //             double dt,
+  //             size_t nThreads,
+  //             bool earlyExit,
+  //             PredictionTreeNode* node,
+  //             bool& finished);
 
   static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
                                                            RcsGraph* graph,
@@ -299,6 +302,16 @@ public:
                                                            double dt,
                                                            bool earlyExit,
                                                            std::string& errMsg);
+
+  static  std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
+                                                               RcsGraph* graph,
+                                                               const RcsBroadPhase* broadphase,
+                                                               std::vector<std::string> actions,
+                                                               size_t stepsToPlan,
+                                                               size_t maxNumThreads,
+                                                               double dt,
+                                                               bool earlyExit,
+                                                               std::string& errMsg);
 
 private:
 

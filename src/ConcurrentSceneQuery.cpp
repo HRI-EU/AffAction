@@ -178,8 +178,8 @@ std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTreeDFT(const st
   update(true);
   std::string errMsg;
 
-  return PredictionTree::planActionTreeDFT(scene, graph, broadphase, actions, actions.size(),
-                                           maxThreads, sim->entity.getDt(), earlyExit, errMsg);
+  return PredictionTree::planActionTreeDFT_MT(scene, graph, broadphase, actions, actions.size(),
+                                              maxThreads, sim->entity.getDt(), earlyExit, errMsg);
 }
 
 std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgent,
