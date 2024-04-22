@@ -390,8 +390,8 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
     auto sln = tree->findSolutionPath();
     for (const auto& nd : sln)
     {
-      predictedActions.push_back(nd->action->getActionCommand());
-      RLOG_CPP(0, "Action: " << nd->action->getActionCommand() <<
+      predictedActions.push_back(nd->actionCommand());
+      RLOG_CPP(0, "Action: " << nd->actionCommand() <<
                " cost: " << nd->cost);
     }
   }

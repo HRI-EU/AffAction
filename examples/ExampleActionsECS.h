@@ -119,7 +119,7 @@ public:
   bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
   bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded, verbose, processingAction, lookahead, turbo;
+  bool singleThreaded, verbose, processingAction, lookahead, turbo, earlyExit, depthFirst;
   double dtProcess, dtEvents;
 
   std::unique_ptr<GraphComponent> graphC;
@@ -139,12 +139,15 @@ private:
   bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
   void printCompletedActionStack() const;
+  std::string resolveActionSequence(std::string text) const;
 
   // Subscribed callbacks
   void onQuit();
   void onPrint();
   void onActionSequence(std::string text);
   void onPlanActionSequence(std::string text);
+  void onPlanActionSequenceDFS(std::string text);
+  void onPlanActionSequenceDFSEE(std::string text);
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
   void onChangeBackgroundColorFreeze(bool freeze);

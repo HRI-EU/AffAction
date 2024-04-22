@@ -132,8 +132,6 @@ static RcsBody* getBodyUnderMousePointer(RcsGraph* graph,
     return NULL;
   }
 
-  // Rcs::setNodeAlpha(nd, 0.5 + 0.49*sin(Timer_getSystemTime()));
-
   RcsBody* bdy = RCSBODY_BY_ID(graph, nd->body()->id);
 
   if (k_pt && I_pt && bdy)
@@ -244,6 +242,8 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   processingAction = false;
   lookahead = false;
   turbo = true;
+  earlyExit = false;
+  depthFirst = false;
 
   dtProcess = 0.0;
   dtEvents = 0.0;
@@ -316,6 +316,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-lookahead", &lookahead, "Perform lookahead for whole sequences");
   parser->getArgument("-lookaheadCount", &lookaheadCount, "Number of actions to lookahead");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
+  parser->getArgument("-earlyExit", &earlyExit, "Quit on first encountered solution when expanding DFS tree");
+  parser->getArgument("-depthFirst", &depthFirst, "Use depth-dirst tree search");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -354,6 +356,8 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
   entity.subscribe<bool, double, std::string>("ActionResult", &ExampleActionsECS::onActionResult, this);
   entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequence, this);
+  entity.subscribe("PlanDFS", &ExampleActionsECS::onPlanActionSequenceDFS, this);
+  entity.subscribe("PlanDFSEE", &ExampleActionsECS::onPlanActionSequenceDFSEE, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
@@ -893,15 +897,22 @@ void ExampleActionsECS::run()
     seqCmd.push_back("get bottle_of_cola");
     seqCmd.push_back("pour bottle_of_cola glass_blue");
     seqCmd.push_back("put bottle_of_cola");
-    auto res = sceneQuery->instance()->planActionSequence(seqCmd, seqCmd.size());
-    std::string newCmd;
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-      newCmd += res[i];
-      newCmd += ";";
-    }
 
-    RLOG_CPP(0, "Command : " << newCmd);
+    std::string errMsg;
+    auto tree = PredictionTree::planActionTreeDFT(*getScene(), getGraph(), getBroadPhase(),
+                                                  seqCmd, seqCmd.size(), 5, entity.getDt(),
+                                                  false, errMsg);
+
+    tree->toDotFile("PredictionTree.dot");
+    // auto res = sceneQuery->instance()->planActionSequence(seqCmd, seqCmd.size());
+    // std::string newCmd;
+    // for (size_t i = 0; i < res.size(); ++i)
+    // {
+    //   newCmd += res[i];
+    //   newCmd += ";";
+    // }
+
+    // RLOG_CPP(0, "Command : " << newCmd);
     runLoop = false;
   }
 
@@ -1001,10 +1012,22 @@ void ExampleActionsECS::onQuit()
 
 static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         std::string sequenceCommand,
-                                        size_t maxNumThreads)
+                                        size_t maxNumThreads,
+                                        bool depthFirst,
+                                        bool earlyExit)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto tree = ex->getQuery()->planActionTree(seq, maxNumThreads);
+
+  std::unique_ptr<PredictionTree> tree;
+
+  if (depthFirst)
+  {
+    tree = ex->getQuery()->planActionTreeDFT(seq, maxNumThreads, earlyExit);
+  }
+  else
+  {
+    tree = ex->getQuery()->planActionTree(seq, maxNumThreads);
+  }
 
   std::vector<std::string> predictedActions;
 
@@ -1013,15 +1036,13 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     auto sln = tree->findSolutionPath();
     for (const auto& nd : sln)
     {
-      predictedActions.push_back(nd->action->getActionCommand());
-      RLOG_CPP(0, "Action: " << nd->action->getActionCommand() <<
-               " cost: " << nd->cost);
+      predictedActions.push_back(nd->actionCommand());
+      RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
     }
   }
 
   // Animation of all valid solution paths. We only show the first 3 so that we
   // don't copy around huge amounts of memory.
-#if 1
   if (tree)
   {
     size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)3);
@@ -1042,7 +1063,6 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
     ex->entity.publish("AnimateSequence", predictions, 0);
   }
-#endif
 
   if (predictedActions.empty())
   {
@@ -1069,7 +1089,29 @@ void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
 {
   processingAction = true;
   const size_t maxNumthreads = 0;   // 0 means auto-select
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads);
+  bool dfs = false;
+  sequenceCommand = resolveActionSequence(sequenceCommand);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
+  t1.detach();
+}
+
+void ExampleActionsECS::onPlanActionSequenceDFS(std::string sequenceCommand)
+{
+  processingAction = true;
+  const size_t maxNumthreads = 0;   // 0 means auto-select
+  bool dfs = true;
+  sequenceCommand = resolveActionSequence(sequenceCommand);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
+  t1.detach();
+}
+
+void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string sequenceCommand)
+{
+  processingAction = true;
+  const size_t maxNumthreads = 0;   // 0 means auto-select
+  bool dfs = true;
+  sequenceCommand = resolveActionSequence(sequenceCommand);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, true);
   t1.detach();
 }
 
@@ -1597,6 +1639,113 @@ void ExampleActionsECS::lockStepMtx() const
 void ExampleActionsECS::unlockStepMtx() const
 {
   stepMtx.unlock();
+}
+
+std::string ExampleActionsECS::resolveActionSequence(std::string text) const
+{
+  // Step 1: Analyse if we received an ActionSequence to be broken down. This is
+  // starting with either 'sequence' or 's'.
+  std::vector<std::string> words = Rcs::String_split(text, " ");
+
+  // We first check if a sequence command has been given. This is
+  // starting with either 'sequence' or 's'.
+  if (words.size() != 2)
+  {
+    RLOG_CPP(1, "Received sequence with " << words.size() << " parameters (two are expected).");
+    return text;
+  }
+
+  if (words[0] != "sequence" && words[0] != "s")
+  {
+    RLOG_CPP(1, "Sequence keyword is " << words[0] << " but must be 's' or 'sequence'");
+    return text;
+  }
+
+  // In case we detected a sequence, we parse the graph's configuration
+  // file again to load all available sequences. We do this here in order
+  // to allow to modify the file at run-time.
+  RLOG(1, "Detected action sequence");
+  ActionSequence seq(controller->getGraph()->cfgFile);
+  bool sequenceFound = false;
+  for (const auto& pair : seq.sequences)
+  {
+    if (words[1] == pair.first)
+    {
+      // If a valid sequence name has been found, we expand it into the text string.
+      text = pair.second;
+      sequenceFound = true;
+      RLOG_CPP(0, "Sequence expanded to '" << text << "'");
+      break;
+    }
+  }
+
+  // If we end up here, a sequence with a name has been given, but the
+  // sequence was not specified in the configuration file. This is
+  // treated as an error.
+  if (!sequenceFound)
+  {
+    RLOG_CPP(0, "Action sequence " << words[1] << " not found in config file: '"
+             << text << "'");
+    return text;
+  }
+
+  // Check for cascading sequences and expand them
+  bool innerSequenceFound = true;
+  while (innerSequenceFound)
+  {
+    // We start with the assumption that no inner sequence has been found.
+    // Split the text into its individual commands.
+    innerSequenceFound = false;
+    std::vector<std::string> textWords = Rcs::String_split(text, ";");
+
+    // Split individual commands into single words and check if they are
+    // sequences.
+    for (const auto& command : textWords)
+    {
+      std::vector<std::string> words = Rcs::String_split(command, " ");
+      if ((!words.empty()) && (words[0] == "sequence" || words[0] == "s"))
+      {
+        // If a inner sequence command is found, start the expanding process.
+        // Flag that a cascading sequence has been found, which enforces another
+        // top level loop to check for new inner sequences.
+        innerSequenceFound = true;
+        RLOG_CPP(1, "Detected cascading action sequence");
+
+        // Check if the sequence is in fact part of the configuration file.
+        bool sequenceFound = false;
+        for (const auto& pair : seq.sequences)
+        {
+          // If we find the sequence, we replace the ALL the occurences
+          // with the sequence text as it's defined in the config.
+          if (words[1] == pair.first)
+          {
+            RLOG_CPP(1, "Expanding '" << command << "' into '" << pair.second << "'");
+
+            replaceFirst(text, command, pair.second);
+
+            sequenceFound = true;
+            RLOG_CPP(1, "Sequence expanded to '" << text << "'");
+            break;
+          }
+        }
+
+        // TODO (CP) - duplicated code, refactor
+        // If we end up here, a sequence with a name has been given, but the
+        // sequence was not specified in the configuration file. This is
+        // treated as an error.
+        if (!sequenceFound)
+        {
+          RLOG_CPP(0, "Action sequence " << words[1] << " not found in config file: '" << text << "'");
+          return text;
+        }
+      }
+    }
+  }
+
+  // From here on, any sequence has been expanded
+  RLOG_CPP(1, "Sequence expanded to '" << text << "'");
+
+  return text;
 }
 
 }   // namespace aff

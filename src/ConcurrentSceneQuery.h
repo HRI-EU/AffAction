@@ -91,6 +91,8 @@ public:
                                               size_t maxThreads = 0);
   std::unique_ptr<PredictionTree> planActionTree(const std::vector<std::string>& actions,
                                                  size_t maxThreads = 0);
+  std::unique_ptr<PredictionTree> planActionTreeDFT(const std::vector<std::string>& actions,
+                                                    size_t maxThreads, bool earlyExit);
 
   bool isAgentBusy(const std::string& agentName, double distanceThreshold);
 

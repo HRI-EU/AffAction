@@ -134,25 +134,25 @@
 		<Supportable frame="table_grid_0_7"/>
 		<Supportable frame="table_grid_0_8"/>
 		
-		<Supportable frame="table_grid_1_0"/>
-		<Supportable frame="table_grid_1_1"/>
-		<Supportable frame="table_grid_1_2"/>
-		<Supportable frame="table_grid_1_3"/>
-		<Supportable frame="table_grid_1_4"/>
-		<Supportable frame="table_grid_1_5"/>
-		<Supportable frame="table_grid_1_6"/>
-		<Supportable frame="table_grid_1_7"/>
-		<Supportable frame="table_grid_1_8"/>
+		<!-- <Supportable frame="table_grid_1_0"/> -->
+		<!-- <Supportable frame="table_grid_1_1"/> -->
+		<!-- <Supportable frame="table_grid_1_2"/> -->
+		<!-- <Supportable frame="table_grid_1_3"/> -->
+		<!-- <Supportable frame="table_grid_1_4"/> -->
+		<!-- <Supportable frame="table_grid_1_5"/> -->
+		<!-- <Supportable frame="table_grid_1_6"/> -->
+		<!-- <Supportable frame="table_grid_1_7"/> -->
+		<!-- <Supportable frame="table_grid_1_8"/> -->
 
-		<xxSupportable frame="table_grid_2_0"/>
-		<Supportable frame="table_grid_2_1"/>
-		<Supportable frame="table_grid_2_2"/>
-		<Supportable frame="table_grid_2_3"/>
-		<Supportable frame="table_grid_2_4"/>
-		<Supportable frame="table_grid_2_5"/>
-		<Supportable frame="table_grid_2_6"/>
-		<Supportable frame="table_grid_2_7"/>
-		<xxSupportable frame="table_grid_2_8"/>
+		<!-- <xxSupportable frame="table_grid_2_0"/> -->
+		<!-- <Supportable frame="table_grid_2_1"/> -->
+		<!-- <Supportable frame="table_grid_2_2"/> -->
+		<!-- <Supportable frame="table_grid_2_3"/> -->
+		<!-- <Supportable frame="table_grid_2_4"/> -->
+		<!-- <Supportable frame="table_grid_2_5"/> -->
+		<!-- <Supportable frame="table_grid_2_6"/> -->
+		<!-- <Supportable frame="table_grid_2_7"/> -->
+		<!-- <xxSupportable frame="table_grid_2_8"/> -->
 	</AffordanceModel>
 
 

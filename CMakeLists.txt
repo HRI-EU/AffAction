@@ -364,6 +364,9 @@ TARGET_LINK_LIBRARIES(TestAffordance AffAction)
 ADD_EXECUTABLE(TestLLMSim examples/TestLLMSim.cpp)
 TARGET_LINK_LIBRARIES(TestLLMSim AffAction)
 
+ADD_EXECUTABLE(TreeTest examples/TreeTest.cpp)
+TARGET_LINK_LIBRARIES(TreeTest RcsCore)
+
 # To fix issues with remote graphics, we call XInitThreads in TestLLMSim.
 # That's why we need to link against X11 under Linux.
 IF (UNIX)

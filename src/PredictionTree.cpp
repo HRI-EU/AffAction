@@ -49,26 +49,27 @@
 // the max. joint velocity over all joints and all time steps will exactly
 // be at the limit. This scaling factor extends the duration so that there
 // is a margin between the max. reached joint velocity and its limit.
-#define TURBO_DURATION_SCALER (1.2)
+#define TURBO_DURATION_SCALER (1.25)
 
 
 namespace aff
 {
+size_t PredictionTreeNode::uniqueIdCount = 0;
 
 PredictionTreeNode::PredictionTreeNode() :
-  success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(-1),
-  level(0), isPredicted(false), parent(nullptr), graph(nullptr)
+  success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(uniqueIdCount++),
+  level(0), parent(nullptr), graph(nullptr)
 {
 }
 
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
-  success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(-1),
-  isPredicted(false), bodyTransforms(success ? pr.bodyTransforms : std::vector<double>()),
+  success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
+  bodyTransforms(success ? pr.bodyTransforms : std::vector<double>()),
   parent(parent_), graph(pr.graph)
 {
-  action = std::shared_ptr<ActionBase>(pr.action);
-  level = parent->level++;
+  accumulatedCost = parent->accumulatedCost + cost;
+  level = parent->level+1;
 }
 
 PredictionTreeNode::~PredictionTreeNode()
@@ -83,7 +84,7 @@ PredictionTreeNode::~PredictionTreeNode()
 
 std::string PredictionTreeNode::actionCommand() const
 {
-  return action ? action->getActionCommand() : "ROOT";
+  return resolvedActionCommand;//action ? action->getActionCommand() : "ROOT";
 }
 
 // The lesser function for sorting a vector of results. The failure -
@@ -107,7 +108,6 @@ bool PredictionTreeNode::lesser(const PredictionTreeNode* a,
 PredictionTreeNode* PredictionTreeNode::addChild(const TrajectoryPredictor::PredictionResult& pr)
 {
   PredictionTreeNode* newChild = new PredictionTreeNode(this, pr);
-  newChild->accumulatedCost = accumulatedCost + newChild->cost;
   children.push_back(newChild);
   return newChild;
 }
@@ -191,7 +191,7 @@ void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, 
     node = root;
   }
 
-  if (node->children.empty())
+  if (node->children.empty() && (node->level==incomingActionSequence.size()))
   {
     if ((!onlySuccessfulOnes) || (onlySuccessfulOnes&&node->success))
     {
@@ -327,7 +327,7 @@ bool PredictionTree::toDotFile(const std::string& filename) const
 
   for (const auto& n : nodes)
   {
-    auto aCmd = n->action ? n->action->getActionCommand() : "ROOT";
+    auto aCmd = n->actionCommand();//n->action ? n->action->getActionCommand() : "ROOT";
     auto words = Rcs::String_split(aCmd, " ");
     std::string label;
     for (size_t i = 0; i < words.size(); ++i)
@@ -339,6 +339,8 @@ bool PredictionTree::toDotFile(const std::string& filename) const
         label += "\\n";
       }
     }
+    label += "\\n(level " + std::to_string(n->level) + " of " +
+             std::to_string(incomingActionSequence.size()) + ")";
 
     fd << n->uniqueId << "[label=\"" << label << "\" ";
 
@@ -346,7 +348,7 @@ bool PredictionTree::toDotFile(const std::string& filename) const
     {
       fd << "style=filled ";
 
-      if (n->success)
+      if (n->success && (n->level==incomingActionSequence.size()))
       {
         fd << "color=\"green\"];\n";
       }
@@ -420,9 +422,12 @@ void PredictionTree::printTreeVisual(const PredictionTreeNode* node, int indent)
   if (node==root)
   {
     auto sln = findSolutionPath();
+    bool solutionFound = !sln.empty();
     if (!sln.empty() && (sln.size() != incomingActionSequence.size()))
     {
-      RLOG(0, "Mismatch in solution size and incoming sequence: %zu %zu", sln.size(), incomingActionSequence.size());
+      solutionFound = false;
+      RLOG(0, "Mismatch in solution size and incoming sequence: %zu %zu",
+           sln.size(), incomingActionSequence.size());
     }
 
     std::cout << std::endl << "Incoming sequence: " << std::endl;
@@ -439,12 +444,16 @@ void PredictionTree::printTreeVisual(const PredictionTreeNode* node, int indent)
     std::cout << std::endl << "Solution path: " << std::endl;
     for (size_t i = 0; i < sln.size(); i++)
     {
-      std::cout << "  Resolved #" << i << ": `" << sln[i]->action->getActionCommand() << "'";
+      std::cout << "  Resolved #" << i << ": `" << sln[i]->actionCommand() << "'";
       std::cout << std::endl;
     }
 
     std::cout << "Number of nodes: " << getNumNodes() << std::endl;
     std::cout << "Number of valid solution paths: " << getNumValidPaths() << std::endl;
+    if (!sln.empty())
+    {
+      std::cout << "Minimum cost: " << sln.back()->accumulatedCost << std::endl;
+    }
     std::cout << "Calculation time[sec]: " << t_calc << std::endl << std::endl;
   }
 }
@@ -757,6 +766,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
           r.print(1);
           auto child = currentPredictionNode->addChild(r);
           child->uniqueId = uniqueNodeId++;
+          child->resolvedActionCommand = r.action->getActionCommand();
           RLOG(1, "Tree size[MB]: %.3f", 1.0e-6*predictionTree->size());
         }
       }
@@ -777,7 +787,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
 
   predictionTree->t_calc = Timer_getSystemTime() - predictionTree->t_calc;
 
-  REXEC(-1)
+  REXEC(0)
   {
     predictionTree->printTreeVisual(predictionTree->root, 0);
     predictionTree->toDotFile("PredictionTree.dot");
@@ -786,7 +796,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
   const int treeDepth = predictionTree->getMaxDepth() - 1; //exclude root
   if (treeDepth < stepsToPlan)
   {
-    RMSG("Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
+    RLOG(0, "Cannot predict a successfull path for the provided sequence! Failure encountered after %d actions.", treeDepth);
     return nullptr;
   }
 
@@ -795,77 +805,109 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
 }
 
 
-void PredictionTree::DFS(ActionScene& scene,
-                         std::vector<PredictionTreeNode*>& leafs,
-                         std::vector<std::string> actions,
-                         size_t nThreads,
-                         PredictionTreeNode* node)
+void PredictionTree::DFS_MT(ActionScene& scene,
+                            const RcsBroadPhase* broadphase,
+                            std::vector<std::string> actionSequenceStrings,
+                            double dt,
+                            size_t nThreads,
+                            bool earlyExit,
+                            PredictionTreeNode* node,
+                            bool& finished)
 {
-  static size_t recurseLevel = 0;
-  RLOG_CPP(0, "\n\n***** Level " << node->level << " Recursion " << recurseLevel++);
+  std::string err;
+  std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
+  auto action_ = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
 
-  // Roll back if number of threads has been matched
-  if (leafs.size()==nThreads)
+  for (size_t i = 0; i < (action_ ? action_->getNumSolutions() : 0); ++i)
   {
-    return;
-  }
+    auto action = action_->clone();
+    action->initialize(scene, node->graph, i);
+    bool actionEarlyExit = true;
+    auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
 
-  // When arriving here, the node has an action and a graph. It might not be initialized and predicted.
-  // if (!node->isPredicted)
-  // {
-  //   for (size_t i = 0; i < action->getNumSolutions(); ++i)
-  //   {
-  //   }
-
-  // }
-
-
-
-
-
-  // If the node has no action associated with it, we create it and resize the
-  // children's vector to the number of solutions.
-  if (!node->action)
-  {
-    std::string err;
-    std::vector<std::string> actionParams = Rcs::String_split(actions[node->level], " ");
-    if (node->parent)
+    // Scale duration to make motion as fast as possible
+    if (action->turboMode())
     {
-      node->graph = RcsGraph_clone(node->parent->graph);
+      double newDuration = action->getDurationHint() * res.scaleJointSpeeds;
+      action->setDuration(newDuration * TURBO_DURATION_SCALER);
     }
-    RCHECK(node->graph);
-    RLOG_CPP(0, "Creating node for '" << actions[node->level] << "' on level " << node->level);
-    node->action = std::shared_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
-    RCHECK_MSG(node->action, "%s", err.c_str());
-    // RLOG_CPP(0, "Adding " << node->action->getNumSolutions() << " empty (nullptr) children");
-    // node->children.resize(node->action->getNumSolutions(), nullptr);
-  }
 
-  // Found a leaf node that has not yet been predicted
-  if (!node->isPredicted && node->parent && node->parent->isPredicted)
-  {
-    RLOG_CPP(0, "Adding leaf");
-    leafs.push_back(node);
-    return;
-  }
+    // Now the node->graph is correctly initialized for the next tree child
+    PredictionTreeNode* child = new PredictionTreeNode(node, res);
+    child->resolvedActionCommand = action->getActionCommand();
+    node->children.push_back(child);
 
-  // Children may be nullptr
-  RLOG_CPP(0, "Going through " << node->children.size() << " children");
-  for (size_t i=0; i< node->children.size(); ++i)
-  {
-    if (!node->children[i])
+    // We stop the recursion in case we found a successful leaf node on the last level.
+    if (earlyExit && child->success && child->level == actionSequenceStrings.size())
     {
-      node->children[i] = new PredictionTreeNode();
-      node->children[i]->parent = node;
-      node->children[i]->level = node->level++;
-      RLOG_CPP(0, "Creating new child" << i);
-    }   // solutions
+      finished = true;
+      break;
+    }
+
+    // Descent to next recursion level
+    if (child->level < actionSequenceStrings.size() && child->success)
+    {
+      DFS(scene, broadphase, actionSequenceStrings, dt, nThreads, earlyExit, child, finished);
+      if (finished)
+      {
+        break;
+      }
+    }
   }
 
-  for (auto& child : node->children)
+}
+
+void PredictionTree::DFS(ActionScene& scene,
+                         const RcsBroadPhase* broadphase,
+                         std::vector<std::string> actionSequenceStrings,
+                         double dt,
+                         size_t nThreads,
+                         bool earlyExit,
+                         PredictionTreeNode* node,
+                         bool& finished)
+{
+  std::string err;
+  std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
+  auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
+
+  for (size_t i=0; i<(action ? action->getNumSolutions() : 0); ++i)
   {
-    DFS(scene, leafs, actions, nThreads, child);
+    action->initialize(scene, node->graph, i);
+    bool actionEarlyExit = true;
+    auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
+
+    // Scale duration to make motion as fast as possible
+    double merk = action->getDurationHint();
+    if (action->turboMode())
+    {
+      double newDuration = action->getDurationHint() * res.scaleJointSpeeds;
+      action->setDuration(newDuration*TURBO_DURATION_SCALER);
+    }
+
+    // Now the node->graph is correctly initialized for the next tree child
+    PredictionTreeNode* child = new PredictionTreeNode(node, res);
+    child->resolvedActionCommand = action->getActionCommand();
+    node->children.push_back(child);
+    action->setDuration(merk);
+
+    // We stop the recursion in case we found a successful leaf node on the last level.
+    if (earlyExit && child->success && child->level==actionSequenceStrings.size())
+    {
+      finished = true;
+      break;// return;
+    }
+
+    // Descent to next recursion level
+    if (child->level<actionSequenceStrings.size() && child->success)
+    {
+      DFS(scene, broadphase, actionSequenceStrings, dt, nThreads, earlyExit, child, finished);
+      if (finished)
+      {
+        break;
+      }
+    }
   }
+
 }
 
 
@@ -879,63 +921,36 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT(ActionScene& d
                                                                   bool earlyExit,
                                                                   std::string& errMsg)
 {
-  for (const auto& a : actions)
+  // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
+  size_t nThreads = std::thread::hardware_concurrency();
+
+  if (maxNumThreads != 0)
   {
-    RLOG_CPP(0, "action: " << a);
+    nThreads = std::min(nThreads, maxNumThreads);
   }
 
   // Create tree
   std::unique_ptr<PredictionTree> tree = std::make_unique<PredictionTree>();
+  tree->t_calc = Timer_getSystemTime();
 
-  // Create root node and initialize
-  std::string err;
-  std::vector<std::string> actionParams = Rcs::String_split(actions[0], " ");
+  // Strip whitespaces from action commands
+  for (size_t i = 0; i < actions.size(); i++)
+  {
+    Rcs::String_trim(actions[i]);
+  }
+
+  tree->incomingActionSequence = actions;
   tree->root->graph = RcsGraph_clone(graph);
-  tree->root->isPredicted = false;
-  tree->root->action = std::shared_ptr<ActionBase>(ActionFactory::create(domain, tree->root->graph, actionParams, err));
-  RCHECK_MSG(tree->root->action, "%s", err.c_str());
 
-  std::vector<PredictionTreeNode*> leafs;
-  tree->DFS(domain, leafs, actions, 10, tree->root);
+  bool isFinished = false;
+  tree->DFS(domain, broadphase, actions, dt, nThreads, earlyExit, tree->root, isFinished);
+  tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
-  RLOG_CPP(0, "Collected " << leafs.size() << " leafs");
-  RPAUSE();
-
-  // std::vector<PredictionTreeNode*> workingSet, doneSet, leafs;
-
-  // // Step 1: Construct tree
-  // std::vector<PredictionTreeNode*> parents;
-  // parents.push_back(tree->root);
-
-  // for (size_t s=0; s<actions.size(); ++s)
-  // {
-  //   std::string err;
-  //   std::vector<std::string> actionParams = Rcs::String_split(actions[s], " ");
-  //   ActionBase* action = ActionFactory::create(domain, nodeGraph, actionParams, err);
-
-  //   for (size_t p=0; p<parents.size(); ++p)
-  //   {
-  //     PredictionTreeNode* parent = parents[p];
-
-  //     for (size_t a = 0; a < action->getNumSolutions(); ++a)
-  //     {
-  //       PredictionTreeNode* actionNode = new PredictionTreeNode();
-  //       actionNode->parent = parent;
-  //       actionNode->action = std::shared_ptr<ActionBase>(action->clone());
-  //       actionNode->graph = RcsGraph_clone(parent->graph);
-  //       actionNode->action->initialize(domain, nodeGraph, a);
-  //     }   // solutions
-
-  //   }   // parents
-
-  // }   // actions
-
-
-
-
-
-
-
+  REXEC(0)
+  {
+    tree->printTreeVisual(tree->root, 0);
+    tree->toDotFile("PredictionTreeDFS.dot");
+  }
 
   return tree;
 }

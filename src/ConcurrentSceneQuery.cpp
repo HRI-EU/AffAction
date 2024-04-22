@@ -172,6 +172,16 @@ std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTree(const std::
                                         maxThreads, sim->entity.getDt(), earlyExit, errMsg);
 }
 
+std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTreeDFT(const std::vector<std::string>& actions, size_t maxThreads, bool earlyExit)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update(true);
+  std::string errMsg;
+
+  return PredictionTree::planActionTreeDFT(scene, graph, broadphase, actions, actions.size(),
+                                           maxThreads, sim->entity.getDt(), earlyExit, errMsg);
+}
+
 std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgent,
                                                      const std::string& gazeTarget)
 {

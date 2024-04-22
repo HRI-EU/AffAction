@@ -56,13 +56,13 @@ public:
   int idx; /**< Solution index of the action. */
   int uniqueId; /**< Unique identifier for nodes in tree. */
   int level; /**< 0 for root, increasing for each child level. */
-  bool isPredicted; /**< True if prediction of the node has run, false otherwise. */
   std::vector<double> bodyTransforms;
 
   PredictionTreeNode* parent; /**< Pointer to the parent node. */
   std::vector<PredictionTreeNode*> children; /**< Vector of child nodes. */
   RcsGraph* graph; /**< Pointer to the Rcs graph associated with the action. */
-  std::shared_ptr<ActionBase> action;
+  std::string resolvedActionCommand;
+  static size_t uniqueIdCount;
 
   /**
    * @brief Default constructor.
@@ -158,11 +158,6 @@ public:
    * @brief Returns the number of tree nodes.
    */
   size_t getNumNodes() const;
-
-  /**
-   * @brief Returns a vector of all leaf nodes.
-   */
-  void getLeafNodes(std::vector<PredictionTreeNode*>& collection, bool onlySuccessfulOnes=false, PredictionTreeNode* node = nullptr) const;
 
   /**
    * @brief Recursively prints the tree in a visual format.
@@ -278,10 +273,22 @@ public:
                                                         std::string& errMsg);
 
   void DFS(ActionScene& scene,
-           std::vector<PredictionTreeNode*>& leafs,
+           const RcsBroadPhase* bp,
            std::vector<std::string> actions,
+           double dt,
            size_t nThreads,
-           PredictionTreeNode* node);
+           bool earlyExit,
+           PredictionTreeNode* node,
+           bool& finished);
+
+  void DFS_MT(ActionScene& scene,
+              const RcsBroadPhase* bp,
+              std::vector<std::string> actions,
+              double dt,
+              size_t nThreads,
+              bool earlyExit,
+              PredictionTreeNode* node,
+              bool& finished);
 
   static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
                                                            RcsGraph* graph,
@@ -294,6 +301,14 @@ public:
                                                            std::string& errMsg);
 
 private:
+
+  /**
+   * @brief Returns a vector of all leaf nodes.
+   */
+  void getLeafNodes(std::vector<PredictionTreeNode*>& collection,
+                    bool onlySuccessfulOnes=false,
+                    PredictionTreeNode* node = nullptr) const;
+
   /**
    * @brief Recursively finds the smallest cost path in the prediction tree.
    *
