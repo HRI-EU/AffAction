@@ -139,7 +139,6 @@ private:
   bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
   void printCompletedActionStack() const;
-  std::string resolveActionSequence(std::string text) const;
 
   // Subscribed callbacks
   void onQuit();

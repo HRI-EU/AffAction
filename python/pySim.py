@@ -44,7 +44,6 @@ setLogLevel(-1)
 sim = LlmSim()
 sim.noTextGui = True
 sim.unittest = False
-sim.useWebsocket = False
 sim.speedUp = 3
 sim.noLimits = False
 sim.verbose = False

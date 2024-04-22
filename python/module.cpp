@@ -41,6 +41,7 @@ namespace py = pybind11;
 #include <LandmarkBase.h>
 #include <ExampleLLMSim.h>
 #include <ActionFactory.h>
+#include <ActionSequence.h>
 #include <HardwareComponent.h>
 #include <LandmarkZmqComponent.hpp>
 
@@ -550,6 +551,66 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.entity.publish("ActionSequence", newCmd);
 
     bool success = true;
+
+    if (blocking)
+    {
+      blocker.wait();
+      STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+      RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
+    }
+
+    RLOG_CPP(0, "Finished: " << newCmd);
+
+    return success;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Predict action sequence as tree
+  // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
+  //////////////////////////////////////////////////////////////////////////////
+  .def("plan", [](aff::ExampleLLMSim& ex, std::string sequenceCommand) -> bool
+  {
+    sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
+    std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
+    auto tree = ex.getQuery()->planActionTreeDFT(seq, 0, true);
+    if (!tree)
+    {
+      RLOG_CPP(0, "Could not find solution for: '" << sequenceCommand << "'");
+      return false;
+    }
+
+    std::vector<std::string> predictedActions;  // Action sequence which will be returned
+
+    auto sln = tree->findSolutionPath();
+    for (const auto& nd : sln)
+    {
+      predictedActions.push_back(nd->actionCommand());
+      RLOG_CPP(0, "Action: " << nd->actionCommand() <<
+               " cost: " << nd->cost);
+    }
+
+    if (predictedActions.empty())
+    {
+      RLOG_CPP(0, "Could not find solution");
+      return false;
+    }
+
+    RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps");
+
+    std::string newCmd;
+    for (size_t i = 0; i < predictedActions.size(); ++i)
+    {
+      newCmd += predictedActions[i];
+      newCmd += ";";
+    }
+
+    RLOG_CPP(0, "Command : " << newCmd);
+
+    PollBlockerComponent blocker(&ex);
+    ex.entity.publish("ActionSequence", newCmd);
+
+    bool success = true;
+    bool blocking = true;
 
     if (blocking)
     {

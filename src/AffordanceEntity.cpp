@@ -470,12 +470,15 @@ void sort(const RcsGraph* graph,
     pairs.emplace_back(std::make_tuple(a, c));
   }
 
-  for (size_t i=0; i<qPairs.size(); ++i)
+  REXEC(5)
   {
-    RLOG(0, "Solution %zu: %s - %s = %f", i,
-         std::get<0>(qPairs[i])->frame.c_str(),
-         std::get<1>(qPairs[i])->frame.c_str(),
-         std::get<2>(qPairs[i]));
+    for (size_t i=0; i<qPairs.size(); ++i)
+    {
+      RLOG(0, "Solution %zu: %s - %s = %f", i,
+           std::get<0>(qPairs[i])->frame.c_str(),
+           std::get<1>(qPairs[i])->frame.c_str(),
+           std::get<2>(qPairs[i]));
+    }
   }
 }
 

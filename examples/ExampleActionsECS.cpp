@@ -79,37 +79,6 @@ namespace aff
 {
 
 /*******************************************************************************
- * Replace the first occurence of a string in another string.
- * The replacement is aware of word boundaries, i.e. it will not replace
- * "s 1" in "s 11".
- ******************************************************************************/
-static void replaceFirst(std::string& str, const std::string& search, const std::string& replace)
-{
-  size_t pos = 0;
-  const size_t search_len = search.length();
-  const size_t replace_len = replace.length();
-
-  while ((pos = str.find(search, pos)) != std::string::npos)
-  {
-    // Check if the found occurrence is not part of a bigger sequence
-    // E.g. for "s 1" we don't want to replace "s 11"
-    if ((pos == 0 || !std::isalnum(str[pos - 1])) &&
-        (pos + search_len == str.length() || !std::isalnum(str[pos + search_len])))
-    {
-      str.replace(pos, search_len, replace);
-      pos += replace_len;
-      // quit after 1st replacement
-      break;
-    }
-    else
-    {
-      // Move past the found occurrence without replacing
-      pos += search_len;
-    }
-  }
-}
-
-/*******************************************************************************
  *
  ******************************************************************************/
 void onSetLogLevel(int dl)
@@ -1090,7 +1059,7 @@ void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
   processingAction = true;
   const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = false;
-  sequenceCommand = resolveActionSequence(sequenceCommand);
+  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
   std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
   t1.detach();
 }
@@ -1100,7 +1069,7 @@ void ExampleActionsECS::onPlanActionSequenceDFS(std::string sequenceCommand)
   processingAction = true;
   const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = true;
-  sequenceCommand = resolveActionSequence(sequenceCommand);
+  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
   std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
   t1.detach();
 }
@@ -1110,7 +1079,7 @@ void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string sequenceCommand)
   processingAction = true;
   const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = true;
-  sequenceCommand = resolveActionSequence(sequenceCommand);
+  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
   std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, true);
   t1.detach();
 }
@@ -1134,118 +1103,7 @@ void ExampleActionsECS::onActionSequence(std::string text)
     return;
   }
 
-  // Step 1: Analyse if we received an ActionSequence to be broken down. This is
-  // starting with either 'sequence' or 's'.
-  std::vector<std::string> words = Rcs::String_split(text, " ");
-
-  // We first check if a sequence command has been given. This is
-  // starting with either 'sequence' or 's'.
-  if ((!words.empty()) && (words[0] == "sequence" || words[0] == "s"))
-  {
-    if (words.size() != 2)
-    {
-      // In case the sequence command has been given, we expect more
-      // characters describing it. If there are none, this is interpreted
-      // as an error and we return.
-      std::string explanation = "ERROR REASON: Received sequence with " + std::to_string(words.size()) +
-                                " parameters (two are expected). SUGGESTION: Check your spelling DEVELOPER: '" +
-                                text + "' " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-      entity.publish("ActionResult", false, 0.0, explanation);
-      return;
-    }
-
-    // In case we detected a sequence, we parse the graph's configuration
-    // file again to load all available sequences. We do this here in order
-    // to allow to modify the file at run-time.
-    RLOG(1, "Detected action sequence");
-    ActionSequence seq(controller->getGraph()->cfgFile);
-    bool sequenceFound = false;
-    for (const auto& pair : seq.sequences)
-    {
-      if (words[1] == pair.first)
-      {
-        // If a valid sequence name has been found, we expand it into the text string.
-        text = pair.second;
-        sequenceFound = true;
-        RLOG_CPP(0, "Sequence expanded to '" << text << "'");
-        break;
-      }
-    }
-
-    // If we end up here, a sequence with a name has been given, but the
-    // sequence was not specified in the configuration file. This is
-    // treated as an error.
-    if (!sequenceFound)
-    {
-      std::string explanation = "ERROR: Can't execute action sequence. REASON: Action sequence " +
-                                words[1] + " not found in config file DEVELOPER: '" + text + "'";
-      entity.publish("ActionResult", false, 0.0, explanation);
-      RLOG_CPP(0, explanation);
-      return;
-    }
-
-    // Check for cascading sequences and expand them
-    bool innerSequenceFound = true;
-    while (innerSequenceFound)
-    {
-      // We start with the assumption that no inner sequence has been found.
-      // Split the text into its individual commands.
-      innerSequenceFound = false;
-      std::vector<std::string> textWords = Rcs::String_split(text, ";");
-
-      // Split individual commands into single words and check if they are
-      // sequences.
-      for (const auto& command : textWords)
-      {
-        std::vector<std::string> words = Rcs::String_split(command, " ");
-        if ((!words.empty()) && (words[0] == "sequence" || words[0] == "s"))
-        {
-          // If a inner sequence command is found, start the expanding process.
-          // Flag that a cascading sequence has been found, which enforces another
-          // top level loop to check for new inner sequences.
-          innerSequenceFound = true;
-          RLOG_CPP(1, "Detected cascading action sequence");
-
-          // Check if the sequence is in fact part of the configuration file.
-          bool sequenceFound = false;
-          for (const auto& pair : seq.sequences)
-          {
-            // If we find the sequence, we replace the ALL the occurences
-            // with the sequence text as it's defined in the config.
-            if (words[1] == pair.first)
-            {
-              RLOG_CPP(1, "Expanding '" << command << "' into '" << pair.second << "'");
-
-              replaceFirst(text, command, pair.second);
-
-              sequenceFound = true;
-              RLOG_CPP(1, "Sequence expanded to '" << text << "'");
-              break;
-            }
-          }
-
-          // TODO (CP) - duplicated code, refactor
-          // If we end up here, a sequence with a name has been given, but the
-          // sequence was not specified in the configuration file. This is
-          // treated as an error.
-          if (!sequenceFound)
-          {
-            std::string explanation = "ERROR: Can't execute action sequence. REASON: Action sequence " +
-                                      words[1] + " not found in config file DEVELOPER: '" + text + "'";
-            entity.publish("ActionResult", false, 0.0, explanation);
-            RLOG_CPP(0, explanation);
-            return;
-          }
-        }
-      }
-    }
-
-    if (words[0] == "s")
-    {
-      entity.publish("PlanActionSequence", text);
-      return;
-    }
-  }
+  text = ActionSequence::resolve(getGraph()->cfgFile, text);
 
   // From here on, any sequence has been expanded
   RLOG_CPP(1, "Sequence expanded to '" << text << "'");
@@ -1258,32 +1116,6 @@ void ExampleActionsECS::onActionSequence(std::string text)
   {
     Rcs::String_trim(action);
   }
-
-  // In case of action sequences, perform lookahead predictions.
-  // The number of actions to lookahead is determined by the
-  // stepsToPlan parameter (default is actionStack.size()).
-  // The lookahead process returns a corrected actionStack with
-  // various parameters for actions (e.g. grip type to use in the case
-  // of the `get` action) based on what the best sequence
-  // of future predictions was found.
-#if 0
-  if (lookahead)
-  {
-    if (actionStack.size() > 1)
-    {
-      if (lookaheadCount > 1)
-      {
-        // Lookahead a specific number of actions only
-        actionStack = std::move(sceneQuery->planActionSequence(actionStack, lookaheadCount));
-      }
-      else
-      {
-        // Lookahead the entire sequence
-        actionStack = std::move(sceneQuery->planActionSequence(actionStack, actionStack.size()));
-      }
-    }
-  }
-#endif
 
   entity.publish("TextCommand", actionStack[0]);
 }
@@ -1639,113 +1471,6 @@ void ExampleActionsECS::lockStepMtx() const
 void ExampleActionsECS::unlockStepMtx() const
 {
   stepMtx.unlock();
-}
-
-std::string ExampleActionsECS::resolveActionSequence(std::string text) const
-{
-  // Step 1: Analyse if we received an ActionSequence to be broken down. This is
-  // starting with either 'sequence' or 's'.
-  std::vector<std::string> words = Rcs::String_split(text, " ");
-
-  // We first check if a sequence command has been given. This is
-  // starting with either 'sequence' or 's'.
-  if (words.size() != 2)
-  {
-    RLOG_CPP(1, "Received sequence with " << words.size() << " parameters (two are expected).");
-    return text;
-  }
-
-  if (words[0] != "sequence" && words[0] != "s")
-  {
-    RLOG_CPP(1, "Sequence keyword is " << words[0] << " but must be 's' or 'sequence'");
-    return text;
-  }
-
-  // In case we detected a sequence, we parse the graph's configuration
-  // file again to load all available sequences. We do this here in order
-  // to allow to modify the file at run-time.
-  RLOG(1, "Detected action sequence");
-  ActionSequence seq(controller->getGraph()->cfgFile);
-  bool sequenceFound = false;
-  for (const auto& pair : seq.sequences)
-  {
-    if (words[1] == pair.first)
-    {
-      // If a valid sequence name has been found, we expand it into the text string.
-      text = pair.second;
-      sequenceFound = true;
-      RLOG_CPP(0, "Sequence expanded to '" << text << "'");
-      break;
-    }
-  }
-
-  // If we end up here, a sequence with a name has been given, but the
-  // sequence was not specified in the configuration file. This is
-  // treated as an error.
-  if (!sequenceFound)
-  {
-    RLOG_CPP(0, "Action sequence " << words[1] << " not found in config file: '"
-             << text << "'");
-    return text;
-  }
-
-  // Check for cascading sequences and expand them
-  bool innerSequenceFound = true;
-  while (innerSequenceFound)
-  {
-    // We start with the assumption that no inner sequence has been found.
-    // Split the text into its individual commands.
-    innerSequenceFound = false;
-    std::vector<std::string> textWords = Rcs::String_split(text, ";");
-
-    // Split individual commands into single words and check if they are
-    // sequences.
-    for (const auto& command : textWords)
-    {
-      std::vector<std::string> words = Rcs::String_split(command, " ");
-      if ((!words.empty()) && (words[0] == "sequence" || words[0] == "s"))
-      {
-        // If a inner sequence command is found, start the expanding process.
-        // Flag that a cascading sequence has been found, which enforces another
-        // top level loop to check for new inner sequences.
-        innerSequenceFound = true;
-        RLOG_CPP(1, "Detected cascading action sequence");
-
-        // Check if the sequence is in fact part of the configuration file.
-        bool sequenceFound = false;
-        for (const auto& pair : seq.sequences)
-        {
-          // If we find the sequence, we replace the ALL the occurences
-          // with the sequence text as it's defined in the config.
-          if (words[1] == pair.first)
-          {
-            RLOG_CPP(1, "Expanding '" << command << "' into '" << pair.second << "'");
-
-            replaceFirst(text, command, pair.second);
-
-            sequenceFound = true;
-            RLOG_CPP(1, "Sequence expanded to '" << text << "'");
-            break;
-          }
-        }
-
-        // TODO (CP) - duplicated code, refactor
-        // If we end up here, a sequence with a name has been given, but the
-        // sequence was not specified in the configuration file. This is
-        // treated as an error.
-        if (!sequenceFound)
-        {
-          RLOG_CPP(0, "Action sequence " << words[1] << " not found in config file: '" << text << "'");
-          return text;
-        }
-      }
-    }
-  }
-
-  // From here on, any sequence has been expanded
-  RLOG_CPP(1, "Sequence expanded to '" << text << "'");
-
-  return text;
 }
 
 }   // namespace aff

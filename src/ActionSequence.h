@@ -41,7 +41,7 @@
 #include <tuple>
 #include <map>
 
-namespace aff 
+namespace aff
 {
 
 /*******************************************************************************
@@ -55,6 +55,7 @@ public:
   std::vector<std::pair<std::string, std::string>> filterByKeyword(const std::string& keyWord) const;
   void print() const;
   static void parseRecursive(const xmlNodePtr parentNode, ActionSequence& sequence);
+  static std::string resolve(const std::string& cfgFile, std::string text);
   std::vector<std::pair<std::string, std::string>> sequences;
 };
 

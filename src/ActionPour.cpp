@@ -221,11 +221,11 @@ void ActionPour::init(const ActionScene& domain,
   if (R_r_bottle[1] < R_r_glas[1])   // Pouring with right hand
   {
     bottleInRightHand = true;
-    RLOG(0, "Pouring with right hand");
+    RLOG(5, "Pouring with right hand");
   }
   else   // Pouring with left hand
   {
-    RLOG(0, "Pouring with left hand");
+    RLOG(5, "Pouring with left hand");
     bottleInRightHand = false;
   }
 
