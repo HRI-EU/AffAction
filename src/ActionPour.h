@@ -54,6 +54,7 @@ public:
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
+  std::string getActionCommand() const;
 
 protected:
 
@@ -61,8 +62,7 @@ protected:
             const RcsGraph* graph,
             const std::string& objectToPourFrom,
             const std::string& objectToPourTo,
-            double amountToPour,
-            const std::string& roboBase);
+            double amountToPour);
 
   std::vector<std::string> createTasksXML() const;
   void performLiquidTransition(const AffordanceEntity* pourFromAff,

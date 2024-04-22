@@ -81,18 +81,15 @@ ActionPour::ActionPour(const ActionScene& domain,
                           "Pour only liquid amounts with positive volume.");
   }
 
-  init(domain, graph, objectToPourFrom, objectToPourInto, amountToPour, "base_footprint");
+  init(domain, graph, objectToPourFrom, objectToPourInto, amountToPour);
 }
 
 void ActionPour::init(const ActionScene& domain,
                       const RcsGraph* graph,
                       const std::string& objectToPourFrom,
                       const std::string& objToPourInto,
-                      double amountToPour,
-                      const std::string& roboBase)
+                      double amountToPour)
 {
-  std::string errorMsg = "ERROR ";
-
   if (objectToPourFrom == objToPourInto)
   {
     throw ActionException(ActionException::ParamNotFound,
@@ -151,13 +148,28 @@ void ActionPour::init(const ActionScene& domain,
 
   usedManipulators.push_back(pouringHand->name);
 
+  // Determine the agent that is owning the manipulator
+  Agent* agent = Agent::getAgentOwningManipulator(&domain, pouringHand->name);
+  if (!agent)
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "The manipulator " + pouringHand->name + " could not be associated with an agent.",
+                          "Check your configuration file");
+  }
+
+  if (!dynamic_cast<RobotAgent*>(agent))
+  {
+    throw ActionException(ActionException::ParamInvalid,
+                          "The agent " + agent->name + " is not a robot agent.");
+  }
+
   // We make a local copy of the body strings, since they might be resolved
   // into different names when being a GenericBody
   RCHECK_MSG(openings.size()==1, "Can't deal with more than 1 opening");
   RCHECK_MSG(containers.size()==1, "Can't deal with more than 1 container");
   this->bottle = openings[0]->frame;
   this->glas = containers[0]->frame;
-  this->roboBaseFrame = roboBase;
+  this->roboBaseFrame = agent->bdyName;
 
   // We go through the following look-ups to resolve the names of possible
   // generic bodies.
@@ -189,7 +201,7 @@ void ActionPour::init(const ActionScene& domain,
 
 
   // Task naming
-  this->taskRelPos = bottle + "-" + glas + "-" + roboBase + "-XYZ";
+  this->taskRelPos = bottle + "-" + glas + "-" + roboBaseFrame + "-XYZ";
   this->taskBottleOri = bottle + "-POLAR";
   this->taskGlasOri = glas + "-POLAR";
   this->taskGlasPosX = glas + "-X";
@@ -453,6 +465,11 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
 std::unique_ptr<ActionBase> ActionPour::clone() const
 {
   return std::make_unique<ActionPour>(*this);
+}
+
+std::string ActionPour::getActionCommand() const
+{
+  return ActionBase::getActionCommand() + " duration " + std::to_string(getDurationHint());
 }
 
 }   // namespace aff
