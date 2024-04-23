@@ -134,7 +134,7 @@ static void eraseAffordancesNearerOrFartherNtt(const ActionScene& domain,
       if (di <= d_limit)
       {
         eraseSupportable = !trueForFarther;
-        RLOG(0, "%s - %s is %s (d=%f, limit=%f)",
+        RLOG(5, "%s - %s is %s (d=%f, limit=%f)",
              nttFrames[0]->name, putFrame->name,
              (eraseSupportable ? "erased" : "not erased"), di, d_limit);
         break;

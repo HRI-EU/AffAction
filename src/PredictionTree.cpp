@@ -997,8 +997,6 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT(ActionScene& d
  ******************************************************************************/
 static int launchedThreads = 0;
 static int maxThreads = std::thread::hardware_concurrency();
-// static int branchingFactor = 5;
-// static int depth = 4;
 static int globalThreadNumber = 0;
 static int startedThreads = 0;
 static int stoppedThreads = 0;
@@ -1101,7 +1099,8 @@ void DFSMT(ActionScene& scene,
 
   if (!action)
   {
-    RLOG_CPP(0, "Could not create action for '" << levelCommands[node->level] << "'");
+    RLOG_CPP(0, "Could not create this action: '" << levelCommands[node->level] << "'");
+    return;
   }
 
   std::vector<std::thread> workers;
