@@ -36,15 +36,17 @@
 #include "ActivationSet.h"
 #include "VectorConstraint.h"
 #include "PolarConstraint.h"
+#include "EulerConstraint.h"
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
+#include <Rcs_math.h>
 
 #include <algorithm>
 
-#define ORI_POLAR_INCL
+//#define ORI_POLAR_INCL
 
 namespace aff
 {
@@ -73,7 +75,7 @@ ActionPoint::ActionPoint(const ActionScene& scene,
                           "Number of passed strings is not 1");
   }
 
-  std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(params[0]);
+  auto ntts = scene.getSceneEntities(params[0]);
   const SceneEntity* ntt = nullptr;
 
   if (!ntts.empty())
@@ -87,27 +89,38 @@ ActionPoint::ActionPoint(const ActionScene& scene,
     pointBdyName = ntt->bdyName;
   }
 
-  if (pointBdyName.empty())
+  const Agent* agentToPointAt = dynamic_cast<const Agent*>(ntt);
+  if (agentToPointAt)
   {
-    const Agent* agent = scene.getAgent(params[0]);
-
-    if (!agent)
-    {
-      throw ActionException(ActionException::ParamNotFound,
-                            "The agent or object " + params[0] + " is unknown. ",
-                            "Point at an object or agent name that is defined in the environment",
-                            "This name was checked: " + params[0]);
-    }
-
-    // From here on, we have a valid agent. We point at its (first) head
-    auto m = agent->getManipulatorsOfType(&scene, "head");
+    auto m = agentToPointAt->getManipulatorsOfType(&scene, "head");
     if (!m.empty())
     {
       ntt = m[0];
       pointBdyName = ntt->bdyName;
     }
-
   }
+
+  // if (pointBdyName.empty())
+  // {
+  //   const Agent* agent = scene.getAgent(params[0]);
+
+  //   if (!agent)
+  //   {
+  //     throw ActionException(ActionException::ParamNotFound,
+  //                           "The agent or object " + params[0] + " is unknown. ",
+  //                           "Point at an object or agent name that is defined in the environment",
+  //                           "This name was checked: " + params[0]);
+  //   }
+
+  //   // From here on, we have a valid agent. We point at its (first) head
+  //   auto m = agent->getManipulatorsOfType(&scene, "head");
+  //   if (!m.empty())
+  //   {
+  //     ntt = m[0];
+  //     pointBdyName = ntt->bdyName;
+  //   }
+
+  // }
 
   // Give up: pointTarget is no entity, no agent, no RcsBody.
   if (pointBdyName.empty())
@@ -221,9 +234,9 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
   a1->addActivation(t_start, true, 0.5, taskPoint);
-  a1->addActivation(t_start+0.5*(t_end-t_start), true, 0.5, taskDir);
+  a1->addActivation(t_start+0.0*(t_end-t_start), true, 0.5, taskDir);
   a1->addActivation(t_start, true, 0.5, taskDist);
-  a1->addActivation(t_start + 0.25 * (t_end - t_start), true, 0.5, taskHandIncline);
+  //a1->addActivation(t_start + 0.25 * (t_end - t_start), true, 0.5, taskHandIncline);
   a1->addActivation(t_start, true, 0.5, taskFingers);
 
   if (!keepTasksActiveAfterEnd)
@@ -231,7 +244,7 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
     a1->addActivation(t_end + afterTime, false, 0.5, taskPoint);
     a1->addActivation(t_end + afterTime, false, 0.5, taskDir);
     a1->addActivation(t_end + afterTime, false, 0.5, taskDist);
-    a1->addActivation(t_end + afterTime, false, 0.5, taskHandIncline);
+    //a1->addActivation(t_end + afterTime, false, 0.5, taskHandIncline);
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
   }
 
@@ -242,7 +255,14 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {M_PI_2}, taskHandIncline));
 #else
   double abc[3][3];
-  Vec3d_copy(abc[0], pointDirection);
+  Vec3d_copy(abc[2], pointDirection);   // z-axis from object to shoulder
+  Vec3d_crossProduct(abc[0], abc[2], Vec3d_ez());   // force x-axis to horizontal plane
+  Vec3d_normalizeSelf(abc[0]);
+  Vec3d_crossProduct(abc[1], abc[2], abc[0]);
+  RCHECK(Mat3d_isValid(abc));
+  double ea[3];
+  Mat3d_toEulerAngles(ea, abc);
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_end, ea, taskDir));
 #endif
 
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {0.0, 0.0}, taskPoint));
@@ -260,6 +280,11 @@ std::vector<std::string> ActionPoint::getManipulators() const
 std::unique_ptr<ActionBase> ActionPoint::clone() const
 {
   return std::make_unique<ActionPoint>(*this);
+}
+
+std::string ActionPoint::getActionCommand() const
+{
+  return "point " + pointBdyName + " duration " + std::to_string(getDurationHint());
 }
 
 }   // namespace aff

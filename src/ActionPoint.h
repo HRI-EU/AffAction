@@ -51,6 +51,7 @@ public:
 
   virtual ~ActionPoint();
   std::unique_ptr<ActionBase> clone() const override;
+  std::string getActionCommand() const;
 
 protected:
 
