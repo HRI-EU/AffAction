@@ -132,6 +132,11 @@ RcsBody* SceneEntity::body(RcsGraph* graph)
   return b;
 }
 
+HTr SceneEntity::getBodyTransform(const RcsGraph* graph) const
+{
+  return body(graph)->A_BI;
+}
+
 bool SceneEntity::isCollideable(const RcsGraph* graph) const
 {
   const RcsBody* body = RcsGraph_getBodyByName(graph, bdyName.c_str());

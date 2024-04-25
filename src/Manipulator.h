@@ -89,6 +89,10 @@ public:
    */
   size_t getNumFingers() const;
 
+  /*! \brief Returns the base joint transformation in world coordinates.
+   */
+  HTr getBaseJointTransform(const RcsGraph* graph) const;
+
   /*! \brief For now this is specific for the Jaco Gen2 3-finger hand. By
    *         measuring, we obtained: y = 175*(1-x) where y is the finger
    *         tip distance in [mm] and x is the joint angle in [rad]. The

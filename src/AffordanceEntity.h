@@ -75,6 +75,10 @@ public:
    */
   const RcsBody* body(const RcsGraph* graph) const;
   RcsBody* body(RcsGraph* graph);
+
+  /*! \brief Returns the RcsBody's transformation (matching bdyName).
+   */
+  HTr getBodyTransform(const RcsGraph* graph) const;
 };
 
 class AffordanceEntity : public SceneEntity

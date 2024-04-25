@@ -110,9 +110,7 @@ public:
   virtual ~HumanAgent();
 
   Agent* clone() const;
-  //void setMarkers(const std::vector<HTr>& newMarkers);
   void setVisibility(const bool newVisibilty);
-  //void projectMarkersOnManipulators(const RcsGraph* graph);
   bool hasHead() const;
   bool getHeadTransform(HTr* A_HI) const;
   bool getHeadPosition(double pos[3]) const;

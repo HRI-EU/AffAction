@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <cfloat>
 
 namespace aff
 {

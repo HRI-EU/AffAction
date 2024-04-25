@@ -233,6 +233,7 @@ SET(ACTION_SRCS
 src/ActionBase.cpp
 src/ActionGet.cpp
 src/ActionPass.cpp
+src/ActionPoint.cpp
 src/ActionPush.cpp
 src/ActionPut.cpp
 src/ActionPour.cpp

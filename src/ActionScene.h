@@ -99,6 +99,22 @@ public:
 
   Agent* getAgent(const std::string& agentName);
   const Agent* getAgent(const std::string& agentName) const;
+
+  template<typename T>
+  std::vector<const T*> getAgents() const
+  {
+    std::vector<const T*> res;
+    for (size_t i = 0; i < agents.size(); ++i)
+    {
+      const T* a = dynamic_cast<T*>(agents[i]);
+      if (a)
+      {
+        res.push_back(a);
+      }
+    }
+    return res;
+  }
+
 };
 
 void sort(const RcsGraph* graph,

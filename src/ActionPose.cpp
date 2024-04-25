@@ -46,6 +46,7 @@
 #include <Rcs_utilsCPP.h>
 
 #include <tuple>
+#include <cfloat>
 
 
 

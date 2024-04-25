@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <memory>
 #include <fstream>
+#include <cfloat>
 
 
 // When computing the duration scaling factor to touch the velocity limits,

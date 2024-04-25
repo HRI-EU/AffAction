@@ -105,21 +105,12 @@ ActionGet::ActionGet(const ActionScene& domain,
 
 std::string ActionGet::getActionCommand() const
 {
-  std::string actionCommand;
-
-  actionCommand += "get ";
-  actionCommand += objectName + " ";
   auto get_manipulators = getManipulators();
-  if (get_manipulators.empty())
-  {
-    actionCommand += "invalid_manipulator ";
-  }
-  else
-  {
-    actionCommand += get_manipulators[0] + " ";  // This should contain only 1 maniplator everytime
-  }
-  actionCommand += graspTypeToString(graspType);
+  RCHECK(!get_manipulators.empty());
 
+  // The first manipulator is the one to get the object with.
+  std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
+  actionCommand += graspTypeToString(graspType);
   actionCommand += " duration " + std::to_string(getDurationHint());
 
   return actionCommand;

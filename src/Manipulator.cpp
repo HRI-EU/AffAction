@@ -48,6 +48,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <cfloat>
 
 /*
 
@@ -271,6 +272,13 @@ bool Manipulator::isEmpty(const RcsGraph* graph) const
 size_t Manipulator::getNumFingers() const
 {
   return fingerJoints.size();
+}
+
+HTr Manipulator::getBaseJointTransform(const RcsGraph* graph) const
+{
+  const RcsJoint* jnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
+  RCHECK_MSG(jnt, "Base joint '%s' not found in graph", baseJointName.c_str());
+  return jnt->A_JI;
 }
 
 std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const
