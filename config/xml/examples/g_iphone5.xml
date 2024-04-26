@@ -36,6 +36,7 @@
   </Body>
   
   <AffordanceModel body="iphone" types="mobile_phone">
+    <Stackable frame="iphone"/>
   </AffordanceModel>
 
 </Graph>
