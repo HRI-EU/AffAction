@@ -38,7 +38,6 @@
 #include "EulerConstraint.h"
 #include "PositionConstraint.h"
 
-#include <TaskFactory.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
@@ -251,8 +250,6 @@ std::vector<std::string> ActionPoint::createTasksXML() const
 {
   std::vector<std::string> tasks;
 
-  // taskGaze: XYZ-task with effector=gazeTarget and refBdy=cameraFrame
-  // was YZ
   std::string xmlTask;
   xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"ABC\" " +
             "effector=\"" + pointerFrame + "\" />";
