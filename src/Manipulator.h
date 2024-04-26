@@ -89,8 +89,12 @@ public:
    */
   size_t getNumFingers() const;
 
-  /*! \brief Returns the base joint transformation in world coordinates.
+  /*! \brief Returns the base joint. If the joint does not exist, this function will exit.
    */
+  const RcsJoint* getBaseJoint(const RcsGraph* graph) const;
+
+  /*! \brief Returns the base joint transformation in world coordinates.
+     */
   HTr getBaseJointTransform(const RcsGraph* graph) const;
 
   /*! \brief For now this is specific for the Jaco Gen2 3-finger hand. By

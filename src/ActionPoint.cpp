@@ -46,7 +46,7 @@
 
 #include <algorithm>
 
-//#define ORI_POLAR_INCL
+
 
 namespace aff
 {
@@ -67,68 +67,33 @@ ActionPoint::ActionPoint(const ActionScene& scene,
                           "Use an object name that is defined in the environment");
   }
 
-  if (!params.size()==1)
+  std::vector<const SceneEntity*> nttsToPointAt;
+  for (const auto& e : scene.getSceneEntities(params[0]))
   {
-    throw ActionException(ActionException::ParamInvalid,
-                          "Received " + std::to_string(params.size()) + " objects to point at the same time.",
-                          "Specify exactly one object to point at.",
-                          "Number of passed strings is not 1");
-  }
-
-  auto ntts = scene.getSceneEntities(params[0]);
-  const SceneEntity* ntt = nullptr;
-
-  if (!ntts.empty())
-  {
-    if (ntts.size()!=1)
+    const Agent* agent = dynamic_cast<const Agent*>(e);
+    if (agent)   // Select the agent's head as pointing target
     {
-      RLOG_CPP(1, "Found several object with the name " << params[0]);
+      auto m = agent->getManipulatorsOfType(&scene, "head");
+      if (!m.empty())
+      {
+        nttsToPointAt.push_back(m[0]);
+      }
+    }
+    else   // not an agent
+    {
+      nttsToPointAt.push_back(e);
     }
 
-    ntt = ntts[0];
-    pointBdyName = ntt->bdyName;
   }
 
-  const Agent* agentToPointAt = dynamic_cast<const Agent*>(ntt);
-  if (agentToPointAt)
-  {
-    auto m = agentToPointAt->getManipulatorsOfType(&scene, "head");
-    if (!m.empty())
-    {
-      ntt = m[0];
-      pointBdyName = ntt->bdyName;
-    }
-  }
-
-  // if (pointBdyName.empty())
-  // {
-  //   const Agent* agent = scene.getAgent(params[0]);
-
-  //   if (!agent)
-  //   {
-  //     throw ActionException(ActionException::ParamNotFound,
-  //                           "The agent or object " + params[0] + " is unknown. ",
-  //                           "Point at an object or agent name that is defined in the environment",
-  //                           "This name was checked: " + params[0]);
-  //   }
-
-  //   // From here on, we have a valid agent. We point at its (first) head
-  //   auto m = agent->getManipulatorsOfType(&scene, "head");
-  //   if (!m.empty())
-  //   {
-  //     ntt = m[0];
-  //     pointBdyName = ntt->bdyName;
-  //   }
-
-  // }
-
-  // Give up: pointTarget is no entity, no agent, no RcsBody.
-  if (pointBdyName.empty())
+  if (nttsToPointAt.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "Can't point at " + params[0] + ". It is neither an entity nor an agent nor a body",
-                          "Check if the given target is correct, or use another one");
+                          "Could not find entity to point at for name '" + params[0] + "'.",
+                          "Make sure the object exists in the scene.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
+
 
   // Find robot agent that should point. \todo: handle multiple agents
   auto robots = scene.getAgents<RobotAgent>();
@@ -141,55 +106,161 @@ ActionPoint::ActionPoint(const ActionScene& scene,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  std::vector<const Manipulator*> hands = robots[0]->getManipulatorsOfType(&scene, "hand");
+  std::vector<const Manipulator*> hands;
+
+  if (params.size()>1)
+  {
+    const Manipulator* hand = scene.getManipulator(params[1]);
+    if (!hand)
+    {
+      throw ActionException(ActionException::ParamInvalid,
+                            "Specified manipulator '" + params[1] + " ' not found in the scene.",
+                            "Check manipulator name.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    hands.push_back(hand);
+  }
+  else
+  {
+    hands = robots[0]->getManipulatorsOfType(&scene, "hand");
+  }
+
   if (hands.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
                           "Can't find a hand of robot " + robots[0]->name + " to point with");
   }
 
-  this->pointerFrame = hands[0]->bdyName;
+  // Assemble all combinations
+  for (const auto& h : hands)
+  {
+    for (const auto& e : nttsToPointAt)
+    {
+      RLOG(0, "Adding '%s' - '%s' to map", h->bdyName.c_str(), e->bdyName.c_str());
+      manipulatorEntityMap.push_back(std::make_tuple(h->bdyName, e->bdyName,
+                                                     pointDistance(scene, graph, h->bdyName, e->bdyName)));
+    }
+  }
 
+  // Sort the solutions somehow.
+  std::sort(manipulatorEntityMap.begin(), manipulatorEntityMap.end(),
+            [&](std::tuple<std::string,std::string,double>& t1, std::tuple<std::string,std::string,double>& t2)
+  {
+    double d1 = pointDistance(scene, graph, std::get<0>(t1), std::get<1>(t1));
+    double d2 = pointDistance(scene, graph, std::get<0>(t2), std::get<1>(t2));
+
+    return std::get<2>(t1) < std::get<2>(t2);
+  });
+
+  initialize(scene, graph, 0);
+}
+
+ActionPoint::~ActionPoint()
+{
+}
+
+double ActionPoint::pointDistance(const ActionScene& scene, const RcsGraph* graph,
+                                  const std::string& fingerName, const std::string& objectName) const
+{
+  auto fingers = scene.getSceneEntities(fingerName);
+  auto objects = scene.getSceneEntities(objectName);
+  RCHECK_MSG(fingers.size()==1, "Name %s has %zu entities", fingerName.c_str(), fingers.size());
+  RCHECK_MSG(objects.size()==1, "Name %s has %zu entities", objectName.c_str(), objects.size());
+  auto finger = fingers[0];
+  auto object = objects[0];
+  RCHECK_MSG(finger, "%s", fingerName.c_str());
+  RCHECK_MSG(object, "%s", objectName.c_str());
+  return Vec3d_distance(finger->getBodyTransform(graph).org, object->getBodyTransform(graph).org);
+}
+
+bool ActionPoint::initialize(const ActionScene& scene,
+                             const RcsGraph* graph,
+                             size_t solutionRank)
+{
+  if (solutionRank >= getNumSolutions())
+  {
+    return false;
+  }
+
+  pointerFrame = std::get<0>(manipulatorEntityMap[solutionRank]);
+  pointBdyName = std::get<1>(manipulatorEntityMap[solutionRank]);
+
+  const Manipulator* hand = scene.getManipulator(pointerFrame);
+  RCHECK(hand);
+  auto objects = scene.getSceneEntities(pointBdyName);
+  RCHECK(objects.size()==1);
+  auto object = objects[0];
+
+  usedManipulators.clear();
+  usedManipulators.push_back(hand->name);
 
   // Assemble finger task name
   fingerJoints.clear();
-  for (auto& f : hands[0]->fingerJoints)
+  for (auto& f : hand->fingerJoints)
   {
     fingerJoints += f;
     fingerJoints += " ";
   }
 
+  // Determine kinematics: direction vector for orientation constraint
+  const RcsJoint* shldrJnt = hand->getBaseJoint(graph);
 
-  auto heads = robots[0]->getManipulatorsOfType(&scene, "head");
-  if (heads.empty())
+  // Find the body associated with the shoulder joint
+  RCSGRAPH_FOREACH_BODY(graph)
   {
-    throw ActionException(ActionException::ParamNotFound,
-                          "Can't find a head of robot " + robots[0]->name);
+    RCSBODY_FOREACH_JOINT(graph, BODY)
+    {
+      if (JNT->id == shldrJnt->id)
+      {
+        shoulderFrame = BODY->name;
+      }
+    }
   }
 
-  // Determine direction vector for Polar constraint
-  HTr shldr = hands[0]->getBaseJointTransform(graph);
-  HTr objBdy = ntt->getBodyTransform(graph);
-  Vec3d_sub(this->pointDirection, shldr.org, objBdy.org);
+  if (shoulderFrame.empty())
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "Couldn't determine shoulder body for joint " + std::string(shldrJnt->name),
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
+
+  HTr objBdy = object->getBodyTransform(graph);
+  Vec3d_sub(this->pointDirection, shldrJnt->A_JI.org, objBdy.org);
   double len = Vec3d_normalizeSelf(pointDirection);
   if (len==0.0)
   {
-    throw ActionException(ActionException::ParamNotFound,
+    throw ActionException(ActionException::KinematicallyImpossible,
                           "Couldn't determine Polar direction vector", "",
                           "Normalization failed - eye and object coincide");
   }
 
-  this->reach = std::min(0.7*hands[0]->reach, Vec3d_distance(shldr.org, objBdy.org)-0.3);
-
+  this->reach = std::min(0.7*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, objBdy.org)-0.3);
   this->taskPoint = "Point-" + pointerFrame + "-" + pointBdyName;
-  this->taskDir = "Align-" + pointerFrame + "-" + pointBdyName;
+  this->taskOri = "Align-" + pointerFrame + "-" + pointBdyName;
   this->taskDist = "Distance" + pointerFrame + "-" + pointBdyName;
-  this->taskHandIncline = "Incline-" + pointerFrame;
   this->taskFingers = pointerFrame + "_fingers";
+
+  print();
+
+  return true;
 }
 
-ActionPoint::~ActionPoint()
+void ActionPoint::print() const
 {
+  ActionBase::print();
+
+  for (size_t i=0; i<manipulatorEntityMap.size(); ++i)
+  {
+    std::cout << "Solution " << i << ": Manipulator: " << std::get<0>(manipulatorEntityMap[i])
+              << " Object: " << std::get<1>(manipulatorEntityMap[i]) << std::endl;
+  }
+}
+
+size_t ActionPoint::getNumSolutions() const
+{
+  return manipulatorEntityMap.size();
 }
 
 std::vector<std::string> ActionPoint::createTasksXML() const
@@ -203,22 +274,12 @@ std::vector<std::string> ActionPoint::createTasksXML() const
             "effector=\"" + pointBdyName + "\" " + "refBdy=\"" + pointerFrame + "\" />";
   tasks.push_back(xmlTask);
 
-#if defined (ORI_POLAR_INCL)
-  xmlTask = "<Task name=\"" + taskDir + "\" " + "controlVariable=\"POLAR\" " +
+  xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"ABC\" " +
             "effector=\"" + pointerFrame + "\" />";
   tasks.push_back(xmlTask);
-
-  xmlTask = "<Task name=\"" + taskHandIncline + "\" " + "controlVariable=\"Inclination\" axisDirection=\"X\" " +
-            "effector=\"" + pointerFrame + "\" />";
-  tasks.push_back(xmlTask);
-#else
-  xmlTask = "<Task name=\"" + taskDir + "\" " + "controlVariable=\"ABC\" " +
-            "effector=\"" + pointerFrame + "\" />";
-  tasks.push_back(xmlTask);
-#endif
 
   xmlTask = "<Task name=\"" + taskDist + "\" " + "controlVariable=\"SphR\" " +
-            "effector=\"" + pointerFrame + "\" " + "refBdy=\"" + "upperarm_left" + "\" />";
+            "effector=\"" + pointerFrame + "\" " + "refBdy=\"" + shoulderFrame + "\" />";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
@@ -234,26 +295,18 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
   a1->addActivation(t_start, true, 0.5, taskPoint);
-  a1->addActivation(t_start+0.0*(t_end-t_start), true, 0.5, taskDir);
+  a1->addActivation(t_start+0.0*(t_end-t_start), true, 0.5, taskOri);
   a1->addActivation(t_start, true, 0.5, taskDist);
-  //a1->addActivation(t_start + 0.25 * (t_end - t_start), true, 0.5, taskHandIncline);
   a1->addActivation(t_start, true, 0.5, taskFingers);
 
   if (!keepTasksActiveAfterEnd)
   {
     a1->addActivation(t_end + afterTime, false, 0.5, taskPoint);
-    a1->addActivation(t_end + afterTime, false, 0.5, taskDir);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskOri);
     a1->addActivation(t_end + afterTime, false, 0.5, taskDist);
-    //a1->addActivation(t_end + afterTime, false, 0.5, taskHandIncline);
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
   }
 
-#if defined (ORI_POLAR_INCL)
-  double polarAngles[2];
-  Vec3d_getPolarAngles(polarAngles, pointDirection);
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_end, polarAngles[0], polarAngles[1], taskDir));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {M_PI_2}, taskHandIncline));
-#else
   double abc[3][3];
   Vec3d_copy(abc[2], pointDirection);   // z-axis from object to shoulder
   Vec3d_crossProduct(abc[0], abc[2], Vec3d_ez());   // force x-axis to horizontal plane
@@ -262,8 +315,9 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   RCHECK(Mat3d_isValid(abc));
   double ea[3];
   Mat3d_toEulerAngles(ea, abc);
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_end, ea, taskDir));
-#endif
+  RLOG(0, "Euler angles: %f %f %f (%f %f %f)", ea[0], ea[1], ea[2],
+       (180.0/M_PI)*ea[0], (180.0/M_PI)*ea[1], (180.0/M_PI)*ea[2]);
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_end, ea, taskOri));
 
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {0.0, 0.0}, taskPoint));
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {reach}, taskDist));
@@ -284,7 +338,14 @@ std::unique_ptr<ActionBase> ActionPoint::clone() const
 
 std::string ActionPoint::getActionCommand() const
 {
-  return "point " + pointBdyName + " duration " + std::to_string(getDurationHint());
+  return "point " + pointBdyName + " " + pointerFrame + " duration " + std::to_string(getDurationHint());
 }
+
+double ActionPoint::actionCost(const ActionScene& scene, const RcsGraph* graph) const
+{
+  return pointDistance(scene, graph, pointBdyName, pointerFrame);
+  //return ActionBase::actionCost(scene, graph);
+}
+
 
 }   // namespace aff

@@ -291,6 +291,8 @@ void ActionBase::print() const
 
   std::cout << "Action default duration: " << getDurationHint() << std::endl;
   std::cout << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
+  std::cout << "Action command: " << getActionCommand() << std::endl;
+  std::cout << "Action has " << getNumSolutions() << " solutions" << std::endl;
 }
 
 std::vector<double> ActionBase::getOptimState() const

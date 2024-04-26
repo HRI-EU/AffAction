@@ -36,8 +36,8 @@
   </Manipulator>
 
   <Agent body="Johnnie" types="robot" name="Johnnie" >
-     <Component manipulator="hand_left" />
-     <Component manipulator="hand_left" />
+     <Component manipulator="hand_left_robot" />
+     <Component manipulator="hand_right_robot" />
      <Component manipulator="head" />
   </Agent>
 

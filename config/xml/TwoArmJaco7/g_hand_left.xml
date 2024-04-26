@@ -29,21 +29,21 @@
 
 <Graph>
 
-    <Body name="hand_left" prev="hand_base_left" transform="0 0 -0.1 0 0 0" >
+    <Body name="hand_left_robot" prev="hand_base_left" transform="0 0 -0.1 0 0 0" >
         <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
                transform="0 0 0.2 180 0 0" color="RED"/>
         <Shape type="FRAME" scale="0.3"/>
     </Body>
 
-    <Body name="hand_left_powergrasp" prev="hand_left" transform="0 -0.02 -0.04 0 -90 180">
+    <Body name="hand_left_powergrasp" prev="hand_left_robot" transform="0 -0.02 -0.04 0 -90 180">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_left_palmgrasp" prev="hand_left" transform="0 0 -0.02 0 -90 180">
+    <Body name="hand_left_palmgrasp" prev="hand_left_robot" transform="0 0 -0.02 0 -90 180">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_left_pincergrasp" prev="hand_left" transform="0 0 -0.09 0 -90 180">
+    <Body name="hand_left_pincergrasp" prev="hand_left_robot" transform="0 0 -0.09 0 -90 180">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
@@ -59,7 +59,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator body="hand_left" types="hand">
+  <Manipulator body="hand_left_robot" types="hand">
     <Joints names="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left"/>
     <PowergraspCapability frame="hand_left_powergrasp" />
     <PalmgraspCapability frame="hand_left_palmgrasp" />

@@ -276,9 +276,14 @@ size_t Manipulator::getNumFingers() const
 
 HTr Manipulator::getBaseJointTransform(const RcsGraph* graph) const
 {
+  return getBaseJoint(graph)->A_JI;
+}
+
+const RcsJoint* Manipulator::getBaseJoint(const RcsGraph* graph) const
+{
   const RcsJoint* jnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
   RCHECK_MSG(jnt, "Base joint '%s' not found in graph", baseJointName.c_str());
-  return jnt->A_JI;
+  return jnt;
 }
 
 std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const

@@ -52,21 +52,30 @@ public:
   virtual ~ActionPoint();
   std::unique_ptr<ActionBase> clone() const override;
   std::string getActionCommand() const;
+  size_t getNumSolutions() const;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  void print() const;
+  double actionCost(const ActionScene& domain,
+                    const RcsGraph* graph) const;
 
 protected:
 
   std::vector<std::string> createTasksXML() const;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
+  double pointDistance(const ActionScene& scene, const RcsGraph* graph,
+                       const std::string& finger, const std::string& object) const;
 
   std::string pointBdyName;
   std::string pointerFrame;
+  std::string shoulderFrame;
   std::string fingerJoints;
-  std::string taskPoint, taskDir, taskDist, taskHandIncline, taskFingers;
+  std::string taskPoint, taskOri, taskDist, taskFingers;
   std::vector<std::string> usedManipulators;
   bool keepTasksActiveAfterEnd;
   double pointDirection[3];
   double reach;
+  std::vector<std::tuple<std::string, std::string,double>> manipulatorEntityMap;
 };
 
 }   // namespace aff
