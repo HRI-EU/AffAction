@@ -70,10 +70,11 @@ protected:
   std::string pointerFrame;
   std::string shoulderFrame;
   std::string fingerJoints;
-  std::string taskPoint, taskOri, taskDist, taskFingers;
+  std::string taskOri, taskFingers, taskFingerTip;
   std::vector<std::string> usedManipulators;
   bool keepTasksActiveAfterEnd;
   double pointDirection[3];
+  double fingerTipPosition[3];
   double reach;
   std::vector<std::tuple<std::string, std::string,double>> manipulatorEntityMap;
 };

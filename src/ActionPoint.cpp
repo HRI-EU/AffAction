@@ -35,8 +35,8 @@
 #include "Agent.h"
 #include "ActivationSet.h"
 #include "VectorConstraint.h"
-#include "PolarConstraint.h"
 #include "EulerConstraint.h"
+#include "PositionConstraint.h"
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
@@ -58,6 +58,7 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   reach(0.0), keepTasksActiveAfterEnd(true)
 {
   Vec3d_setZero(pointDirection);
+  Vec3d_setZero(fingerTipPosition);
   parseParams(params);
 
   if (params.empty())
@@ -137,7 +138,6 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   {
     for (const auto& e : nttsToPointAt)
     {
-      RLOG(0, "Adding '%s' - '%s' to map", h->bdyName.c_str(), e->bdyName.c_str());
       manipulatorEntityMap.push_back(std::make_tuple(h->bdyName, e->bdyName,
                                                      pointDistance(scene, graph, h->bdyName, e->bdyName)));
     }
@@ -158,20 +158,6 @@ ActionPoint::ActionPoint(const ActionScene& scene,
 
 ActionPoint::~ActionPoint()
 {
-}
-
-double ActionPoint::pointDistance(const ActionScene& scene, const RcsGraph* graph,
-                                  const std::string& fingerName, const std::string& objectName) const
-{
-  auto fingers = scene.getSceneEntities(fingerName);
-  auto objects = scene.getSceneEntities(objectName);
-  RCHECK_MSG(fingers.size()==1, "Name %s has %zu entities", fingerName.c_str(), fingers.size());
-  RCHECK_MSG(objects.size()==1, "Name %s has %zu entities", objectName.c_str(), objects.size());
-  auto finger = fingers[0];
-  auto object = objects[0];
-  RCHECK_MSG(finger, "%s", fingerName.c_str());
-  RCHECK_MSG(object, "%s", objectName.c_str());
-  return Vec3d_distance(finger->getBodyTransform(graph).org, object->getBodyTransform(graph).org);
 }
 
 bool ActionPoint::initialize(const ActionScene& scene,
@@ -237,12 +223,10 @@ bool ActionPoint::initialize(const ActionScene& scene,
   }
 
   this->reach = std::min(0.7*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, objBdy.org)-0.3);
-  this->taskPoint = "Point-" + pointerFrame + "-" + pointBdyName;
+  Vec3d_constMulAndAdd(fingerTipPosition, shldrJnt->A_JI.org, pointDirection, -reach);
   this->taskOri = "Align-" + pointerFrame + "-" + pointBdyName;
-  this->taskDist = "Distance" + pointerFrame + "-" + pointBdyName;
   this->taskFingers = pointerFrame + "_fingers";
-
-  print();
+  this->taskFingerTip = pointerFrame + "_XYZ";
 
   return true;
 }
@@ -270,20 +254,16 @@ std::vector<std::string> ActionPoint::createTasksXML() const
   // taskGaze: XYZ-task with effector=gazeTarget and refBdy=cameraFrame
   // was YZ
   std::string xmlTask;
-  xmlTask = "<Task name=\"" + taskPoint + "\" " + "controlVariable=\"XY\" " +
-            "effector=\"" + pointBdyName + "\" " + "refBdy=\"" + pointerFrame + "\" />";
-  tasks.push_back(xmlTask);
-
   xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"ABC\" " +
             "effector=\"" + pointerFrame + "\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"" + taskDist + "\" " + "controlVariable=\"SphR\" " +
-            "effector=\"" + pointerFrame + "\" " + "refBdy=\"" + shoulderFrame + "\" />";
-  tasks.push_back(xmlTask);
-
   xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
             "jnts=\"" + fingerJoints + "\" />";
+  tasks.push_back(xmlTask);
+
+  xmlTask = "<Task name=\"" + taskFingerTip + "\" controlVariable=\"XYZ\" " +
+            "effector=\"" + pointerFrame + "\" />";
   tasks.push_back(xmlTask);
 
   return tasks;
@@ -294,17 +274,15 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   const double afterTime = 0.5;
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
-  a1->addActivation(t_start, true, 0.5, taskPoint);
   a1->addActivation(t_start+0.0*(t_end-t_start), true, 0.5, taskOri);
-  a1->addActivation(t_start, true, 0.5, taskDist);
   a1->addActivation(t_start, true, 0.5, taskFingers);
+  a1->addActivation(t_start, true, 0.5, taskFingerTip);
 
   if (!keepTasksActiveAfterEnd)
   {
-    a1->addActivation(t_end + afterTime, false, 0.5, taskPoint);
     a1->addActivation(t_end + afterTime, false, 0.5, taskOri);
-    a1->addActivation(t_end + afterTime, false, 0.5, taskDist);
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskFingerTip);
   }
 
   double abc[3][3];
@@ -315,13 +293,10 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   RCHECK(Mat3d_isValid(abc));
   double ea[3];
   Mat3d_toEulerAngles(ea, abc);
-  RLOG(0, "Euler angles: %f %f %f (%f %f %f)", ea[0], ea[1], ea[2],
-       (180.0/M_PI)*ea[0], (180.0/M_PI)*ea[1], (180.0/M_PI)*ea[2]);
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_end, ea, taskOri));
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_start + 0.7*(t_end-t_start), ea, taskOri));
 
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {0.0, 0.0}, taskPoint));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {reach}, taskDist));
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {RCS_DEG2RAD(80.0), RCS_DEG2RAD(10.0), RCS_DEG2RAD(10.0)}, taskFingers));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_end, fingerTipPosition, taskFingerTip));
 
   return a1;
 }
@@ -344,7 +319,20 @@ std::string ActionPoint::getActionCommand() const
 double ActionPoint::actionCost(const ActionScene& scene, const RcsGraph* graph) const
 {
   return pointDistance(scene, graph, pointBdyName, pointerFrame);
-  //return ActionBase::actionCost(scene, graph);
+}
+
+double ActionPoint::pointDistance(const ActionScene& scene, const RcsGraph* graph,
+                                  const std::string& fingerName, const std::string& objectName) const
+{
+  auto fingers = scene.getSceneEntities(fingerName);
+  auto objects = scene.getSceneEntities(objectName);
+  RCHECK_MSG(fingers.size()==1, "Name %s has %zu entities", fingerName.c_str(), fingers.size());
+  RCHECK_MSG(objects.size()==1, "Name %s has %zu entities", objectName.c_str(), objects.size());
+  auto finger = fingers[0];
+  auto object = objects[0];
+  RCHECK_MSG(finger, "%s", fingerName.c_str());
+  RCHECK_MSG(object, "%s", objectName.c_str());
+  return Vec3d_distance(finger->getBodyTransform(graph).org, object->getBodyTransform(graph).org);
 }
 
 
