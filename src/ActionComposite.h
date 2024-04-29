@@ -55,6 +55,9 @@ public:
   virtual double getDurationHint() const;
   void addAction(ActionBase* action);
   std::vector<std::string> getManipulators() const;
+  std::string getActionCommand() const;
+  size_t getNumSolutions() const;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
 
 protected:
 

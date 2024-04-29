@@ -75,7 +75,9 @@ void AnimationSequence::onToggleFastPrediction()
 
 void AnimationSequence::onRender()
 {
-  if ((predictionIdx==-1) || (predictionIdx>=predictions[channel].size()))
+  if ((predictionIdx==-1) ||
+      (predictionIdx>=predictions[channel].size()) ||
+      (predictions[channel][predictionIdx].bodyTransforms.empty()))
   {
     predictionIdx = -1;
     animationTic = 0;

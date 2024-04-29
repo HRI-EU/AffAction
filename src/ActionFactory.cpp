@@ -35,6 +35,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_parser.h>
 #include <Rcs_stlParser.h>
+#include <Rcs_utilsCPP.h>
 
 
 namespace aff
@@ -78,6 +79,31 @@ void ActionFactory::print()
  ******************************************************************************/
 ActionBase* ActionFactory::create(const ActionScene& domain,
                                   const RcsGraph* graph,
+                                  std::string actionCommand,
+                                  std::string& explanation)
+{
+  Rcs::String_trim(actionCommand);
+  std::vector<std::string> actionStrings = Rcs::String_split(actionCommand, "+");
+
+  // We found a "+" character, so lets construct a composite action.
+  if (actionStrings.size() > 1)
+  {
+    actionStrings.insert(actionStrings.begin(), "multi_string");
+    return ActionFactory::create(domain, graph, actionStrings, explanation);;
+  }
+
+  // No "+" character, it is a "normal" action.
+  std::vector<std::string> words = Rcs::String_split(actionCommand, " ");
+  std::string aname = words[0];
+  words.erase(words.begin());
+  return ActionFactory::create(domain, graph, aname, words, explanation);
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+ActionBase* ActionFactory::create(const ActionScene& domain,
+                                  const RcsGraph* graph,
                                   std::vector<std::string> words,
                                   std::string& explanation)
 {
@@ -96,7 +122,6 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
                                   std::string& explanation)
 {
   ActionBase* action = NULL;
-
   std::map<std::string, ActionMaker>::iterator it;
   it = constructorMap().find(actionName);
 

@@ -539,11 +539,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     }
 
     // Early exit in case of detected failure.
-    // \todo: Re-thing early exit with respect to only error cases. They might not be
+    // \todo: Re-think early exit with respect to only error cases. They might not be
     // comparable if the time horizon differs.
     if (!result.success && successPrev)
     {
-      RLOG(4, "Predictor failed at t=%f - quitting", t);
+      RLOG(4, "Predictor failed at t=%f (of %f, after-step period: %f) - quitting",
+           t, nSteps*dt, nAfterSteps*dt);
       RLOG_CPP(4, "Result: " << result.message);
 
       if (earlyExit)
@@ -571,14 +572,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   // Multiplay duration with this value to get optimal speed
   result.scaleJointSpeeds = jointSpeedScaler;
 
-
-
-  RLOG(4, "Trajectory %s after %d steps, took %.3f sec",
-       result.success ? "ok" : "failed", tStack->m, result.t_predict);
-  RLOG_CPP(4, "Result: " << result.message);
-
   MatNd_destroyN(3, a_des, x_des, a_prev);
-
   MatNd_binarizeSelf(&jMaskArr, 0.0);
 
   if (result.message.empty())
@@ -596,6 +590,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   // We add a clone so that we can call this classes methods several times.
   result.graph = RcsGraph_cloneEssential(graph);
   result.t_predict = Timer_getTime() - result.t_predict;
+
+  RLOG(4, "Trajectory %s after %d steps, took %.3f sec",
+       result.success ? "ok" : "failed", tStack->m, result.t_predict);
+  RLOG(4, "   at t=%f (of %f, after-step period: %f)",
+       tStack->m*dt, nSteps* dt, nAfterSteps* dt);
+  RLOG_CPP(4, "Result: " << result.message);
 
   return result;
 }
@@ -886,10 +886,9 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
   if (withSpeedAccLimit)
   {
     double scale = RcsGraph_checkJointSpeeds(graph, dq_des, dt, RcsStateFull);
-
     if (scale < 1.0)
     {
-      RLOG(5, "Scaling down joint speeds by factor %f", scale);
+      NLOG(0, "Scaling down joint speeds by factor %f", scale);
       MatNd_constMulSelf(dq_des, 0.99999 * scale);
     }
 

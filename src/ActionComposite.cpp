@@ -147,8 +147,156 @@ std::vector<std::string> ActionComposite::getManipulators() const
   return mVec;
 }
 
+std::string ActionComposite::getActionCommand() const
+{
+  std::string compositeCmd;
+
+  for (size_t i=0; i<actions.size(); ++i)
+  {
+    compositeCmd += actions[i]->getActionCommand();
+    if (i < actions.size() - 1)
+    {
+      compositeCmd += "+";
+    }
+  }
+
+  return compositeCmd;
+}
+
+size_t ActionComposite::getNumSolutions() const
+{
+  size_t nSols = 1;
+
+  for (const auto& a : actions)
+  {
+    nSols *= a->getNumSolutions();
+  }
+
+  return nSols;
+}
 
 
+/* Test
+
+   size_t nsols = 12;
+   size_t nsols0 = 4;
+   size_t nsols1 = 3;
+   size_t query = 7;
+
+   for (size_t i = 0; i < nsols; ++i)
+   {
+       RLOG(0, "Query %zu gets: %zu %zu", i, i / nsols1, i % nsols1);
+   }
+
+   PAUSE();
+
+End test
+
+get glass_red; put glass_red far bottle_of_cola; get bottle_of_cola + get glass_red; pour bottle_of_cola glass_red duration 25;put glass_red near Felix + put bottle_of_cola box_of_cereal; pose default
+
+get glass_red; put glass_red far bottle_of_cola + get bottle_of_cola; get glass_red; pour bottle_of_cola glass_red duration 25;put glass_red near Felix + put bottle_of_cola box_of_cereal; pose default
+*/
+
+static void getTuples(size_t index, const std::vector<int>& totals,
+                      std::vector<int>& current,
+                      std::vector<std::vector<int>>& result)
+{
+  if (index == totals.size())
+  {
+    result.push_back(current);
+    return;
+  }
+
+  for (int i = 0; i < totals[index]; ++i)
+  {
+    current.push_back(i);
+    getTuples(index + 1, totals, current, result);
+    current.pop_back();
+  }
+}
+
+static void printTuple(const std::vector<int>& tuple)
+{
+  std::cout << "(";
+  for (size_t i = 0; i < tuple.size(); ++i)
+  {
+    std::cout << tuple[i];
+    if (i != tuple.size() - 1)
+    {
+      std::cout << ", ";
+    }
+  }
+  std::cout << ")";
+}
+
+static std::vector<std::vector<int>> createTuples(std::vector<int> solutions)
+{
+  std::vector<int> current;
+  std::vector<std::vector<int>> result;
+
+  getTuples(0, solutions, current, result);
+
+  return result;
+}
+
+/*
+get glass_red; put glass_red far bottle_of_cola; get bottle_of_cola + get glass_red; pour bottle_of_cola glass_red duration 25;put glass_red near Felix + put bottle_of_cola box_of_cereal; pose default
+
+get glass_red; put glass_red far bottle_of_cola + get bottle_of_cola; get glass_red; pour bottle_of_cola glass_red duration 25;put glass_red near Felix + put bottle_of_cola box_of_cereal; pose default
+ */
+bool ActionComposite::initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
+{
+  if (solutionRank >= getNumSolutions())
+  {
+    return false;
+  }
+
+  // RCHECK_MSG(actions.size()==2, "Fixme");
+
+  // if (actions.size() == 2)
+  // {
+  //   size_t sols0 = actions[0]->getNumSolutions();
+  //   size_t sols1 = actions[1]->getNumSolutions();
+  //   actions[0]->initialize(domain, graph, solutionRank/sols1);
+  //   actions[1]->initialize(domain, graph, solutionRank%sols1);
+  // }
+
+  // std::vector<size_t> denom(actions.size(), 1);
+  // for (size_t i=0; i<actions.size(); ++i)
+  // {
+  //   denom[i] = denom[i-1] * actions[0]->getNumSolutions();
+  // }
+
+  std::vector<int> numSolutions;
+  for (const auto& a : actions)
+  {
+    numSolutions.push_back(a->getNumSolutions());
+  }
+
+  auto tuples = createTuples(numSolutions);
+
+
+  // Print all generated tuples
+  REXEC(1)
+  {
+    RLOG(0, "Found these tuples:");
+    for (const auto& t : tuples)
+    {
+      printTuple(t);
+      std::cout << std::endl;
+    }
+  }
+
+  RCHECK(tuples.size()==getNumSolutions());
+
+  for (size_t i=0; i<actions.size(); ++i)
+  {
+    actions[0]->initialize(domain, graph, tuples[solutionRank][i]);
+  }
+
+
+  return true;
+}
 
 
 

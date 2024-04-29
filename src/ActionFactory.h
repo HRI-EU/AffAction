@@ -88,11 +88,15 @@ class ActionFactory
 public:
 
   /*! \brief Creates a new action by name using the registered
-   *         construction function.
+   *         construction function. The string actionCommand
+   *         will first be decomposed into portions that are
+   *         separated by a "+" sign (composite actions), and
+   *         then by " " characters (individual words of an
+   *         action command).
    */
   static ActionBase* create(const ActionScene& domain,
                             const RcsGraph* graph,
-                            std::vector<std::string> params,
+                            std::string actionCommand,
                             std::string& explanation);
 
   /*! \brief Creates a new action by name using the registered
@@ -100,7 +104,6 @@ public:
    */
   static ActionBase* create(const ActionScene& domain,
                             const RcsGraph* graph,
-                            std::string actionName,
                             std::vector<std::string> params,
                             std::string& explanation);
 
@@ -113,6 +116,15 @@ public:
   static std::string printToString();
 
 private:
+
+  /*! \brief Creates a new action by name using the registered
+   *         construction function.
+   */
+  static ActionBase* create(const ActionScene& domain,
+                            const RcsGraph* graph,
+                            std::string actionName,
+                            std::vector<std::string> params,
+                            std::string& explanation);
 
   /*! \brief Private constructor because ActionFactory is a singleton class
    */

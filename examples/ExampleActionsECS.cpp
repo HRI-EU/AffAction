@@ -968,7 +968,10 @@ std::string ExampleActionsECS::help()
   s << Rcs::RcsShape_distanceFunctionsToString();
   s << std::endl << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
   s << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
+  if (controller)
+  {
   s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
+  }
 
   return s.str();
 }
@@ -1030,7 +1033,10 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
     }
 
+    if (!predictions.empty())
+    {
     ex->entity.publish("AnimateSequence", predictions, 0);
+    }
   }
 
   if (predictedActions.empty())

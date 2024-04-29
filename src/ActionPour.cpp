@@ -270,6 +270,8 @@ std::vector<std::string> ActionPour::createTasksXML() const
 
   // taskGlasOri: Polar-task with effector=glas. We don't need any refBdy,
   // since we only keep it constant in case the glas is held with a hand.
+  if (glasInHand)
+  {
   xmlTask = "<Task name=\"" + taskGlasOri + "\" " + "controlVariable=\"POLAR\" " +
             "effector=\"" + glas + "\" />";
   tasks.push_back(xmlTask);
@@ -281,6 +283,7 @@ std::vector<std::string> ActionPour::createTasksXML() const
   xmlTask = "<Task name=\"" + taskGlasPosZ + "\" " + "controlVariable=\"Z\" " +
             "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
   tasks.push_back(xmlTask);
+  }
 
   return tasks;
 }
@@ -469,7 +472,14 @@ std::unique_ptr<ActionBase> ActionPour::clone() const
 
 std::string ActionPour::getActionCommand() const
 {
-  return ActionBase::getActionCommand() + " duration " + std::to_string(getDurationHint());
+  std::string str = ActionBase::getActionCommand();
+
+  if (str.find("duration") == std::string::npos)
+  {
+    str += " duration " + std::to_string(getDurationHint());
+  }
+
+  return str;
 }
 
 }   // namespace aff

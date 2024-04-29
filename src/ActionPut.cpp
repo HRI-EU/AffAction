@@ -468,7 +468,7 @@ void ActionPut::initOptions(const ActionScene& domain,
     {
       const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
       const bool eraseMe = !(s && (s->frame == whereOn));
-      RLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
+      NLOG(0, "%s Supportable %s", eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
       it = eraseMe ? affordanceMap.erase(it) : it+1;
     }
   }

@@ -50,7 +50,7 @@
 // the max. joint velocity over all joints and all time steps will exactly
 // be at the limit. This scaling factor extends the duration so that there
 // is a margin between the max. reached joint velocity and its limit.
-#define TURBO_DURATION_SCALER (1.25)
+#define TURBO_DURATION_SCALER (1.2)
 
 
 namespace aff
@@ -647,10 +647,10 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
   predictionTree->t_calc = Timer_getSystemTime();
 
   // Strip whitespaces from action commands
-  for (size_t i = 0; i < actions.size(); i++)
-  {
-    Rcs::String_trim(actions[i]);
-  }
+  //for (size_t i = 0; i < actions.size(); i++)
+  //{
+  //  Rcs::String_trim(actions[i]);
+  //}
 
   predictionTree->incomingActionSequence = actions;
 
@@ -708,6 +708,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
       // We are here if a '+' has been detected in the command string. This is a
       // parallel action where the actions that are separated by the '+' sign get
       // instantiated by the MultiStringAction.
+#if 0
       if (actionStrings.size() > 1)
       {
         actionStrings.insert(actionStrings.begin(), "multi_string");
@@ -721,6 +722,12 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
         action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, words, explanation));
         errMsg += explanation;
       }
+#else
+      action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, text, explanation));
+      errMsg += explanation;
+#endif
+
+
 
       // Early exit if the action could not be created. The particular reason
       // depends on the action and is returned in the explanation string.
@@ -771,8 +778,10 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
           // Scale duration to make motion as fast as possible
           if (predResults[i].action->turboMode())
           {
-            double newDuration = predResults[i].action->getDurationHint() * predResults[i].scaleJointSpeeds;
-            predResults[i].action->setDuration(newDuration* TURBO_DURATION_SCALER);
+            double newDuration = predResults[i].action->getDurationHint() * predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
+            newDuration -= std::fmod(newDuration, dt);
+            RLOG(0, "newDuration is %f", newDuration);
+            predResults[i].action->setDuration(newDuration);
           }
         }));
       }
@@ -1042,11 +1051,13 @@ static void expand(ActionScene& scene,
   auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
   res.idx = solutionIndex;
 
-  // Scale duration to make motion as fast as possible
+  // Scale duration to make motion as fast as possible. We also force it to the lower multiple of dt,
+  // since we sometimes receive issues with control steps outside index ranges. \todo
   if (action->turboMode())
   {
-    double newDuration = action->getDurationHint() * res.scaleJointSpeeds;
-    action->setDuration(newDuration * TURBO_DURATION_SCALER);
+    double newDuration = action->getDurationHint() * res.scaleJointSpeeds * TURBO_DURATION_SCALER;
+    newDuration -= std::fmod(newDuration, dt);
+    action->setDuration(newDuration);
   }
 
   // Now the node->graph is correctly initialized for the next tree child
@@ -1095,8 +1106,9 @@ void DFSMT(ActionScene& scene,
            bool& finished)
 {
   std::string err;
-  std::vector<std::string> actionParams = Rcs::String_split(levelCommands[node->level], " ");
-  auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
+  //std::vector<std::string> actionParams = Rcs::String_split(levelCommands[node->level], " ");
+  //auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
+  auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, levelCommands[node->level], err));
 
   if (!action)
   {
@@ -1161,7 +1173,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT_MT(ActionScene
                                                                      std::string& errMsg)
 {
   // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
-  size_t nThreads = 2*std::thread::hardware_concurrency();
+  size_t nThreads = 2*(size_t)std::thread::hardware_concurrency();
 
   if (maxNumThreads != 0)
   {
@@ -1175,13 +1187,6 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT_MT(ActionScene
   // Create tree
   std::unique_ptr<PredictionTree> tree = std::make_unique<PredictionTree>();
   tree->t_calc = Timer_getSystemTime();
-
-  // Strip whitespaces from action commands
-  for (size_t i = 0; i < actions.size(); i++)
-  {
-    Rcs::String_trim(actions[i]);
-  }
-
   tree->incomingActionSequence = actions;
   tree->root->graph = RcsGraph_clone(graph);
 
