@@ -34,6 +34,8 @@
   <ActionSequence name="3" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
   <ActionSequence name="4" text="pose watchit_eye fast; pose watchit_point fast; pose default_up fast" />
 	
+  <Body name="default_camera_view" transform="3.1 1.1 3.2   13 -30 -156">
+  </Body>
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
@@ -243,7 +245,9 @@
     <Body name="center_post_link"/>
     <Body name="screen_link"/>
     <Body name="head_kinect_link"/>
-    <Body name="base_link"/>
+    <Body name="adapter_shoulder_left_3"/>
+    <Body name="adapter_shoulder_right_3"/>
+	  
   </BroadPhase>
 	
 </Graph>
