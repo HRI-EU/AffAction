@@ -104,7 +104,8 @@ void TextEditComponent::onStop()
 
 void TextEditComponent::guiCallback(std::string text)
 {
-  getEntity()->publish("ActionSequence", text);
+  getEntity()->publish("PlanDFSEE", text);
+  //getEntity()->publish("ActionSequence", text);
 }
 
 }   // namespace aff
