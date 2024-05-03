@@ -26,30 +26,31 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph>
+<Graph resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
 
     <!-- table (x was 0.65) -->
-    <Body name="table" prev="lab" rigid_body_joints="0.58 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
+    <Body name="table" rigid_body_joints="-0.27 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
         <Shape type="FRAME" scale="0.3" graphics="false"/>
-        <Shape type="BOX" extents="0.8 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
+        <Shape type="BOX" extents="0.8 1.4 0.02" transform="0.05 0 -0.01 0 0 0" graphics="true" physics="true"
                distance="true" textureFile="textures/table.jpg"/>
     </Body>
-    <Body name="table_left" prev="table" transform="-0.2 0.3 0 0 0 0" >
+    <Body name="table_left" prev="table" transform="-0.25 0.3 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_left_2" prev="table" transform="-0.2 0.2 0 0 0 0" >
+    <Body name="table_left_2" prev="table" transform="-0.25 0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_right" prev="table" transform="-0.2 -0.3 0 0 0 0" >
+    <Body name="table_3" prev="table" transform="-0.25 0.1 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_right_2" prev="table" transform="-0.2 -0.2 0 0 0 0" >
+
+    <Body name="table_right" prev="table" transform="-0.25 -0.3 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_3" prev="table" transform="-0.1 0.2 0 0 0 0" >
+    <Body name="table_right_2" prev="table" transform="-0.25 -0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
-    <Body name="table_4" prev="table" transform="-0.1 -0.2 0 0 0 0" >
+    <Body name="table_4" prev="table" transform="-0.25 -0.1 0 0 0 0" >
         <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
     </Body>
 
@@ -64,7 +65,7 @@
     </AffordanceModel>
 
     <!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.25 0.1 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+    <Body name="shelf" prev="table" rigid_body_joints="0.25 0 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
@@ -105,12 +106,13 @@
 
     <!-- bbq_sauce_bottle -->
     <Body name="bbq_sauce_bottle" prev="shelf_position_2" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="bbq_sauce_bottle_tip" prev="bbq_sauce_bottle" transform="0 0 0.23 0 0 0">
@@ -134,7 +136,7 @@
     </AffordanceModel>
 
     <!-- anchovies_bowl -->
-    <Body name="anchovies_bowl" prev="table" rigid_body_joints="-0.1 -0.72 0 0 0 0" color="RUBY">
+    <Body name="anchovies_bowl" prev="table" rigid_body_joints="0.12 0.6 0 0 0 0" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
@@ -1000,7 +1002,7 @@
     </AffordanceModel>
 
     <!-- goat_cheese_bowl -->
-    <Body name="goat_cheese_bowl" prev="table" rigid_body_joints="-0.1 -0.59 0 0 0 0" color="RUBY">
+    <Body name="goat_cheese_bowl" prev="table" rigid_body_joints="-0.23 0.58 0 0 0 0" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
@@ -1442,7 +1444,7 @@
     </AffordanceModel>
 
     <!-- mozzarella_cheese_bowl -->
-    <Body name="mozzarella_cheese_bowl" prev="table" rigid_body_joints="-0.1 -0.46 0 0 0 0" color="RUBY">
+    <Body name="mozzarella_cheese_bowl" prev="table" rigid_body_joints="-0.23 0.45 0 0 0 0" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
@@ -2102,7 +2104,7 @@
     </AffordanceModel>
 
     <!-- ricotta_cheese_bowl -->
-    <Body name="ricotta_cheese_bowl" prev="table" rigid_body_joints="-0.1 -0.85 0 0 0 0" color="RUBY">
+    <Body name="ricotta_cheese_bowl" prev="table" rigid_body_joints="-0.1 -0.2 0 0 0 0" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
@@ -2213,11 +2215,12 @@
 
     <!-- olive_oil_bottle -->
     <Body name="olive_oil_bottle" prev="shelf_position_3" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1" />
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="olive_oil_bottle_tip" prev="olive_oil_bottle" transform="0 0 0.23 0 0 0">
@@ -2262,7 +2265,7 @@
     </AffordanceModel>
 
     <!-- TODO!! NEED OVEN STL -->
-    <!-- oven -->
+    <!-- oven 
     <Body name="oven" rigid_body_joints="+0.3 +0.8 0 0 0 -90" was_rigid_body_joints="-0.2 +0.7 0 0 0 315" prev="table" mass="1" physics="dynamic" color="LIGHTGRAY" was_color="LIGHTGRAY_TRANS">
         <Shape type="MESH" meshFile="object_models/microwave_1/microwave_1_body.stl" scale="1.0" transform="0 0 0 0 0 0"/>
         <Shape type="BOX" extents="0.44 0.36 0.27" color="PUREWHITE" graphics="false" distance="true" transform="0 0 0.135 0 0 0"/>
@@ -2298,15 +2301,17 @@
         <Hingeable frame="oven_handle" />
         <PointPushable frame="oven_switch" />
     </AffordanceModel>
-
+    -->
+    
     <!-- peppers_bottle -->
     <Body name="peppers_bottle" prev="shelf_position_7" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="peppers_bottle_tip" prev="peppers_bottle" transform="0 0 0.23 0 0 0">
@@ -2331,12 +2336,13 @@
 
     <!-- pesto_sauce_bottle -->
     <Body name="pesto_sauce_bottle" prev="shelf_position_6" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="pesto_sauce_bottle_tip" prev="pesto_sauce_bottle" transform="0 0 0.23 0 0 0">
@@ -2359,37 +2365,33 @@
       <Openable open="true"/>
     </AffordanceModel>
 
-    <!-- pizza_dough_big_plate -->
-    <Body name="pizza_dough_big_plate" prev="table" rigid_body_joints="0.05 0 0.015 0 0 0" color="COPPER" physics="dynamic" mass="0.5" >
-        <Shape type="CYLINDER" xxextents="0.15 1 0.03" radius="0.15" length="0.03" graphics="true" distance="true"
-               transform="0 0 0 0 0 0"/>
-        <Shape type="MESH" meshFile="object_models/plate_1/plate_1.stl" graphics="true" scale="1.5"
-               transform="0 0 -0.015 0 0 0"/>
-        <Shape type="FRAME" scale="0.1"
-               transform="0 0 -0.015 0 0 0" graphics="false"/>
+    <!-- big_plate -->
+    <Body name="big_plate" prev="table" rigid_body_joints="0 0 0.015 0 0 0" color="COPPER" physics="dynamic" mass="0.5" >
+        <Shape type="CYLINDER" radius="0.15" length="0.03" graphics="true" distance="true" />
+        <Shape type="FRAME" scale="0.1" transform="0 0 -0.015 0 0 0" graphics="false"/>
     </Body>
 
-    <Body name="pizza_dough_big_plate_inside" prev="pizza_dough_big_plate" transform="0 0 0.015 0 0 0">
+    <Body name="big_plate_inside" prev="big_plate" transform="0 0 0.015 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Body name="pizza_dough_big_plate_grip_1" prev="pizza_dough_big_plate" transform="-0.15 0 0.015 0 0 0">
+    <Body name="big_plate_grip_1" prev="big_plate" transform="-0.15 0 0.015 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Body name="pizza_dough_big_plate_pour" prev="pizza_dough_big_plate" transform="0 0 0.25 0 0 0">
+    <Body name="big_plate_pour" prev="big_plate" transform="0 0 0.25 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="pizza_dough_big_plate" types="plate">
-        <Stackable frame="pizza_dough_big_plate"/>
-        <Supportable frame="pizza_dough_big_plate_inside"/>
-        <PowerGraspable frame="pizza_dough_big_plate_grip_1"/>
-        <Containable frame="pizza_dough_big_plate_pour" max_volume="0.8" />
+    <AffordanceModel body="big_plate" types="plate">
+        <Stackable frame="big_plate"/>
+        <Supportable frame="big_plate_inside"/>
+        <PowerGraspable frame="big_plate_grip_1"/>
+        <Containable frame="big_plate_pour" max_volume="0.8" />
     </AffordanceModel>
 
     <!-- pizza_dough-->
-    <Body name="pizza_dough" prev="pizza_dough_big_plate_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.5" >
+    <Body name="pizza_dough" prev="big_plate_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.5" >
         <Shape type="CYLINDER" xxextents="0.16 0.16 0.01" radius="0.14" length="0.01" graphics="true" distance="false"
                transform="0 0 0.005 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="true"
@@ -2416,7 +2418,7 @@
     </AffordanceModel>
 
     <!-- provolone_cheese_bowl -->
-    <Body name="provolone_cheese_bowl" prev="table" rigid_body_joints="0.01 -0.79 0.01 0 0 0" color="RUBY">
+    <Body name="provolone_cheese_bowl" prev="table" rigid_body_joints="-0.1 0.2 0.01 0 0 0" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
@@ -2528,12 +2530,13 @@
 
     <!-- salt_bottle -->
     <Body name="salt_bottle" prev="shelf_position_5" xxxprev="table_right_2" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="salt_bottle_tip" prev="salt_bottle" transform="0 0 0.23 0 0 0">
@@ -2888,12 +2891,13 @@
 
     <!-- tomato_sauce_bottle -->
     <Body name="tomato_sauce_bottle" prev="shelf_position_4" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="Tea.stl" scale="0.04" distance="false" physics="true" />
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
                transform="0.035 0 0.12 0 90 0"/>
         <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
     </Body>
 
     <Body name="tomato_sauce_bottle_tip" prev="tomato_sauce_bottle" transform="0 0 0.23 0 0 0">
@@ -2917,7 +2921,7 @@
     </AffordanceModel>
 
     <!-- tray -->
-    <Body name="tray" prev="table" rigid_body_joints="-0.3 -0.75 0 0 0 0" color="GRAY" physics="dynamic" mass="0.5" >
+    <Body name="tray" prev="table" rigid_body_joints="-0.25 -0.6 0 0 0 -10" color="GRAY" physics="dynamic" mass="0.5" >
         <Shape type="BOX" extents="0.3 0.4 0.02" graphics="true" distance="false"
                transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="true"/>
@@ -2927,25 +2931,34 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <Body name="tray_grip_1" prev="tray" transform="-0.2 0 0.01 0 0 0">
+    <Body name="tray_grip_1" prev="tray" transform="-0.2 0 0.03 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <Body name="tray_position_1" prev="tray" transform="0.1 0.15 0.06 0 0 0" >
+    <Body name="tray_position_1" prev="tray" transform="0.075 0.15 0.03 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
-    <Body name="tray_position_2" prev="tray" transform="0.1 -0.15 0.06 0 0 0" >
+    <Body name="tray_position_2" prev="tray" transform="0.075 0 0.03 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
-    <Body name="tray_position_3" prev="tray" transform="-0.05 0.15 0.06 0 0 0" >
+    <Body name="tray_position_3" prev="tray" transform="0.075 -0.15 0.03 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
-    <Body name="tray_position_4" prev="tray" transform="-0.05 -0.15 0.06 0 0 0" >
+    <Body name="tray_position_4" prev="tray" transform="-0.075 0.15 0.03 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
+
+    <Body name="tray_position_5" prev="tray" transform="-0.075 0 0.03 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <Body name="tray_position_6" prev="tray" transform="-0.075 -0.15 0.03 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
 
     <AffordanceModel body="tray" types="tray">
         <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
@@ -2955,6 +2968,8 @@
         <Supportable frame="tray_position_2" />
         <Supportable frame="tray_position_3" />
         <Supportable frame="tray_position_4" />
+        <Supportable frame="tray_position_5" />
+        <Supportable frame="tray_position_6" />
     </AffordanceModel>
 
 </Graph>
