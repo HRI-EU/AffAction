@@ -39,7 +39,7 @@
 namespace py = pybind11;
 
 #include <LandmarkBase.h>
-#include <ExampleLLMSim.h>
+#include <ExampleActionsECS.h>
 #include <ActionFactory.h>
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
@@ -68,7 +68,7 @@ RCS_INSTALL_ERRORHANDLERS
 //////////////////////////////////////////////////////////////////////////////
 // Fully threaded tree prediction and execution function.
 //////////////////////////////////////////////////////////////////////////////
-void _planActionSequenceThreaded(aff::ExampleLLMSim& ex,
+void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
                                  std::string sequenceCommand,
                                  size_t maxNumThreads)
 {
@@ -104,7 +104,7 @@ class PollBlockerComponent
 {
 public:
 
-  PollBlockerComponent(aff::ExampleLLMSim* sim_) : sim(sim_)
+  PollBlockerComponent(aff::ExampleActionsECS* sim_) : sim(sim_)
   {
     sim->processingAction = true;
   }
@@ -118,7 +118,7 @@ public:
     RLOG(0, "Done wait");
   }
 
-  aff::ExampleLLMSim* sim;
+  aff::ExampleActionsECS* sim;
 };
 
 
@@ -167,7 +167,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // LlmSim constructor
   //////////////////////////////////////////////////////////////////////////////
-  py::class_<aff::ExampleLLMSim>(m, "LlmSim")
+  py::class_<aff::ExampleActionsECS>(m, "LlmSim")
   .def(py::init<>([]()
   {
 #if !defined(_MSC_VER)// Avoid crashes when running remotely.
@@ -179,7 +179,7 @@ PYBIND11_MODULE(pyAffaction, m)
     }
 #endif
 
-    auto ex = std::unique_ptr<aff::ExampleLLMSim>(new aff::ExampleLLMSim());
+    auto ex = std::unique_ptr<aff::ExampleActionsECS>(new aff::ExampleActionsECS());
     ex->initParameters();
     return std::move(ex);
   }))
@@ -188,7 +188,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("init", [](aff::ExampleLLMSim& ex, bool debug=false) -> bool
+  .def("init", [](aff::ExampleActionsECS& ex, bool debug=false) -> bool
   {
     bool success = ex.initAlgo();
 
@@ -224,9 +224,9 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Update one LlmSim instance from anotuer one
   //////////////////////////////////////////////////////////////////////////////
-  .def("sync", [](aff::ExampleLLMSim& ex, py::object obj)
+  .def("sync", [](aff::ExampleActionsECS& ex, py::object obj)
   {
-    aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
+    aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RcsGraph_copy(ex.getGraph(), sim->getGraph());
     ex.getScene()->agents = sim->getScene()->agents;
     ex.step();
@@ -237,7 +237,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // for the agent: {"occluded": [{"name": "entity name 1", "instance_id": "entity id 1"},
   //                              {"name": "entity name 2", "instance_id": "entity id 2"}]}
   //////////////////////////////////////////////////////////////////////////////
-  .def("getOccludedObjectsForAgent", [](aff::ExampleLLMSim& ex, std::string agentName) -> nlohmann::json
+  .def("getOccludedObjectsForAgent", [](aff::ExampleActionsECS& ex, std::string agentName) -> nlohmann::json
   {
     return ex.getQuery()->getOccludedObjectsForAgent(agentName);
   })
@@ -246,7 +246,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Returns empty json if not occluded, or occluding objects sorted by distance
   // to eye (increasing): {"occluded_by": ["id_1", "id_2"] }
   //////////////////////////////////////////////////////////////////////////////
-  .def("isOccludedBy", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objectName) -> nlohmann::json
+  .def("isOccludedBy", [](aff::ExampleActionsECS& ex, std::string agentName, std::string objectName) -> nlohmann::json
   {
     return ex.getQuery()->getObjectOccludersForAgent(agentName, objectName);
   })
@@ -255,7 +255,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Returns a boolean indicating if any scene entity is closer to any hand of
   // the agent closer than a distance threshold.
   //////////////////////////////////////////////////////////////////////////////
-  .def("isBusy", [](aff::ExampleLLMSim& ex, std::string agentName) -> bool
+  .def("isBusy", [](aff::ExampleActionsECS& ex, std::string agentName) -> bool
   {
     return ex.getQuery()->isAgentBusy(agentName, 0.15);
   })
@@ -263,7 +263,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Returns the pan tilt angles for the agent when it looks at the gazeTarget
   //////////////////////////////////////////////////////////////////////////////
-  .def("getPanTilt", [](aff::ExampleLLMSim& ex, std::string roboAgent, std::string gazeTarget)
+  .def("getPanTilt", [](aff::ExampleActionsECS& ex, std::string roboAgent, std::string gazeTarget)
   {
     RLOG(0, "Pan tilt angle calculation");
 
@@ -293,7 +293,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // For the robot agent: If the result is true, it does not necessarily mean
   // that it can be grasped
   //////////////////////////////////////////////////////////////////////////////
-  .def("isReachable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objectName) -> bool
+  .def("isReachable", [](aff::ExampleActionsECS& ex, std::string agentName, std::string objectName) -> bool
   {
     auto agent = ex.getScene()->getAgent(agentName);
     if (!agent)
@@ -326,7 +326,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return false;
   }, "Check if agent can reach to the given position")
 
-  .def("initHardwareComponents", [](aff::ExampleLLMSim& ex)
+  .def("initHardwareComponents", [](aff::ExampleActionsECS& ex)
   {
     ex.entity.initialize(ex.graphC->getGraph());
   }, "Initializes hardware components")
@@ -335,14 +335,14 @@ PYBIND11_MODULE(pyAffaction, m)
   // Calls the run method in a new thread, releases the GIL and returns to the
   // python context (e.g. console).
   //////////////////////////////////////////////////////////////////////////////
-  .def("run", &aff::ExampleLLMSim::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
+  .def("run", &aff::ExampleActionsECS::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
 
   //////////////////////////////////////////////////////////////////////////////
   // Simulates the action command in a copy of the simulator class.
   //////////////////////////////////////////////////////////////////////////////
-  .def("simulate", [](aff::ExampleLLMSim& ex, std::string actionCommand) -> bool
+  .def("simulate", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> bool
   {
-    auto sim = std::unique_ptr<aff::ExampleLLMSim>(new aff::ExampleLLMSim());
+    auto sim = std::unique_ptr<aff::ExampleActionsECS>(new aff::ExampleActionsECS());
     sim->initParameters();
     sim->noTextGui = true;
     sim->unittest = true;
@@ -360,9 +360,9 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
   })
-  .def("isGraspable", [](aff::ExampleLLMSim& ex, std::string agentName, std::string objName) -> bool
+  .def("isGraspable", [](aff::ExampleActionsECS& ex, std::string agentName, std::string objName) -> bool
   {
-    auto sim = std::unique_ptr<aff::ExampleLLMSim>(new aff::ExampleLLMSim());
+    auto sim = std::unique_ptr<aff::ExampleActionsECS>(new aff::ExampleActionsECS());
     sim->initParameters();
     sim->noTextGui = true;
     sim->unittest = true;
@@ -381,7 +381,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
   })
 
-  .def("run", [](aff::ExampleLLMSim& ex, std::string actionCommand) -> std::string
+  .def("run", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> std::string
   {
     double t_calc = Timer_getSystemTime();
     ex.sequenceCommand = actionCommand;
@@ -396,26 +396,26 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return ex.lastResultMsg;
   })
-  .def("callEvent", [](aff::ExampleLLMSim& ex, std::string eventName)
+  .def("callEvent", [](aff::ExampleActionsECS& ex, std::string eventName)
   {
     ex.entity.publish(eventName);
     ex.entity.process();
   })
-  .def("reset", [](aff::ExampleLLMSim& ex)
+  .def("reset", [](aff::ExampleActionsECS& ex)
   {
     ex.entity.publish("ActionSequence", std::string("reset"));
     ex.entity.process();
   })
-  .def("render", [](aff::ExampleLLMSim& ex)
+  .def("render", [](aff::ExampleActionsECS& ex)
   {
     ex.entity.publish("Render");
     ex.entity.process();
   })
-  .def("process", [](aff::ExampleLLMSim& ex)
+  .def("process", [](aff::ExampleActionsECS& ex)
   {
     ex.entity.process();
   })
-  .def("showGraphicsWindow", [](aff::ExampleLLMSim& ex) -> bool
+  .def("showGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
     bool success = ex.initGraphics();
 
@@ -427,12 +427,12 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return success;
   })
-  .def("showGuis", [](aff::ExampleLLMSim& ex) -> bool
+  .def("showGuis", [](aff::ExampleActionsECS& ex) -> bool
   {
     return ex.initGuis();
   })
 
-  .def("hideGraphicsWindow", [](aff::ExampleLLMSim& ex) -> bool
+  .def("hideGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
     if (!ex.viewer)
     {
@@ -444,7 +444,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return true;
   })
 
-  .def("get_state", [](aff::ExampleLLMSim& ex) -> std::string
+  .def("get_state", [](aff::ExampleActionsECS& ex) -> std::string
   {
     return ex.getQuery()->getSceneState().dump();
   })
@@ -453,7 +453,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Returns empty json if there are no objects or a json in the form:
   // {"objects": ['iphone', 'red_glass', 'fanta_bottle'] }
   //////////////////////////////////////////////////////////////////////////////
-  .def("get_objects", [](aff::ExampleLLMSim& ex) -> nlohmann::json
+  .def("get_objects", [](aff::ExampleActionsECS& ex) -> nlohmann::json
   {
     return ex.getQuery()->getObjects();
   })
@@ -462,7 +462,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Returns empty json if there are no objects or a json in the form:
   // {"agents": ['Daniel', 'Felix', 'Robot'] }
   //////////////////////////////////////////////////////////////////////////////
-  .def("get_agents", [](aff::ExampleLLMSim& ex) -> nlohmann::json
+  .def("get_agents", [](aff::ExampleActionsECS& ex) -> nlohmann::json
   {
     return ex.getQuery()->getAgents();
   })
@@ -475,7 +475,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Execute the action command, and return immediately.
   //////////////////////////////////////////////////////////////////////////////
   //.def("execute", &aff::ExampleActionsECS::onActionSequence)
-  .def("execute", [](aff::ExampleLLMSim& ex, std::string actionCommand)
+  .def("execute", [](aff::ExampleActionsECS& ex, std::string actionCommand)
   {
     ex.entity.publish("ActionSequence", actionCommand);
   })
@@ -483,7 +483,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Execute the action command, and return only after finished.
   //////////////////////////////////////////////////////////////////////////////
-  .def("executeBlocking", [](aff::ExampleLLMSim& ex, std::string actionCommand) -> bool
+  .def("executeBlocking", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> bool
   {
     PollBlockerComponent blocker(&ex);
     ex.entity.publish("ActionSequence", actionCommand);
@@ -494,7 +494,7 @@ PYBIND11_MODULE(pyAffaction, m)
     RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
     return success;
   })
-  .def("getRobotCapabilities", [](aff::ExampleLLMSim& ex)
+  .def("getRobotCapabilities", [](aff::ExampleActionsECS& ex)
   {
     return aff::ActionFactory::printToString();
   })
@@ -503,7 +503,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Predict action sequence as tree
   // Call it like: agent.sim.predictActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
   //////////////////////////////////////////////////////////////////////////////
-  .def("predictActionSequence", [](aff::ExampleLLMSim& ex, std::string sequenceCommand) -> std::vector<std::string>
+  .def("predictActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::string>
   {
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
     return ex.getQuery()->planActionSequence(seq, seq.size());
@@ -513,7 +513,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Predict action sequence as tree
   // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
   //////////////////////////////////////////////////////////////////////////////
-  .def("planActionSequenceThreaded", [](aff::ExampleLLMSim& ex, std::string sequenceCommand)
+  .def("planActionSequenceThreaded", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
     ex.processingAction = true;
     const size_t maxNumthreads = 0;   // 0 means auto-select
@@ -525,7 +525,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Predict action sequence as tree
   // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
   //////////////////////////////////////////////////////////////////////////////
-  .def("planActionSequence", [](aff::ExampleLLMSim& ex, std::string sequenceCommand, bool blocking) -> bool
+  .def("planActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool blocking) -> bool
   {
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
     auto res = ex.getQuery()->planActionSequence(seq, seq.size());
@@ -568,7 +568,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Predict action sequence as tree
   // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan", [](aff::ExampleLLMSim& ex, std::string sequenceCommand) -> bool
+  .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
   {
     sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
@@ -628,14 +628,14 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to listen to the Respeaker ROS nose, and to acquire the
   // sound directions, ASR etc.
   //////////////////////////////////////////////////////////////////////////////
-  .def("addRespeaker", [](aff::ExampleLLMSim& ex,
+  .def("addRespeaker", [](aff::ExampleActionsECS& ex,
                           bool listenWitHandRaisedOnly,
                           bool gazeAtSpeaker,
                           bool speakOut) -> bool
   {
     if (!ex.getScene())
     {
-      RLOG(0, "Initialize ExampleLLMSim before adding Respeaker - skipping");
+      RLOG(0, "Initialize ExampleActionsECS before adding Respeaker - skipping");
       return false;
     }
 
@@ -657,7 +657,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Sets or clears the talk flag. This only has an effect if the Respeaker
   // component has been added, and the ASR module is running.
   //////////////////////////////////////////////////////////////////////////////
-  .def("enableASR", [](aff::ExampleLLMSim& ex, bool enable)
+  .def("enableASR", [](aff::ExampleActionsECS& ex, bool enable)
   {
     ex.entity.publish("EnableASR", enable);
     RLOG(0, "%s ASR", enable ? "Enabling" : "Disabling");
@@ -667,9 +667,9 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to listen to the landmarks publishers through ROS, which
   // is for instance the Azure Kinect, and later also the Mediapipe components
   //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkROS", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addLandmarkROS", [](aff::ExampleActionsECS& ex) -> bool
   {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
     aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-landmarks_ros");
     if (c)
     {
@@ -687,9 +687,9 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to listen to the landmarks publishers through ROS, which
   // is for instance the Azure Kinect, and later also the Mediapipe components
   //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkZmq", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex) -> bool
   {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
 
     RLOG(0, "Adding trackers");
     std::string connection="tcp://localhost:5555";
@@ -727,9 +727,9 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to connect to the PTU action server ROS node, and to being
   // able to send pan / tilt commands to the PTU
   //////////////////////////////////////////////////////////////////////////////
-  .def("addPTU", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addPTU", [](aff::ExampleActionsECS& ex) -> bool
   {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleLLMSim before adding PTU");
+    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
     aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-ptu");
     if (c)
     {
@@ -745,7 +745,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Currently, 2 modes are supported: the Nuance TTS which requires the
   // corresponding ROS node to run, and a native Unix espeak TTS.
   //////////////////////////////////////////////////////////////////////////////
-  .def("addTTS", [](aff::ExampleLLMSim& ex, std::string type) -> bool
+  .def("addTTS", [](aff::ExampleActionsECS& ex, std::string type) -> bool
   {
     if (type == "nuance")
     {
@@ -769,7 +769,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Adds a component to connect to a websocket client. The component receives
   // action commands, and sends back the state.
   //////////////////////////////////////////////////////////////////////////////
-  .def("addWebsocket", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addWebsocket", [](aff::ExampleActionsECS& ex) -> bool
   {
     auto c = createComponent(ex.entity, ex.getGraph(),
                              ex.getScene(), "-websocket");
@@ -780,7 +780,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to the left Jaco7 Gen2 arm
   //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoLeft", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addJacoLeft", [](aff::ExampleActionsECS& ex) -> bool
   {
     auto c = aff::createComponent(ex.entity, ex.getGraph(),
                                   ex.getScene(), "-jacoShm7l");
@@ -791,7 +791,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to the right Jaco7 Gen2 arm
   //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoRight", [](aff::ExampleLLMSim& ex) -> bool
+  .def("addJacoRight", [](aff::ExampleActionsECS& ex) -> bool
   {
     auto c = aff::createComponent(ex.entity, ex.getGraph(),
                                   ex.getScene(), "-jacoShm7r");
@@ -804,15 +804,15 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
   //////////////////////////////////////////////////////////////////////////////
-  .def_readwrite("unittest", &aff::ExampleLLMSim::unittest)
-  .def_readwrite("noTextGui", &aff::ExampleLLMSim::noTextGui)
-  .def_readwrite("sequenceCommand", &aff::ExampleLLMSim::sequenceCommand)
-  .def_readwrite("speedUp", &aff::ExampleLLMSim::speedUp)
-  .def_readwrite("xmlFileName", &aff::ExampleLLMSim::xmlFileName)
-  .def_readwrite("configDirectory", &aff::ExampleLLMSim::config_directory)
-  .def_readwrite("noLimits", &aff::ExampleLLMSim::noLimits)
-  .def_readwrite("noCollCheck", &aff::ExampleLLMSim::noCollCheck)   // Set before init()
-  .def_readwrite("noTrajCheck", &aff::ExampleLLMSim::noTrajCheck)
+  .def_readwrite("unittest", &aff::ExampleActionsECS::unittest)
+  .def_readwrite("noTextGui", &aff::ExampleActionsECS::noTextGui)
+  .def_readwrite("sequenceCommand", &aff::ExampleActionsECS::sequenceCommand)
+  .def_readwrite("speedUp", &aff::ExampleActionsECS::speedUp)
+  .def_readwrite("xmlFileName", &aff::ExampleActionsECS::xmlFileName)
+  .def_readwrite("configDirectory", &aff::ExampleActionsECS::config_directory)
+  .def_readwrite("noLimits", &aff::ExampleActionsECS::noLimits)
+  .def_readwrite("noCollCheck", &aff::ExampleActionsECS::noCollCheck)   // Set before init()
+  .def_readwrite("noTrajCheck", &aff::ExampleActionsECS::noTrajCheck)
   .def_readwrite("verbose", &aff::ExampleActionsECS::verbose)
   .def_readwrite("processingAction", &aff::ExampleActionsECS::processingAction)
   .def_readwrite("noViewer", &aff::ExampleActionsECS::noViewer)
@@ -832,7 +832,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def(py::init<>())
   .def(py::init<>([](py::object obj)
   {
-    aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
+    aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RLOG_CPP(1, sim->help());
     auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
     lm->setScenePtr(sim->getGraph(), sim->getScene());
@@ -852,7 +852,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("getSyncInputWithWallclock", &aff::LandmarkBase::getSyncInputWithWallclock)
   .def("enableDebugGraphics", [](aff::LandmarkBase& lm, py::object obj)
   {
-    aff::ExampleLLMSim* sim = obj.cast<aff::ExampleLLMSim*>();
+    aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     lm.enableDebugGraphics(sim->getViewer());
   })
   .def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)

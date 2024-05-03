@@ -68,6 +68,7 @@
 
 
 #define NUM_SCENEQUERIES (5)
+#define FIRST_N_SOLUTIONS (3)
 
 
 void AffActionExampleInfo()
@@ -169,6 +170,10 @@ private:
  *
  ******************************************************************************/
 RCS_REGISTER_EXAMPLE(ExampleActionsECS, "Actions", "ECS");
+
+ExampleActionsECS::ExampleActionsECS() : ExampleActionsECS(0, NULL)
+{
+}
 
 ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   ExampleBase(argc, argv), entity(), graphToInitializeWith(NULL)
@@ -970,7 +975,7 @@ std::string ExampleActionsECS::help()
   s << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
   if (controller)
   {
-  s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
+    s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
   }
 
   return s.str();
@@ -1003,41 +1008,75 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
   std::vector<std::string> predictedActions;
 
-  if (tree)
+  // Early exit in case tree could not be constructed
+  if (!tree)
   {
-    auto sln = tree->findSolutionPath();
-    for (const auto& nd : sln)
-    {
-      predictedActions.push_back(nd->actionCommand());
-      RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
-    }
+    std::string explanation = "ERROR REASON: Action tree is empty. SUGGESTION: Choose a different command sequence DEVELOPER: '" +
+                              sequenceCommand + "' " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    ex->entity.publish("ActionResult", false, 0.0, explanation);
+    return;
   }
+
+
+
+
+
+  //if (tree)
+  //{
+  auto sln = tree->findSolutionPath();
+  for (const auto& nd : sln)
+  {
+    predictedActions.push_back(nd->actionCommand());
+    RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
+  }
+  //}
 
   // Animation of all valid solution paths. We only show the first 3 so that we
   // don't copy around huge amounts of memory.
-  if (tree)
+  //if (tree)
+  //{
+  size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)FIRST_N_SOLUTIONS);
+  std::vector<TrajectoryPredictor::PredictionResult> predictions(numSolutions);
+
+  for (size_t i = 0; i < predictions.size(); ++i)
   {
-    size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)3);
-    std::vector<TrajectoryPredictor::PredictionResult> predictions(numSolutions);
-
-    for (size_t i = 0; i < predictions.size(); ++i)
+    predictions[i].success = true;
+    auto path = tree->findSolutionPath(i);
+    for (const auto& nd : path)
     {
-      predictions[i].success = true;
-      auto path = tree->findSolutionPath(i);
-      for (const auto& nd : path)
-      {
-        predictions[i].bodyTransforms.insert(predictions[i].bodyTransforms.end(),
-                                             nd->bodyTransforms.begin(),
-                                             nd->bodyTransforms.end());
-      }
-
+      predictions[i].bodyTransforms.insert(predictions[i].bodyTransforms.end(),
+                                           nd->bodyTransforms.begin(),
+                                           nd->bodyTransforms.end());
     }
 
-    if (!predictions.empty())
+  }
+
+  // If there are no FIRST_N_SOLUTIONS successful paths, we append non-succesful ones.
+  if (predictions.size() < FIRST_N_SOLUTIONS)
+  {
+    for (size_t i = predictions.size(); i < FIRST_N_SOLUTIONS; ++i)
     {
-    ex->entity.publish("AnimateSequence", predictions, 0);
+      TrajectoryPredictor::PredictionResult res;
+      res.success = false;
+      auto path = tree->findSolutionPath(i, false);
+      if (!path.empty())
+      {
+        for (const auto& nd : path)
+        {
+          res.bodyTransforms.insert(res.bodyTransforms.end(),
+                                    nd->bodyTransforms.begin(),
+                                    nd->bodyTransforms.end());
+        }
+      }
+      predictions.push_back(res);
     }
   }
+
+  if (!predictions.empty())
+  {
+    ex->entity.publish("AnimateSequence", predictions, 0);
+  }
+  //}
 
   if (predictedActions.empty())
   {

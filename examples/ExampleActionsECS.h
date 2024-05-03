@@ -71,6 +71,7 @@ class ExampleActionsECS : public Rcs::ExampleBase
 {
 public:
 
+  ExampleActionsECS();
   ExampleActionsECS(int argc, char** argv);
   virtual ~ExampleActionsECS();
 

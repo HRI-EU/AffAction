@@ -31,7 +31,7 @@
 
 *******************************************************************************/
 
-#include <ExampleLLMSim.h>
+#include <ExampleActionsECS.h>
 #include <ArucoTracker.h>
 #include <AzureSkeletonTracker.h>
 #include <LandmarkZmqComponent.hpp>
@@ -51,7 +51,7 @@
 
 RCS_INSTALL_ERRORHANDLERS
 
-aff::ExampleLLMSim* examplePtr = NULL;
+aff::ExampleActionsECS* examplePtr = NULL;
 
 
 void quit(int /*sig*/)
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
   Rcs_addResourcePath(RCS_CONFIG_DIR);
 
-  aff::ExampleLLMSim ex(argc, argv);
+  aff::ExampleActionsECS ex(argc, argv);
   examplePtr = &ex;
   bool success = ex.init(argc, argv);
 

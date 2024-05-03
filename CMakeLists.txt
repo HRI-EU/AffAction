@@ -283,7 +283,6 @@ src/WebsocketActionComponent.cpp
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
-examples/ExampleLLMSim.cpp
 src/JacoShmComponent.cpp
 src/TTSComponent.cpp
 )
