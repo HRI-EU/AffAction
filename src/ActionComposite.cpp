@@ -291,7 +291,7 @@ bool ActionComposite::initialize(const ActionScene& domain, const RcsGraph* grap
 
   for (size_t i=0; i<actions.size(); ++i)
   {
-    actions[0]->initialize(domain, graph, tuples[solutionRank][i]);
+    actions[i]->initialize(domain, graph, tuples[solutionRank][i]);
   }
 
 
