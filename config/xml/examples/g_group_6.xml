@@ -33,6 +33,10 @@
   <ActionSequence name="2" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola far glass_blue near box_of_cereal;get glass_blue;put glass_blue near Johnnie;get glass_blue;put glass_blue near Felix" />
   <ActionSequence name="3" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola;get glass_blue;put glass_blue;get glass_blue;put glass_blue near Felix" />
   <ActionSequence name="4" text="pose watchit_eye fast; pose watchit_point fast; pose default_up fast" />
+  <ActionSequence name="5" text="get glass_red + gaze glass_red; put glass_red far bottle_of_cola + get bottle_of_cola + gaze bottle_of_cola; get glass_red; pour bottle_of_cola glass_red duration 25; put bottle_of_cola + put glass_red near Felix + gaze Felix; pose default" />
+
+
+
 	
   <Body name="default_camera_view" transform="3.1 1.1 3.2   13 -30 -156">
   </Body>

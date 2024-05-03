@@ -262,6 +262,11 @@ void ActionBase::setActionParams(const std::vector<std::string>& params)
   actionParams = params;
 }
 
+std::vector<std::string> ActionBase::getActionParams() const
+{
+  return actionParams;
+}
+
 std::string ActionBase::getName() const
 {
   return actionName;

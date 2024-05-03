@@ -155,6 +155,7 @@ public:
   void setName(const std::string& name);
   std::string getName() const;
   void setActionParams(const std::vector<std::string>& params);
+  std::vector<std::string> getActionParams() const;
   virtual std::string getActionCommand() const;
   virtual void print() const;
   virtual double actionCost(const ActionScene& domain,
