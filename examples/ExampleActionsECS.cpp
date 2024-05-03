@@ -747,7 +747,7 @@ bool ExampleActionsECS::initGraphics()
     if (om.empty())
     {
       std::string textCmd = "get " + std::string(bn->body()->name);
-      entity.publish("ActionSequence", textCmd);
+      entity.publish("PlanDFSEE", textCmd);
     }
     else
     {
@@ -977,6 +977,7 @@ std::string ExampleActionsECS::help()
   {
     s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
   }
+  s << "Current working directory: " << Rcs::File_getCurrentWorkingDir() << std::endl;
 
   return s.str();
 }
@@ -1170,6 +1171,7 @@ void ExampleActionsECS::onPrint()
   RcsCollisionModel_fprint(stderr, controller->getCollisionMdl());
   ActionFactory::print();
   actionC->getDomain()->print();
+  std::cout << help();
 }
 
 void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
