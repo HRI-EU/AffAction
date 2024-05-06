@@ -50,8 +50,7 @@ REGISTER_ACTION(ActionGaze, "gaze");
 ActionGaze::ActionGaze(const ActionScene& scene,
                        const RcsGraph* graph,
                        std::vector<std::string> params) :
-  isGazeTargetInHand(false),
-  keepTasksActiveAfterEnd(true)
+  isGazeTargetInHand(false), keepTasksActiveAfterEnd(false)
 {
   defaultDuration = 3.0;
   parseParams(params);
@@ -219,10 +218,10 @@ tropic::TCS_sptr ActionGaze::createTrajectory(double t_start, double t_end) cons
   // This freezes the pan/tilt dof if an object is held in hand. We can use the gaze ray to move the object
   if (isGazeTargetInHand)
   {
-    a1->add(std::make_shared<tropic::JointWeightConstraint>(t_start, "ptu_pan_joint", 0.0, 0.0));
-    a1->add(std::make_shared<tropic::JointWeightConstraint>(t_end, "ptu_pan_joint", 1.0, 1.0));
-    a1->add(std::make_shared<tropic::JointWeightConstraint>(t_start, "ptu_tilt_joint", 0.0, 0.0));
-    a1->add(std::make_shared<tropic::JointWeightConstraint>(t_end, "ptu_tilt_joint", 1.0, 1.0));
+    // a1->add(std::make_shared<tropic::JointWeightConstraint>(t_start, "ptu_pan_joint", 0.0, 0.0));
+    // a1->add(std::make_shared<tropic::JointWeightConstraint>(t_end, "ptu_pan_joint", 1.0, 1.0));
+    // a1->add(std::make_shared<tropic::JointWeightConstraint>(t_start, "ptu_tilt_joint", 0.0, 0.0));
+    // a1->add(std::make_shared<tropic::JointWeightConstraint>(t_end, "ptu_tilt_joint", 1.0, 1.0));
   }
 
   return a1;

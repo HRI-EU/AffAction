@@ -205,7 +205,6 @@ tropic::TCS_sptr ActionPose::createTrajectory(double t_start, double t_end) cons
     a1->addActivation(t_start, true, 0.5, jntName);
     a1->addActivation(t_end+0.5, false, 0.5, jntName);
     a1->add(t_end, q_des, 0.0, 0.0, 7, jntName + " 0");
-    // We don't deactivate the tasks so that the pose persists
   }
 
   return a1;
