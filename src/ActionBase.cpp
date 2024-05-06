@@ -384,11 +384,11 @@ std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
                                                         size_t stepsToPlan,
                                                         size_t maxNumThreads,
                                                         double dt,
-                                                        bool earlyExit,
+                                                        bool earlyExitAction,
                                                         std::string& errMsg)
 {
-  auto tree = PredictionTree::planActionTree(domain, graph, broadphase, actions,
-                                             stepsToPlan, maxNumThreads, dt, earlyExit, errMsg);
+  auto tree = PredictionTree::planActionTree(PredictionTree::SearchType::BFS, domain, graph, broadphase, actions,
+                                             dt, errMsg, maxNumThreads, false, earlyExitAction);
 
   std::vector<std::string> predictedActions;  // Action sequence which will be returned
 

@@ -79,11 +79,11 @@ static RcsGraph* RcsGraph_cloneEssential(const RcsGraph* src)
   dst->bodies = RNALLOC(src->nBodies, RcsBody);
   dst->joints = RNALLOC(src->dof, RcsJoint);
 
+  // Skip copying sensors
   dst->nSensors = 0;
-  dst->sensors = NULL;//RNALLOC(src->nSensors, RcsSensor);
+  dst->sensors = NULL;
 
-  if ((!dst->q) || (!dst->q_dot) || (!dst->bodies) ||
-      (!dst->joints) /* || (!dst->sensors) */)
+  if ((!dst->q) || (!dst->q_dot) || (!dst->bodies) || (!dst->joints))
   {
     RLOG(1, "Failed to allocate memory for cloning graph");
     RcsGraph_destroy(dst);
@@ -96,38 +96,23 @@ static RcsGraph* RcsGraph_cloneEssential(const RcsGraph* src)
   // Same for bodies. We handle the copying of the shapes below.
   memcpy(dst->bodies, src->bodies, src->nBodies * sizeof(RcsBody));
 
-  // Copy all bodies
+  // Copy all shapes for each body
   for (unsigned int i=0; i<src->nBodies; ++i)
   {
     RcsBody* bdyDst = &dst->bodies[i];
     const RcsBody* bdySrc = &src->bodies[i];
 
-    // Make a copy of all body shapes. We don't do a block copy to avoid
-    // shallow-copying of the meshes.
+    // Make a copy of all body shapes. We  do a block copy and reset the mesh
+    // to NULL to avoid double deletion
     bdyDst->shapes = RNALLOC(bdySrc->nShapes, RcsShape);
+    memcpy(bdyDst->shapes, bdySrc->shapes, bdySrc->nShapes*sizeof(RcsShape));
     for (unsigned int i = 0; i < bdyDst->nShapes; i++)
     {
-      RcsMeshData* memMesh = bdySrc->shapes[i].mesh;
-      bdySrc->shapes[i].mesh = NULL;
-      RcsShape_copy(&bdyDst->shapes[i], &bdySrc->shapes[i]);
-      bdySrc->shapes[i].mesh = memMesh;
+      bdyDst->shapes[i].mesh = NULL;
     }
 
   }   // RCSGRAPH_TRAVERSE_BODIES(src)
 
-
-  // Create the sensors
-  // for (unsigned int i=0; i<src->nSensors; ++i)
-  // {
-  //   RcsSensor_copy(&dst->sensors[i], &src->sensors[i]);
-  // }
-
-  // REXEC(4)
-  // {
-  //   // Check for consistency
-  //   RCHECK_MSG(RcsGraph_check(dst, NULL, NULL),
-  //              "Consistency check for graph \"%s\" failed", dst->cfgFile);
-  // }
   return dst;
 }
 
@@ -857,11 +842,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
     MatNd_binarizeSelf(aMask, 0.0);
     MatNd_transposeSelf(aMask);
     MatNd_eleMulSelf(dH, aMask);
-
-
-    MatNd_destroy(eMask);
-    MatNd_destroy(aMask);
-    MatNd_destroy(tmpMask);
+    MatNd_destroyN(3, eMask, aMask, tmpMask);
   }
 
   // The right inverse is the method of choice here, since we have less task

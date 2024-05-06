@@ -161,25 +161,31 @@ std::vector<std::string> ConcurrentSceneQuery::planActionSequence(const std::vec
   return res;
 }
 
-std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTree(const std::vector<std::string>& actions, size_t maxThreads)
+std::unique_ptr<PredictionTree>
+ConcurrentSceneQuery::planActionTree(const std::vector<std::string>& actions, size_t maxThreads)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
   std::string errMsg;
-  bool earlyExit = true;
+  bool earlyExitAction = true;
 
-  return PredictionTree::planActionTree(scene, graph, broadphase, actions, actions.size(),
-                                        maxThreads, sim->entity.getDt(), earlyExit, errMsg);
+  return PredictionTree::planActionTree(PredictionTree::SearchType::BFS, scene, graph, broadphase, actions,
+                                        sim->entity.getDt(), errMsg, maxThreads, false, earlyExitAction);
 }
 
-std::unique_ptr<PredictionTree> ConcurrentSceneQuery::planActionTreeDFT(const std::vector<std::string>& actions, size_t maxThreads, bool earlyExit)
+std::unique_ptr<PredictionTree>
+ConcurrentSceneQuery::planActionTreeDFT(const std::vector<std::string>& actions,
+                                        size_t maxThreads,
+                                        bool earlyExitSearch,
+                                        bool earlyExitAction)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
   std::string errMsg;
 
-  return PredictionTree::planActionTreeDFT_MT(scene, graph, broadphase, actions, actions.size(),
-                                              maxThreads, sim->entity.getDt(), earlyExit, errMsg);
+  return PredictionTree::planActionTree(PredictionTree::SearchType::DFSMT, scene, graph, broadphase, actions,
+                                        sim->entity.getDt(), errMsg, maxThreads,
+                                        earlyExitSearch, earlyExitAction);
 }
 
 std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgent,

@@ -62,6 +62,7 @@ public:
   std::vector<PredictionTreeNode*> children; /**< Vector of child nodes. */
   RcsGraph* graph; /**< Pointer to the Rcs graph associated with the action. */
   std::string resolvedActionCommand;
+  std::string errorMessage;
   int threadNumber;
   static size_t uniqueIdCount;
 
@@ -123,6 +124,14 @@ public:
 class PredictionTree
 {
 public:
+
+  enum class SearchType
+  {
+    BFS,
+    DFS,
+    DFSMT
+  };
+
   PredictionTreeNode* root; /**< Pointer to the root node of the tree. */
   double t_calc;
   std::vector<std::string> incomingActionSequence;
@@ -253,6 +262,7 @@ public:
    * @return The i-th best path where i is parameter index.
    */
   std::vector<PredictionTreeNode*> findSolutionPath(size_t index = 0, bool onlySuccessfulOnes = true) const;
+  std::vector<PredictionTreeNode*> getSolutionPath(size_t index = 0) const;
 
   /**
    * @brief Gets the maximum depth of the tree.
@@ -265,53 +275,31 @@ public:
   */
   size_t getNumValidPaths() const;
 
-  static std::unique_ptr<PredictionTree> planActionTree(ActionScene& domain,
-                                                        RcsGraph* graph,
-                                                        const RcsBroadPhase* bp,
-                                                        std::vector<std::string> actions,
-                                                        size_t numStepsToPlan,
-                                                        size_t maxNumThreads,
-                                                        double dt,
-                                                        bool earlyExit,
-                                                        std::string& errMsg);
-
-  void DFS(ActionScene& scene,
-           const RcsBroadPhase* bp,
-           std::vector<std::string> actions,
-           double dt,
-           size_t nThreads,
-           bool earlyExit,
-           PredictionTreeNode* node,
-           bool& finished);
-
-  // void DFS_MT(ActionScene& scene,
-  //             const RcsBroadPhase* bp,
-  //             std::vector<std::string> actions,
-  //             double dt,
-  //             size_t nThreads,
-  //             bool earlyExit,
-  //             PredictionTreeNode* node,
-  //             bool& finished);
-
-  static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
-                                                           RcsGraph* graph,
-                                                           const RcsBroadPhase* bp,
-                                                           std::vector<std::string> actions,
-                                                           size_t numStepsToPlan,
-                                                           size_t maxNumThreads,
-                                                           double dt,
-                                                           bool earlyExit,
-                                                           std::string& errMsg);
-
-  static  std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
-                                                               RcsGraph* graph,
-                                                               const RcsBroadPhase* broadphase,
-                                                               std::vector<std::string> actions,
-                                                               size_t stepsToPlan,
-                                                               size_t maxNumThreads,
-                                                               double dt,
-                                                               bool earlyExit,
-                                                               std::string& errMsg);
+  /**
+   * @brief Tree search function.
+   *
+   * @param sType            Type for search algorithm, see enum SearchType
+   * @param scene            Reference to scene object
+   * @param graph            Pointer to scene's underlying graph
+   * @param broadphase       Broadphase collision model of graph
+   * @param actionCommands   Sequence of action commands, separated by semicolon
+   * @param maxNumThreads    Numer of threads to distribute. A value of 0 means auto-select.
+   * @param dt               Prediction time step
+   * @param earlyExitSearch  True: quit search on first successful solution, false: compute whole tree
+   * @param earlyExitAction  True: Stop predicting action once error encountered, false: Always compute full action duration
+   * @param errMsg           Text string comprising error messages
+   * @return Search tree or nullptr in case of errors.
+  */
+  static  std::unique_ptr<PredictionTree> planActionTree(SearchType sType,
+                                                         ActionScene& scene,
+                                                         RcsGraph* graph,
+                                                         const RcsBroadPhase* broadphase,
+                                                         std::vector<std::string> actionCommands,
+                                                         double dt,
+                                                         std::string& errMsg,
+                                                         size_t maxNumThreads=0,
+                                                         bool earlyExitSearch=true,
+                                                         bool earlyExitAction=true);
 
 private:
 

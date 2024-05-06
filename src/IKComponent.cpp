@@ -129,12 +129,7 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
   if ((ikOk<0) && (eStop==false))
   {
     RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg);
-    //getEntity()->call("EmergencyStop");
-    //RcsGraph_toXML(controller->getGraph(), "emergency.xml");
   }
-
-  // std::string msg = "Collision cost: " + std::to_string(controller->getCollisionCost());
-  // getEntity()->publish("SetTextLine", msg, 3);
 
   // Gradually activate null space so that it takes 1 second from 0 to alphaMax.
   // This is only happening after class construction / initialization, but not

@@ -66,8 +66,7 @@ PredictionTreeNode::PredictionTreeNode() :
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
   success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
-  bodyTransforms(success ? pr.bodyTransforms : std::vector<double>()),
-  parent(parent_), graph(pr.graph), threadNumber(0)
+  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), errorMessage(pr.message), threadNumber(0)
 {
   accumulatedCost = parent->accumulatedCost + cost;
   level = parent->level+1;
@@ -633,25 +632,53 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
   return bestPath;
 }
 
-std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& domain,
-                                                               RcsGraph* graph,
-                                                               const RcsBroadPhase* broadphase,
-                                                               std::vector<std::string> actions,
-                                                               size_t stepsToPlan,
-                                                               size_t maxNumThreads,
-                                                               double dt,
-                                                               bool earlyExit,
-                                                               std::string& errMsg)
+std::vector<PredictionTreeNode*> PredictionTree::getSolutionPath(size_t index) const
+{
+  std::vector<PredictionTreeNode*> leafs, bestPath;
+
+  // Get all successful leaf nodes and order so that the best one is at the first index
+  getLeafNodes(leafs, false);
+
+  if (leafs.empty() || index >= leafs.size())
+  {
+    return std::vector<PredictionTreeNode*>();
+  }
+
+  std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
+
+  if (!leafs.empty())
+  {
+    PredictionTreeNode* nodePtr = leafs[index];
+    bestPath.push_back(nodePtr);
+
+    while (nodePtr->parent)
+    {
+      nodePtr = nodePtr->parent;
+      bestPath.push_back(nodePtr);
+    }
+
+    bestPath.pop_back();   // Remove root
+    std::reverse(bestPath.begin(), bestPath.end());
+  }
+
+  return bestPath;
+}
+
+/*******************************************************************************
+ * Breadth-first search
+ ******************************************************************************/
+static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
+                                                         RcsGraph* graph,
+                                                         const RcsBroadPhase* broadphase,
+                                                         std::vector<std::string> actions,
+                                                         size_t stepsToPlan,
+                                                         size_t maxNumThreads,
+                                                         double dt,
+                                                         bool earlyExit,
+                                                         std::string& errMsg)
 {
   std::unique_ptr<PredictionTree> predictionTree = std::make_unique<PredictionTree>();
   predictionTree->t_calc = Timer_getSystemTime();
-
-  // Strip whitespaces from action commands
-  //for (size_t i = 0; i < actions.size(); i++)
-  //{
-  //  Rcs::String_trim(actions[i]);
-  //}
-
   predictionTree->incomingActionSequence = actions;
 
   PredictionTreeNode* currentPredictionNode = predictionTree->root;
@@ -705,27 +732,8 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
         RCHECK(lookaheadGraph);
       }
 
-      // We are here if a '+' has been detected in the command string. This is a
-      // parallel action where the actions that are separated by the '+' sign get
-      // instantiated by the MultiStringAction.
-#if 0
-      if (actionStrings.size() > 1)
-      {
-        actionStrings.insert(actionStrings.begin(), "multi_string");
-        action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, actionStrings, explanation));
-        errMsg += explanation;
-      }
-      // This is the "normal" action that only has space-separated words.
-      else
-      {
-        std::vector<std::string> words = Rcs::String_split(text, " ");
-        action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, words, explanation));
-        errMsg += explanation;
-      }
-#else
       action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, text, explanation));
       errMsg += explanation;
-#endif
 
 
 
@@ -844,67 +852,14 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(ActionScene& doma
   return std::move(predictionTree);
 }
 
-
-// void PredictionTree::DFS_MT(ActionScene& scene,
-//                             const RcsBroadPhase* broadphase,
-//                             std::vector<std::string> actionSequenceStrings,
-//                             double dt,
-//                             size_t nThreads,
-//                             bool earlyExit,
-//                             PredictionTreeNode* node,
-//                             bool& finished)
-// {
-//   std::string err;
-//   std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
-//   auto action_ = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
-
-//   for (size_t i = 0; i < (action_ ? action_->getNumSolutions() : 0); ++i)
-//   {
-//     auto action = action_->clone();
-//     action->initialize(scene, node->graph, i);
-//     bool actionEarlyExit = true;
-//     auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
-
-//     // Scale duration to make motion as fast as possible
-//     if (action->turboMode())
-//     {
-//       double newDuration = action->getDurationHint() * res.scaleJointSpeeds;
-//       action->setDuration(newDuration * TURBO_DURATION_SCALER);
-//     }
-
-//     // Now the node->graph is correctly initialized for the next tree child
-//     PredictionTreeNode* child = new PredictionTreeNode(node, res);
-//     child->resolvedActionCommand = action->getActionCommand();
-//     node->children.push_back(child);
-
-//     // We stop the recursion in case we found a successful leaf node on the last level.
-//     if (earlyExit && child->success && child->level == actionSequenceStrings.size())
-//     {
-//       finished = true;
-//       break;
-//     }
-
-//     // Descent to next recursion level
-//     if (child->level < actionSequenceStrings.size() && child->success)
-//     {
-//       DFS(scene, broadphase, actionSequenceStrings, dt, nThreads, earlyExit, child, finished);
-//       if (finished)
-//       {
-//         break;
-//       }
-//     }
-//   }
-
-// }
-
-void PredictionTree::DFS(ActionScene& scene,
-                         const RcsBroadPhase* broadphase,
-                         std::vector<std::string> actionSequenceStrings,
-                         double dt,
-                         size_t nThreads,
-                         bool earlyExit,
-                         PredictionTreeNode* node,
-                         bool& finished)
+static void DFS(ActionScene& scene,
+                const RcsBroadPhase* broadphase,
+                std::vector<std::string> actionSequenceStrings,
+                double dt,
+                size_t nThreads,
+                bool earlyExit,
+                PredictionTreeNode* node,
+                bool& finished)
 {
   std::string err;
   std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
@@ -947,19 +902,21 @@ void PredictionTree::DFS(ActionScene& scene,
       }
     }
   }
-
 }
 
-
-std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT(ActionScene& domain,
-                                                                  RcsGraph* graph,
-                                                                  const RcsBroadPhase* broadphase,
-                                                                  std::vector<std::string> actions,
-                                                                  size_t stepsToPlan,
-                                                                  size_t maxNumThreads,
-                                                                  double dt,
-                                                                  bool earlyExit,
-                                                                  std::string& errMsg)
+/*******************************************************************************
+ * Single-threaded depth-first search
+ ******************************************************************************/
+static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
+                                                         RcsGraph* graph,
+                                                         const RcsBroadPhase* broadphase,
+                                                         std::vector<std::string> actions,
+                                                         size_t stepsToPlan,
+                                                         size_t maxNumThreads,
+                                                         double dt,
+                                                         bool earlyExitSearch,
+                                                         bool earlyExitAction,
+                                                         std::string& errMsg)
 {
   // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
   size_t nThreads = std::thread::hardware_concurrency();
@@ -983,7 +940,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT(ActionScene& d
   tree->root->graph = RcsGraph_clone(graph);
 
   bool isFinished = false;
-  tree->DFS(domain, broadphase, actions, dt, nThreads, earlyExit, tree->root, isFinished);
+  DFS(domain, broadphase, actions, dt, nThreads, earlyExitSearch, tree->root, isFinished);
   tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
   REXEC(0)
@@ -1019,7 +976,8 @@ static void DFSMT(ActionScene& scene,
                   PredictionTreeNode* node,
                   const std::vector<std::string>& levelCommands,
                   double dt,
-                  bool earlyExit,
+                  bool earlyExitSearch,
+                  bool earlyExitAction,
                   bool& finished);
 
 static void expand(ActionScene& scene,
@@ -1027,7 +985,8 @@ static void expand(ActionScene& scene,
                    PredictionTreeNode* node,
                    const std::vector<std::string>& levelCommands,
                    double dt,
-                   bool earlyExit,
+                   bool earlyExitSearch,
+                   bool earlyExitAction,
                    bool& finished,
                    int solutionIndex,
                    std::unique_ptr<ActionBase> action,
@@ -1040,15 +999,14 @@ static void expand(ActionScene& scene,
       std::lock_guard<std::mutex> lock(staticLock);
       RLOG_CPP(0, "Started thread " << globalThreadNumber
                << " parent: " << node->threadNumber);
+      threadIdMap[std::this_thread::get_id()] = globalThreadNumber;
     }
-    threadIdMap[std::this_thread::get_id()] = globalThreadNumber;
     globalThreadNumber++;
     startedThreads++;
   }
 
-  bool actionEarlyExit = true;
   action->initialize(scene, node->graph, solutionIndex);
-  auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
+  auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, earlyExitAction);
   res.idx = solutionIndex;
 
   // Scale duration to make motion as fast as possible. We also force it to the lower multiple of dt,
@@ -1063,7 +1021,6 @@ static void expand(ActionScene& scene,
   // Now the node->graph is correctly initialized for the next tree child
   PredictionTreeNode* child = new PredictionTreeNode(node, res);
   child->resolvedActionCommand = action->getActionCommand();
-  //child->threadIdx = std::this_thread::get_id();
   child->threadNumber = globalThreadNumber;
   node->children.push_back(child);
 
@@ -1073,7 +1030,7 @@ static void expand(ActionScene& scene,
   }
 
   // We stop the recursion in case we found a successful leaf node on the last level.
-  if (earlyExit && child->success && child->level == levelCommands.size())
+  if (earlyExitSearch && child->success && child->level == levelCommands.size())
   {
     finished = true;
     return;
@@ -1082,7 +1039,7 @@ static void expand(ActionScene& scene,
   // Descent to next recursion level
   if ((child->level < levelCommands.size()) && child->success)
   {
-    DFSMT(scene, broadphase, child, levelCommands, dt, earlyExit, finished);
+    DFSMT(scene, broadphase, child, levelCommands, dt, earlyExitSearch, earlyExitAction, finished);
     if (finished)
     {
       return;
@@ -1091,23 +1048,16 @@ static void expand(ActionScene& scene,
 
 }
 
-
-
-
-
-
-
 void DFSMT(ActionScene& scene,
            const RcsBroadPhase* broadphase,
            PredictionTreeNode* node,
            const std::vector<std::string>& levelCommands,
            double dt,
-           bool earlyExit,
+           bool earlyExitSearch,
+           bool earlyExitAction,
            bool& finished)
 {
   std::string err;
-  //std::vector<std::string> actionParams = Rcs::String_split(levelCommands[node->level], " ");
-  //auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, levelCommands[node->level], err));
 
   if (!action)
@@ -1128,14 +1078,14 @@ void DFSMT(ActionScene& scene,
 
     if (!threadMe)
     {
-      expand(scene, broadphase, node, levelCommands, dt, earlyExit, finished, i,
+      expand(scene, broadphase, node, levelCommands, dt, earlyExitSearch, earlyExitAction, finished, i,
              std::unique_ptr<ActionBase>(action->clone()), false);
     }
     else
     {
       launchedThreads++;
-      workers.push_back(std::thread(expand, std::ref(scene), broadphase, node, levelCommands, dt, earlyExit,
-                                    std::ref(finished), (int)i,
+      workers.push_back(std::thread(expand, std::ref(scene), broadphase, node, levelCommands, dt,
+                                    earlyExitSearch, earlyExitAction, std::ref(finished), (int)i,
                                     std::unique_ptr<ActionBase>(action->clone()), true));
     }
 
@@ -1162,15 +1112,19 @@ void DFSMT(ActionScene& scene,
 }
 
 
-std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT_MT(ActionScene& domain,
-                                                                     RcsGraph* graph,
-                                                                     const RcsBroadPhase* broadphase,
-                                                                     std::vector<std::string> actions,
-                                                                     size_t stepsToPlan,
-                                                                     size_t maxNumThreads,
-                                                                     double dt,
-                                                                     bool earlyExit,
-                                                                     std::string& errMsg)
+/*******************************************************************************
+ * Multi-threaded depth-first search
+ ******************************************************************************/
+static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
+                                                            RcsGraph* graph,
+                                                            const RcsBroadPhase* broadphase,
+                                                            std::vector<std::string> actions,
+                                                            size_t stepsToPlan,
+                                                            size_t maxNumThreads,
+                                                            double dt,
+                                                            bool earlyExitSearch,
+                                                            bool earlyExitAction,
+                                                            std::string& errMsg)
 {
   // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
   size_t nThreads = 2*(size_t)std::thread::hardware_concurrency();
@@ -1182,7 +1136,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT_MT(ActionScene
 
   maxThreads = nThreads;
   RLOG_CPP(0, "Planning with " << maxThreads << " threads - early exit is "
-           << (earlyExit ? "TRUE" : "FALSE"));
+           << (earlyExitSearch ? "TRUE" : "FALSE"));
 
   // Create tree
   std::unique_ptr<PredictionTree> tree = std::make_unique<PredictionTree>();
@@ -1191,26 +1145,54 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTreeDFT_MT(ActionScene
   tree->root->graph = RcsGraph_clone(graph);
 
   bool isFinished = false;
-  DFSMT(domain, broadphase, tree->root, actions, dt, earlyExit, isFinished);
+  DFSMT(domain, broadphase, tree->root, actions, dt, earlyExitSearch, earlyExitAction, isFinished);
   tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
-  REXEC(0)
-  {
-    tree->toDotFile("PredictionTreeDFS.dot");
-  }
-
-  REXEC(1)
-  {
-    tree->printTreeVisual(tree->root, 0);
-  }
-
-  RLOG_CPP(0, "Took " << tree->t_calc << " secs for " << tree->getNumNodes() << " nodes");
   RLOG_CPP(0, "Started threads: " << startedThreads << " stopped threads: " << stoppedThreads);
 
   return tree;
 }
 
 
+/*******************************************************************************
+ * Tree search function
+ ******************************************************************************/
+std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
+                                                               ActionScene& scene,
+                                                               RcsGraph* graph,
+                                                               const RcsBroadPhase* bp,
+                                                               std::vector<std::string> actions,
+                                                               double dt,
+                                                               std::string& errMsg,
+                                                               size_t maxNumThreads,
+                                                               bool earlyExitSearch,
+                                                               bool earlyExitAction)
+{
+  std::unique_ptr<PredictionTree> tree;
+  size_t numStepsToPlan = actions.size();
 
+  switch (sType)
+  {
+    case SearchType::BFS:
+      tree = planActionTreeBFS(scene, graph, bp, actions, numStepsToPlan,
+                               maxNumThreads, dt, earlyExitAction, errMsg);
+      break;
+
+    case SearchType::DFS:
+      tree = planActionTreeDFT(scene, graph, bp, actions, numStepsToPlan,
+                               maxNumThreads, dt, earlyExitSearch, earlyExitAction, errMsg);
+      break;
+
+    case SearchType::DFSMT:
+      tree = planActionTreeDFT_MT(scene, graph, bp, actions, numStepsToPlan,
+                                  maxNumThreads, dt, earlyExitSearch, earlyExitAction, errMsg);
+      break;
+
+    default:
+      RLOG_CPP(0, "Unknown search type: " << (int)sType);
+  }
+
+  return tree;
+}
 
 }; // namespace aff

@@ -873,18 +873,10 @@ void ExampleActionsECS::run()
     seqCmd.push_back("put bottle_of_cola");
 
     std::string errMsg;
-    auto tree = PredictionTree::planActionTreeDFT(*getScene(), getGraph(), getBroadPhase(),
-                                                  seqCmd, seqCmd.size(), 5, entity.getDt(),
-                                                  false, errMsg);
+    auto tree = PredictionTree::planActionTree(PredictionTree::SearchType::DFSMT, *getScene(), getGraph(), getBroadPhase(),
+                                               seqCmd, entity.getDt(), errMsg, 0, false, false);
 
     tree->toDotFile("PredictionTree.dot");
-    // auto res = sceneQuery->instance()->planActionSequence(seqCmd, seqCmd.size());
-    // std::string newCmd;
-    // for (size_t i = 0; i < res.size(); ++i)
-    // {
-    //   newCmd += res[i];
-    //   newCmd += ";";
-    // }
 
     // RLOG_CPP(0, "Command : " << newCmd);
     runLoop = false;
@@ -1007,7 +999,6 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     tree = ex->getQuery()->planActionTree(seq, maxNumThreads);
   }
 
-  std::vector<std::string> predictedActions;
 
   // Early exit in case tree could not be constructed
   if (!tree)
@@ -1018,24 +1009,19 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     return;
   }
 
+#if 0
+  // From here on, we have a valid tree. But it might not contain a valid solution.
+  std::vector<std::string> predictedActions;
 
-
-
-
-  //if (tree)
-  //{
   auto sln = tree->findSolutionPath();
   for (const auto& nd : sln)
   {
     predictedActions.push_back(nd->actionCommand());
     RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
   }
-  //}
 
   // Animation of all valid solution paths. We only show the first 3 so that we
   // don't copy around huge amounts of memory.
-  //if (tree)
-  //{
   size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)FIRST_N_SOLUTIONS);
   std::vector<TrajectoryPredictor::PredictionResult> predictions(numSolutions);
 
@@ -1058,26 +1044,65 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     for (size_t i = predictions.size(); i < FIRST_N_SOLUTIONS; ++i)
     {
       TrajectoryPredictor::PredictionResult res;
-      res.success = false;
       auto path = tree->findSolutionPath(i, false);
       if (!path.empty())
       {
+        auto leaf = path.back();
+        res.success = leaf->success;
         for (const auto& nd : path)
         {
           res.bodyTransforms.insert(res.bodyTransforms.end(),
                                     nd->bodyTransforms.begin(),
                                     nd->bodyTransforms.end());
         }
+        predictions.push_back(res);
       }
-      predictions.push_back(res);
     }
   }
+#else
+
+  // From here on, we have a valid tree. But it might not contain a valid solution.
+  std::vector<std::string> predictedActions;
+  std::vector<TrajectoryPredictor::PredictionResult> predictions;
+
+  for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
+  {
+    TrajectoryPredictor::PredictionResult res;
+    auto path = tree->getSolutionPath(i);
+
+    if (!path.empty())
+    {
+      res.success = path.back()->success;
+      RLOG_CPP(0, "Solution " << i << " is " << (res.success ? "SUCCESSFUL" : "NOT SUCCESSFUL"));
+
+      for (const auto& nd : path)
+      {
+        if (i==0 && res.success)
+        {
+          predictedActions.push_back(nd->actionCommand());
+          RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
+        }
+
+        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
+        res.bodyTransforms.insert(res.bodyTransforms.end(),
+                                  nd->bodyTransforms.begin(),
+                                  nd->bodyTransforms.end());
+      }
+    }
+    else
+    {
+      RLOG_CPP(0, "No path found for solution " << i);
+    }
+
+    predictions.push_back(res);
+  }
+
+#endif
 
   if (!predictions.empty())
   {
     ex->entity.publish("AnimateSequence", predictions, 0);
   }
-  //}
 
   if (predictedActions.empty())
   {
@@ -1098,6 +1123,18 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
   RLOG_CPP(0, "Command : " << newCmd);
   ex->entity.publish("ActionSequence", newCmd);
+
+  REXEC(0)
+  {
+    tree->toDotFile("PredictionTreeDFS.dot");
+  }
+
+  REXEC(1)
+  {
+    tree->printTreeVisual(tree->root, 0);
+  }
+
+  RLOG_CPP(0, "Took " << tree->t_calc << " secs for " << tree->getNumNodes() << " nodes");
 }
 
 void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
