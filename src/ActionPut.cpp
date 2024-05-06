@@ -40,6 +40,7 @@
 #include <ConnectBodyConstraint.h>
 #include <VectorConstraint.h>
 
+#include <Rcs_utilsCPP.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
@@ -658,6 +659,7 @@ bool ActionPut::initialize(const ActionScene& domain,
   }
 
   detailedActionCommand += " frame " + surfaceFrameName;
+
   // We add the duration in the getActionCommand() function, since initialize() is not
   // called after predict(), and we might adapt the duration after that.
   return true;
@@ -992,6 +994,118 @@ std::string ActionPut::getActionCommand() const
 {
   return detailedActionCommand + " duration " + std::to_string(getDurationHint());
 }
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionMove : public ActionPut
+{
+public:
+
+  ActionMove(const ActionScene& domain,
+             const RcsGraph* graph,
+             std::vector<std::string> params) : ActionPut(domain, graph, params)
+  {
+  }
+
+  bool initialize(const ActionScene& domain,
+                  const RcsGraph* graph,
+                  size_t solutionRank)
+  {
+    bool success = ActionPut::initialize(domain, graph, solutionRank);
+
+    if (!success)
+    {
+      return false;
+    }
+
+    auto words = Rcs::String_split(detailedActionCommand, " ");
+
+    if (words.empty())
+    {
+      RLOG(0, "Failed to decompose action command for ActionMove");
+      return false;
+    }
+
+    words[0] = "move";
+
+    detailedActionCommand.clear();
+    for (const auto& w : words)
+    {
+      detailedActionCommand += w + " ";
+    }
+
+    detailedActionCommand += "duration " + std::to_string(getDurationHint());
+
+    return true;
+  }
+
+  virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const
+  {
+    const double t_put = t_start + 0.66 * (t_end - t_start);
+    const double afterTime = 0.5;
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    a1->addActivation(t_start, true, 0.5, taskSurfaceOri);
+    a1->addActivation(t_end, false, 0.5, taskSurfaceOri);
+
+    // Put object on surface
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosX);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfacePosX);
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosY);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfacePosY);
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosZ);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfacePosZ);
+
+    const double* x = downProjection;
+
+    a1->add(t_put, x[0], 0.0, 0.0, 7, taskObjSurfacePosX + " 0");
+    a1->add(t_put, x[1], 0.0, 0.0, 7, taskObjSurfacePosY + " 0");
+    a1->add(t_put, x[2], 0.0, 0.0, 7, taskObjSurfacePosZ + " 0");
+
+    // Move in a little bit of a curve above other objects
+    if (!putDown)
+    {
+      a1->add(0.75*(t_start+t_put), 0.1, 0.0, 0.0, 1, taskObjSurfacePosZ + " 0");
+    }
+
+    // Object orientation wrt world frame. The object is re-connected to the
+    // table at t=t_put. Therefore we must switch of the hand-object relative
+    // orientation to avoid conflicting constraints. If we want the hand to
+    // remain upright a bit longer, we would need to activate an orientation
+    // task that is absolute with respect to the hand, for instance taskHandObjPolar.
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePolar);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfacePolar);
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfacePolar));
+
+    if (!isPincerGrasped)
+    {
+      a1->addActivation(t_put, true, 0.5, taskHandObjPolar);
+      a1->addActivation(t_put + 0.5 * (t_end - t_put), false, 0.5, taskHandObjPolar);
+    }
+
+    return a1;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionMove>(*this);
+  }
+
+};
+
+REGISTER_ACTION(ActionMove, "move");
+
 
 
 
