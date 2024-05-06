@@ -31,6 +31,7 @@
 
   <ActionSequence name="1" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
   <ActionSequence name="2" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
+  <ActionSequence name="3" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough" />
 
 
   <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >

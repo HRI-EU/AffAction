@@ -242,7 +242,7 @@
     <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
     <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
   </model_state>
-	
+
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>
     <Tree root="upperarm_right"/>
@@ -250,8 +250,7 @@
     <Body name="screen_link"/>
     <Body name="head_kinect_link"/>
     <Body name="adapter_shoulder_left_3"/>
-    <Body name="adapter_shoulder_right_3"/>
-	  
+    <Body name="adapter_shoulder_right_3"/>	  
   </BroadPhase>
 	
 </Graph>
