@@ -45,6 +45,7 @@
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
+#include <Rcs_utilsCPP.h>
 
 #include <limits>
 #include <tuple>
@@ -1123,6 +1124,26 @@ public:
     init(domain, graph, objectToGet, manipulator, graspToUse, whereFrom);
   }
 
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionGetAndHold>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    auto words = Rcs::String_split(ActionGet::getActionCommand(), " ");
+    RCHECK(!words.empty());
+    words[0] = "get_and_hold";
+
+    std::string res;
+    for (const auto& w : words)
+    {
+      res += w + " ";
+    }
+
+    return res;
+  }
+
 };
 
 REGISTER_ACTION(ActionGetAndHold, "get_and_hold");
@@ -1233,7 +1254,7 @@ public:
 
   std::string getActionCommand() const
   {
-    return ActionBase::getActionCommand();
+    return "magic_" + ActionGet::getActionCommand();
   }
 
 };

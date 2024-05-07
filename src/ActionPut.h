@@ -80,10 +80,10 @@ protected:
                                     const RcsGraph* graph,
                                     const std::string& objAffordance);
 
-  void initOptions(const ActionScene& domain,
-                   const RcsGraph* graph,
-                   const AffordanceEntity* object,
-                   const std::string& surface);
+  virtual std::vector<std::tuple<Affordance*, Affordance*>> initOptions(const ActionScene& domain,
+                                                                        const RcsGraph* graph,
+                                                                        const AffordanceEntity* object,
+                                                                        const std::string& surface) const;
 
   std::vector<std::string> createTasksXML() const;
 
@@ -118,15 +118,19 @@ protected:
   std::vector<std::string> usedManipulators;
   std::vector<double> handOpen;
 
+  bool above;
   bool putDown;
   bool isObjCollidable;
   bool isPincerGrasped;
   double supportRegionX, supportRegionY;
   unsigned int polarAxisIdx;
   double distance;
+  double heightAboveGoal;   // If "above" is specified, the distance of the object bottom above the target surface.
 
   // Point in the frame of the surface object on which the object will be put.
-  double downProjection[3];
+  double startPoint[3];
+  double midPoint[3];
+  double endPoint[3];
 
   std::vector<std::tuple<Affordance*, Affordance*>> affordanceMap;
 };

@@ -350,7 +350,16 @@ const AffordanceEntity* ActionBase::raycastSurface(const ActionScene& domain,
   // First we compute an axis-aligned bounding box around the body. We raycast
   // from its bottom. This avoids self-intersections with the object.
   double xyzMin[3], xyzMax[3], castFrom[3], dir[3], surfPt[3], dMin = 0.0;
-  RcsGraph_computeBodyAABB(graph, body->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
+  bool aabbFound = RcsGraph_computeBodyAABB(graph, body->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
+
+  if (!aabbFound)
+  {
+    // Set to body origin in world coordinates
+    const double* bodyPos = graph->bodies[body->id].A_BI.org;
+    Vec3d_copy(xyzMin, bodyPos);
+    Vec3d_copy(xyzMax, bodyPos);
+  }
+
   Vec3d_set(castFrom, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), xyzMin[2]-1.0e-8);
   Vec3d_set(dir, 0.0, 0.0, -1.0);
   const RcsBody* surfaceBdy = RcsBody_closestRigidBodyInDirection(graph, castFrom, dir, surfPt, &dMin);

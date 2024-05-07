@@ -109,11 +109,9 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
     if (!surface)
     {
-      throw ActionException(errMsg, ActionException::KinematicallyImpossible);
-      //throw ActionException("ERROR: Can't drop the " + objectToDrop +
-      //    " REASON: There is nothing under the " +
-      //    objectToDrop + " where I can put it on",
-      //    ActionException::KinematicallyImpossible);
+      RLOG_CPP(0, errMsg);
+      throw ActionException(ActionException::KinematicallyImpossible,
+                            "There is no surface under the " + objectToDrop + " where I can put it on");
     }
 
     this->surfaceName = surface->bdyName;
@@ -121,8 +119,11 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!surface)
   {
-    throw ActionException(ActionException::KinematicallyImpossible, "No surface entity to drop on found");
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "No surface entity to drop on found");
   }
+
+  RLOG_CPP(0, "Dropping object on " << surfaceName);
 
   // Capability is "graspCapability", all support surfaces are stored in
   // supportSurfaces. We create an affordance-capability map that will be
