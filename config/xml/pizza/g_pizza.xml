@@ -137,11 +137,11 @@
 
     <!-- anchovies_bowl -->
     <Body name="anchovies_bowl" prev="table" rigid_body_joints="0.12 0.6 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="anchovies_bowl_inside" prev="anchovies_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="anchovies_bowl_inside" prev="anchovies_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -245,11 +245,11 @@
 
    <!-- artichoke_hearts_bowl -->
     <Body name="artichoke_hearts_bowl" prev="table" rigid_body_joints="0.12 0.34 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="artichoke_hearts_bowl_inside" prev="artichoke_hearts_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="artichoke_hearts_bowl_inside" prev="artichoke_hearts_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -348,11 +348,11 @@
 
    <!-- bacon_bowl -->
     <Body name="bacon_bowl" prev="table" rigid_body_joints="0.01 -0.66 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <Body name="bacon_bowl_inside" prev="bacon_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="bacon_bowl_inside" prev="bacon_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -452,12 +452,12 @@
 
 
     <!-- black_olives_bowl -->
-    <Body name="black_olives_bowl" prev="table" rigid_body_joints="-0.1 0.33 0.01 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+    <Body name="black_olives_bowl" prev="table" rigid_body_joints="-0.1 0.33 0 0 0 0" color="EMERALD">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="black_olives_bowl_inside" prev="black_olives_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="black_olives_bowl_inside" prev="black_olives_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -563,11 +563,11 @@
 
     <!-- feta_cheese_bowl -->
     <Body name="feta_cheese_bowl" prev="table" rigid_body_joints="0.12 -0.21 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="feta_cheese_bowl_inside" prev="feta_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="feta_cheese_bowl_inside" prev="feta_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -674,11 +674,11 @@
 
     <!-- fresh_basil_leaves_bowl -->
     <Body name="fresh_basil_leaves_bowl" prev="table" rigid_body_joints="0.01 0.53 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="fresh_basil_leaves_bowl_inside" prev="fresh_basil_leaves_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="fresh_basil_leaves_bowl_inside" prev="fresh_basil_leaves_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -784,11 +784,11 @@
 
     <!-- fresh_tomatoes_bowl -->
     <Body name="fresh_tomatoes_bowl" prev="table" rigid_body_joints="0.01 0.40 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="fresh_tomatoes_bowl_inside" prev="fresh_tomatoes_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="fresh_tomatoes_bowl_inside" prev="fresh_tomatoes_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -893,11 +893,11 @@
 
     <!-- garlic_bowl -->
     <Body name="garlic_bowl" prev="table" rigid_body_joints="-0.1 0.46 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="garlic_bowl_inside" prev="garlic_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="garlic_bowl_inside" prev="garlic_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1003,11 +1003,11 @@
 
     <!-- goat_cheese_bowl -->
     <Body name="goat_cheese_bowl" prev="table" rigid_body_joints="-0.23 0.58 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="goat_cheese_bowl_inside" prev="goat_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="goat_cheese_bowl_inside" prev="goat_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1113,11 +1113,11 @@
 
     <!-- grilled_chicken_bowl -->
     <Body name="grilled_chicken_bowl" prev="table" rigid_body_joints="0.12 -0.60 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="grilled_chicken_bowl_inside" prev="grilled_chicken_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="grilled_chicken_bowl_inside" prev="grilled_chicken_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1228,7 +1228,7 @@
         <Shape type="FRAME" scale="0.1" graphics="false"/>
     </Body>
 
-    <Body name="italian_seasoning_bowl_inside" prev="italian_seasoning_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="italian_seasoning_bowl_inside" prev="italian_seasoning_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1335,11 +1335,11 @@
 
     <!-- ham_bowl -->
     <Body name="ham_bowl" prev="table" rigid_body_joints="0.12 -0.34 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="ham_bowl_inside" prev="ham_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="ham_bowl_inside" prev="ham_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1445,11 +1445,11 @@
 
     <!-- mozzarella_cheese_bowl -->
     <Body name="mozzarella_cheese_bowl" prev="table" rigid_body_joints="-0.23 0.45 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="mozzarella_cheese_bowl_inside" prev="mozzarella_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="mozzarella_cheese_bowl_inside" prev="mozzarella_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1553,12 +1553,12 @@
     </AffordanceModel>
 
     <!-- mushrooms_bowl -->
-    <Body name="mushrooms_bowl" prev="table" rigid_body_joints="0.01 -0.4 0.01 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+    <Body name="mushrooms_bowl" prev="table" rigid_body_joints="0.01 -0.4 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="mushrooms_bowl_inside" prev="mushrooms_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="mushrooms_bowl_inside" prev="mushrooms_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1664,11 +1664,11 @@
 
     <!-- parmesan_cheese_bowl -->
     <Body name="parmesan_cheese_bowl" prev="table" rigid_body_joints="0.01 -0.27 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="parmesan_cheese_bowl_inside" prev="parmesan_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="parmesan_cheese_bowl_inside" prev="parmesan_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1774,11 +1774,11 @@
 
    <!-- pepperoni_slices_bowl -->
     <Body name="pepperoni_slices_bowl" prev="table" rigid_body_joints="0.12 -0.47 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="pepperoni_slices_bowl_inside" prev="pepperoni_slices_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="pepperoni_slices_bowl_inside" prev="pepperoni_slices_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1884,11 +1884,11 @@
 
     <!-- pineapple_chunks_bowl -->
     <Body name="pineapple_chunks_bowl" prev="table" rigid_body_joints="0.12 0.47 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0" />
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0" />
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="pineapple_chunks_bowl_inside" prev="pineapple_chunks_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="pineapple_chunks_bowl_inside" prev="pineapple_chunks_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -1995,11 +1995,11 @@
 
     <!-- red_onion_bowl -->
     <Body name="red_onion_bowl" prev="table" rigid_body_joints="0.01 0.27 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="red_onion_bowl_inside" prev="red_onion_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="red_onion_bowl_inside" prev="red_onion_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -2105,11 +2105,11 @@
 
     <!-- ricotta_cheese_bowl -->
     <Body name="ricotta_cheese_bowl" prev="table" rigid_body_joints="-0.1 -0.2 0 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="ricotta_cheese_bowl_inside" prev="ricotta_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="ricotta_cheese_bowl_inside" prev="ricotta_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -2418,12 +2418,12 @@
     </AffordanceModel>
 
     <!-- provolone_cheese_bowl -->
-    <Body name="provolone_cheese_bowl" prev="table" rigid_body_joints="-0.1 0.2 0.01 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+    <Body name="provolone_cheese_bowl" prev="table" rigid_body_joints="-0.1 0.2 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="provolone_cheese_bowl_inside" prev="provolone_cheese_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="provolone_cheese_bowl_inside" prev="provolone_cheese_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -2559,12 +2559,12 @@
     </AffordanceModel>
 
     <!-- sausage_bowl -->
-    <Body name="sausage_bowl" prev="table" rigid_body_joints="0.01 -0.53 0.01 0 0 0" color="RUBY">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+    <Body name="sausage_bowl" prev="table" rigid_body_joints="0.01 -0.53 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="sausage_bowl_inside" prev="sausage_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="sausage_bowl_inside" prev="sausage_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -2670,11 +2670,11 @@
 
     <!-- spinach_leaves_bowl -->
     <Body name="spinach_leaves_bowl" prev="table" rigid_body_joints="-0.1 0.59 0 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="spinach_leaves_bowl_inside" prev="spinach_leaves_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="spinach_leaves_bowl_inside" prev="spinach_leaves_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
@@ -2779,12 +2779,12 @@
     </AffordanceModel>
 
    <!-- sun_dried_tomatoes_bowl -->
-    <Body name="sun_dried_tomatoes_bowl" prev="table" rigid_body_joints="0.12 0.21 0.01 0 0 0" color="EMERALD">
-        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.01 0 0 0"/>
+    <Body name="sun_dried_tomatoes_bowl" prev="table" rigid_body_joints="0.12 0.21 0 0 0 0" color="EMERALD">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true" transform="0 0 0.015 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
-    <Body name="sun_dried_tomatoes_bowl_inside" prev="sun_dried_tomatoes_bowl" transform="0 0 0.04 0 0 0">
+    <Body name="sun_dried_tomatoes_bowl_inside" prev="sun_dried_tomatoes_bowl" transform="0 0 0.05 0 0 0">
         <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
     </Body>
 
