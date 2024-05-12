@@ -632,36 +632,19 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
   return bestPath;
 }
 
-std::vector<PredictionTreeNode*> PredictionTree::getSolutionPath(size_t index) const
+std::vector<std::string> PredictionTree::findSolutionPathAsStrings(size_t index, bool onlySuccessfulOnes) const
 {
-  std::vector<PredictionTreeNode*> leafs, bestPath;
+  auto tree = findSolutionPath(index, onlySuccessfulOnes);
 
-  // Get all successful leaf nodes and order so that the best one is at the first index
-  getLeafNodes(leafs, false);
+  std::vector<std::string> predictedActions;
 
-  if (leafs.empty() || index >= leafs.size())
+  auto sln = findSolutionPath();
+  for (const auto& nd : sln)
   {
-    return std::vector<PredictionTreeNode*>();
+    predictedActions.push_back(nd->actionCommand());
   }
 
-  std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
-
-  if (!leafs.empty())
-  {
-    PredictionTreeNode* nodePtr = leafs[index];
-    bestPath.push_back(nodePtr);
-
-    while (nodePtr->parent)
-    {
-      nodePtr = nodePtr->parent;
-      bestPath.push_back(nodePtr);
-    }
-
-    bestPath.pop_back();   // Remove root
-    std::reverse(bestPath.begin(), bestPath.end());
-  }
-
-  return bestPath;
+  return predictedActions;
 }
 
 /*******************************************************************************

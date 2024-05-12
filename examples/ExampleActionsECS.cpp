@@ -193,7 +193,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   lambda = 1.0e-6;
   speedUp = 1;
   loopCount = 0;
-  lookaheadCount = 0;
+  maxNumThreads = 0;
 
   pause = false;
   noSpeedCheck = false;
@@ -214,10 +214,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   singleThreaded = false;
   verbose = true;
   processingAction = false;
-  lookahead = false;
   turbo = true;
-  earlyExit = false;
-  depthFirst = false;
 
   dtProcess = 0.0;
   dtEvents = 0.0;
@@ -260,15 +257,13 @@ bool ExampleActionsECS::initParameters()
 bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
 {
   parser->getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
-  parser->getArgument("-speedUp", &speedUp, "Speed-up factor (default: %d)",
-                      speedUp);
+  parser->getArgument("-speedUp", &speedUp, "Speed-up factor (default: %d)", speedUp);
   parser->getArgument("-dt", &dt, "Time step (default is %f)", dt);
   parser->getArgument("-f", &xmlFileName, "Configuration file name "
                       "(default is %s)", xmlFileName.c_str());
   parser->getArgument("-dir", &config_directory, "Configuration file directory "
                       "(default is %s)", config_directory.c_str());
-  parser->getArgument("-alpha", &alpha,
-                      "Null space scaling factor (default is %f)", alpha);
+  parser->getArgument("-alpha", &alpha, "Null space scaling factor (default is %f)", alpha);
   parser->getArgument("-lambda", &lambda, "Regularization (default: %f)", lambda);
   parser->getArgument("-pause", &pause, "Pause after each process() call");
   parser->getArgument("-nospeed", &noSpeedCheck, "No speed limit checks");
@@ -287,11 +282,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
-  parser->getArgument("-lookahead", &lookahead, "Perform lookahead for whole sequences");
-  parser->getArgument("-lookaheadCount", &lookaheadCount, "Number of actions to lookahead");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
-  parser->getArgument("-earlyExit", &earlyExit, "Quit on first encountered solution when expanding DFS tree");
-  parser->getArgument("-depthFirst", &depthFirst, "Use depth-dirst tree search");
+  parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -984,21 +976,14 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         std::string sequenceCommand,
                                         size_t maxNumThreads,
                                         bool depthFirst,
-                                        bool earlyExit)
+                                        bool earlyExitSearch)
 {
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
 
-  std::unique_ptr<PredictionTree> tree;
-
-  if (depthFirst)
-  {
-    tree = ex->getQuery()->planActionTreeDFT(seq, maxNumThreads, earlyExit);
-  }
-  else
-  {
-    tree = ex->getQuery()->planActionTree(seq, maxNumThreads);
-  }
-
+  std::string errMsg;
+  auto sType = depthFirst ? PredictionTree::SearchType::DFSMT : PredictionTree::SearchType::BFS;
+  auto tree = ex->getQuery()->planActionTree(sType, seq, ex->entity.getDt(), errMsg,
+                                             maxNumThreads, earlyExitSearch);
 
   // Early exit in case tree could not be constructed
   if (!tree)
@@ -1068,7 +1053,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
   {
     TrajectoryPredictor::PredictionResult res;
-    auto path = tree->getSolutionPath(i);
+    auto path = tree->findSolutionPath(i, false);
 
     if (!path.empty())
     {
@@ -1140,30 +1125,27 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
 {
   processingAction = true;
-  const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = false;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false);
   t1.detach();
 }
 
 void ExampleActionsECS::onPlanActionSequenceDFS(std::string sequenceCommand)
 {
   processingAction = true;
-  const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = true;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, false);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false);
   t1.detach();
 }
 
 void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string sequenceCommand)
 {
   processingAction = true;
-  const size_t maxNumthreads = 0;   // 0 means auto-select
   bool dfs = true;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumthreads, dfs, true);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, true);
   t1.detach();
 }
 

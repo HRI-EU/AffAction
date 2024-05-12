@@ -62,12 +62,12 @@ std::shared_ptr<ConcurrentSceneQuery> SceneQueryPool::instance()
   {
     if (queries[i].use_count() == 1)
     {
-      //RLOG_CPP(0, "Returning query " << i);
+      NLOG_CPP(0, "Returning query " << i);
       return queries[i];
     }
   }
 
-  //RLOG_CPP(0, "No query found");
+  NLOG_CPP(0, "No query found");
   return nullptr;
 }
 
@@ -143,6 +143,15 @@ nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::strin
   return aff::getObjectOccludersForAgent(agentName, objectName, &scene, graph);
 }
 
+std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  const AffordanceEntity* ntt = scene.getAffordanceEntity(objectName);
+  const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
+  return parent ? parent->name : std::string();
+}
+
 bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double distanceThreshold)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
@@ -150,41 +159,20 @@ bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double dist
   return aff::isAgentBusy(agentName, &scene, graph, distanceThreshold);
 }
 
-std::vector<std::string> ConcurrentSceneQuery::planActionSequence(const std::vector<std::string>& actions, size_t maxThreads)
-{
-  std::lock_guard<std::mutex> lock(reentrancyLock);
-  update(true);
-  std::string errMsg;
-  bool earlyExit = true;
-  auto res =  ActionBase::planActionSequence(scene, graph, broadphase, actions, actions.size(), maxThreads, sim->entity.getDt(), earlyExit, errMsg);
-
-  return res;
-}
-
 std::unique_ptr<PredictionTree>
-ConcurrentSceneQuery::planActionTree(const std::vector<std::string>& actions, size_t maxThreads)
+ConcurrentSceneQuery::planActionTree(PredictionTree::SearchType searchType,
+                                     const std::vector<std::string>& actions,
+                                     double dt,
+                                     std::string& errMsg,
+                                     size_t maxThreads,
+                                     bool earlyExitSearch,
+                                     bool earlyExitAction)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
-  std::string errMsg;
-  bool earlyExitAction = true;
 
-  return PredictionTree::planActionTree(PredictionTree::SearchType::BFS, scene, graph, broadphase, actions,
-                                        sim->entity.getDt(), errMsg, maxThreads, false, earlyExitAction);
-}
-
-std::unique_ptr<PredictionTree>
-ConcurrentSceneQuery::planActionTreeDFT(const std::vector<std::string>& actions,
-                                        size_t maxThreads,
-                                        bool earlyExitSearch,
-                                        bool earlyExitAction)
-{
-  std::lock_guard<std::mutex> lock(reentrancyLock);
-  update(true);
-  std::string errMsg;
-
-  return PredictionTree::planActionTree(PredictionTree::SearchType::DFSMT, scene, graph, broadphase, actions,
-                                        sim->entity.getDt(), errMsg, maxThreads,
+  return PredictionTree::planActionTree(searchType, scene, graph, broadphase, actions,
+                                        dt, errMsg, maxThreads,
                                         earlyExitSearch, earlyExitAction);
 }
 
@@ -325,6 +313,29 @@ nlohmann::json ConcurrentSceneQuery::getAgents()
   }
 
   return json;
+}
+
+std::string ConcurrentSceneQuery::getHoldingHand(const std::string& objectName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  auto ntts = scene.getAffordanceEntities(objectName);
+
+  if (ntts.empty())
+  {
+    return std::string();
+  }
+
+  for (const auto& ntt : ntts)
+  {
+    const Manipulator* hand = scene.getGraspingHand(graph, ntt);
+    if (hand)
+    {
+      return hand->name;
+    }
+  }
+
+  return std::string();
 }
 
 }   // namespace aff

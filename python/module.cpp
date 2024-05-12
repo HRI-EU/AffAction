@@ -72,8 +72,11 @@ void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
                                  std::string sequenceCommand,
                                  size_t maxNumThreads)
 {
+  std::string errMsg;
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto res = ex.getQuery()->planActionSequence(seq, maxNumThreads);
+  auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
+                                            seq, ex.entity.getDt(), errMsg, maxNumThreads);
+  auto res = tree->findSolutionPathAsStrings();
 
   if (res.empty())
   {
@@ -449,6 +452,11 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getSceneState().dump();
   })
 
+  .def("get_parent", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
+  {
+    return ex.getQuery()->getParent(child);
+  })
+
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if there are no objects or a json in the form:
   // {"objects": ['iphone', 'red_glass', 'fanta_bottle'] }
@@ -505,8 +513,12 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("predictActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::string>
   {
+    std::string errMsg;
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    return ex.getQuery()->planActionSequence(seq, seq.size());
+    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
+                                              seq, ex.entity.getDt(), errMsg);
+    return tree ? tree->findSolutionPathAsStrings() : std::vector<std::string>();
+    //return ex.getQuery()->planActionSequence(seq, seq.size());
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -528,7 +540,11 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("planActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool blocking) -> bool
   {
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    auto res = ex.getQuery()->planActionSequence(seq, seq.size());
+    std::string errMsg;
+
+    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
+                                              seq, ex.entity.getDt(), errMsg);
+    auto res = tree->findSolutionPathAsStrings();
 
     if (res.empty())
     {
@@ -555,7 +571,7 @@ PYBIND11_MODULE(pyAffaction, m)
     if (blocking)
     {
       blocker.wait();
-      STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+      success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
       RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
     }
 
@@ -566,13 +582,25 @@ PYBIND11_MODULE(pyAffaction, m)
 
   //////////////////////////////////////////////////////////////////////////////
   // Predict action sequence as tree
-  // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
   //////////////////////////////////////////////////////////////////////////////
   .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
   {
+    PollBlockerComponent blocker(&ex);
+    ex.entity.publish("PlanDFSEE", sequenceCommand);
+    blocker.wait();
+    bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
+
+    return success;
+  })
+
+  .def("plan2", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
+  {
     sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    auto tree = ex.getQuery()->planActionTreeDFT(seq, 0, true);
+    std::string errMsg;
+    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
+                                              seq, ex.entity.getDt(), errMsg, 0, true, true);
     if (!tree)
     {
       RLOG_CPP(0, "Could not find solution for: '" << sequenceCommand << "'");
@@ -615,7 +643,7 @@ PYBIND11_MODULE(pyAffaction, m)
     if (blocking)
     {
       blocker.wait();
-      STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+      success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
       RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
     }
 
@@ -816,6 +844,8 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("verbose", &aff::ExampleActionsECS::verbose)
   .def_readwrite("processingAction", &aff::ExampleActionsECS::processingAction)
   .def_readwrite("noViewer", &aff::ExampleActionsECS::noViewer)
+  .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
+  .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
   ;
 
 

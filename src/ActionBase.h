@@ -163,16 +163,6 @@ public:
 
   static void setTurboMode(bool enable);
 
-  static std::vector<std::string> planActionSequence(ActionScene& domain,
-                                                     RcsGraph* graph,
-                                                     const RcsBroadPhase* bp,
-                                                     std::vector<std::string> actions,
-                                                     size_t numStepsToPlan,
-                                                     size_t maxNumThreads,
-                                                     double dt,
-                                                     bool earlyExit,
-                                                     std::string& errMsg);
-
   // Interface for prediction
   virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   virtual size_t getNumSolutions() const;

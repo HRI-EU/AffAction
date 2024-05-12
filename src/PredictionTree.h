@@ -262,7 +262,7 @@ public:
    * @return The i-th best path where i is parameter index.
    */
   std::vector<PredictionTreeNode*> findSolutionPath(size_t index = 0, bool onlySuccessfulOnes = true) const;
-  std::vector<PredictionTreeNode*> getSolutionPath(size_t index = 0) const;
+  std::vector<std::string> findSolutionPathAsStrings(size_t index = 0, bool onlySuccessfulOnes = true) const;
 
   /**
    * @brief Gets the maximum depth of the tree.
@@ -290,16 +290,16 @@ public:
    * @param errMsg           Text string comprising error messages
    * @return Search tree or nullptr in case of errors.
   */
-  static  std::unique_ptr<PredictionTree> planActionTree(SearchType sType,
-                                                         ActionScene& scene,
-                                                         RcsGraph* graph,
-                                                         const RcsBroadPhase* broadphase,
-                                                         std::vector<std::string> actionCommands,
-                                                         double dt,
-                                                         std::string& errMsg,
-                                                         size_t maxNumThreads=0,
-                                                         bool earlyExitSearch=true,
-                                                         bool earlyExitAction=true);
+  static std::unique_ptr<PredictionTree> planActionTree(SearchType sType,
+                                                        ActionScene& scene,
+                                                        RcsGraph* graph,
+                                                        const RcsBroadPhase* broadphase,
+                                                        std::vector<std::string> actionCommands,
+                                                        double dt,
+                                                        std::string& errMsg,
+                                                        size_t maxNumThreads=0,
+                                                        bool earlyExitSearch=true,
+                                                        bool earlyExitAction=true);
 
 private:
 

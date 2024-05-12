@@ -33,8 +33,6 @@
 #ifndef AFF_CONCURRENTSCENEQUERY_H
 #define AFF_CONCURRENTSCENEQUERY_H
 
-
-
 #include "ActionScene.h"
 #include "PredictionTree.h"
 #include "json.hpp"
@@ -50,10 +48,6 @@ namespace aff
 {
 
 class ExampleActionsECS;
-
-
-
-
 
 class ConcurrentSceneQuery
 {
@@ -71,30 +65,67 @@ public:
    *         {"agents": ['Daniel', 'Felix', 'Robot'] }
    */
   nlohmann::json getAgents();
+
+  /*! \brief Legacy function that returns a really large json with the overal
+   *         scene information. See SceneJsonHelpers.cpp for details.
+   */
   nlohmann::json getSceneState();
+
+  /*! \brief Returns empty json if no occluded objects exist, or an array of occluded objects
+   *         for the agent, for example:
+   *         {"occluded": [{"name": "entity name 1", "instance_id": "entity id 1"},
+   *                       {"name": "entity name 2", "instance_id": "entity id 2"}]}
+   */
   nlohmann::json getOccludedObjectsForAgent(const std::string& agentName);
+
+  /*! \brief Returns a json of objects that occlude the object with objectName for the
+   *         agent given with agentName. The occluders are sorted by increasing distance
+   *         to the agent's eye, for example:
+   *         {"occluded_by": ["entity name 1", "entity name 2"] }
+   *         The jeson is empty if the agent with agentName does not exist, or the entity
+   *         with objectName does not exist. If several objects with the given name exist,
+   *         the function will return something, but it might not be consistent.
+   */
   nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
                                             const std::string& objectName);
+
+  /*! \brief Returns the name of the kinematic parent of the object, or an empty
+   *         string if:
+   *         - objectName is not the name / type of an AffordanceEntity
+   *         - the object has no parent.
+   *         If objectName refers to more than one entities, the first one found is used.
+   */
+  std::string getParent(const std::string& objectName);
+
+  /*! \brief Returns the name of the holding hand of the object, or an empty
+   *         string if:
+   *         - objectName is not the name / type of an AffordanceEntity
+   *         - the object is not held in a hand.
+   *         If objectName refers to more than one entities, the first one found is used.
+   */
+  std::string getHoldingHand(const std::string& objectName);
 
   /*! \brief Plans a detailed action sequence given a vector of (possibly
    *         abstract) actions.
    *
-   *  \param[in] actions          Vector of (possibly abstract) actions.
-   *  \param[in] maxThreads       Upper limit on number of threads used. If it
-   *                              is 0, then the function will automatically
-   *                              detect the best possible value for the fastest
-   *                              computation result.
-   *  \return Vector of detailed atomic actions constituting to the sequence,
-   *          or empty vector if no valid solution could be found.
+   *  \param[in]  searchType       See enum PredictionTree::SearchType. DFSMT is the fastest.
+   *  \param[in]  actions          Vector of (possibly abstract) actions.
+   *  \param[out] errMsg           Error message for tracking down reason for no solution.
+   *  \param[in]  maxThreads       Upper limit on number of threads used. If it
+   *                               is 0, then the function will automatically
+   *                               detect the best possible value for the fastest
+   *                               computation result.
+   *  \param[in] earlyExitSearch   Stop search after first successful solution.
+   *  \param[in] earlyExitAction   Stop action prediction after first encountered error.
+   *  \return Prediction tree.
    */
-  std::vector<std::string> planActionSequence(const std::vector<std::string>& actions,
-                                              size_t maxThreads = 0);
-  std::unique_ptr<PredictionTree> planActionTree(const std::vector<std::string>& actions,
-                                                 size_t maxThreads = 0);
-  std::unique_ptr<PredictionTree> planActionTreeDFT(const std::vector<std::string>& actions,
-                                                    size_t maxThreads=0,
-                                                    bool earlyExitSearch=true,
-                                                    bool earlyExitAction=true);
+  std::unique_ptr<PredictionTree> planActionTree(PredictionTree::SearchType searchType,
+                                                 const std::vector<std::string>& actions,
+                                                 double dt,
+                                                 std::string& errMsg,
+                                                 size_t maxThreads=0,
+                                                 bool earlyExitSearch=true,
+                                                 bool earlyExitAction=true);
 
   bool isAgentBusy(const std::string& agentName, double distanceThreshold);
 

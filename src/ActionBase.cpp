@@ -31,7 +31,6 @@
 *******************************************************************************/
 
 #include "ActionBase.h"
-#include "PredictionTree.h"
 
 #include <TaskFactory.h>
 #include <Rcs_macros.h>
@@ -385,36 +384,5 @@ const AffordanceEntity* ActionBase::raycastSurface(const ActionScene& domain,
 
   return surface;
 }
-
-std::vector<std::string> ActionBase::planActionSequence(ActionScene& domain,
-                                                        RcsGraph* graph,
-                                                        const RcsBroadPhase* broadphase,
-                                                        std::vector<std::string> actions,
-                                                        size_t stepsToPlan,
-                                                        size_t maxNumThreads,
-                                                        double dt,
-                                                        bool earlyExitAction,
-                                                        std::string& errMsg)
-{
-  auto tree = PredictionTree::planActionTree(PredictionTree::SearchType::BFS, domain, graph, broadphase, actions,
-                                             dt, errMsg, maxNumThreads, false, earlyExitAction);
-
-  std::vector<std::string> predictedActions;  // Action sequence which will be returned
-
-  if (tree)
-  {
-    auto sln = tree->findSolutionPath();
-    for (const auto& nd : sln)
-    {
-      predictedActions.push_back(nd->actionCommand());
-      RLOG_CPP(0, "Action: " << nd->actionCommand() <<
-               " cost: " << nd->cost);
-    }
-  }
-
-  return predictedActions;
-}
-
-
 
 }   // namespace aff

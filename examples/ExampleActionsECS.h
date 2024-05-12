@@ -116,11 +116,12 @@ public:
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda;
-  unsigned int speedUp, loopCount, lookaheadCount;
+  unsigned int speedUp, loopCount;
+  int maxNumThreads;
   bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
   bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded, verbose, processingAction, lookahead, turbo, earlyExit, depthFirst;
+  bool singleThreaded, verbose, processingAction, turbo;
   double dtProcess, dtEvents;
 
   std::unique_ptr<GraphComponent> graphC;
