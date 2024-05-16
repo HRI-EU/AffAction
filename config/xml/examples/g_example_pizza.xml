@@ -31,7 +31,7 @@
 
   <ActionSequence name="1" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
   <ActionSequence name="2" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
-  <ActionSequence name="3" text="get tomato_sauce_bottle; pour tomato_sauce_bottle pizza_dough" />
+  <ActionSequence name="3" text="get tomato_sauce_bottle; move tomato_sauce_bottle above pizza_dough; pour tomato_sauce_bottle pizza_dough" />
   <ActionSequence name="4" text="get_and_hold salt_bottle; release salt_bottle shelf" />
   <ActionSequence name="5" text="get_and_hold salt_bottle; release salt_bottle" />
   <ActionSequence name="6" text="get_and_hold italian_seasoning_5; release italian_seasoning_5" />
