@@ -49,6 +49,19 @@ namespace aff
 
 class ExampleActionsECS;
 
+/*!
+ * \brief Class to access scene and graph state concurrently from other threads as
+ *        the one running the process loop.
+ *
+ * For each function call, the class creates a copy of the scene, the graph, and
+ * (optionally) of the broadphase model. This is done exclusive to the step()
+ * function of the sim object, so that no concurrency issues arise. Copying the
+ * state is not a very expensive function, but it might block the step method for
+ * some time. It is advisable to not call the ConcurrentSceneQuery methods in a loop
+ * or many iterations to not block the run() loop of the sim object. This class mainly
+ * was written for the python module.
+ */
+
 class ConcurrentSceneQuery
 {
 public:
@@ -127,15 +140,34 @@ public:
                                                  bool earlyExitSearch=true,
                                                  bool earlyExitAction=true);
 
+  /*! \brief Returns true if a HumanAgent is busy, false otherwise. The state
+   *         of being busy is true if one of the agent's hands is closer to
+   *         an entity as the given distanceThreshold. Objects that are not
+   *         collideable (have no shape with distance calculation flag) as well
+   *         as very big objects like a table (one of the AABB extents > 1m)
+   *         will be ignored.
+   */
   bool isAgentBusy(const std::string& agentName, double distanceThreshold);
 
+  /*! \brief Returns the pan and tilt angles for the robot agent with the agentName
+   *         for the head pose looking at the entity with the type sceneEntity. If
+   *         several entities with the type exist, the first one found is taken. A
+   *         sceneEntity can also be an agent. Then, the pan / tilt angles are calculated
+   *         to look to the agent's head.
+   *         If the function fails, the returned vector will be empty. This is the case if:
+   *         - agentName does not refer to a RobotAgent instance
+   *         - objectName is not the name / type of an AffordanceEntity
+   *         - the pan / tile joints cannot be found
+   *         - The function does not converge (uses IK internally)
+   */
   std::vector<double> getPanTilt(const std::string& agentName,
-                                 const std::string& objectName);
+                                 const std::string& sceneEntity);
 
 
 private:
 
-  void update(bool withBroadphase=false);
+  void update(bool withBroadphase = false);
+  void updateNoMutex(bool withBroadphase = false);
 
   const ExampleActionsECS* sim;
   RcsGraph* graph;

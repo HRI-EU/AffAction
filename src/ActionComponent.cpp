@@ -183,13 +183,13 @@ void ActionComponent::actionThread(std::string text)
                                               getEntity()->getDt(), earlyExitPrediction);
         predictions[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
-        predictions[i].message += " command: " + localAction->getActionCommand();
+        predictions[i].feedbackMsg.developer += " command: " + localAction->getActionCommand();
         RLOGS(1, "%s for prediction %zu from %zu",
               (predictions[i].success ? "SUCCESS" : "FAILURE"), i, localAction->getNumSolutions()-1);
         RLOGS(2, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f, actionCost=%f\n\tMessage: %s",
               predictions[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
               1.0e3 * dt_predict, predictions[i].jlCost, predictions[i].collCost, predictions[i].actionCost,
-              predictions[i].message.c_str());
+              predictions[i].feedbackMsg.toString().c_str());
       }));
     }
 
@@ -216,7 +216,7 @@ void ActionComponent::actionThread(std::string text)
       RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
            predictions[i].success ? "SUCCESS" : "FAILURE", action->getName().c_str(), i,
            1.0e3 * dt_predict, predictions[i].jlCost, predictions[i].collCost,
-           predictions[i].message.c_str());
+           predictions[i].feedbackMsg.toString().c_str());
     }
   }
 
@@ -291,7 +291,7 @@ void ActionComponent::actionThread(std::string text)
       }
       else
       {
-        errMsg = predictions[0].message;
+        errMsg = predictions[0].feedbackMsg.toString();
       }
 
       getEntity()->publish("ActionResult", false, 0.0, errMsg);

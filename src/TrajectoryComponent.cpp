@@ -337,7 +337,7 @@ void TrajectoryComponent::checkerThread(TCS_sptr tSet, bool simulateOnly,
   // Early exit without applying the trajectory if the predictor reports issues
   if (!trajOk)
   {
-    getEntity()->publish("ActionResult", false, 0.0, result.message);
+    getEntity()->publish("ActionResult", false, 0.0, result.feedbackMsg.toString());
     return;
   }
   else if (simulateOnly)

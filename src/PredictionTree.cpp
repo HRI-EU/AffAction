@@ -66,7 +66,7 @@ PredictionTreeNode::PredictionTreeNode() :
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
   success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
-  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), errorMessage(pr.message), threadNumber(0)
+  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), feedbackMsg(pr.feedbackMsg), threadNumber(0)
 {
   accumulatedCost = parent->accumulatedCost + cost;
   level = parent->level+1;
@@ -84,7 +84,7 @@ PredictionTreeNode::~PredictionTreeNode()
 
 std::string PredictionTreeNode::actionCommand() const
 {
-  return resolvedActionCommand;//action ? action->getActionCommand() : "ROOT";
+  return resolvedActionCommand;
 }
 
 // The lesser function for sorting a vector of results. The failure -
@@ -634,17 +634,28 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
 
 std::vector<std::string> PredictionTree::findSolutionPathAsStrings(size_t index, bool onlySuccessfulOnes) const
 {
-  auto tree = findSolutionPath(index, onlySuccessfulOnes);
-
   std::vector<std::string> predictedActions;
+  auto sln = findSolutionPath(index, onlySuccessfulOnes);
 
-  auto sln = findSolutionPath();
   for (const auto& nd : sln)
   {
     predictedActions.push_back(nd->actionCommand());
   }
 
   return predictedActions;
+}
+
+std::vector<TrajectoryPredictor::FeedbackMessage> PredictionTree::getSolutionErrorStrings(size_t index) const
+{
+  std::vector<TrajectoryPredictor::FeedbackMessage> errs;
+  auto sln = findSolutionPath(index, false);
+
+  for (const auto& nd : sln)
+  {
+    errs.push_back(nd->feedbackMsg);
+  }
+
+  return errs;
 }
 
 /*******************************************************************************
@@ -760,20 +771,22 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
                                                 scaleDurationHint * localAction->getDurationHint(), dt, earlyExit);
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
-          predResults[i].message += " command: " + localAction->getActionCommand();
+          predResults[i].feedbackMsg.developer += " command: " + localAction->getActionCommand();
           RLOG(1, "[%s] Action \"%s\" try %zu: took %.1f msec, cost=%f\n\tMessage: %s",
                predResults[i].success ? "SUCCESS" : "FAILURE", localAction->getName().c_str(), i,
-               1.0e3 * dt_predict, predResults[i].cost(), predResults[i].message.c_str());
-          predResults[i].action = localAction.release();
+               1.0e3 * dt_predict, predResults[i].cost(), predResults[i].feedbackMsg.toString().c_str());
 
           // Scale duration to make motion as fast as possible
-          if (predResults[i].action->turboMode())
+          if (localAction->turboMode())
           {
-            double newDuration = predResults[i].action->getDurationHint() * predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
+            double newDuration = localAction->getDurationHint() * predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
             newDuration -= std::fmod(newDuration, dt);
             RLOG(0, "newDuration is %f", newDuration);
-            predResults[i].action->setDuration(newDuration);
+            localAction->setDuration(newDuration);
           }
+
+          predResults[i].resolvedActionCommand = localAction->getActionCommand();
+          //predResults[i].action = localAction.release();
         }));
       }
 
@@ -797,7 +810,8 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           r.print(1);
           auto child = currentPredictionNode->addChild(r);
           child->uniqueId = uniqueNodeId++;
-          child->resolvedActionCommand = r.action->getActionCommand();
+          //child->resolvedActionCommand = r.action->getActionCommand();
+          child->resolvedActionCommand = r.resolvedActionCommand;
           RLOG(1, "Tree size[MB]: %.3f", 1.0e-6*predictionTree->size());
         }
       }
@@ -858,8 +872,9 @@ static void DFS(ActionScene& scene,
     double merk = action->getDurationHint();
     if (action->turboMode())
     {
-      double newDuration = action->getDurationHint() * res.scaleJointSpeeds;
-      action->setDuration(newDuration*TURBO_DURATION_SCALER);
+      double newDuration = action->getDurationHint() * res.scaleJointSpeeds * TURBO_DURATION_SCALER;
+      newDuration -= std::fmod(newDuration, dt);
+      action->setDuration(newDuration);
     }
 
     // Now the node->graph is correctly initialized for the next tree child
@@ -872,7 +887,7 @@ static void DFS(ActionScene& scene,
     if (earlyExit && child->success && child->level==actionSequenceStrings.size())
     {
       finished = true;
-      break;// return;
+      break;
     }
 
     // Descent to next recursion level

@@ -36,16 +36,23 @@
 #include <TrajectoryController.h>
 #include <IkSolverRMR.h>
 
-#include <iostream>
-
 
 namespace aff
 {
-class ActionBase;
 
 class TrajectoryPredictor
 {
 public:
+  struct FeedbackMessage
+  {
+    std::string error;
+    std::string reason;
+    std::string suggestion;
+    std::string developer;
+
+    std::string toString() const;
+    void clear();
+  };
 
   struct PredictionResult
   {
@@ -70,13 +77,13 @@ public:
     double scaleJointSpeeds;
     double elbowNS, wristNS;
     double t_predict;
-    std::string message;
+    FeedbackMessage feedbackMsg;
+    std::string resolvedActionCommand;
     std::string minDistBdy1, minDistBdy2;
     std::vector<double> jMask;
     std::vector<double> optimizationParameters;
     std::vector<double> bodyTransforms;
     RcsGraph* graph;   // Will be passed to PredictionTreeNode and deleted there. \todo(MG)
-    ActionBase* action;
   };
 
   /*! \brief Constructs class with TrajectoryController instance cloned from
@@ -109,7 +116,7 @@ public:
                        double dt, double alpha, double lambda,
                        double qFilt, double phase, bool speedLimitCheck, bool jointLimitCheck,
                        bool collisionCheck, bool withSpeedAccLimit,
-                       bool verbose, MatNd* jMask, std::string& resMsg);
+                       bool verbose, MatNd* jMask, FeedbackMessage& resMsg);
 
   tropic::TrajectoryControllerBase* tc;
   Rcs::IkSolverRMR* ikSolver;
@@ -131,10 +138,10 @@ private:
   static int checkState(const Rcs::ControllerBase* controller,
                         bool speedLimitCheck, bool jointLimitCheck,
                         bool collisionCheck, bool verbose,
-                        std::string& resMsg);
+                        FeedbackMessage& resMsg);
 
-  TrajectoryPredictor(const TrajectoryPredictor&);
-  TrajectoryPredictor& operator=(const TrajectoryPredictor&);
+  TrajectoryPredictor(const TrajectoryPredictor&) = delete;
+  TrajectoryPredictor& operator=(const TrajectoryPredictor&) = delete;
 };
 
 }

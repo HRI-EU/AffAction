@@ -120,11 +120,31 @@ using namespace tropic;
 
 namespace aff
 {
+/*******************************************************************************
+ *
+ ******************************************************************************/
+std::string TrajectoryPredictor::FeedbackMessage::toString() const
+{
+  std::string res = "ERROR: " + error + " REASON: " + reason + " SUGGESTION: "
+                    + suggestion + " DEVELOPER:" + developer;
+  return res;
+}
 
+void TrajectoryPredictor::FeedbackMessage::clear()
+{
+  error.clear();
+  reason.clear();
+  suggestion.clear();
+  developer.clear();
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 TrajectoryPredictor::PredictionResult::PredictionResult() :
   idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
   scaleJointSpeeds(1.0), elbowNS(0.0), wristNS(0.0), t_predict(0.0),
-  graph(nullptr), action(nullptr)
+  graph(nullptr)//, action(nullptr)
 {
 }
 
@@ -189,7 +209,11 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
     std::cout << "collCost: " << collCost << std::endl;
     std::cout << "actionCost: " << actionCost << std::endl;
     std::cout << "scaleJointSpeeds: " << scaleJointSpeeds << std::endl;
-    std::cout << "message: " << message << std::endl;
+    std::cout << "error message: " << feedbackMsg.error << std::endl;
+    std::cout << "reason message: " << feedbackMsg.reason << std::endl;
+    std::cout << "suggestion message: " << feedbackMsg.suggestion << std::endl;
+    std::cout << "developer message: " << feedbackMsg.developer << std::endl;
+    std::cout << "resolvedActionCommand: " << resolvedActionCommand << std::endl;
     std::cout << "minDistBdy1: " << minDistBdy1 << std::endl;
     std::cout << "minDistBdy2: " << minDistBdy2 << std::endl;
     std::cout << "animation frames: " << bodyTransforms.size() << std::endl;
@@ -202,9 +226,6 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
 
   std::cout << std::endl;
 }
-
-
-
 
 TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_) :
   tc(NULL), ikSolver(NULL), tStack(NULL)
@@ -285,7 +306,8 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
   if (check(jointLimitCheck, collisionCheck, speedLimitCheck)==false)
   {
-    result.message = "FATAL_ERROR: Initial state is invalid";
+    result.feedbackMsg.error = "FATAL_ERROR";
+    result.feedbackMsg.reason = "Initial state is invalid";
     result.success = false;
     result.t_predict = Timer_getTime() - result.t_predict;
     return result;
@@ -349,7 +371,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     }
 
     // Updates graph with new state
-    std::string resMsg;
+    FeedbackMessage resMsg;
 
     // The phase computation must match the one in the TrajectoryComponent so that predictor and
     // run-time lead to the same results. \todo(MG): This should not be duplicate code.
@@ -380,7 +402,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     //   - Collision check
     if (ikRes!=0)
     {
-      result.message = resMsg;
+      result.feedbackMsg = resMsg;
       result.success = false;
     }
 
@@ -467,9 +489,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           controller->decompressFromActiveSelf(dx_err, a_des);
           unsigned int errIdx = MatNd_maxAbsEleIndex(dx_err);
 
-          result.message = "ERROR: Reachability problem REASON: Can't reach the object - it is too far away";
-          result.message += " SUGGESTION: Try with the other hand or get it closer with a tool";
-          result.message += " DEVELOPER: Tracking error at t=" + std::to_string(t) + " is " + std::to_string(err);
+          result.feedbackMsg.error = "Reachability problem";
+          result.feedbackMsg.reason = "Can't reach the object - it is too far away";
+          result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
+          result.feedbackMsg.developer = "Tracking error at t=" + std::to_string(t) + " is " + std::to_string(err);
+          result.feedbackMsg.developer += std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+
           // Here we add details about the "guilty" task and its dimension.
           size_t count = 0;
           for (size_t i = 0; i < controller->getNumberOfTasks(); i++)
@@ -478,7 +503,17 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
             {
               if (count==errIdx)
               {
-                result.message += ": Task " + controller->getTaskName(i) + "[dim " + std::to_string(j) + "]\n";
+                result.feedbackMsg.developer += ": Task " + controller->getTaskName(i) + "[dim " + std::to_string(j) + "] ";
+                const RcsBody* effBdy = RCSBODY_BY_ID(controller->getGraph(), controller->getTask(i)->getEffectorId());
+                const RcsBody* refBdy = RCSBODY_BY_ID(controller->getGraph(), controller->getTask(i)->getRefBodyId());
+                if (effBdy && refBdy)
+                {
+                  result.feedbackMsg.developer += "effector: " + std::string(effBdy->name);
+                  result.feedbackMsg.developer += " refBdy: " + std::string(refBdy->name);
+                  result.feedbackMsg.developer += " object: " +
+                                                  std::string(!RcsBody_isArticulated(controller->getGraph(), effBdy) ? effBdy->name : "") + " " +
+                                                  std::string(!RcsBody_isArticulated(controller->getGraph(), refBdy) ? refBdy->name : "") + "\n";
+                }
               }
               count++;
             }
@@ -530,7 +565,6 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     {
       RLOG(4, "Predictor failed at t=%f (of %f, after-step period: %f) - quitting",
            t, nSteps*dt, nAfterSteps*dt);
-      RLOG_CPP(4, "Result: " << result.message);
 
       if (earlyExit)
       {
@@ -560,9 +594,9 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   MatNd_destroyN(3, a_des, x_des, a_prev);
   MatNd_binarizeSelf(&jMaskArr, 0.0);
 
-  if (result.message.empty())
+  if (result.feedbackMsg.error.empty())
   {
-    result.message = "SUCCESS";
+    result.feedbackMsg.error = "SUCCESS";
   }
 
   // \todo: This is a lot of memory for large trees
@@ -580,7 +614,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
        result.success ? "ok" : "failed", tStack->m, result.t_predict);
   RLOG(4, "   at t=%f (of %f, after-step period: %f)",
        tStack->m*dt, nSteps* dt, nAfterSteps* dt);
-  RLOG_CPP(4, "Result: " << result.message);
+  RLOG_CPP(4, "Result: " << result.feedbackMsg.toString());
 
   return result;
 }
@@ -749,7 +783,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
                                    double dt, double alpha, double lambda, double qFilt, double phase,
                                    bool speedLimitCheck, bool jointLimitCheck,
                                    bool collisionCheck, bool withSpeedAccLimit,
-                                   bool verbose, MatNd* jMask, std::string& resMsg)
+                                   bool verbose, MatNd* jMask, FeedbackMessage& resMsg)
 {
   Rcs::ControllerBase* controller = solver->getController();
   RcsGraph* graph = controller->getGraph();
@@ -858,7 +892,8 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
   // be a source of error.
   if (det == 0.0)
   {
-    resMsg = "ERROR: REASON: Got into a singular posture";
+    resMsg.error = "ERROR";
+    resMsg.reason = "Got into a singular posture";
     MatNd_destroyN(4, dq_des, dx_des, dH, qdot);
     return -1;
   }
@@ -926,9 +961,10 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
 int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
                                     bool speedLimitCheck, bool jointLimitCheck,
                                     bool collisionCheck, bool verbose,
-                                    std::string& resMsg)
+                                    FeedbackMessage& resMsg)
 {
   const RcsGraph* graph = controller->getGraph();
+  resMsg.clear();
 
   // Speed limit check
   if (speedLimitCheck)
@@ -937,7 +973,9 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
 
     if (scaling < 1.0)
     {
-      resMsg = "ERROR: Speed limit violated, I can't move that fast + REASON: The duration of the action might have been too short. SUGGESTION: Call the action with a longer duration.";
+      resMsg.error = "Speed limit violated, I can't move that fast";
+      resMsg.reason = "The duration of the action might have been too short.";
+      resMsg.suggestion = "Call the action with a longer duration.";
 
       if (verbose)
       {
@@ -953,7 +991,7 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
             snprintf(detailedMsg, 256, " DEVELOPER: %s: q_dot=%f   limit=%f [%s]", JNT->name,
                      sf * qdi, sf * JNT->speedLimit, sf == 1.0 ? "m/sec" : "deg/sec");
             RLOG(1, "%s", detailedMsg);
-            resMsg += detailedMsg;
+            resMsg.developer += detailedMsg;
           }
         }
       }
@@ -974,16 +1012,17 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
         RcsGraph_printState(graph, graph->q);
       }
 
-      resMsg = "ERROR: REASON: Joint limit problem. The robot is not able to do move well enough. ";
-      resMsg += " DEVELOPER: " + std::to_string(aor) + " joint limit violations";
+      resMsg.error = "ERROR";
+      resMsg.reason = "Joint limit problem. The robot is not able to do move well enough. ";
+      resMsg.developer = std::to_string(aor) + " joint limit violations";
 
       RCSGRAPH_TRAVERSE_JOINTS(graph)
       {
         const double qi = MatNd_get2(graph->q, JNT->jointIndex, 0);
         if (!JNT->constrained && (qi<JNT->q_min || qi>JNT->q_max))
         {
-          resMsg += " Joint " + std::string(JNT->name) + ": " + std::to_string(qi) + " outside [" +
-                    std::to_string(JNT->q_min) + " ... " + std::to_string(JNT->q_max) + "]";
+          resMsg.developer += " Joint " + std::string(JNT->name) + ": " + std::to_string(qi) + " outside [" +
+                              std::to_string(JNT->q_min) + " ... " + std::to_string(JNT->q_max) + "]";
         }
       }
 
@@ -1011,30 +1050,33 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
       {
         if (!articulatedB2)
         {
-          resMsg = "ERROR: REASON: Collision problem, " + std::string(b1->name) +
-                   " collides with the " + std::string(b2->name);
+          resMsg.error = "ERROR";
+          resMsg.reason = "Collision problem, " + std::string(b1->name) +
+                          " collides with the " + std::string(b2->name);
         }
         else
         {
-          resMsg = "ERROR: REASON: Collision problem, " + std::string(b1->name) +
-                   " and " + std::string(b2->name) + " collide";
+          resMsg.error = "ERROR";
+          resMsg.reason = "Collision problem, " + std::string(b1->name) +
+                          " and " + std::string(b2->name) + " collide";
         }
       }
       else // b1 is static object
       {
-        resMsg = "ERROR: REASON: Collision problem, " + std::string(b2->name) +
-                 " collides with the " + std::string(b1->name);
+        resMsg.error = "ERROR";
+        resMsg.reason = "Collision problem, " + std::string(b2->name) +
+                        " collides with the " + std::string(b1->name);
       }
 
-      resMsg += " SUGGESTION: Choose another command or try to remove an obstacle.";
+      resMsg.suggestion = "Choose another command or try to remove an obstacle.";
 
       std::string devMsg =  " DEVELOPER: Collision detected at pair-idx " + std::to_string(min_i);
       devMsg += " between ";
       devMsg += RCSBODY_NAME_BY_ID(graph, cmdl->pair[min_i].b1);
       devMsg += " and ";
       devMsg += RCSBODY_NAME_BY_ID(graph, cmdl->pair[min_i].b2);
-      resMsg += devMsg;
-      resMsg += " " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+      resMsg.developer = devMsg;
+      resMsg.developer += " " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
 
       if (verbose)
       {

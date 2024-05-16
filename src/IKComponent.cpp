@@ -119,7 +119,7 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
 
 
 
-  std::string resMsg;
+  TrajectoryPredictor::FeedbackMessage resMsg;
   int ikOk = TrajectoryPredictor::computeIK(ikSolver, a, x, getEntity()->getDt(), alpha*blending,
                                             lambda, qFilt, phase, speedLimitCheck, jointLimitCheck,
                                             collisionCheck, applySpeedAndAccLimits, true, NULL, resMsg);
@@ -128,7 +128,7 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
   // second comparison
   if ((ikOk<0) && (eStop==false))
   {
-    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg);
+    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
   }
 
   // Gradually activate null space so that it takes 1 second from 0 to alphaMax.

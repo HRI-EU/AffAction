@@ -358,7 +358,6 @@ const AffordanceEntity* ActionScene::getAffordanceEntity(const std::string& name
   for (size_t i=0; i<entities.size(); ++i)
   {
     // Return first entity whose types contains the requested name.
-    //if (std::find(entities[i].types.begin(), entities[i].types.end(), name) != entities[i].types.end())
     if (entities[i].isOfType(name))
     {
       return &entities[i];

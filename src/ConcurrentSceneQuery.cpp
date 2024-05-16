@@ -108,6 +108,12 @@ ConcurrentSceneQuery::~ConcurrentSceneQuery()
 void ConcurrentSceneQuery::update(bool withBroadphase)
 {
   sim->lockStepMtx();
+  updateNoMutex(withBroadphase);
+  sim->unlockStepMtx();
+}
+
+void ConcurrentSceneQuery::updateNoMutex(bool withBroadphase)
+{
   RcsGraph_copy(this->graph, sim->getGraph());
   this->scene = *(sim->getScene());
 
@@ -116,7 +122,6 @@ void ConcurrentSceneQuery::update(bool withBroadphase)
     RcsBroadPhase_destroy(this->broadphase);
     this->broadphase = RcsBroadPhase_clone(sim->getBroadPhase(), graph);
   }
-  sim->unlockStepMtx();
 }
 
 nlohmann::json ConcurrentSceneQuery::getSceneState()

@@ -1096,30 +1096,11 @@ public:
   {
     bool success = ActionPut::initialize(domain, graph, solutionRank);
 
-    if (!success)
-    {
-      return false;
-    }
-
-    auto words = Rcs::String_split(detailedActionCommand, " ");
-
-    if (words.empty())
-    {
-      RLOG(0, "Failed to decompose action command for ActionMove");
-      return false;
-    }
-
-    words[0] = "move";
-
-    detailedActionCommand.clear();
-    for (const auto& w : words)
-    {
-      detailedActionCommand += w + " ";
-    }
-
-    detailedActionCommand += "duration " + std::to_string(getDurationHint());
-
-    return true;
+    // Duration not needed to be set, this comes through the ActionPut::getActionCommand()
+    // Self-assignment is unsafe, therefore we do a swap.
+    auto tmp = "move" + detailedActionCommand.substr(3);
+    detailedActionCommand = tmp;
+    return success;
   }
 
   virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const

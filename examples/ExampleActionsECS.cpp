@@ -994,58 +994,6 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     return;
   }
 
-#if 0
-  // From here on, we have a valid tree. But it might not contain a valid solution.
-  std::vector<std::string> predictedActions;
-
-  auto sln = tree->findSolutionPath();
-  for (const auto& nd : sln)
-  {
-    predictedActions.push_back(nd->actionCommand());
-    RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
-  }
-
-  // Animation of all valid solution paths. We only show the first 3 so that we
-  // don't copy around huge amounts of memory.
-  size_t numSolutions = std::min(tree->getNumValidPaths(), (size_t)FIRST_N_SOLUTIONS);
-  std::vector<TrajectoryPredictor::PredictionResult> predictions(numSolutions);
-
-  for (size_t i = 0; i < predictions.size(); ++i)
-  {
-    predictions[i].success = true;
-    auto path = tree->findSolutionPath(i);
-    for (const auto& nd : path)
-    {
-      predictions[i].bodyTransforms.insert(predictions[i].bodyTransforms.end(),
-                                           nd->bodyTransforms.begin(),
-                                           nd->bodyTransforms.end());
-    }
-
-  }
-
-  // If there are no FIRST_N_SOLUTIONS successful paths, we append non-succesful ones.
-  if (predictions.size() < FIRST_N_SOLUTIONS)
-  {
-    for (size_t i = predictions.size(); i < FIRST_N_SOLUTIONS; ++i)
-    {
-      TrajectoryPredictor::PredictionResult res;
-      auto path = tree->findSolutionPath(i, false);
-      if (!path.empty())
-      {
-        auto leaf = path.back();
-        res.success = leaf->success;
-        for (const auto& nd : path)
-        {
-          res.bodyTransforms.insert(res.bodyTransforms.end(),
-                                    nd->bodyTransforms.begin(),
-                                    nd->bodyTransforms.end());
-        }
-        predictions.push_back(res);
-      }
-    }
-  }
-#else
-
   // From here on, we have a valid tree. But it might not contain a valid solution.
   std::vector<std::string> predictedActions;
   std::vector<TrajectoryPredictor::PredictionResult> predictions;
@@ -1079,10 +1027,15 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       RLOG_CPP(0, "No path found for solution " << i);
     }
 
+    auto errMsgs = tree->getSolutionErrorStrings(i);
+    RLOG_CPP(0, "Found " << errMsgs.size() << " error messages of solution " << i);
+    for (const auto& e : errMsgs)
+    {
+      RLOG_CPP(0, e.toString());
+    }
+
     predictions.push_back(res);
   }
-
-#endif
 
   if (!predictions.empty())
   {
