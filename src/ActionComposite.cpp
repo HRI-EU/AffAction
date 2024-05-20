@@ -513,7 +513,7 @@ public:
       for (size_t i = 0; i < params.size(); ++i)
       {
         std::vector<std::string> words = Rcs::String_split(params[i], " ");
-        std::string errMsg;
+        TrajectoryPredictor::FeedbackMessage errMsg;
         addAction(ActionFactory::create(domain, graph, words, errMsg));
       }
     }

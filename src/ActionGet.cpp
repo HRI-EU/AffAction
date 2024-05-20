@@ -1175,7 +1175,7 @@ public:
     if (nttsToGet.empty())
     {
       throw ActionException(ActionException::ParamNotFound,
-                            "The " + objectName + " is unknown.",
+                            "The object " + objectName + " is unknown.",
                             "Use an object name that is defined in the environment",
                             std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }

@@ -49,8 +49,10 @@ public:
     std::string reason;
     std::string suggestion;
     std::string developer;
+    std::string actionCommand;
 
     std::string toString() const;
+    std::vector<std::string> toStringVec() const;
     void clear();
   };
 

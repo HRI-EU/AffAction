@@ -495,12 +495,9 @@ std::vector<const AffordanceEntity*> ActionScene::getDirectChildren(const RcsGra
 const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
                                                                const AffordanceEntity* child) const
 {
-  std::string errMsg;
-
   if (!child)
   {
-    errMsg = "Entity to be checked for retrieving parent is NULL";
-    RLOG_CPP(1, errMsg);
+    RLOG_CPP(0, "Entity to be checked for retrieving parent is NULL");
     return NULL;
   }
 
@@ -519,6 +516,7 @@ const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* g
     // \todo(MG): This loop is not needed - the isChild() method does traverse up the tree.
     for (const Affordance* parentAffordance : parentCandidate.affordances)
     {
+      RLOG_CPP(0, "Checking parent candidate " << parentCandidate.name << " frame " << parentAffordance->frame);
       const RcsBody* parentAffFrame = RcsGraph_getBodyByName(graph, parentAffordance->frame.c_str());
 
       if (parentAffFrame && RcsBody_isChild(graph, childBdy, parentAffFrame))

@@ -123,7 +123,6 @@ public:
    *
    *  \param[in]  searchType       See enum PredictionTree::SearchType. DFSMT is the fastest.
    *  \param[in]  actions          Vector of (possibly abstract) actions.
-   *  \param[out] errMsg           Error message for tracking down reason for no solution.
    *  \param[in]  maxThreads       Upper limit on number of threads used. If it
    *                               is 0, then the function will automatically
    *                               detect the best possible value for the fastest
@@ -135,7 +134,6 @@ public:
   std::unique_ptr<PredictionTree> planActionTree(PredictionTree::SearchType searchType,
                                                  const std::vector<std::string>& actions,
                                                  double dt,
-                                                 std::string& errMsg,
                                                  size_t maxThreads=0,
                                                  bool earlyExitSearch=true,
                                                  bool earlyExitAction=true);

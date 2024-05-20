@@ -320,13 +320,14 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
-  entity.subscribe<bool, double, std::string>("ActionResult", &ExampleActionsECS::onActionResult, this);
+  entity.subscribe<bool, double, std::vector<std::string>>("ActionResult", &ExampleActionsECS::onActionResult, this);
   entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequence, this);
   entity.subscribe("PlanDFS", &ExampleActionsECS::onPlanActionSequenceDFS, this);
   entity.subscribe("PlanDFSEE", &ExampleActionsECS::onPlanActionSequenceDFSEE, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
+  entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -864,9 +865,8 @@ void ExampleActionsECS::run()
     seqCmd.push_back("pour bottle_of_cola glass_blue");
     seqCmd.push_back("put bottle_of_cola");
 
-    std::string errMsg;
     auto tree = PredictionTree::planActionTree(PredictionTree::SearchType::DFSMT, *getScene(), getGraph(), getBroadPhase(),
-                                               seqCmd, entity.getDt(), errMsg, 0, false, false);
+                                               seqCmd, entity.getDt(), 0, false, false);
 
     tree->toDotFile("PredictionTree.dot");
 
@@ -972,31 +972,44 @@ void ExampleActionsECS::onQuit()
   runLoop = false;
 }
 
+/*******************************************************************************
+ * Builds a search tree, finds solutions, and handles events.
+ ******************************************************************************/
 static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         std::string sequenceCommand,
                                         size_t maxNumThreads,
                                         bool depthFirst,
                                         bool earlyExitSearch)
 {
+  if (ex->verbose)
+  {
+    RMSG_CPP("_planActionSequenceThreaded received sequence: '" << sequenceCommand << "'");
+  }
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
 
-  std::string errMsg;
   auto sType = depthFirst ? PredictionTree::SearchType::DFSMT : PredictionTree::SearchType::BFS;
-  auto tree = ex->getQuery()->planActionTree(sType, seq, ex->entity.getDt(), errMsg,
+  auto tree = ex->getQuery()->planActionTree(sType, seq, ex->entity.getDt(),
                                              maxNumThreads, earlyExitSearch);
 
   // Early exit in case tree could not be constructed
   if (!tree)
   {
-    std::string explanation = "ERROR REASON: Action tree is empty. SUGGESTION: Choose a different command sequence DEVELOPER: '" +
-                              sequenceCommand + "' " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    ex->entity.publish("ActionResult", false, 0.0, explanation);
+    TrajectoryPredictor::FeedbackMessage explanation;
+    explanation.error = "No solution found";
+    explanation.reason = "The action tree is empty";
+    explanation.suggestion = "Send another command that does the same thing";
+    explanation.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    ex->entity.publish("ActionResult", false, 0.0, explanation.toStringVec());
+    if (ex->verbose)
+    {
+      RMSG_CPP("_planActionSequenceThreaded: Error creating tree - returning");
+    }
     return;
   }
 
   // From here on, we have a valid tree. But it might not contain a valid solution.
   std::vector<std::string> predictedActions;
-  std::vector<TrajectoryPredictor::PredictionResult> predictions;
+  std::vector<TrajectoryPredictor::PredictionResult> animations;
 
   for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
   {
@@ -1006,17 +1019,17 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     if (!path.empty())
     {
       res.success = path.back()->success;
-      RLOG_CPP(0, "Solution " << i << " is " << (res.success ? "SUCCESSFUL" : "NOT SUCCESSFUL"));
+      RLOG_CPP(1, "Solution " << i << " is " << (res.success ? "SUCCESSFUL" : "NOT SUCCESSFUL"));
 
       for (const auto& nd : path)
       {
         if (i==0 && res.success)
         {
           predictedActions.push_back(nd->actionCommand());
-          RLOG_CPP(0, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
+          RLOG_CPP(1, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
         }
 
-        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
+        RLOG_CPP(1, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
         res.bodyTransforms.insert(res.bodyTransforms.end(),
                                   nd->bodyTransforms.begin(),
                                   nd->bodyTransforms.end());
@@ -1024,47 +1037,87 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     }
     else
     {
-      RLOG_CPP(0, "No path found for solution " << i);
+      RLOG_CPP(1, "No path found for solution index " << i);
     }
 
     auto errMsgs = tree->getSolutionErrorStrings(i);
-    RLOG_CPP(0, "Found " << errMsgs.size() << " error messages of solution " << i);
+    RLOG_CPP(1, "Found " << errMsgs.size() << " error messages of solution " << i);
     for (const auto& e : errMsgs)
     {
       RLOG_CPP(0, e.toString());
     }
 
-    predictions.push_back(res);
+    animations.push_back(res);
   }
 
-  if (!predictions.empty())
+  // Needs to go before the return for failure, otherwise we don't see it in the animation
+  if (!animations.empty())
   {
-    ex->entity.publish("AnimateSequence", predictions, 0);
+    ex->entity.publish("AnimateSequence", animations, 0);
   }
 
+  // We failed: Create a meaningful error and return. We don't need to set the
+  // processingAction flag here, since that's handled inside the onActionResult
+  // method if success is false.
   if (predictedActions.empty())
   {
     RLOG_CPP(0, "Could not find solution");
-    ex->processingAction = false;
     ex->clearCompletedActionStack();
+
+    // Compose a meaningful error description for each failed action sequence
+    TrajectoryPredictor::FeedbackMessage errDescr;
+
+    for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
+    {
+      auto path = tree->findSolutionPath(i, false);
+      std::string actionSeq;
+      for (const auto& nd : path)
+      {
+        actionSeq += nd->actionCommand() + " ";
+      }
+
+      auto finalNode = path.empty() ? tree->root : path.back();
+      const TrajectoryPredictor::FeedbackMessage& errMsg = finalNode->feedbackMsg;
+
+      if (!errMsg.error.empty())
+      {
+        errDescr.error += " Issue " + std::to_string(i) + ": " + errMsg.error;
+        errDescr.reason += " Reason " + std::to_string(i) + ": " + errMsg.reason;
+        errDescr.suggestion += " Suggestion " + std::to_string(i) + ": " + errMsg.suggestion;
+        errDescr.developer += " Developer " + std::to_string(i) + ": " + errMsg.developer;
+      }
+    }
+
+    ex->entity.publish("ActionResult", false, 0.0, errDescr.toStringVec());
+
+    REXEC(0)
+    {
+      bool success = tree->toDotFile("PredictionTreeDFS.dot");
+      RLOG(1, "%s PredictionTreeDFS.dot", success ? "Successfully wrote" : "Failed to write");
+    }
+
+    if (ex->verbose)
+    {
+      RMSG_CPP("_planActionSequenceThreaded: No successful predicted action - returning");
+    }
+
     return;
   }
 
-  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps");
+  // From here on, we succeeded
+  TrajectoryPredictor::FeedbackMessage fbmsg;
+  fbmsg.error = "SUCCESS";
+  fbmsg.developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+  fbmsg.actionCommand = Rcs::String_concatenate(predictedActions, ";");
 
-  std::string newCmd;
-  for (size_t i = 0; i < predictedActions.size(); ++i)
-  {
-    newCmd += predictedActions[i];
-    newCmd += ";";
-  }
+  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << fbmsg.toString());
+  ex->entity.publish("ActionSequence", fbmsg.actionCommand);
 
-  RLOG_CPP(0, "Command : " << newCmd);
-  ex->entity.publish("ActionSequence", newCmd);
 
   REXEC(0)
   {
-    tree->toDotFile("PredictionTreeDFS.dot");
+    bool success = tree->toDotFile("PredictionTreeDFS.dot");
+    RLOG(0, "%s PredictionTreeDFS.dot", success ? "Successfully wrote" : "Failed to write");
   }
 
   REXEC(1)
@@ -1073,6 +1126,10 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   }
 
   RLOG_CPP(0, "Took " << tree->t_calc << " secs for " << tree->getNumNodes() << " nodes");
+  if (ex->verbose)
+  {
+    RMSG_CPP("_planActionSequenceThreaded: SUCCESS - returning");
+  }
 }
 
 void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
@@ -1115,9 +1172,12 @@ void ExampleActionsECS::onActionSequence(std::string text)
   // Early exit in case we receive an empty string
   if (text.empty())
   {
-    std::string explanation = "ERROR REASON: Received empty action command string. SUGGESTION: Check your spelling DEVELOPER: '" +
-                              text + "' " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    entity.publish("ActionResult", false, 0.0, explanation);
+    TrajectoryPredictor::FeedbackMessage fbmsg;
+    fbmsg.error = "ERROR";
+    fbmsg.reason = "Received empty action command string.";
+    fbmsg.suggestion = "Check your spelling.";
+    fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", false, 0.0, fbmsg.toStringVec());
     return;
   }
 
@@ -1155,8 +1215,11 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
   }
 
   // If the trajectory has finshed, we can report success.
-  entity.publish("ActionResult", true, 0.0, std::string("SUCCESS DEVELOPER: ") +
-                 std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
+  TrajectoryPredictor::FeedbackMessage fbmsg;
+  fbmsg.error = "SUCCESS";
+  fbmsg.actionCommand = actionStack.empty() ? std::string() : actionStack[0];
+  fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+  entity.publish("ActionResult", true, 0.0,fbmsg.toStringVec());
 
   // We unfreeze the scene after the last action has finished
   if (actionStack.empty())
@@ -1226,10 +1289,14 @@ void ExampleActionsECS::onTextCommand(std::string text)
       RcsGraph* newGraph = RcsGraph_create(resetCmd[1].c_str());
       if (!newGraph)
       {
+        TrajectoryPredictor::FeedbackMessage fbmsg;
+        fbmsg.error = "ERROR when doing a reset command";
+        fbmsg.reason = "Reset with xml file '" + resetCmd[1] + "' failed.";
+        fbmsg.suggestion = "Check if the file name is correct.";
+        fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
         std::string errStr = "ERROR REASON: Reset with xml file '" + resetCmd[1] +
                              "' failed. SUGGESTION: Check if the file name is correct";
-        entity.publish("ActionResult", false, 0.0, errStr +
-                       std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
+        entity.publish("ActionResult", false, 0.0, fbmsg.toStringVec());
 
         if (viewer)
         {
@@ -1254,8 +1321,11 @@ void ExampleActionsECS::onTextCommand(std::string text)
     entity.publish("InitFromState", (const RcsGraph*)graphToInitializeWith);
     entity.publish("EmergencyRecover");
     entity.setTime(0.0);
-    entity.publish("ActionResult", true, 0.0, std::string("SUCCESS DEVELOPER: Reset succeeded ") +
-                   std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
+
+    TrajectoryPredictor::FeedbackMessage fbmsg;
+    fbmsg.error = "SUCCESS";
+    fbmsg.developer = std::string("Reset succeeded ") + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", true, 0.0, fbmsg.toStringVec());
 
     // The ActionScene is reloaded, since otherwise fill levels etc. remain as
     // they are.
@@ -1278,20 +1348,27 @@ void ExampleActionsECS::onTextCommand(std::string text)
 
 }
 
-void ExampleActionsECS::onActionResult(bool success, double quality, std::string resMsg)
+void ExampleActionsECS::onActionResult(bool success, double quality, std::vector<std::string> resMsg)
 {
+  std::string resAsString;
   if (verbose)
   {
-    RMSG_CPP(resMsg);
-  }
-  entity.publish("SetTextLine", resMsg, 1);
+    for (const auto& s : resMsg)
+    {
+      resAsString += s + " ";
+    }
 
-  lastResultMsg = resMsg;
+    RMSG_CPP(resAsString);
+  }
+
+  lastFeedbackMsg = resMsg;
+  lastResultMsg = resMsg[1];   // That's the action command
+  entity.publish("SetTextLine", lastResultMsg, 1);
 
   // This needs to be done independent of failure or success
   if (!actionStack.empty())
   {
-    addToCompletedActionStack(actionStack[0], resMsg);
+    addToCompletedActionStack(actionStack[0], resMsg[1]);
 
     REXEC(1)
     {
@@ -1310,7 +1387,6 @@ void ExampleActionsECS::onActionResult(bool success, double quality, std::string
       if (!actionStack.empty())
       {
         // \todo: Check why this works
-        //RPAUSE_MSG("Calling reset");
         entity.publish("TextCommand", std::string("reset"));
         actionStack.insert(actionStack.begin(), "reset");
       }
@@ -1345,7 +1421,7 @@ void ExampleActionsECS::onActionResult(bool success, double quality, std::string
   }
   else
   {
-    entity.publish("SendWebsocket", resMsg);
+    entity.publish("SendWebsocket", resAsString);
   }
 
 }
@@ -1469,6 +1545,11 @@ void ExampleActionsECS::onChangeBackgroundColorFreeze(bool freeze)
 void ExampleActionsECS::onProcess()
 {
   entity.process();
+}
+
+void ExampleActionsECS::onSetTurboMode(bool enable)
+{
+  ActionBase::setTurboMode(enable);
 }
 
 bool ExampleActionsECS::isFinalPoseRunning() const

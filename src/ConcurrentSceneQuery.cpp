@@ -150,9 +150,14 @@ nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::strin
 
 std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
 {
+  RLOG_CPP(0, "Checking parent for " << objectName);
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
   const AffordanceEntity* ntt = scene.getAffordanceEntity(objectName);
+  if (!ntt)
+  {
+    RLOG_CPP(0, "No entity found with name " << objectName);
+  }
   const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
   return parent ? parent->name : std::string();
 }
@@ -168,7 +173,6 @@ std::unique_ptr<PredictionTree>
 ConcurrentSceneQuery::planActionTree(PredictionTree::SearchType searchType,
                                      const std::vector<std::string>& actions,
                                      double dt,
-                                     std::string& errMsg,
                                      size_t maxThreads,
                                      bool earlyExitSearch,
                                      bool earlyExitAction)
@@ -177,7 +181,7 @@ ConcurrentSceneQuery::planActionTree(PredictionTree::SearchType searchType,
   update(true);
 
   return PredictionTree::planActionTree(searchType, scene, graph, broadphase, actions,
-                                        dt, errMsg, maxThreads,
+                                        dt, maxThreads,
                                         earlyExitSearch, earlyExitAction);
 }
 

@@ -2335,7 +2335,7 @@
     </AffordanceModel>
 
     <!-- pesto_sauce_bottle -->
-    <Body name="pesto_sauce_bottle" prev="shelf_position_6" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="1" >
+    <Body name="pesto_sauce_bottle" prev="ham_bowl" was_prev="shelf_position_6" rigid_body_joints="-0.02 0 0 0 0 0" color="GREEN" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
@@ -2529,7 +2529,7 @@
 
 
     <!-- salt_bottle -->
-    <Body name="salt_bottle" prev="shelf_position_5" xxxprev="table_right_2" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="1" >
+    <Body name="salt_bottle" prev="parmesan_cheese_bowl" was_prev="shelf_position_5" xxxprev="table_right_2" rigid_body_joints="-0.04 0 0 0 0 0" color="WHITE" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />

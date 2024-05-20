@@ -97,7 +97,7 @@ public:
   static ActionBase* create(const ActionScene& domain,
                             const RcsGraph* graph,
                             std::string actionCommand,
-                            std::string& explanation);
+                            TrajectoryPredictor::FeedbackMessage& explanation);
 
   /*! \brief Creates a new action by name using the registered
    *         construction function.
@@ -105,7 +105,7 @@ public:
   static ActionBase* create(const ActionScene& domain,
                             const RcsGraph* graph,
                             std::vector<std::string> params,
-                            std::string& explanation);
+                            TrajectoryPredictor::FeedbackMessage& explanation);
 
   /*! \brief Prints out all registered actions to the console.
    */
@@ -124,7 +124,7 @@ private:
                             const RcsGraph* graph,
                             std::string actionName,
                             std::vector<std::string> params,
-                            std::string& explanation);
+                            TrajectoryPredictor::FeedbackMessage& explanation);
 
   /*! \brief Private constructor because ActionFactory is a singleton class
    */

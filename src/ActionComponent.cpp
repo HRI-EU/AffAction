@@ -101,10 +101,12 @@ void ActionComponent::onTextCommand(std::string text)
     std::string textToSpeak = text.c_str()+5;
     RLOG_CPP(0, "Speak action: " << textToSpeak);
     getEntity()->publish("Speak", textToSpeak);
-    std::string explanation = "SUCCESS DEVELOPER: speaking '" +
-                              textToSpeak + "' " + std::string(__FILENAME__) +
-                              " line " + std::to_string(__LINE__);
-    getEntity()->publish("ActionResult", true, 0.0, explanation);
+    TrajectoryPredictor::FeedbackMessage fbmsg;
+    fbmsg.error = "SUCCESS";
+    fbmsg.developer = "SUCCESS DEVELOPER: speaking '" +
+                      textToSpeak + "' " + std::string(__FILENAME__) +
+                      " line " + std::to_string(__LINE__);
+    getEntity()->publish("ActionResult", true, 0.0, fbmsg.toStringVec());
     return;
   }
 
@@ -129,7 +131,7 @@ void ActionComponent::actionThread(std::string text)
   // Reentrancy lock
   std::lock_guard<std::mutex> lock(actionThreadMtx);
 
-  std::string explanation = "Success";
+  TrajectoryPredictor::FeedbackMessage explanation;
   std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
   std::unique_ptr<ActionBase> action;
 
@@ -152,7 +154,7 @@ void ActionComponent::actionThread(std::string text)
   // depends on the action and is returned in the explanation string.
   if ((!action) || (action->getNumSolutions()==0))
   {
-    getEntity()->publish("ActionResult", false, 0.0, explanation);
+    getEntity()->publish("ActionResult", false, 0.0, explanation.toStringVec());
     return;
   }
 
@@ -242,7 +244,7 @@ void ActionComponent::actionThread(std::string text)
   // the trajectory with the 'd' key.
   // if ((!predResults[0].success) && getLimitCheck())
   // {
-  //   getEntity()->publish("ActionResult", false, 0.0, predResults[0].message);
+  //   getEntity()->publish("ActionResult", false, 0.0, predResults[0].message (Fixme to FeedbackMessage));
   //   return;
   // }
 
@@ -284,17 +286,19 @@ void ActionComponent::actionThread(std::string text)
     // the trajectory with the 'd' key.
     if (predictions.empty() || (!predictions[0].success))
     {
-      std::string errMsg;
+      TrajectoryPredictor::FeedbackMessage errMsg;
       if (predictions.empty())
       {
-        errMsg = "Gaze action could not find solution";
+        errMsg.error = "ERROR";
+        errMsg.reason = "Gaze action could not find solution";
+        errMsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
       }
       else
       {
-        errMsg = predictions[0].feedbackMsg.toString();
+        errMsg = predictions[0].feedbackMsg;
       }
 
-      getEntity()->publish("ActionResult", false, 0.0, errMsg);
+      getEntity()->publish("ActionResult", false, 0.0, errMsg.toStringVec());
       return;
     }
 
@@ -313,8 +317,11 @@ void ActionComponent::actionThread(std::string text)
 
   if (taskVec.empty())
   {
-    explanation = "ERROR: Found invalid tasks for action REASON: That's an error in the program. SUGGESTION: File a bug report for my program. DEVELOPER: " + action->getActionCommand();
-    getEntity()->publish("ActionResult", false, 0.0, explanation);
+    explanation.error = "Found invalid tasks for action";
+    explanation.reason = "That's an error in the program";
+    explanation.suggestion = "File a bug report for my program.";
+    explanation.developer = "Action command: " + action->getActionCommand();
+    getEntity()->publish("ActionResult", false, 0.0, explanation.toStringVec());
     return;
   }
 

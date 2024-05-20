@@ -113,6 +113,7 @@ public:
   std::string config_directory;
   std::string sequenceCommand;
   std::string lastResultMsg;
+  std::vector<std::string> lastFeedbackMsg;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda;
@@ -152,8 +153,9 @@ private:
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
   void onChangeBackgroundColorFreeze(bool freeze);
-  void onActionResult(bool success, double quality, std::string resMsg);
+  void onActionResult(bool success, double quality, std::vector<std::string> resMsg);
   void onProcess();
+  void onSetTurboMode(bool enable);
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;

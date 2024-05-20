@@ -213,7 +213,6 @@ The project is composed of three parts:
   - open-world
   - action trees
   - pose actions more flexible
-  - remove explanation string
   - smart pointers for tree nodes and prediction results
   - Pass explanations from tree to python wrapper
   - nicer function for pose sequences

@@ -75,7 +75,7 @@ void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
   std::string errMsg;
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
   auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                            seq, ex.entity.getDt(), errMsg, maxNumThreads);
+                                            seq, ex.entity.getDt(), maxNumThreads);
   auto res = tree->findSolutionPathAsStrings();
 
   if (res.empty())
@@ -516,7 +516,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::string errMsg;
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt(), errMsg);
+                                              seq, ex.entity.getDt());
     return tree ? tree->findSolutionPathAsStrings() : std::vector<std::string>();
     //return ex.getQuery()->planActionSequence(seq, seq.size());
   })
@@ -543,7 +543,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::string errMsg;
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt(), errMsg);
+                                              seq, ex.entity.getDt());
     auto res = tree->findSolutionPathAsStrings();
 
     if (res.empty())
@@ -583,6 +583,34 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Predict action sequence as tree
   //////////////////////////////////////////////////////////////////////////////
+  .def("plan_fb", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::string
+  {
+    PollBlockerComponent blocker(&ex);
+    ex.entity.publish("PlanDFSEE", sequenceCommand);
+    blocker.wait();
+    bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+
+    std::string fbmsgAsString;
+    size_t i = 0;
+    for (const auto& fb : ex.lastFeedbackMsg)
+    {
+      if (i<3)
+      {
+        fbmsgAsString += fb + " ";
+      }
+      i++;
+    }
+
+    RLOG(0, "Success=%s, Feedback is: \n'%s'", success ? "true" : "false", fbmsgAsString.c_str());
+
+    if (success)
+    {
+      fbmsgAsString = "SUCCESS";
+    }
+
+    return fbmsgAsString;
+  })
+
   .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
   {
     PollBlockerComponent blocker(&ex);
@@ -598,9 +626,8 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    std::string errMsg;
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt(), errMsg, 0, true, true);
+                                              seq, ex.entity.getDt(), 0, true, true);
     if (!tree)
     {
       RLOG_CPP(0, "Could not find solution for: '" << sequenceCommand << "'");

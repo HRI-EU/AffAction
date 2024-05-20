@@ -126,7 +126,20 @@ namespace aff
 std::string TrajectoryPredictor::FeedbackMessage::toString() const
 {
   std::string res = "ERROR: " + error + " REASON: " + reason + " SUGGESTION: "
-                    + suggestion + " DEVELOPER:" + developer;
+                    + suggestion + " DEVELOPER:" + developer + " ACTION: " + actionCommand;
+  return res;
+}
+
+std::vector<std::string> TrajectoryPredictor::FeedbackMessage::toStringVec() const
+{
+  std::vector<std::string> res(5);
+
+  res[0] = error;
+  res[1] = actionCommand;
+  res[2] = reason;
+  res[3] = suggestion;
+  res[4] = developer;
+
   return res;
 }
 
@@ -144,7 +157,7 @@ void TrajectoryPredictor::FeedbackMessage::clear()
 TrajectoryPredictor::PredictionResult::PredictionResult() :
   idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
   scaleJointSpeeds(1.0), elbowNS(0.0), wristNS(0.0), t_predict(0.0),
-  graph(nullptr)//, action(nullptr)
+  graph(nullptr)
 {
 }
 
@@ -490,10 +503,10 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           unsigned int errIdx = MatNd_maxAbsEleIndex(dx_err);
 
           result.feedbackMsg.error = "Reachability problem";
-          result.feedbackMsg.reason = "Can't reach the object - it is too far away";
           result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
           result.feedbackMsg.developer = "Tracking error at t=" + std::to_string(t) + " is " + std::to_string(err);
-          result.feedbackMsg.developer += std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+          result.feedbackMsg.developer += " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+          std::string unreachableObject;
 
           // Here we add details about the "guilty" task and its dimension.
           size_t count = 0;
@@ -508,15 +521,24 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
                 const RcsBody* refBdy = RCSBODY_BY_ID(controller->getGraph(), controller->getTask(i)->getRefBodyId());
                 if (effBdy && refBdy)
                 {
+                  unreachableObject = std::string(!RcsBody_isArticulated(controller->getGraph(), effBdy) ? effBdy->name : "") + " " +
+                                      std::string(!RcsBody_isArticulated(controller->getGraph(), refBdy) ? refBdy->name : "");
                   result.feedbackMsg.developer += "effector: " + std::string(effBdy->name);
                   result.feedbackMsg.developer += " refBdy: " + std::string(refBdy->name);
-                  result.feedbackMsg.developer += " object: " +
-                                                  std::string(!RcsBody_isArticulated(controller->getGraph(), effBdy) ? effBdy->name : "") + " " +
-                                                  std::string(!RcsBody_isArticulated(controller->getGraph(), refBdy) ? refBdy->name : "") + "\n";
+                  result.feedbackMsg.developer += " unreachable object: " + unreachableObject + "\n";
                 }
               }
               count++;
             }
+          }
+
+          if (unreachableObject.empty())
+          {
+            result.feedbackMsg.reason = "Can't reach the object - it is too far away";
+          }
+          else
+          {
+            result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " - it is too far away";
           }
 
           result.success = false;
@@ -1046,31 +1068,41 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
       const bool articulatedB1 = RcsBody_isArticulated(graph, b1);
       const bool articulatedB2 = RcsBody_isArticulated(graph, b2);
 
+      resMsg.error = "Collision problem";
+      std::string collider;
+
       if (articulatedB1)
       {
         if (!articulatedB2)
         {
-          resMsg.error = "ERROR";
-          resMsg.reason = "Collision problem, " + std::string(b1->name) +
-                          " collides with the " + std::string(b2->name);
+          collider = b2->name;
+          resMsg.reason = "The " + std::string(b1->name) +
+                          " collides with the " + collider;
         }
         else
         {
-          resMsg.error = "ERROR";
-          resMsg.reason = "Collision problem, " + std::string(b1->name) +
+          resMsg.reason = "The " + std::string(b1->name) +
                           " and " + std::string(b2->name) + " collide";
         }
       }
       else // b1 is static object
       {
-        resMsg.error = "ERROR";
-        resMsg.reason = "Collision problem, " + std::string(b2->name) +
-                        " collides with the " + std::string(b1->name);
+        collider = b1->name;
+        resMsg.reason = "The " + std::string(b2->name) +
+                        " collides with the " + collider;
       }
 
-      resMsg.suggestion = "Choose another command or try to remove an obstacle.";
+      if (!collider.empty())
+      {
+        resMsg.suggestion = "Try to get the " + collider + " out of the way";
+      }
+      else
+      {
+        resMsg.suggestion = "Try to get " + std::string(b1->name) + " and " +
+                            std::string(b2->name) + " away from each other";
+      }
 
-      std::string devMsg =  " DEVELOPER: Collision detected at pair-idx " + std::to_string(min_i);
+      std::string devMsg =  "Collision detected at pair-idx " + std::to_string(min_i);
       devMsg += " between ";
       devMsg += RCSBODY_NAME_BY_ID(graph, cmdl->pair[min_i].b1);
       devMsg += " and ";

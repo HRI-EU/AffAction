@@ -66,16 +66,19 @@ public:
   ActionException(ActionError e,
                   std::string reasonMsg_,
                   std::string suggestionMsg_=std::string(),
-                  std::string developerMsg_=std::string()) :
-    error(e), errorMsg(err2str(e)), reasonMsg(reasonMsg_), suggestionMsg(suggestionMsg_), developerMsg(developerMsg_)
+                  std::string developerMsg_=std::string()) : error(e)
   {
+    feedbackMsg.error = err2str(e);
+    feedbackMsg.reason = reasonMsg_;
+    feedbackMsg.suggestion = suggestionMsg_;
+    feedbackMsg.developer = developerMsg_;
 
     // Create legacy message
     msg = (e==NoError) ? "SUCCESS" : "ERROR";
-    msg += " REASON: " + reasonMsg + " SUGGESTION: " + suggestionMsg;
-    if (!developerMsg.empty())
+    msg += " REASON: " + feedbackMsg.reason + " SUGGESTION: " + feedbackMsg.suggestion;
+    if (!feedbackMsg.developer.empty())
     {
-      msg += " DEVELEOPER: " + developerMsg;
+      msg += " DEVELEOPER: " + feedbackMsg.developer;
     }
   }
 
@@ -125,14 +128,15 @@ public:
     return str;
   }
 
+  TrajectoryPredictor::FeedbackMessage getFeedbackMsg() const
+  {
+    return feedbackMsg;
+  }
+
 protected:
 
   std::string msg;
-  std::string errorMsg;
-  std::string reasonMsg;
-  std::string suggestionMsg;
-  std::string developerMsg;
-
+  TrajectoryPredictor::FeedbackMessage feedbackMsg;
   ActionError error;
 };
 

@@ -298,7 +298,6 @@ public:
                                                         const RcsBroadPhase* broadphase,
                                                         std::vector<std::string> actionCommands,
                                                         double dt,
-                                                        std::string& errMsg,
                                                         size_t maxNumThreads=0,
                                                         bool earlyExitSearch=true,
                                                         bool earlyExitAction=true);

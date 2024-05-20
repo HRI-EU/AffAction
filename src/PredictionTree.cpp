@@ -221,7 +221,7 @@ void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, 
     node = root;
   }
 
-  if (node->children.empty() && (node->level==incomingActionSequence.size()))
+  if (node->children.empty())// && (node->level==incomingActionSequence.size()))
   {
     if ((!onlySuccessfulOnes) || (onlySuccessfulOnes&&node->success))
     {
@@ -357,7 +357,7 @@ bool PredictionTree::toDotFile(const std::string& filename) const
 
   for (const auto& n : nodes)
   {
-    auto aCmd = n->actionCommand();//n->action ? n->action->getActionCommand() : "ROOT";
+    auto aCmd = n->actionCommand();
     auto words = Rcs::String_split(aCmd, " ");
     std::string label;
     for (size_t i = 0; i < words.size(); ++i)
@@ -371,6 +371,11 @@ bool PredictionTree::toDotFile(const std::string& filename) const
     }
     label += "\\n(level " + std::to_string(n->level) + " of " +
              std::to_string(incomingActionSequence.size()) + ")";
+
+    if (!n->success)
+    {
+      label += "\\n(" + n->feedbackMsg.toString() + ")";
+    }
 
     fd << n->uniqueId << "[label=\"" << label << "\" ";
 
@@ -606,13 +611,16 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
 
   // Get all successful leaf nodes and order so that the best one is at the first index
   getLeafNodes(leafs, onlySuccessfulOnes);
+  RLOG_CPP(0, "Found " << leafs.size() << " leaf nodes for index " << index);
 
-  if (leafs.empty() || index >= leafs.size())
+  if (leafs.empty() || (index>=leafs.size()))
   {
+    RLOG_CPP(0, "No leaf nodes found or index " << index << " >= leaf.size(): " << leafs.size());
     return std::vector<PredictionTreeNode*>();
   }
-
+  RLOG_CPP(0, "Leafs size is now " << leafs.size());
   std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
+  RLOG_CPP(0, "Leafs size is now " << leafs.size());
 
   if (!leafs.empty())
   {
@@ -628,7 +636,7 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
     bestPath.pop_back();   // Remove root
     std::reverse(bestPath.begin(), bestPath.end());
   }
-
+  RLOG_CPP(0, "Best path has length " << bestPath.size());
   return bestPath;
 }
 
@@ -668,8 +676,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
                                                          size_t stepsToPlan,
                                                          size_t maxNumThreads,
                                                          double dt,
-                                                         bool earlyExit,
-                                                         std::string& errMsg)
+                                                         bool earlyExit)
 {
   std::unique_ptr<PredictionTree> predictionTree = std::make_unique<PredictionTree>();
   predictionTree->t_calc = Timer_getSystemTime();
@@ -713,7 +720,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
       break;
     }
 
-    std::string explanation;// = "Success";
+    TrajectoryPredictor::FeedbackMessage explanation;
     std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
     std::unique_ptr<ActionBase> action;
 
@@ -727,15 +734,16 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
       }
 
       action = std::unique_ptr<ActionBase>(ActionFactory::create(domain, lookaheadGraph, text, explanation));
-      errMsg += explanation;
-
-
 
       // Early exit if the action could not be created. The particular reason
       // depends on the action and is returned in the explanation string.
+      // We copy the explanation from the failed action creation into the node
+      // and move on to the next node
       if ((!action) || (action->getNumSolutions() == 0))
       {
-        RLOG(0, "Could not create action! Early exit triggered! Explanation: %s", explanation.c_str());
+        currentPredictionNode->feedbackMsg = explanation;
+        currentPredictionNode->success = false;
+        RLOG_CPP(0, "Could not create action! Early exit triggered! Explanation:" << explanation.toString());
         break;
       }
 
@@ -786,7 +794,6 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           }
 
           predResults[i].resolvedActionCommand = localAction->getActionCommand();
-          //predResults[i].action = localAction.release();
         }));
       }
 
@@ -810,7 +817,6 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           r.print(1);
           auto child = currentPredictionNode->addChild(r);
           child->uniqueId = uniqueNodeId++;
-          //child->resolvedActionCommand = r.action->getActionCommand();
           child->resolvedActionCommand = r.resolvedActionCommand;
           RLOG(1, "Tree size[MB]: %.3f", 1.0e-6*predictionTree->size());
         }
@@ -858,11 +864,19 @@ static void DFS(ActionScene& scene,
                 PredictionTreeNode* node,
                 bool& finished)
 {
-  std::string err;
+  TrajectoryPredictor::FeedbackMessage err;
   std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
 
-  for (size_t i=0; i<(action ? action->getNumSolutions() : 0); ++i)
+  if (!action)
+  {
+    RLOG_CPP(0, "Could not create this action: '" << actionSequenceStrings[node->level] << "'");
+    node->feedbackMsg = err;
+    return;
+  }
+
+  // From here on, we have a valid action.
+  for (size_t i=0; i<action->getNumSolutions(); ++i)
   {
     action->initialize(scene, node->graph, i);
     bool actionEarlyExit = true;
@@ -913,8 +927,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
                                                          size_t maxNumThreads,
                                                          double dt,
                                                          bool earlyExitSearch,
-                                                         bool earlyExitAction,
-                                                         std::string& errMsg)
+                                                         bool earlyExitAction)
 {
   // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
   size_t nThreads = std::thread::hardware_concurrency();
@@ -1055,12 +1068,18 @@ void DFSMT(ActionScene& scene,
            bool earlyExitAction,
            bool& finished)
 {
-  std::string err;
+  TrajectoryPredictor::FeedbackMessage err;
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, levelCommands[node->level], err));
 
+  // If we can't create the action for this command, we don't expand any childred.
   if (!action)
   {
     RLOG_CPP(0, "Could not create this action: '" << levelCommands[node->level] << "'");
+    RLOG_CPP(0, "Feedback: '" << err.toString() << "'");
+    node->feedbackMsg = err;
+    std::string tmp = "Failed to create action: " + node->feedbackMsg.error;
+    node->feedbackMsg.error = tmp;
+    node->success = false;
     return;
   }
 
@@ -1121,8 +1140,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
                                                             size_t maxNumThreads,
                                                             double dt,
                                                             bool earlyExitSearch,
-                                                            bool earlyExitAction,
-                                                            std::string& errMsg)
+                                                            bool earlyExitAction)
 {
   // Thread pool with of either number of solutions or available hardware threads (whichever is smaller)
   size_t nThreads = 2*(size_t)std::thread::hardware_concurrency();
@@ -1161,7 +1179,6 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
                                                                const RcsBroadPhase* bp,
                                                                std::vector<std::string> actions,
                                                                double dt,
-                                                               std::string& errMsg,
                                                                size_t maxNumThreads,
                                                                bool earlyExitSearch,
                                                                bool earlyExitAction)
@@ -1173,17 +1190,17 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
   {
     case SearchType::BFS:
       tree = planActionTreeBFS(scene, graph, bp, actions, numStepsToPlan,
-                               maxNumThreads, dt, earlyExitAction, errMsg);
+                               maxNumThreads, dt, earlyExitAction);
       break;
 
     case SearchType::DFS:
       tree = planActionTreeDFT(scene, graph, bp, actions, numStepsToPlan,
-                               maxNumThreads, dt, earlyExitSearch, earlyExitAction, errMsg);
+                               maxNumThreads, dt, earlyExitSearch, earlyExitAction);
       break;
 
     case SearchType::DFSMT:
       tree = planActionTreeDFT_MT(scene, graph, bp, actions, numStepsToPlan,
-                                  maxNumThreads, dt, earlyExitSearch, earlyExitAction, errMsg);
+                                  maxNumThreads, dt, earlyExitSearch, earlyExitAction);
       break;
 
     default:
