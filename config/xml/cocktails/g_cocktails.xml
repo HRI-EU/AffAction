@@ -1,0 +1,1232 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+
+<!--
+
+Cocktail:
+
+1. Vodka
+2. Gin
+3. Rum (light and dark)
+4. Tequila (silver or blanco)
+5. Whiskey (bourbon or rye)
+6. Vermouth (dry and sweet)
+7. Triple sec or orange liqueur
+8. Brandy
+9. Bitters (Angostura or other flavors)
+10. Simple syrup
+11. Fresh citrus fruits (lemons, limes, oranges)
+12. Grenadine
+13. Cranberry juice
+14. Pineapple juice
+15. Tomato juice
+16. Soda water
+17. Tonic water
+18. Ginger beer
+19. Cola
+20. Cream or milk
+21. Fresh herbs (mint, basil, rosemary)
+22. Sugar cubes
+23. Salt
+24. Ice cubes
+
+-->
+
+<Graph resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+
+
+
+    <!-- table -->
+    <Body name="table" prev="lab" rigid_body_joints="-0.27 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+        <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
+               distance="true" textureFile="textures/table.jpg"/>
+    </Body>
+    <Body name="table_left" prev="table" transform="-0.1 0.6 0 0 0 0" >
+        <Shape type="BOX" extents="0.5 0.5 0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_center" prev="table" transform="-0.1 -0 0 0 0 0" >
+        <Shape type="BOX" extents="0.5 0.65  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+    <Body name="table_right" prev="table" transform="-0.1 -0.6 0 0 0 0" >
+        <Shape type="BOX" extents="0.5 0.5  0.001" graphics="true" wireframe="true" color="YELLOW" />
+    </Body>
+
+    <AffordanceModel body="table" type="furniture">
+        <Supportable frame="table_left" extentsX="0.1" extentsY=".1" />
+        <Supportable frame="table_center" extentsX="0.1" extentsY=".1" />
+        <Supportable frame="table_right" extentsX="0.1" extentsY=".1" />
+    </AffordanceModel>
+
+    <!-- shelf -->
+    <Body name="shelf" prev="table" rigid_body_joints="0.20 0 0.1 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+        <Shape type="FRAME" scale="0.2"/>
+        <!-- bottom shelf -->
+        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
+               distance="true" physics="true" textureFile="textures/table.jpg"/>
+        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0.1 0 0.29 0 0 0" graphics="true"
+               distance="true" physics="true" textureFile="textures/table.jpg"/>
+    </Body>
+    <!-- bottom shelf frames-->
+    <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos2" prev="shelf" transform="0 +0.4 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos3" prev="shelf" transform="0 +0.2 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos4" prev="shelf" transform="0 0 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos5" prev="shelf" transform="0 -0.2 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos6" prev="shelf" transform="0 -0.4 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos7" prev="shelf" transform="0 -0.6 0.001 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <!-- top shelf frames-->
+    <Body name="shelf_pos8" prev="shelf" transform="0.1 +0.6 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos9" prev="shelf" transform="0.1 +0.4 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos10" prev="shelf" transform="0.1 +0.2 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos11" prev="shelf" transform="0.1 0 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos12" prev="shelf" transform="0.1 -0.2 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos13" prev="shelf" transform="0.1 -0.4 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+    <Body name="shelf_pos14" prev="shelf" transform="0.1 -0.6 0.301 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <AffordanceModel body="shelf" >
+        <Supportable frame="shelf_pos1" />
+        <Supportable frame="shelf_pos2" />
+        <Supportable frame="shelf_pos3" />
+        <Supportable frame="shelf_pos4" />
+        <Supportable frame="shelf_pos5" />
+        <Supportable frame="shelf_pos6" />
+        <Supportable frame="shelf_pos7" />
+        <Supportable frame="shelf_pos8" />
+        <Supportable frame="shelf_pos9" />
+        <Supportable frame="shelf_pos10" />
+        <Supportable frame="shelf_pos11" />
+        <Supportable frame="shelf_pos12" />
+        <Supportable frame="shelf_pos13" />
+        <Supportable frame="shelf_pos14" />
+    </AffordanceModel>
+
+    <!-- 
+
+    ===========================================================================
+
+    Shelf items 
+    
+    ===========================================================================
+    -->
+    
+    
+    <!-- bitters_bottle -->
+    <Body name="bitters_bottle" prev="shelf_pos1" rigid_body_joints="true" color="LIGHTGRAY" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="bitters_bottle_tip" prev="bitters_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="bitters_bottle_grip" prev="bitters_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="bitters_bottle" type="bottle">
+      <Stackable frame="bitters_bottle"/>
+      <Pourable frame="bitters_bottle_tip"/>
+      <PowerGraspable frame="bitters_bottle_grip" />
+      <PointPokable frame="bitters_bottle_tip"/>
+      <Containable frame="bitters_bottle" max_volume="1.0" open="true">
+        <Ingredient name="bitters" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- brandy_bottle -->
+    <Body name="brandy_bottle" prev="shelf_pos2" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="brandy_bottle_tip" prev="brandy_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="brandy_bottle_grip" prev="brandy_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>coca_cola_bottle
+
+    <AffordanceModel body="brandy_bottle" type="bottle">
+      <Stackable frame="brandy_bottle"/>
+      <Pourable frame="brandy_bottle_tip"/>
+      <PowerGraspable frame="brandy_bottle_grip" />
+      <PointPokable frame="brandy_bottle_tip"/>
+      <Containable frame="brandy_bottle" max_volume="1.0" open="true">
+        <Ingredient name="brandy" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- coca_cola_bottle -->
+    <Body name="coca_cola_bottle" prev="shelf_pos3" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="coca_cola_bottle_tip" prev="coca_cola_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="coca_cola_bottle_grip" prev="coca_cola_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="coca_cola_bottle" type="bottle">
+      <Stackable frame="coca_cola_bottle"/>
+      <Pourable frame="coca_cola_bottle_tip"/>
+      <PowerGraspable frame="coca_cola_bottle_grip" />
+      <PointPokable frame="coca_cola_bottle_tip"/>
+      <Containable frame="coca_cola_bottle" max_volume="1.0" open="true">
+        <Ingredient name="coca_cola" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- gin_bottle -->
+    <Body name="gin_bottle" prev="shelf_pos4" rigid_body_joints="true" color="TURQUOISE" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="gin_bottle_tip" prev="gin_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="gin_bottle_grip" prev="gin_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="gin_bottle" type="bottle">
+      <Stackable frame="gin_bottle"/>
+      <Pourable frame="gin_bottle_tip"/>
+      <PowerGraspable frame="gin_bottle_grip" />
+      <PointPokable frame="gin_bottle_tip"/>
+      <Containable frame="gin_bottle" max_volume="1.0" open="true">
+        <Ingredient name="gin" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- ginger_beer_bottle -->
+    <Body name="ginger_beer_bottle" prev="shelf_pos5" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="ginger_beer_bottle_tip" prev="ginger_beer_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="ginger_beer_bottle_grip" prev="ginger_beer_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="ginger_beer_bottle" type="bottle">
+      <Stackable frame="ginger_beer_bottle"/>
+      <Pourable frame="ginger_beer_bottle_tip"/>
+      <PowerGraspable frame="ginger_beer_bottle_grip" />
+      <PointPokable frame="ginger_beer_bottle_tip"/>
+      <Containable frame="ginger_beer_bottle" max_volume="1.0" open="true">
+        <Ingredient name="ginger_beer" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- grenadine_bottle -->
+    <Body name="grenadine_bottle" prev="shelf_pos6" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="grenadine_bottle_tip" prev="grenadine_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="grenadine_bottle_grip" prev="grenadine_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="grenadine_bottle" type="bottle">
+      <Stackable frame="grenadine_bottle"/>
+      <Pourable frame="grenadine_bottle_tip"/>
+      <PowerGraspable frame="grenadine_bottle_grip" />
+      <PointPokable frame="grenadine_bottle_tip"/>
+      <Containable frame="grenadine_bottle" max_volume="1.0" open="true">
+        <Ingredient name="grenadine" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- salt_bottle -->
+    <Body name="salt_bottle" prev="shelf_pos7" rigid_body_joints="true" color="PEARL_S" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="salt_bottle_tip" prev="salt_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="salt_bottle_grip" prev="salt_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="salt_bottle" type="bottle">
+      <Stackable frame="salt_bottle"/>
+      <Pourable frame="salt_bottle_tip"/>
+      <PowerGraspable frame="salt_bottle_grip" />
+      <PointPokable frame="salt_bottle_tip"/>
+      <Containable frame="salt_bottle" max_volume="0.5" open="true">
+        <Ingredient name="salt" volume="0.5" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- tomato_juice_bottle -->
+    <Body name="tomato_juice_bottle" prev="shelf_pos8" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="tomato_juice_bottle_tip" prev="tomato_juice_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="tomato_juice_bottle_grip" prev="tomato_juice_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="tomato_juice_bottle" type="bottle">
+      <Stackable frame="tomato_juice_bottle"/>
+      <Pourable frame="tomato_juice_bottle_tip"/>
+      <PowerGraspable frame="tomato_juice_bottle_grip" />
+      <PointPokable frame="tomato_juice_bottle_tip"/>
+      <Containable frame="tomato_juice_bottle" max_volume="1.0" open="true">
+        <Ingredient name="simple_syrup" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- soda_water_bottle -->
+    <Body name="soda_water_bottle" prev="shelf_pos9" rigid_body_joints="true" color="LIGHTGRAY_TRANS" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="soda_water_bottle_tip" prev="soda_water_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="soda_water_bottle_grip" prev="soda_water_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="soda_water_bottle" type="bottle">
+      <Stackable frame="soda_water_bottle"/>
+      <Pourable frame="soda_water_bottle_tip"/>
+      <PowerGraspable frame="soda_water_bottle_grip" />
+      <PointPokable frame="soda_water_bottle_tip"/>
+      <Containable frame="soda_water_bottle" max_volume="1.0" open="true">
+        <Ingredient name="soda_water" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- tequila_bottle -->
+    <Body name="tequila_bottle" prev="shelf_pos10" rigid_body_joints="true" color="YELLOW_TRANS" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="tequila_bottle_tip" prev="tequila_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="tequila_bottle_grip" prev="tequila_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="tequila_bottle" type="bottle">
+      <Stackable frame="tequila_bottle"/>
+      <Pourable frame="tequila_bottle_tip"/>
+      <PowerGraspable frame="tequila_bottle_grip" />
+      <PointPokable frame="tequila_bottle_tip"/>
+      <Containable frame="tequila_bottle" max_volume="1.0" open="true">
+        <Ingredient name="tequila" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- tonic_water_bottle -->
+    <Body name="tonic_water_bottle" prev="shelf_pos11" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="tonic_water_bottle_tip" prev="tonic_water_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="tonic_water_bottle_grip" prev="tonic_water_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="tonic_water_bottle" type="bottle">
+      <Stackable frame="tonic_water_bottle"/>
+      <Pourable frame="tonic_water_bottle_tip"/>
+      <PowerGraspable frame="tonic_water_bottle_grip" />
+      <PointPokable frame="tonic_water_bottle_tip"/>
+      <Containable frame="tonic_water_bottle" max_volume="1.0" open="true">
+        <Ingredient name="tonic_water" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- TODO (CP) find suitable position-->
+    <!-- triple_sec_bottle --> 
+    <!-- <Body name="triple_sec_bottle" prev="table_right" rigid_body_joints="0.35 -0.2 0 0 0 0" color="YELLOW" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
+        <Shape type="MESH" meshFile="object_models/Tea.stl" scale="1.0" distance="false" physics="true" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="triple_sec_bottle_tip" prev="triple_sec_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="triple_sec_bottle_grip" prev="triple_sec_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="triple_sec_bottle" type="bottle">
+      <Stackable frame="triple_sec_bottle"/>
+      <Pourable frame="triple_sec_bottle_tip"/>
+      <PowerGraspable frame="triple_sec_bottle_grip" />
+      <PointPokable frame="triple_sec_bottle_tip"/>
+      <Containable frame="triple_sec_bottle" max_volume="1.0" open="true">
+        <Ingredient name="triple_sec" volume="1.0" />
+      </Containable>
+    </AffordanceModel> -->
+
+    <!-- vermouth_bottle -->
+    <Body name="vermouth_bottle" prev="shelf_pos12" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="vermouth_bottle_tip" prev="vermouth_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="vermouth_bottle_grip" prev="vermouth_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="vermouth_bottle" type="bottle">
+      <Stackable frame="vermouth_bottle"/>
+      <Pourable frame="vermouth_bottle_tip"/>
+      <PowerGraspable frame="vermouth_bottle_grip" />
+      <PointPokable frame="vermouth_bottle_tip"/>
+      <Containable frame="vermouth_bottle" max_volume="1.0" open="true">
+        <Ingredient name="vermouth" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- vodka_bottle -->
+    <Body name="vodka_bottle" prev="shelf_pos13" rigid_body_joints="true" color="BLUE" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="vodka_bottle_tip" prev="vodka_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="vodka_bottle_grip" prev="vodka_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="vodka_bottle" type="bottle">
+      <Stackable frame="vodka_bottle"/>
+      <Pourable frame="vodka_bottle_tip"/>
+      <PowerGraspable frame="vodka_bottle_grip" />
+      <PointPokable frame="vodka_bottle_tip"/>
+      <Containable frame="vodka_bottle" max_volume="1.0" open="true">
+        <Ingredient name="vodka" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    <!-- whiskey_bottle -->
+    <Body name="whiskey_bottle" prev="shelf_pos14" rigid_body_joints="true" color="POLISHED_COPPER" physics="dynamic" mass="1" >
+        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+    </Body>
+
+    <Body name="whiskey_bottle_tip" prev="whiskey_bottle" transform="0 0 0.23 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="whiskey_bottle_grip" prev="whiskey_bottle" transform="0 0 0.12 0 0 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <AffordanceModel body="whiskey_bottle" type="bottle">
+      <Stackable frame="whiskey_bottle"/>
+      <Pourable frame="whiskey_bottle_tip"/>
+      <PowerGraspable frame="whiskey_bottle_grip" />
+      <PointPokable frame="whiskey_bottle_tip"/>
+      <Containable frame="whiskey_bottle" max_volume="1.0" open="true">
+        <Ingredient name="whiskey" volume="1.0" />
+      </Containable>
+    </AffordanceModel>
+
+    
+    <!-- 
+
+    ===========================================================================
+
+    Table objects 
+    
+    ===========================================================================
+
+    -->
+
+    <!-- electric_shaker -->
+    <Body name="electric_shaker" prev="table_right" rigid_body_joints="-0.1 -0.1 0.06 0 0 90" physics="kinematic" color="OBSIDIAN" >
+        <Shape type="FRAME" scale="0.1"/>
+        <Shape type="BOX" extents="0.2 0.2 0.12" transform="0 0 -0.01 0 0 0" graphics="true"
+               distance="true" physics="true"/>
+    </Body>
+
+    <Body name="electric_shaker_top" prev="electric_shaker" transform="0 0 0.05 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <Body name="electric_shaker_button" prev="electric_shaker" transform="0 0.11 0 -90 0 0" color="RED">
+        <Shape type="CYLINDER" radius="0.01" length="0.01" graphics="true" distance="false" physics="false" wireframe="true" />
+        <Shape type="FRAME" scale="0.1"
+            transform="0 0 0.005 0 0 0"/>/>
+    </Body>
+
+    <AffordanceModel body="electric_shaker" type="furniture">
+        <Stackable frame="electric_shaker"/>
+        <Supportable frame="electric_shaker_top" />
+        <PointPushable frame="electric_shaker_button"/>
+    </AffordanceModel>
+
+    <!-- mixing_container -->
+    <Body name="mixing_container" prev="electric_shaker_top" rigid_body_joints="0 0 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.095 0 0 0"/>
+    </Body>
+
+    <Body name="mixing_container_grip" prev="mixing_container" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05" graphics="true"/>
+    </Body>
+
+    <Body name="mixing_container_tip" prev="mixing_container" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="mixing_container" body="mixing_container" type="glass" >
+        <Stackable frame="mixing_container"  />
+        <Supportable frame="mixing_container_tip" />
+        <PowerGraspable frame="mixing_container_grip" />
+        <Pourable frame="mixing_container_tip"/>
+        <Containable frame="mixing_container_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- tray -->
+    <Body name="tray" prev="table_left" rigid_body_joints="-0.15 0.1 0 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
+        <Shape type="BOX" extents="0.3 0.4 0.02" graphics="true" distance="false"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="tray_top" prev="tray" transform="0 0 0.02 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="tray_grip_1" prev="tray" transform="-0.15 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.2" graphics="false"/>
+    </Body>
+
+    <Body name="tray_grip_2" prev="tray" transform="0 0.2 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+	
+    <Body name="tray_pos1" prev="tray" transform="0.1 0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+	
+    <Body name="tray_pos2" prev="tray" transform="0.1 -0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+	
+    <Body name="tray_pos3" prev="tray" transform="-0.1 0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+	
+    <Body name="tray_pos4" prev="tray" transform="-0.1 -0.15 0.06 0 0 0" >
+        <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    </Body>
+
+    <AffordanceModel body="tray" type="tray">
+        <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
+        <xxxSupportable frame="tray_top" extentsX="0.01" extentsY="0.01"/>
+        <PowerGraspable frame="tray_grip_1"/>
+        <PowerGraspable frame="tray_grip_2"/>
+        <Supportable frame="tray_pos1" />
+        <Supportable frame="tray_pos2" />
+        <Supportable frame="tray_pos3" />
+        <Supportable frame="tray_pos4" />
+    </AffordanceModel>
+
+    <!-- first_glass -->
+    <Body name="first_glass" prev="table_left" rigid_body_joints="0.15 -0.15 0 0 0 0" color="TURQUOISE">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.10 0 0 0"/>
+    </Body>
+
+    <Body name="first_glass_grip" prev="first_glass" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <Body name="first_glass_tip" prev="first_glass" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="glass" body="first_glass" type="glass" >
+        <Stackable frame="first_glass"  />
+        <Supportable frame="first_glass_tip" />
+        <PowerGraspable frame="first_glass_grip" />
+        <Pourable frame="first_glass_tip"/>
+        <Containable frame="first_glass_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- second_glass -->
+    <Body name="second_glass" prev="table_left" rigid_body_joints="0 -0.15 0 0 0 0" color="TURQUOISE">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.10 0 0 0"/>
+    </Body>
+
+    <Body name="second_glass_grip" prev="second_glass" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <Body name="second_glass_tip" prev="second_glass" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="glass" body="second_glass" type="glass" >
+        <Stackable frame="second_glass"  />
+        <Supportable frame="second_glass_tip" />
+        <PowerGraspable frame="second_glass_grip" />
+        <Pourable frame="second_glass_tip"/>
+        <Containable frame="second_glass_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- third_glass -->
+    <Body name="third_glass" prev="table_left" rigid_body_joints="-0.15 -0.15 0 0 0 0" color="TURQUOISE">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.10 0 0 0"/>
+    </Body>
+
+    <Body name="third_glass_grip" prev="third_glass" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <Body name="third_glass_tip" prev="third_glass" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="glass" body="third_glass" type="glass" >
+        <Stackable frame="third_glass"  />
+        <Supportable frame="third_glass_tip" />
+        <PowerGraspable frame="third_glass_grip" />
+        <Pourable frame="third_glass_tip"/>
+        <Containable frame="third_glass_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- fourth_glass -->
+    <Body name="fourth_glass" prev="table_left" rigid_body_joints="0.15 0 0 0 0 0" color="TURQUOISE">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.10 0 0 0"/>
+    </Body>
+
+    <Body name="fourth_glass_grip" prev="fourth_glass" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <Body name="fourth_glass_tip" prev="fourth_glass" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="glass" body="fourth_glass" type="glass" >
+        <Stackable frame="fourth_glass"  />
+        <Supportable frame="fourth_glass_tip" />
+        <PowerGraspable frame="fourth_glass_grip" />
+        <Pourable frame="fourth_glass_tip"/>
+        <Containable frame="fourth_glass_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- fifth_glass -->
+    <Body name="fifth_glass" prev="table_left" rigid_body_joints="0.15 0.15 0 0 0 0" color="TURQUOISE">
+        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
+               transform="0 0 0.10 0 0 0"/>
+    </Body>
+
+    <Body name="fifth_glass_grip" prev="fifth_glass" transform="0 0 0.1 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <Body name="fifth_glass_tip" prev="fifth_glass" transform="0 0 0.2 0 0 0">
+        <Shape type="FRAME" scale="0.05"/>
+    </Body>
+
+    <AffordanceModel name="glass" body="fifth_glass" type="glass">
+        <Stackable frame="fifth_glass"  />
+        <Supportable frame="fifth_glass_tip" />
+        <PowerGraspable frame="fifth_glass_grip" />
+        <Pourable frame="fifth_glass_tip"/>
+        <Containable frame="fifth_glass_tip" max_volume="1.0" open="true">
+        </Containable>
+   </AffordanceModel>
+
+    <!-- 
+
+    ===========================================================================
+
+    Table ingredients 
+    
+    ===========================================================================
+
+    -->
+
+    <!-- basil_bowl -->
+    <Body name="basil_bowl" prev="table_center" rigid_body_joints="0.16 0.25 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="basil_bowl_inside" prev="basil_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="basil_bowl_tip" prev="basil_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="basil_bowl_grip_1" prev="basil_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="basil_bowl" type="bowl">
+        <Stackable frame="basil_bowl"/>
+        <Supportable frame="basil_bowl_inside"/>
+        <Containable frame="basil_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="basil_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- basil_1 -->
+    <Body name="basil_1" prev="basil_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="basil_1_center" prev="basil_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="basil" body="basil_1" type="ingredient">
+        <Stackable frame="basil_1"  />
+        <BallGraspable frame="basil_1_center"/>
+    </AffordanceModel>
+
+    <!-- fresh_herbs_bowl -->
+    <Body name="fresh_herbs_bowl" prev="table_center" rigid_body_joints="0.16 0.09 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="fresh_herbs_bowl_inside" prev="fresh_herbs_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="fresh_herbs_bowl_tip" prev="fresh_herbs_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="fresh_herbs_bowl_grip_1" prev="fresh_herbs_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="fresh_herbs_bowl" type="bowl">
+        <Stackable frame="fresh_herbs_bowl"/>
+        <Supportable frame="fresh_herbs_bowl_inside"/>
+        <Containable frame="fresh_herbs_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="fresh_herbs_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- fresh_herbs_1 -->
+    <Body name="fresh_herbs_1" prev="fresh_herbs_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="fresh_herbs_1_center" prev="fresh_herbs_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="fresh_herbs" body="fresh_herbs_1" type="ingredient">
+        <Stackable frame="fresh_herbs_1"  />
+        <BallGraspable frame="fresh_herbs_1_center"/>
+    </AffordanceModel>
+
+    <!-- ice_cubes_bowl -->
+    <Body name="ice_cubes_bowl" prev="table_center" rigid_body_joints="0.16 -0.07 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="ice_cubes_bowl_inside" prev="ice_cubes_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="ice_cubes_bowl_tip" prev="ice_cubes_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="ice_cubes_bowl_grip_1" prev="ice_cubes_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="ice_cubes_bowl" type="bowl">
+        <Stackable frame="ice_cubes_bowl"/>
+        <Supportable frame="ice_cubes_bowl_inside"/>
+        <Containable frame="ice_cubes_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="ice_cubes_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- ice_cubes_1 -->
+    <Body name="ice_cubes_1" prev="ice_cubes_bowl_inside" rigid_body_joints="true" color="LIGHTGRAY_TRANS" physics="dynamic" mass="0.1" >
+        <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="ice_cubes_1_center" prev="ice_cubes_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="ice_cubes" body="ice_cubes_1" type="ingredient">
+        <Stackable frame="ice_cubes_1"  />
+        <BallGraspable frame="ice_cubes_1_center"/>
+    </AffordanceModel>
+
+    <!-- lemon_slice_bowl -->
+    <Body name="lemon_slice_bowl" prev="table_center" rigid_body_joints="0.16 -0.23 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="lemon_slice_bowl_inside" prev="lemon_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="lemon_slice_bowl_tip" prev="lemon_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="lemon_slice_bowl_grip_1" prev="lemon_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="lemon_slice_bowl" type="bowl">
+        <Stackable frame="lemon_slice_bowl"/>
+        <Supportable frame="lemon_slice_bowl_inside"/>
+        <Containable frame="lemon_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="lemon_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- lemon_slice_1 -->
+    <Body name="lemon_slice_1" prev="lemon_slice_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lemon_slice_1_center" prev="lemon_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="lemon_slice" body="lemon_slice_1" type="ingredient">
+        <Stackable frame="lemon_slice_1"  />
+        <BallGraspable frame="lemon_slice_1_center"/>
+    </AffordanceModel>
+
+    <!-- lime_slice_bowl -->
+    <Body name="lime_slice_bowl" prev="table_right" rigid_body_joints="0.16 0 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="lime_slice_bowl_inside" prev="lime_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="lime_slice_bowl_tip" prev="lime_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="lime_slice_bowl_grip_1" prev="lime_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="lime_slice_bowl" type="bowl">
+        <Stackable frame="lime_slice_bowl"/>
+        <Supportable frame="lime_slice_bowl_inside"/>
+        <Containable frame="lime_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="lime_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- lime_slice_1 -->
+    <Body name="lime_slice_1" prev="lime_slice_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lime_slice_1_center" prev="lime_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="lime_slice" body="lime_slice_1" type="ingredient">
+        <Stackable frame="lime_slice_1"  />
+        <BallGraspable frame="lime_slice_1_center"/>
+    </AffordanceModel>
+
+    <!-- mint_bowl -->
+    <Body name="mint_bowl" prev="table_right" rigid_body_joints="0.16 -0.16 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="mint_bowl_inside" prev="mint_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="mint_bowl_tip" prev="mint_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="mint_bowl_grip_1" prev="mint_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="mint_bowl" type="bowl">
+        <Stackable frame="mint_bowl"/>
+        <Supportable frame="mint_bowl_inside"/>
+        <Containable frame="mint_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="mint_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- mint_1 -->
+    <Body name="mint_1" prev="mint_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="mint_1_center" prev="mint_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="mint" body="mint_1" type="ingredient">
+        <Stackable frame="mint_1"  />
+        <BallGraspable frame="mint_1_center"/>
+    </AffordanceModel>
+
+    <!-- orange_slice_bowl -->
+    <Body name="orange_slice_bowl" prev="table_right" rigid_body_joints="0 0.16 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="orange_slice_bowl_inside" prev="orange_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="orange_slice_bowl_tip" prev="orange_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="orange_slice_bowl_grip_1" prev="orange_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="orange_slice_bowl" type="bowl">
+        <Stackable frame="orange_slice_bowl"/>
+        <Supportable frame="orange_slice_bowl_inside"/>
+        <Containable frame="orange_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="orange_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- orange_slice_1 -->
+    <Body name="orange_slice_1" prev="orange_slice_bowl_inside" rigid_body_joints="true" color="ORANGE" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="orange_slice_1_center" prev="orange_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="orange_slice" body="orange_slice_1" type="ingredient">
+        <Stackable frame="orange_slice_1"  />
+        <BallGraspable frame="orange_slice_1_center"/>
+    </AffordanceModel>
+
+    <!-- rosemary_bowl -->
+    <Body name="rosemary_bowl" prev="table_right" rigid_body_joints="-0.16 0.16 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="rosemary_bowl_inside" prev="rosemary_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="rosemary_bowl_tip" prev="rosemary_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="rosemary_bowl_grip_1" prev="rosemary_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="rosemary_bowl" type="bowl">
+        <Stackable frame="rosemary_bowl"/>
+        <Supportable frame="rosemary_bowl_inside"/>
+        <Containable frame="rosemary_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="rosemary_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- rosemary_1 -->
+    <Body name="rosemary_1" prev="rosemary_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="rosemary_1_center" prev="rosemary_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="rosemary" body="rosemary_1" type="ingredient">
+        <Stackable frame="rosemary_1"  />
+        <BallGraspable frame="rosemary_1_center"/>
+    </AffordanceModel>
+
+    <!-- sugar_cubes_bowl -->
+    <Body name="sugar_cubes_bowl" prev="table_right" rigid_body_joints="0.16 0.16 0 0 0 0" color="RUBY">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="sugar_cubes_bowl_inside" prev="sugar_cubes_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="sugar_cubes_bowl_tip" prev="sugar_cubes_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="sugar_cubes_bowl_grip_1" prev="sugar_cubes_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="sugar_cubes_bowl" type="bowl">
+        <Stackable frame="sugar_cubes_bowl"/>
+        <Supportable frame="sugar_cubes_bowl_inside"/>
+        <Containable frame="sugar_cubes_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="sugar_cubes_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- sugar_cubes_1 -->
+    <Body name="sugar_cubes_1" prev="sugar_cubes_bowl_inside" rigid_body_joints="true" color="PEARL" physics="dynamic" mass="0.1" >
+        <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="sugar_cubes_1_center" prev="sugar_cubes_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="sugar_cubes" body="sugar_cubes_1" type="ingredient">
+        <Stackable frame="sugar_cubes_1"  />
+        <BallGraspable frame="sugar_cubes_1_center"/>
+    </AffordanceModel>
+
+</Graph>
