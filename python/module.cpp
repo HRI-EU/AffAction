@@ -588,7 +588,8 @@ PYBIND11_MODULE(pyAffaction, m)
     PollBlockerComponent blocker(&ex);
     ex.entity.publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
-    bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
 
     std::string fbmsgAsString;
     size_t i = 0;
@@ -616,7 +617,8 @@ PYBIND11_MODULE(pyAffaction, m)
     PollBlockerComponent blocker(&ex);
     ex.entity.publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
-    bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
     RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
 
     return success;
