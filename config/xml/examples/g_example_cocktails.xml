@@ -29,22 +29,12 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
-  <ActionSequence name="1" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
-  <ActionSequence name="2" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
-  <ActionSequence name="3" text="get tomato_sauce_bottle; move tomato_sauce_bottle above pizza_dough; pour tomato_sauce_bottle pizza_dough" />
-  <ActionSequence name="4" text="get_and_hold salt_bottle; release salt_bottle shelf" />
-  <ActionSequence name="5" text="get_and_hold salt_bottle; release salt_bottle" />
-  <ActionSequence name="6" text="get_and_hold italian_seasoning_5; release italian_seasoning_5" />
-  <ActionSequence name="7" text="get_and_hold goat_cheese_5; release goat_cheese_5" />
-  <ActionSequence name="8" text="get_and_hold salt_bottle; move salt_bottle above pizza_dough height 0.1" />
-  <ActionSequence name="9" text="get salt_bottle; put salt_bottle above pizza_dough" />
-
 
   <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
   </Body>
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
-  <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+  <Body name="aruco_base" rigid_body_joints="true" color="PEWTER" >
     <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
     <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
             graphics="true" physics="true" distance="false"/>
@@ -52,7 +42,7 @@
   </Body>
 
   <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+  <Body name="camera" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 -177 53 88" color="LIGHTGRAY" >
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
     <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>

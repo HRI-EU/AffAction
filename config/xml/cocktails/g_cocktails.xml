@@ -60,41 +60,145 @@ Cocktail:
 
 -->
 
-<Graph resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
 
 
-    <!-- table -->
-    <Body name="table" prev="lab" rigid_body_joints="-0.27 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
-        <Shape type="FRAME" scale="0.3" graphics="false"/>
-        <Shape type="BOX" extents="0.8 1.8 0.02" transform="0 0 -0.01 0 0 0" graphics="true" physics="true"
-               distance="true" textureFile="textures/table.jpg"/>
-    </Body>
-    <Body name="table_left" prev="table" transform="-0.1 0.6 0 0 0 0" >
-        <Shape type="BOX" extents="0.5 0.5 0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_center" prev="table" transform="-0.1 -0 0 0 0 0" >
-        <Shape type="BOX" extents="0.5 0.65  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_right" prev="table" transform="-0.1 -0.6 0 0 0 0" >
-        <Shape type="BOX" extents="0.5 0.5  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
+	<!-- The model for the dining table. -->
+	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
+		<Shape distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" type="BOX"/>
+		<Shape scale="0.2" type="FRAME"/>
+	</Body>
+	<Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />
+	<Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
 
-    <AffordanceModel body="table" type="furniture">
-        <Supportable frame="table_left" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_center" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_right" extentsX="0.1" extentsY=".1" />
-    </AffordanceModel>
+	<Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<!--
+-->
+	<Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
 
-    <!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.20 0 0.1 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+	<xxBody color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</xxBody>
+	<Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<xxBody color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</xxBody>
+
+
+	<AffordanceModel body="table" name="table" types="furniture">
+		<Supportable frame="table_grid_0_0"/>
+		<Supportable frame="table_grid_0_1"/>
+		<Supportable frame="table_grid_0_2"/>
+		<Supportable frame="table_grid_0_3"/>
+		<Supportable frame="table_grid_0_4"/>
+		<Supportable frame="table_grid_0_5"/>
+		<Supportable frame="table_grid_0_6"/>
+		<Supportable frame="table_grid_0_7"/>
+		<Supportable frame="table_grid_0_8"/>
+
+		<!-- <Supportable frame="table_grid_1_0"/> -->
+		<!-- <Supportable frame="table_grid_1_1"/> -->
+		<!-- <Supportable frame="table_grid_1_2"/> -->
+		<!-- <Supportable frame="table_grid_1_3"/> -->
+		<!-- <Supportable frame="table_grid_1_4"/> -->
+		<!-- <Supportable frame="table_grid_1_5"/> -->
+		<!-- <Supportable frame="table_grid_1_6"/> -->
+		<!-- <Supportable frame="table_grid_1_7"/> -->
+		<!-- <Supportable frame="table_grid_1_8"/> -->
+
+		<!-- <xxSupportable frame="table_grid_2_0"/> -->
+		<!-- <Supportable frame="table_grid_2_1"/> -->
+		<!-- <Supportable frame="table_grid_2_2"/> -->
+		<!-- <Supportable frame="table_grid_2_3"/> -->
+		<!-- <Supportable frame="table_grid_2_4"/> -->
+		<!-- <Supportable frame="table_grid_2_5"/> -->
+		<!-- <Supportable frame="table_grid_2_6"/> -->
+		<!-- <Supportable frame="table_grid_2_7"/> -->
+		<!-- <xxSupportable frame="table_grid_2_8"/> -->
+	</AffordanceModel>
+
+	<!-- shelf -->
+    <Body name="shelf" prev="table" rigid_body_joints="0.20 0 0.01 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <!-- bottom shelf -->
         <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
-        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0.1 0 0.29 0 0 0" graphics="true"
+        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.29 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
     </Body>
+	
     <!-- bottom shelf frames-->
     <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.001 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
@@ -118,25 +222,25 @@ Cocktail:
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
     <!-- top shelf frames-->
-    <Body name="shelf_pos8" prev="shelf" transform="0.1 +0.6 0.301 0 0 0" >
+    <Body name="shelf_pos8" prev="shelf" transform="0 +0.6 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos9" prev="shelf" transform="0.1 +0.4 0.301 0 0 0" >
+    <Body name="shelf_pos9" prev="shelf" transform="0 +0.4 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos10" prev="shelf" transform="0.1 +0.2 0.301 0 0 0" >
+    <Body name="shelf_pos10" prev="shelf" transform="0 +0.2 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos11" prev="shelf" transform="0.1 0 0.301 0 0 0" >
+    <Body name="shelf_pos11" prev="shelf" transform="0 0 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos12" prev="shelf" transform="0.1 -0.2 0.301 0 0 0" >
+    <Body name="shelf_pos12" prev="shelf" transform="0 -0.2 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos13" prev="shelf" transform="0.1 -0.4 0.301 0 0 0" >
+    <Body name="shelf_pos13" prev="shelf" transform="0 -0.4 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos14" prev="shelf" transform="0.1 -0.6 0.301 0 0 0" >
+    <Body name="shelf_pos14" prev="shelf" transform="0 -0.6 0.351 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
@@ -168,7 +272,7 @@ Cocktail:
     
     
     <!-- bitters_bottle -->
-    <Body name="bitters_bottle" prev="shelf_pos1" rigid_body_joints="true" color="LIGHTGRAY" physics="dynamic" mass="1" >
+    <Body name="bitters_bottle" prev="shelf_pos14" rigid_body_joints="true" color="LIGHTGRAY" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
@@ -343,7 +447,7 @@ Cocktail:
     </AffordanceModel>
 
     <!-- salt_bottle -->
-    <Body name="salt_bottle" prev="shelf_pos7" rigid_body_joints="true" color="PEARL_S" physics="dynamic" mass="1" >
+    <Body name="salt_bottle" prev="shelf_pos12" rigid_body_joints="true" color="PEARL_S" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
@@ -519,7 +623,7 @@ Cocktail:
     </AffordanceModel> -->
 
     <!-- vermouth_bottle -->
-    <Body name="vermouth_bottle" prev="shelf_pos12" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="1" >
+    <Body name="vermouth_bottle" prev="shelf_pos7" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
@@ -577,7 +681,7 @@ Cocktail:
     </AffordanceModel>
 
     <!-- whiskey_bottle -->
-    <Body name="whiskey_bottle" prev="shelf_pos14" rigid_body_joints="true" color="POLISHED_COPPER" physics="dynamic" mass="1" >
+    <Body name="whiskey_bottle" prev="shelf_pos1" rigid_body_joints="true" color="POLISHED_COPPER" physics="dynamic" mass="1" >
         <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
         <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
         <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
@@ -617,7 +721,7 @@ Cocktail:
     -->
 
     <!-- electric_shaker -->
-    <Body name="electric_shaker" prev="table_right" rigid_body_joints="-0.1 -0.1 0.06 0 0 90" physics="kinematic" color="OBSIDIAN" >
+    <Body name="electric_shaker" prev="table" rigid_body_joints="-0.05 -0.6 0.06 0 0 70" physics="kinematic" color="OBSIDIAN" >
         <Shape type="FRAME" scale="0.1"/>
         <Shape type="BOX" extents="0.2 0.2 0.12" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true"/>
@@ -663,7 +767,7 @@ Cocktail:
    </AffordanceModel>
 
     <!-- tray -->
-    <Body name="tray" prev="table_left" rigid_body_joints="-0.15 0.1 0 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
+    <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
         <Shape type="BOX" extents="0.3 0.4 0.02" graphics="true" distance="false"
                transform="0 0 0.01 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="true"/>
@@ -708,7 +812,7 @@ Cocktail:
         <Supportable frame="tray_pos4" />
     </AffordanceModel>
 
-    <!-- first_glass -->
+    <!-- first_glass
     <Body name="first_glass" prev="table_left" rigid_body_joints="0.15 -0.15 0 0 0 0" color="TURQUOISE">
         <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
                transform="0 0 0.10 0 0 0"/>
@@ -729,99 +833,7 @@ Cocktail:
         <Pourable frame="first_glass_tip"/>
         <Containable frame="first_glass_tip" max_volume="1.0" open="true">
         </Containable>
-   </AffordanceModel>
-
-    <!-- second_glass -->
-    <Body name="second_glass" prev="table_left" rigid_body_joints="0 -0.15 0 0 0 0" color="TURQUOISE">
-        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
-               transform="0 0 0.10 0 0 0"/>
-    </Body>
-
-    <Body name="second_glass_grip" prev="second_glass" transform="0 0 0.1 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <Body name="second_glass_tip" prev="second_glass" transform="0 0 0.2 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <AffordanceModel name="glass" body="second_glass" type="glass" >
-        <Stackable frame="second_glass"  />
-        <Supportable frame="second_glass_tip" />
-        <PowerGraspable frame="second_glass_grip" />
-        <Pourable frame="second_glass_tip"/>
-        <Containable frame="second_glass_tip" max_volume="1.0" open="true">
-        </Containable>
-   </AffordanceModel>
-
-    <!-- third_glass -->
-    <Body name="third_glass" prev="table_left" rigid_body_joints="-0.15 -0.15 0 0 0 0" color="TURQUOISE">
-        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
-               transform="0 0 0.10 0 0 0"/>
-    </Body>
-
-    <Body name="third_glass_grip" prev="third_glass" transform="0 0 0.1 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <Body name="third_glass_tip" prev="third_glass" transform="0 0 0.2 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <AffordanceModel name="glass" body="third_glass" type="glass" >
-        <Stackable frame="third_glass"  />
-        <Supportable frame="third_glass_tip" />
-        <PowerGraspable frame="third_glass_grip" />
-        <Pourable frame="third_glass_tip"/>
-        <Containable frame="third_glass_tip" max_volume="1.0" open="true">
-        </Containable>
-   </AffordanceModel>
-
-    <!-- fourth_glass -->
-    <Body name="fourth_glass" prev="table_left" rigid_body_joints="0.15 0 0 0 0 0" color="TURQUOISE">
-        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
-               transform="0 0 0.10 0 0 0"/>
-    </Body>
-
-    <Body name="fourth_glass_grip" prev="fourth_glass" transform="0 0 0.1 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <Body name="fourth_glass_tip" prev="fourth_glass" transform="0 0 0.2 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <AffordanceModel name="glass" body="fourth_glass" type="glass" >
-        <Stackable frame="fourth_glass"  />
-        <Supportable frame="fourth_glass_tip" />
-        <PowerGraspable frame="fourth_glass_grip" />
-        <Pourable frame="fourth_glass_tip"/>
-        <Containable frame="fourth_glass_tip" max_volume="1.0" open="true">
-        </Containable>
-   </AffordanceModel>
-
-    <!-- fifth_glass -->
-    <Body name="fifth_glass" prev="table_left" rigid_body_joints="0.15 0.15 0 0 0 0" color="TURQUOISE">
-        <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
-               transform="0 0 0.10 0 0 0"/>
-    </Body>
-
-    <Body name="fifth_glass_grip" prev="fifth_glass" transform="0 0 0.1 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <Body name="fifth_glass_tip" prev="fifth_glass" transform="0 0 0.2 0 0 0">
-        <Shape type="FRAME" scale="0.05"/>
-    </Body>
-
-    <AffordanceModel name="glass" body="fifth_glass" type="glass">
-        <Stackable frame="fifth_glass"  />
-        <Supportable frame="fifth_glass_tip" />
-        <PowerGraspable frame="fifth_glass_grip" />
-        <Pourable frame="fifth_glass_tip"/>
-        <Containable frame="fifth_glass_tip" max_volume="1.0" open="true">
-        </Containable>
-   </AffordanceModel>
+   </AffordanceModel> -->
 
     <!-- 
 
@@ -834,11 +846,10 @@ Cocktail:
     -->
 
     <!-- basil_bowl -->
-    <Body name="basil_bowl" prev="table_center" rigid_body_joints="0.16 0.25 0 0 0 0" color="RUBY">
+    <Body name="basil_bowl" prev="table_grid_2_7" rigid_body_joints="true" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="basil_bowl_inside" prev="basil_bowl" transform="0 0 0.08 0 0 0">
@@ -853,7 +864,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="basil_bowl" type="bowl">
+    <AffordanceModel body="basil_bowl" name="bowl">
         <Stackable frame="basil_bowl"/>
         <Supportable frame="basil_bowl_inside"/>
         <Containable frame="basil_bowl_tip" max_volume="0.5" open="true">
@@ -878,11 +889,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- fresh_herbs_bowl -->
-    <Body name="fresh_herbs_bowl" prev="table_center" rigid_body_joints="0.16 0.09 0 0 0 0" color="RUBY">
+    <Body name="fresh_herbs_bowl" prev="table_grid_2_6" rigid_body_joints="true" color="RUBY">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="fresh_herbs_bowl_inside" prev="fresh_herbs_bowl" transform="0 0 0.08 0 0 0">
@@ -897,7 +907,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="fresh_herbs_bowl" type="bowl">
+    <AffordanceModel body="fresh_herbs_bowl" name="bowl">
         <Stackable frame="fresh_herbs_bowl"/>
         <Supportable frame="fresh_herbs_bowl_inside"/>
         <Containable frame="fresh_herbs_bowl_tip" max_volume="0.5" open="true">
@@ -922,11 +932,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- ice_cubes_bowl -->
-    <Body name="ice_cubes_bowl" prev="table_center" rigid_body_joints="0.16 -0.07 0 0 0 0" color="RUBY">
+    <Body name="ice_cubes_bowl" prev="table_grid_2_5" rigid_body_joints="true" color="BLUE">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="ice_cubes_bowl_inside" prev="ice_cubes_bowl" transform="0 0 0.08 0 0 0">
@@ -941,7 +950,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="ice_cubes_bowl" type="bowl">
+    <AffordanceModel body="ice_cubes_bowl" name="bowl">
         <Stackable frame="ice_cubes_bowl"/>
         <Supportable frame="ice_cubes_bowl_inside"/>
         <Containable frame="ice_cubes_bowl_tip" max_volume="0.5" open="true">
@@ -966,11 +975,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- lemon_slice_bowl -->
-    <Body name="lemon_slice_bowl" prev="table_center" rigid_body_joints="0.16 -0.23 0 0 0 0" color="RUBY">
+    <Body name="lemon_slice_bowl" prev="table_grid_2_4" rigid_body_joints="true" color="GREEN">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="lemon_slice_bowl_inside" prev="lemon_slice_bowl" transform="0 0 0.08 0 0 0">
@@ -985,7 +993,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="lemon_slice_bowl" type="bowl">
+    <AffordanceModel body="lemon_slice_bowl" name="bowl">
         <Stackable frame="lemon_slice_bowl"/>
         <Supportable frame="lemon_slice_bowl_inside"/>
         <Containable frame="lemon_slice_bowl_tip" max_volume="0.5" open="true">
@@ -1010,11 +1018,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- lime_slice_bowl -->
-    <Body name="lime_slice_bowl" prev="table_right" rigid_body_joints="0.16 0 0 0 0 0" color="RUBY">
+    <Body name="lime_slice_bowl" prev="table_grid_2_2" rigid_body_joints="true" color="DARKGREEN">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="lime_slice_bowl_inside" prev="lime_slice_bowl" transform="0 0 0.08 0 0 0">
@@ -1029,7 +1036,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="lime_slice_bowl" type="bowl">
+    <AffordanceModel body="lime_slice_bowl" name="bowl">
         <Stackable frame="lime_slice_bowl"/>
         <Supportable frame="lime_slice_bowl_inside"/>
         <Containable frame="lime_slice_bowl_tip" max_volume="0.5" open="true">
@@ -1054,11 +1061,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- mint_bowl -->
-    <Body name="mint_bowl" prev="table_right" rigid_body_joints="0.16 -0.16 0 0 0 0" color="RUBY">
+    <Body name="mint_bowl" prev="table_grid_0_8" rigid_body_joints="true" color="LIGHTBLUE">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="mint_bowl_inside" prev="mint_bowl" transform="0 0 0.08 0 0 0">
@@ -1073,7 +1079,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="mint_bowl" type="bowl">
+    <AffordanceModel body="mint_bowl" name="bowl">
         <Stackable frame="mint_bowl"/>
         <Supportable frame="mint_bowl_inside"/>
         <Containable frame="mint_bowl_tip" max_volume="0.5" open="true">
@@ -1098,11 +1104,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- orange_slice_bowl -->
-    <Body name="orange_slice_bowl" prev="table_right" rigid_body_joints="0 0.16 0 0 0 0" color="RUBY">
+    <Body name="orange_slice_bowl" prev="table_grid_1_8" rigid_body_joints="true" color="ORANGE">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="orange_slice_bowl_inside" prev="orange_slice_bowl" transform="0 0 0.08 0 0 0">
@@ -1117,7 +1122,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="orange_slice_bowl" type="bowl">
+    <AffordanceModel body="orange_slice_bowl" name="bowl">
         <Stackable frame="orange_slice_bowl"/>
         <Supportable frame="orange_slice_bowl_inside"/>
         <Containable frame="orange_slice_bowl_tip" max_volume="0.5" open="true">
@@ -1142,11 +1147,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- rosemary_bowl -->
-    <Body name="rosemary_bowl" prev="table_right" rigid_body_joints="-0.16 0.16 0 0 0 0" color="RUBY">
+    <Body name="rosemary_bowl" prev="table_grid_1_7" rigid_body_joints="true" color="TURQUOISE">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="rosemary_bowl_inside" prev="rosemary_bowl" transform="0 0 0.08 0 0 0">
@@ -1161,7 +1165,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="rosemary_bowl" type="bowl">
+    <AffordanceModel body="rosemary_bowl" name="bowl">
         <Stackable frame="rosemary_bowl"/>
         <Supportable frame="rosemary_bowl_inside"/>
         <Containable frame="rosemary_bowl_tip" max_volume="0.5" open="true">
@@ -1186,11 +1190,10 @@ Cocktail:
     </AffordanceModel>
 
     <!-- sugar_cubes_bowl -->
-    <Body name="sugar_cubes_bowl" prev="table_right" rigid_body_joints="0.16 0.16 0 0 0 0" color="RUBY">
+    <Body name="sugar_cubes_bowl" prev="table_grid_2_3" rigid_body_joints="true" color="PUREWHITE">
         <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
                transform="0 0 0.01 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="false"
-               transform="0 0 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
     </Body>
 
     <Body name="sugar_cubes_bowl_inside" prev="sugar_cubes_bowl" transform="0 0 0.08 0 0 0">
@@ -1205,7 +1208,7 @@ Cocktail:
         <Shape type="FRAME" scale="0.3" graphics="false"/>
     </Body>
 
-    <AffordanceModel body="sugar_cubes_bowl" type="bowl">
+    <AffordanceModel body="sugar_cubes_bowl" name="bowl">
         <Stackable frame="sugar_cubes_bowl"/>
         <Supportable frame="sugar_cubes_bowl_inside"/>
         <Containable frame="sugar_cubes_bowl_tip" max_volume="0.5" open="true">
@@ -1228,5 +1231,17 @@ Cocktail:
         <Stackable frame="sugar_cubes_1"  />
         <BallGraspable frame="sugar_cubes_1_center"/>
     </AffordanceModel>
+
+	<Group prev="table_grid_1_6" name="_blue" color="BLUE" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
+
+	<Group prev="table_grid_0_7" name="_red" color="RED" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
+
+	<Group prev="table_grid_1_2" name="_green" color="GREEN" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
 
 </Graph>
