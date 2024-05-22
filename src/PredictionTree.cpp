@@ -611,16 +611,16 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
 
   // Get all successful leaf nodes and order so that the best one is at the first index
   getLeafNodes(leafs, onlySuccessfulOnes);
-  RLOG_CPP(0, "Found " << leafs.size() << " leaf nodes for index " << index);
+  //RLOG_CPP(0, "Found " << leafs.size() << " leaf nodes for index " << index);
 
   if (leafs.empty() || (index>=leafs.size()))
   {
-    RLOG_CPP(0, "No leaf nodes found or index " << index << " >= leaf.size(): " << leafs.size());
+    //RLOG_CPP(0, "No leaf nodes found or index " << index << " >= leaf.size(): " << leafs.size());
     return std::vector<PredictionTreeNode*>();
   }
-  RLOG_CPP(0, "Leafs size is now " << leafs.size());
+  //RLOG_CPP(0, "Leafs size is now " << leafs.size());
   std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
-  RLOG_CPP(0, "Leafs size is now " << leafs.size());
+  //RLOG_CPP(0, "Leafs size is now " << leafs.size());
 
   if (!leafs.empty())
   {
@@ -636,7 +636,7 @@ std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, 
     bestPath.pop_back();   // Remove root
     std::reverse(bestPath.begin(), bestPath.end());
   }
-  RLOG_CPP(0, "Best path has length " << bestPath.size());
+  //RLOG_CPP(0, "Best path has length " << bestPath.size());
   return bestPath;
 }
 

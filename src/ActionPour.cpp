@@ -186,7 +186,7 @@ void ActionPour::init(const ActionScene& domain,
   this->roboBaseFrame = std::string(roboBaseBdy->name);
 
   // Transition the liquid from bottle to glas.
-  performLiquidTransition(pourFromAff, pourToAff);
+  //performLiquidTransition(pourFromAff, pourToAff);
 
   // Collect solid items from the pouring affordance. We don't care how it got
   // there, therefore we don't go through the Containables. But ideally, the
@@ -272,17 +272,17 @@ std::vector<std::string> ActionPour::createTasksXML() const
   // since we only keep it constant in case the glas is held with a hand.
   if (glasInHand)
   {
-  xmlTask = "<Task name=\"" + taskGlasOri + "\" " + "controlVariable=\"POLAR\" " +
-            "effector=\"" + glas + "\" />";
-  tasks.push_back(xmlTask);
+    xmlTask = "<Task name=\"" + taskGlasOri + "\" " + "controlVariable=\"POLAR\" " +
+              "effector=\"" + glas + "\" />";
+    tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"" + taskGlasPosX + "\" " + "controlVariable=\"X\" " +
-            "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
-  tasks.push_back(xmlTask);
+    xmlTask = "<Task name=\"" + taskGlasPosX + "\" " + "controlVariable=\"X\" " +
+              "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
+    tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"" + taskGlasPosZ + "\" " + "controlVariable=\"Z\" " +
-            "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
-  tasks.push_back(xmlTask);
+    xmlTask = "<Task name=\"" + taskGlasPosZ + "\" " + "controlVariable=\"Z\" " +
+              "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
+    tasks.push_back(xmlTask);
   }
 
   return tasks;

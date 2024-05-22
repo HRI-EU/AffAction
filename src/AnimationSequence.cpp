@@ -66,11 +66,11 @@ void AnimationSequence::onToggleFastPrediction()
   predictionIdx++;
   if (predictionIdx>=predictions[channel].size())
   {
-    predictionIdx = -1;
     onSetDebugRendering(false);
   }
 
-  RLOG(0, "Setting predictionIdx to %d", predictionIdx);
+  RLOG(0, "Setting predictionIdx to %d with %zu predictions",
+       predictionIdx, predictions[channel].size());
 }
 
 void AnimationSequence::onRender()
@@ -121,7 +121,12 @@ void AnimationSequence::onSetDebugRendering(bool enable)
 void AnimationSequence::onAnimateSequence(std::vector<TrajectoryPredictor::PredictionResult> pred,
                                           int animationChannel)
 {
-  RLOG(0, "onAnimateSequence with %zu predictions will be assigned to channel %d", pred.size(), animationChannel);
+  RLOG(0, "onAnimateSequence: %zu predictions will be assigned to channel %d", pred.size(), animationChannel);
+  for (size_t i=0; i<pred.size(); ++i)
+  {
+    RLOG_CPP(0, "Prediction " << i << " with " << pred[i].bodyTransforms.size() << " values");
+  }
+
   predictions[animationChannel] = std::move(pred);
 }
 

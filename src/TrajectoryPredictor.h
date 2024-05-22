@@ -120,11 +120,15 @@ public:
                        bool collisionCheck, bool withSpeedAccLimit,
                        bool verbose, MatNd* jMask, FeedbackMessage& resMsg);
 
+  static void setAnimationMode(int mode);
+  static int toggleAnimationMode();
+
   tropic::TrajectoryControllerBase* tc;
   Rcs::IkSolverRMR* ikSolver;
 
 private:
 
+  static int animationMode;   // 0: none - 1: only sucessful - 2: all predictions
   MatNd* tStack;
 
   void initFromState(const MatNd* q, const MatNd* q_dot = NULL);

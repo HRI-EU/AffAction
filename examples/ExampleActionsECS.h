@@ -147,7 +147,7 @@ private:
   void onQuit();
   void onPrint();
   void onActionSequence(std::string text);
-  void onPlanActionSequence(std::string text);
+  void onPlanActionSequenceBFS(std::string text);
   void onPlanActionSequenceDFS(std::string text);
   void onPlanActionSequenceDFSEE(std::string text);
   void onTrajectoryMoving(bool isMoving);

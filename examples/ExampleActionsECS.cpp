@@ -316,12 +316,13 @@ bool ExampleActionsECS::initAlgo()
   entity.registerEvent<>("EmergencyRecover");
   entity.registerEvent<>("Quit");
   entity.subscribe("SetLogLevel", &onSetLogLevel);
+  entity.subscribe("SetAnimationMode", &TrajectoryPredictor::setAnimationMode);
   entity.subscribe("Quit", &ExampleActionsECS::onQuit, this);
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
   entity.subscribe<bool, double, std::vector<std::string>>("ActionResult", &ExampleActionsECS::onActionResult, this);
-  entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequence, this);
+  entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequenceBFS, this);
   entity.subscribe("PlanDFS", &ExampleActionsECS::onPlanActionSequenceDFS, this);
   entity.subscribe("PlanDFSEE", &ExampleActionsECS::onPlanActionSequenceDFSEE, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
@@ -746,9 +747,8 @@ bool ExampleActionsECS::initGraphics()
     {
       std::vector<const AffordanceEntity*> ge = om[0]->getGraspedEntities(*scene, controller->getGraph());
       RCHECK_MSG(!ge.empty(), "For manipulator: '%s'", om[0]->name.c_str());
-
       std::string textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
-      entity.publish("ActionSequence", textCmd);
+      entity.publish("PlanDFSEE", textCmd);
     }
 
   }, "Get body under mouse");
@@ -777,31 +777,9 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('A', [this](char k)
   {
-    RLOG(0, "Test pan tilt angle calculation");
-
-    double t_calc = Timer_getSystemTime();
-    std::vector<double> panTilt = sceneQuery->instance()->getPanTilt("robot", "glass_blue");
-
-
-    // Agent* robo_ = getScene()->getAgent("robot");
-    // RCHECK(robo_);
-
-    // double panTilt[2], err[2];
-    // size_t maxIter = 100;
-    // double eps = 1.0e-8;
-    // RobotAgent* robo = dynamic_cast<RobotAgent*>(robo_);
-
-    // double t_calc = Timer_getSystemTime();
-    // int iter = robo->getPanTilt(controller->getGraph(), "table", panTilt, maxIter, eps, err);
-    t_calc = Timer_getSystemTime() - t_calc;
-
-    // RLOG(0, "pan=%.1f tilt=%.1f err=%f %f took %d iterations and %.1f msec",
-    //      RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), err[0], err[1], iter, 1.0e3*t_calc);
-    if (!panTilt.empty())
-      RLOG(0, "pan=%.1f tilt=%.1f took %.1f msec",
-           RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]), 1.0e3 * t_calc);
-
-  }, "Test pan tilt angle calculation");
+    int a = TrajectoryPredictor::toggleAnimationMode();
+    RLOG(0, "Setting animation mode to %d", a);
+  }, "Toggle animation mode: 0: none, 1: successful predictions, 2: all predictions");
 
 
   viewer->start();
@@ -1029,7 +1007,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
           RLOG_CPP(1, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
         }
 
-        RLOG_CPP(1, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
+        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
         res.bodyTransforms.insert(res.bodyTransforms.end(),
                                   nd->bodyTransforms.begin(),
                                   nd->bodyTransforms.end());
@@ -1047,7 +1025,10 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       RLOG_CPP(0, e.toString());
     }
 
-    animations.push_back(res);
+    if (!res.bodyTransforms.empty())
+    {
+      animations.push_back(res);
+    }
   }
 
   // Needs to go before the return for failure, otherwise we don't see it in the animation
@@ -1132,7 +1113,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   }
 }
 
-void ExampleActionsECS::onPlanActionSequence(std::string sequenceCommand)
+void ExampleActionsECS::onPlanActionSequenceBFS(std::string sequenceCommand)
 {
   processingAction = true;
   bool dfs = false;

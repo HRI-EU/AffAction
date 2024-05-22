@@ -52,6 +52,8 @@
 #define MAX_TRACKING_ERROR (0.05)
 #define N_DOUBLES_IN_HTR   (sizeof(HTr)/sizeof(double))
 
+int aff::TrajectoryPredictor::animationMode = 0;
+
 /*******************************************************************************
  * Clone graph without meshes and sensors.
  ******************************************************************************/
@@ -240,6 +242,13 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
   std::cout << std::endl;
 }
 
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_) :
   tc(NULL), ikSolver(NULL), tStack(NULL)
 {
@@ -622,11 +631,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   }
 
   // \todo: This is a lot of memory for large trees
-  if (result.success)
+  if ((animationMode==1 && result.success) || (animationMode>1))
   {
     result.bodyTransforms.resize(tStack->size);
     memcpy(result.bodyTransforms.data(), tStack->ele, tStack->size * sizeof(double));
   }
+
 
   // We add a clone so that we can call this classes methods several times.
   result.graph = RcsGraph_cloneEssential(graph);
@@ -1127,6 +1137,23 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
 
 
   return 0;
+}
+
+void TrajectoryPredictor::setAnimationMode(int mode)
+{
+  RLOG_CPP(0, "Setting animation mode to " << mode);
+  animationMode = mode;
+}
+
+int TrajectoryPredictor::toggleAnimationMode()
+{
+  animationMode++;
+  if (animationMode > 2)
+  {
+    animationMode = 0;
+  }
+
+  return animationMode;
 }
 
 }   // namespace aff
