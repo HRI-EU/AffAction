@@ -583,7 +583,7 @@ public:
     return std::make_unique<ActionTilt>(*this);
   }
 
-  std::string ActionTilt::getActionCommand() const
+  std::string getActionCommand() const
   {
     std::string str = ActionBase::getActionCommand();
 
@@ -600,7 +600,7 @@ public:
     return str;
   }
 
-  std::vector<std::string> ActionTilt::getManipulators() const
+  std::vector<std::string> getManipulators() const
   {
     return usedManipulators;
   }
@@ -735,7 +735,7 @@ public:
     return std::make_unique<ActionFixPosition>(*this);
   }
 
-  std::string ActionFixPosition::getActionCommand() const
+  std::string getActionCommand() const
   {
     std::string str = ActionBase::getActionCommand();
 
@@ -747,7 +747,7 @@ public:
     return str;
   }
 
-  std::vector<std::string> ActionFixPosition::getManipulators() const
+  std::vector<std::string> getManipulators() const
   {
     return usedManipulators;
   }

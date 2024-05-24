@@ -270,7 +270,7 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
   RCHECK(soundBeam);
   for (unsigned int i = 0; i < soundBeam->nShapes; ++i)
   {
-    RcsShape_setComputeType(&soundBeam->shapes[i], RCSSHAPE_COMPUTE_GRAPHICS);
+    RcsShape_setComputeType(&soundBeam->shapes[i], RCSSHAPE_COMPUTE_GRAPHICS, true);
   }
   int jidx = RcsBody_getJointIndex(graph, soundBeam);
   RCHECK(jidx>=0);
