@@ -82,8 +82,10 @@ public:
 
   const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
                                                     const AffordanceEntity* child) const;
-  const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
-                                                    const RcsBody* child) const;
+  const Manipulator* getParentManipulator(const RcsGraph* graph,
+                                          const AffordanceEntity* child) const;
+  //const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
+  //                                                  const RcsBody* child) const;
   const Manipulator* getManipulator(const std::string& manipulatorName) const;
   const Manipulator* getManipulator(const Capability* capability) const;
   std::vector<const Manipulator*> getManipulatorsOfType(const std::string& type) const;

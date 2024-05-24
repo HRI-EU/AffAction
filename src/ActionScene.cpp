@@ -492,65 +492,100 @@ std::vector<const AffordanceEntity*> ActionScene::getDirectChildren(const RcsGra
   return foundOnes;
 }
 
+//const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
+//                                                               const AffordanceEntity* child) const
+//{
+//  if (!child)
+//  {
+//    RLOG_CPP(0, "Entity to be checked for retrieving parent is NULL");
+//    return nullptr;
+//  }
+//
+//  const AffordanceEntity* parent = nullptr;
+//
+//  // This is the "root" body of an Affordance entity
+//  const RcsBody* childBdy = child->body(graph);
+//
+//  for (const auto& parentCandidate : entities)
+//  {
+//    const RcsBody* parentCandidateBdy = parentCandidate.body(graph);
+//
+//    // \todo(MG): This loop is not needed - the isChild() method does traverse up the tree.
+//    for (const Affordance* parentAffordance : parentCandidate.affordances)
+//    {
+//      RLOG_CPP(0, "Checking parent candidate " << parentCandidate.name << " frame " << parentAffordance->frame);
+//      const RcsBody* parentAffFrame = parentAffordance->getFrame(graph);
+//
+//      if (parentAffFrame && RcsBody_isChild(graph, childBdy, parentAffFrame))
+//      {
+//        parent = &parentCandidate;
+//      }
+//
+//    }
+//  }
+//
+//  return parent;
+//}
+
 const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
                                                                const AffordanceEntity* child) const
 {
   if (!child)
   {
     RLOG_CPP(0, "Entity to be checked for retrieving parent is NULL");
-    return NULL;
+    return nullptr;
   }
 
-  const AffordanceEntity* parent = NULL;
+  const RcsBody* childBdy = child->body(graph);
+  if (childBdy->parentId == -1)
+  {
+    return nullptr;
+  }
 
-  // This is the "root" body of an Affordance entity
-  const RcsBody* childBdy = RcsGraph_getBodyByName(graph, child->bdyName.c_str());
-  RCHECK(childBdy);   // Should never happen \todo(MG): Remove if tested
-
-
+  std::string childsParentName = graph->bodies[childBdy->parentId].name;
   for (const auto& parentCandidate : entities)
   {
-    const RcsBody* parentCandidateBdy = RcsGraph_getBodyByName(graph, parentCandidate.bdyName.c_str());
-    RCHECK(parentCandidateBdy);
-
-    // \todo(MG): This loop is not needed - the isChild() method does traverse up the tree.
     for (const Affordance* parentAffordance : parentCandidate.affordances)
     {
-      RLOG_CPP(0, "Checking parent candidate " << parentCandidate.name << " frame " << parentAffordance->frame);
-      const RcsBody* parentAffFrame = RcsGraph_getBodyByName(graph, parentAffordance->frame.c_str());
-
-      if (parentAffFrame && RcsBody_isChild(graph, childBdy, parentAffFrame))
+      if (parentAffordance->frame == childsParentName)
       {
-        parent = &parentCandidate;
+        return &parentCandidate;
       }
 
     }
   }
 
-  return parent;
+  return nullptr;
 }
 
-const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
-                                                               const RcsBody* childBdy) const
+const Manipulator* ActionScene::getParentManipulator(const RcsGraph* graph,
+                                                     const AffordanceEntity* child) const
 {
-  if (!childBdy)
+  if (!child)
   {
-    RLOG_CPP(1, "RcsBody to be checked for retrieving parent is NULL");
-    return NULL;
+    RLOG_CPP(0, "Entity to be checked for retrieving parent is NULL");
+    return nullptr;
   }
 
-  for (const auto& parentCandidate : entities)
+  const RcsBody* childBdy = child->body(graph);
+  if (childBdy->parentId == -1)
   {
-    const RcsBody* parentCandidateBdy = RcsGraph_getBodyByName(graph, parentCandidate.bdyName.c_str());
-    RCHECK(parentCandidateBdy);
+    return nullptr;
+  }
 
-    if (RcsBody_isChild(graph, childBdy, parentCandidateBdy))
+  std::string childsParentName = graph->bodies[childBdy->parentId].name;
+  for (const auto& parentCandidate : manipulators)
+  {
+    for (const Capability* parentCapability : parentCandidate.capabilities)
     {
-      return &parentCandidate;
+      if (parentCapability->frame == childsParentName)
+      {
+        return &parentCandidate;
+      }
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 const Manipulator* ActionScene::getManipulator(const std::string& name) const

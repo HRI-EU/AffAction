@@ -482,4 +482,282 @@ std::string ActionPour::getActionCommand() const
   return str;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionTilt : public ActionBase
+{
+public:
+
+  ActionTilt(const ActionScene& domain, const RcsGraph* graph, std::vector<std::string> params) :
+    tiltAngle(M_PI_2)
+  {
+
+    if (params.empty())
+    {
+      throw ActionException(ActionException::ParamInvalid,
+                            "Action has no parameters. At least one parameters are needed: The object to tilt.",
+                            "Correct the action command.");
+    }
+
+    defaultDuration = 10.0;
+    parseParams(params);
+
+    auto it = std::find(params.begin(), params.end(), "angle");
+    if (it != params.end())
+    {
+      tiltAngle = RCS_DEG2RAD(std::stod(*(it + 1)));
+      params.erase(it + 1);
+      params.erase(it);
+    }
+
+    objectToTilt = params[0];
+
+    const AffordanceEntity* tiltNtt = domain.getAffordanceEntity(objectToTilt);
+
+    // Didn't find object to pour from
+    if (!tiltNtt)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectToTilt + " to tilt is unknown.",
+                            "Use an object name that is defined in the environment");
+    }
+
+    // The bottle object must be in a hand
+    const Manipulator* pouringHand = domain.getGraspingHand(graph, tiltNtt);
+    if (!pouringHand)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectToTilt + " to pour from is not held in a hand.",
+                            "First get the object " + objectToTilt + " before performing this action");
+    }
+
+    usedManipulators.push_back(pouringHand->name);
+
+    taskTilt = "tilt_" + objectToTilt;
+
+    // Initialize with the best solution.
+    bool successInit = initialize(domain, graph, 0);
+    RCHECK(successInit);
+  }
+
+  virtual std::vector<std::string> createTasksXML() const
+  {
+    std::vector<std::string> tasks;
+
+    // Dummy task with no meaning, just needed for the activation points
+    std::string xmlTask = "<Task name=\"" + taskTilt +
+                          "\" controlVariable=\"Inclination\" effector=\"" +
+                          objectToTilt + "\" />";
+    tasks.push_back(xmlTask);
+
+    return tasks;
+  }
+
+  virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const
+  {
+    const double afterTime = 0.5;
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    // Orientations
+    a1->addActivation(t_start, true, 0.5, taskTilt);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskTilt);
+    a1->add(t_end, tiltAngle, 0.0, 0.0, 7, taskTilt + " 0");
+
+    return a1;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionTilt>(*this);
+  }
+
+  std::string ActionTilt::getActionCommand() const
+  {
+    std::string str = ActionBase::getActionCommand();
+
+    if (str.find("angle") == std::string::npos)
+    {
+      str += " angle " + std::to_string(RCS_RAD2DEG(tiltAngle));
+    }
+
+    if (str.find("duration") == std::string::npos)
+    {
+      str += " duration " + std::to_string(getDurationHint());
+    }
+
+    return str;
+  }
+
+  std::vector<std::string> ActionTilt::getManipulators() const
+  {
+    return usedManipulators;
+  }
+
+protected:
+  std::string objectToTilt;
+  std::string taskTilt;
+  double tiltAngle;
+  std::vector<std::string> usedManipulators;
+};
+
+REGISTER_ACTION(ActionTilt, "tilt");
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionFixPosition : public ActionBase
+{
+public:
+
+  ActionFixPosition(const ActionScene& domain, const RcsGraph* graph, std::vector<std::string> params)
+  {
+
+    if (params.empty())
+    {
+      throw ActionException(ActionException::ParamInvalid,
+                            "Action has no parameters. At least one parameters are needed: The object to tilt.",
+                            "Correct the action command.");
+    }
+
+    defaultDuration = 10.0;
+    parseParams(params);
+
+    objectToFix = params[0];
+    frame = objectToFix;
+
+    auto it = std::find(params.begin(), params.end(), "frame");
+    if (it != params.end())
+    {
+      frame = *(it + 1);
+      params.erase(it + 1);
+      params.erase(it);
+    }
+
+    const AffordanceEntity* fixNtt = domain.getAffordanceEntity(objectToFix);
+
+    if (!fixNtt)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectToFix + " to tilt is unknown.",
+                            "Use an object name that is defined in the environment");
+    }
+
+    // The bottle object must be in a hand
+    const Manipulator* holdingHand = domain.getGraspingHand(graph, fixNtt);
+    if (!holdingHand)
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objectToFix + " to fix is not held in a hand.",
+                            "First get the object " + objectToFix + " before performing this action");
+    }
+
+    // If a frame was specified, it must belong to the entity
+    if (frame != objectToFix)
+    {
+      bool isFrameValid = false;
+
+      for (const auto& a : fixNtt->affordances)
+      {
+        if (a->frame == frame)
+        {
+          isFrameValid = true;
+          break;
+        }
+      }
+
+      if (!isFrameValid)
+      {
+        throw ActionException(ActionException::ParamNotFound,
+                              "The frame " + frame + " is not part of the object to fix " + objectToFix,
+                              "Check your spelling");
+      }
+
+    }
+
+    usedManipulators.push_back(holdingHand->name);
+
+    taskFix = "fix_position_" + objectToFix;
+
+    // Initialize with the best solution.
+    bool successInit = initialize(domain, graph, 0);
+    RCHECK(successInit);
+  }
+
+  virtual std::vector<std::string> createTasksXML() const
+  {
+    std::vector<std::string> tasks;
+
+    // Dummy task with no meaning, just needed for the activation points
+    std::string xmlTask = "<Task name=\"" + taskFix +
+                          "\" controlVariable=\"XYZ\" effector=\"" +
+                          frame + "\" />";
+    tasks.push_back(xmlTask);
+
+    return tasks;
+  }
+
+  virtual std::shared_ptr<tropic::ConstraintSet> createTrajectory(double t_start, double t_end) const
+  {
+    const double afterTime = 0.5;
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    a1->addActivation(t_start, true, 0.5, taskFix);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskFix);
+
+    return a1;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionFixPosition>(*this);
+  }
+
+  std::string ActionFixPosition::getActionCommand() const
+  {
+    std::string str = ActionBase::getActionCommand();
+
+    if (str.find("duration") == std::string::npos)
+    {
+      str += " duration " + std::to_string(getDurationHint());
+    }
+
+    return str;
+  }
+
+  std::vector<std::string> ActionFixPosition::getManipulators() const
+  {
+    return usedManipulators;
+  }
+
+protected:
+  std::string objectToFix, frame;
+  std::string taskFix;
+  std::vector<std::string> usedManipulators;
+};
+
+REGISTER_ACTION(ActionFixPosition, "fix_position");
+
 }   // namespace aff

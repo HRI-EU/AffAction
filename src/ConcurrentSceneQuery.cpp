@@ -157,9 +157,18 @@ std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
   if (!ntt)
   {
     RLOG_CPP(0, "No entity found with name " << objectName);
+    return std::string();
   }
   const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
-  return parent ? parent->name : std::string();
+
+  if (parent)
+  {
+    return parent->name;
+  }
+
+  const Manipulator* holdingHand = scene.getParentManipulator(graph, ntt);
+
+  return holdingHand ? holdingHand->name : std::string();
 }
 
 bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double distanceThreshold)
