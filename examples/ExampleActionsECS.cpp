@@ -68,7 +68,7 @@
 
 
 #define NUM_SCENEQUERIES (5)
-#define FIRST_N_SOLUTIONS (3)
+#define FIRST_N_SOLUTIONS (4)
 
 
 void AffActionExampleInfo()
@@ -215,6 +215,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   verbose = true;
   processingAction = false;
   turbo = true;
+  earlyExitAction = true;
 
   dtProcess = 0.0;
   dtEvents = 0.0;
@@ -940,7 +941,7 @@ std::string ExampleActionsECS::help()
     s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
   }
   s << "Current working directory: " << Rcs::File_getCurrentWorkingDir() << std::endl;
-
+  s << AffordanceEntity::printAffordanceCapabilityMatches();
   return s.str();
 }
 
@@ -957,17 +958,19 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         std::string sequenceCommand,
                                         size_t maxNumThreads,
                                         bool depthFirst,
-                                        bool earlyExitSearch)
+                                        bool earlyExitSearch,
+                                        bool earlyExitAction)
 {
   if (ex->verbose)
   {
     RMSG_CPP("_planActionSequenceThreaded received sequence: '" << sequenceCommand << "'");
   }
+  ex->processingAction = true;
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
 
   auto sType = depthFirst ? PredictionTree::SearchType::DFSMT : PredictionTree::SearchType::BFS;
   auto tree = ex->getQuery()->planActionTree(sType, seq, ex->entity.getDt(),
-                                             maxNumThreads, earlyExitSearch);
+                                             maxNumThreads, earlyExitSearch, earlyExitAction);
 
   // Early exit in case tree could not be constructed
   if (!tree)
@@ -1115,28 +1118,25 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
 void ExampleActionsECS::onPlanActionSequenceBFS(std::string sequenceCommand)
 {
-  processingAction = true;
   bool dfs = false;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false, earlyExitAction);
   t1.detach();
 }
 
 void ExampleActionsECS::onPlanActionSequenceDFS(std::string sequenceCommand)
 {
-  processingAction = true;
   bool dfs = true;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false, earlyExitAction);
   t1.detach();
 }
 
 void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string sequenceCommand)
 {
-  processingAction = true;
   bool dfs = true;
   sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, true);
+  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, true, earlyExitAction);
   t1.detach();
 }
 

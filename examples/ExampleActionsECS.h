@@ -122,7 +122,7 @@ public:
   bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
   bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded, verbose, processingAction, turbo;
+  bool singleThreaded, verbose, processingAction, turbo, earlyExitAction;
   double dtProcess, dtEvents;
 
   std::unique_ptr<GraphComponent> graphC;
