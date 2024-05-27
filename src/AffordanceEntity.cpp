@@ -44,9 +44,11 @@
 #include <Rcs_math.h>
 #include <Rcs_body.h>
 #include <Rcs_resourcePath.h>
+#include <Rcs_parser.h>
 
 #include <algorithm>
 #include <exception>
+#include <sstream>
 
 /*
 
@@ -351,6 +353,78 @@ bool AffordanceEntity::check(const RcsGraph* graph) const
   }
 
   return success;
+}
+
+std::string AffordanceEntity::printAffordanceCapabilityMatches()
+{
+  std::stringstream res;
+  std::vector<Affordance*> affordanceVec;
+  std::string xmlStr = "<AffordanceModel body=\"dummy\" >\n";
+
+  for (const auto& a : Affordance::typeMap)
+  {
+    xmlStr += "  <" + a.first + " body=\"dummy\" />\n";
+  }
+
+  xmlStr += "</AffordanceModel>";
+
+  xmlDocPtr doc;
+  xmlNodePtr node = parseXMLMemory(xmlStr.c_str(), xmlStr.length(), &doc);
+  RCHECK_MSG(node, xmlStr.c_str());
+  RLOG_CPP(1, "Created xml node from:\n" << xmlStr);
+
+  AffordanceEntity ntt(node, std::string());
+  xmlFreeDoc(doc);
+
+
+
+  for (const auto& affordance : ntt.affordances)
+  {
+    res << "Affordance " << affordance->className << " requires: ";
+    for (const auto& aType : affordance->requiredAffordances)
+    {
+      res << Affordance::stringFromType(aType) << " ";
+    }
+    res << std::endl;
+  }
+
+
+
+
+
+
+
+
+
+  std::vector<Capability*> capabilityVec;
+  xmlStr = "<Manipulator body=\"dummy\" >\n";
+
+  for (const auto& c : Capability::typeMap)
+  {
+    xmlStr += "  <" + c.first + " frame=\"dummy1 dummy2\" />\n";
+  }
+
+  xmlStr += "</Manipulator>";
+
+  node = parseXMLMemory(xmlStr.c_str(), xmlStr.length(), &doc);
+  RCHECK_MSG(node, xmlStr.c_str());
+  RLOG_CPP(1, "Created xml node from:\n" << xmlStr);
+
+  Manipulator hand(node, std::string());
+  xmlFreeDoc(doc);
+
+  res << std::endl;
+  for (const auto& capability : hand.capabilities)
+  {
+    res << "Capability " << capability->className << " affords: ";
+    for (const auto& cType : capability->affordanceTypes)
+    {
+      res << Affordance::stringFromType(cType) << " ";
+    }
+    res << std::endl;
+  }
+
+  return res.str();
 }
 
 /*******************************************************************************

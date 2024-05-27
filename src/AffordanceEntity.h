@@ -94,6 +94,7 @@ public:
   virtual ~AffordanceEntity();
   void print() const;
   virtual bool check(const RcsGraph* graph) const;
+  static std::string printAffordanceCapabilityMatches();
 };
 
 }   // namespace aff
