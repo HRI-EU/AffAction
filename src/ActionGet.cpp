@@ -1204,6 +1204,7 @@ public:
     }
 
     capabilityFrame = manipulators[0]->bdyName;
+    usedManipulators.push_back(agent->name);   // This is a Hack to make the getActionCommand work properly.
   }
 
   virtual std::vector<std::string> createTasksXML() const
