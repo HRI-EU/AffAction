@@ -52,7 +52,8 @@ public:
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> createTasksXML() const;
-  virtual double getDurationHint() const;
+  virtual double getDefaultDuration() const;
+  virtual double getDuration() const;
   void addAction(ActionBase* action);
   std::vector<std::string> getManipulators() const;
   std::string getActionCommand() const;

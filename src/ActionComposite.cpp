@@ -122,13 +122,25 @@ tropic::TCS_sptr ActionComposite::createTrajectory(double t_start, double t_end)
   return cset;
 }
 
-double ActionComposite::getDurationHint() const
+double ActionComposite::getDuration() const
 {
   double duration = 0.0;
 
   for (const auto& a : actions)
   {
-    duration = std::max(duration, a->getDurationHint());
+    duration = std::max(duration, a->getDuration());
+  }
+
+  return duration;
+}
+
+double ActionComposite::getDefaultDuration() const
+{
+  double duration = 0.0;
+
+  for (const auto& a : actions)
+  {
+    duration = std::max(duration, a->getDefaultDuration());
   }
 
   return duration;
@@ -150,7 +162,7 @@ std::vector<std::string> ActionComposite::getManipulators() const
 std::string ActionComposite::getActionCommand() const
 {
   std::string compositeCmd;
-
+  RMSG("CHECK DURATION DISASTER!!!");
   for (size_t i=0; i<actions.size(); ++i)
   {
     compositeCmd += actions[i]->getActionCommand();
@@ -584,8 +596,8 @@ public:
     ActionGaze* ag1 = dynamic_cast<ActionGaze*>(actions[1].get());
     ActionGaze* ag2 = dynamic_cast<ActionGaze*>(actions[2].get());
     RCHECK(actionGet && ag1 && ag2);
-    const double t_get = actionGet->getDurationHint();
-    const double t_gaze = ag1->getDurationHint();
+    const double t_get = actionGet->getDuration();
+    const double t_gaze = ag1->getDuration();
     const double duration = t_end - t_start;
     const double t_mid = t_start+t_get/(t_get+t_gaze)*duration;
 
@@ -611,9 +623,9 @@ public:
     return cset;
   }
 
-  double getDurationHint() const
+  double getDuration() const
   {
-    return 1.0*(actions[0]->getDurationHint() + actions[1]->getDurationHint());
+    return 1.0*(actions[0]->getDuration() + actions[1]->getDuration());
   }
 
   size_t getNumSolutions() const

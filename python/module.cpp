@@ -75,7 +75,7 @@ void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
   std::string errMsg;
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
   auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                            seq, ex.entity.getDt(), maxNumThreads);
+                                            seq, ex.getEntity().getDt(), maxNumThreads);
   auto res = tree->findSolutionPathAsStrings();
 
   if (res.empty())
@@ -96,7 +96,7 @@ void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
   }
 
   RLOG_CPP(0, "Command : " << newCmd);
-  ex.entity.publish("ActionSequence", newCmd);
+  ex.getEntity().publish("ActionSequence", newCmd);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -198,13 +198,13 @@ PYBIND11_MODULE(pyAffaction, m)
     if (debug)
     {
       success = ex.initGraphics() && success;
-      ex.entity.publish("Render");
-      ex.entity.process();
+      ex.getEntity().publish("Render");
+      ex.getEntity().process();
 
       // ex.getViewer()->setKeyCallback('l', [&ex](char k)
       // {
       //   RLOG(0, "Toggle talk flag");
-      //   ex.entity.publish("ToggleASR");
+      //   ex.getEntity().publish("ToggleASR");
 
       // }, "Toggle talk flag");
     }
@@ -331,7 +331,7 @@ PYBIND11_MODULE(pyAffaction, m)
 
   .def("initHardwareComponents", [](aff::ExampleActionsECS& ex)
   {
-    ex.entity.initialize(ex.graphC->getGraph());
+    ex.getEntity().initialize(ex.getCurrentGraph());
   }, "Initializes hardware components")
 
   //////////////////////////////////////////////////////////////////////////////
@@ -401,22 +401,22 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("callEvent", [](aff::ExampleActionsECS& ex, std::string eventName)
   {
-    ex.entity.publish(eventName);
-    ex.entity.process();
+    ex.getEntity().publish(eventName);
+    ex.getEntity().process();
   })
   .def("reset", [](aff::ExampleActionsECS& ex)
   {
-    ex.entity.publish("ActionSequence", std::string("reset"));
-    ex.entity.process();
+    ex.getEntity().publish("ActionSequence", std::string("reset"));
+    ex.getEntity().process();
   })
   .def("render", [](aff::ExampleActionsECS& ex)
   {
-    ex.entity.publish("Render");
-    ex.entity.process();
+    ex.getEntity().publish("Render");
+    ex.getEntity().process();
   })
   .def("process", [](aff::ExampleActionsECS& ex)
   {
-    ex.entity.process();
+    ex.getEntity().process();
   })
   .def("showGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
@@ -424,8 +424,8 @@ PYBIND11_MODULE(pyAffaction, m)
 
     if (success)
     {
-      ex.entity.publish("Render");
-      ex.entity.process();
+      ex.getEntity().publish("Render");
+      ex.getEntity().process();
     }
 
     return success;
@@ -485,7 +485,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //.def("execute", &aff::ExampleActionsECS::onActionSequence)
   .def("execute", [](aff::ExampleActionsECS& ex, std::string actionCommand)
   {
-    ex.entity.publish("ActionSequence", actionCommand);
+    ex.getEntity().publish("ActionSequence", actionCommand);
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -494,7 +494,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("executeBlocking", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> bool
   {
     PollBlockerComponent blocker(&ex);
-    ex.entity.publish("ActionSequence", actionCommand);
+    ex.getEntity().publish("ActionSequence", actionCommand);
     blocker.wait();
     RLOG_CPP(0, "Finished: " << actionCommand);
     bool success =  STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
@@ -516,7 +516,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::string errMsg;
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt());
+                                              seq, ex.getEntity().getDt());
     return tree ? tree->findSolutionPathAsStrings() : std::vector<std::string>();
     //return ex.getQuery()->planActionSequence(seq, seq.size());
   })
@@ -543,7 +543,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::string errMsg;
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt());
+                                              seq, ex.getEntity().getDt());
     auto res = tree->findSolutionPathAsStrings();
 
     if (res.empty())
@@ -564,7 +564,7 @@ PYBIND11_MODULE(pyAffaction, m)
     RLOG_CPP(0, "Command : " << newCmd);
 
     PollBlockerComponent blocker(&ex);
-    ex.entity.publish("ActionSequence", newCmd);
+    ex.getEntity().publish("ActionSequence", newCmd);
 
     bool success = true;
 
@@ -586,7 +586,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("plan_fb", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::string
   {
     PollBlockerComponent blocker(&ex);
-    ex.entity.publish("PlanDFSEE", sequenceCommand);
+    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
     //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
     bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
@@ -615,7 +615,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
   {
     PollBlockerComponent blocker(&ex);
-    ex.entity.publish("PlanDFSEE", sequenceCommand);
+    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
     //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
     bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
@@ -629,7 +629,7 @@ PYBIND11_MODULE(pyAffaction, m)
     sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.entity.getDt(), 0, true, true);
+                                              seq, ex.getEntity().getDt(), 0, true, true);
     if (!tree)
     {
       RLOG_CPP(0, "Could not find solution for: '" << sequenceCommand << "'");
@@ -664,7 +664,7 @@ PYBIND11_MODULE(pyAffaction, m)
     RLOG_CPP(0, "Command : " << newCmd);
 
     PollBlockerComponent blocker(&ex);
-    ex.entity.publish("ActionSequence", newCmd);
+    ex.getEntity().publish("ActionSequence", newCmd);
 
     bool success = true;
     bool blocking = true;
@@ -696,7 +696,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return false;
     }
 
-    aff::ComponentBase* respeaker = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-respeaker");
+    aff::ComponentBase* respeaker = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-respeaker");
     if (respeaker)
     {
       respeaker->setParameter("PublishDialogueWithRaisedHandOnly", listenWitHandRaisedOnly);
@@ -716,7 +716,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("enableASR", [](aff::ExampleActionsECS& ex, bool enable)
   {
-    ex.entity.publish("EnableASR", enable);
+    ex.getEntity().publish("EnableASR", enable);
     RLOG(0, "%s ASR", enable ? "Enabling" : "Disabling");
   })
 
@@ -727,7 +727,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("addLandmarkROS", [](aff::ExampleActionsECS& ex) -> bool
   {
     RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-landmarks_ros");
+    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-landmarks_ros");
     if (c)
     {
       ex.addComponent(c);
@@ -753,7 +753,7 @@ PYBIND11_MODULE(pyAffaction, m)
     double r_agent = DBL_MAX;
     // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
 
-    auto lmc = new aff::LandmarkZmqComponent(&ex.entity, connection);
+    auto lmc = new aff::LandmarkZmqComponent(&ex.getEntity(), connection);
     ex.addComponent(lmc);   // Takes care of deletion
     lmc->setScenePtr(ex.getGraph(), ex.getScene());
 
@@ -772,7 +772,7 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.getViewer()->setKeyCallback('W', [&ex](char k)
     {
       RLOG(0, "Calibrate camera");
-      ex.entity.publish("EstimateCameraPose", 20);
+      ex.getEntity().publish("EstimateCameraPose", 20);
     }, "Calibrate camera");
 
     RLOG(0, "Done adding trackers");
@@ -787,7 +787,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("addPTU", [](aff::ExampleActionsECS& ex) -> bool
   {
     RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.entity, ex.getGraph(), ex.getScene(), "-ptu");
+    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-ptu");
     if (c)
     {
       ex.addHardwareComponent(c);
@@ -806,14 +806,14 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     if (type == "nuance")
     {
-      auto c = createComponent(ex.entity, ex.getGraph(),
+      auto c = createComponent(ex.getEntity(), ex.getGraph(),
                                ex.getScene(), "-nuance_tts");
       ex.addComponent(c);
       return c ? true : false;
     }
     else if (type == "native")
     {
-      auto c = createComponent(ex.entity, ex.getGraph(),
+      auto c = createComponent(ex.getEntity(), ex.getGraph(),
                                ex.getScene(), "-tts");
       ex.addComponent(c);
       return c ? true : false;
@@ -828,7 +828,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addWebsocket", [](aff::ExampleActionsECS& ex) -> bool
   {
-    auto c = createComponent(ex.entity, ex.getGraph(),
+    auto c = createComponent(ex.getEntity(), ex.getGraph(),
                              ex.getScene(), "-websocket");
     ex.addComponent(c);
     return c ? true : false;
@@ -839,7 +839,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addJacoLeft", [](aff::ExampleActionsECS& ex) -> bool
   {
-    auto c = aff::createComponent(ex.entity, ex.getGraph(),
+    auto c = aff::createComponent(ex.getEntity(), ex.getGraph(),
                                   ex.getScene(), "-jacoShm7l");
     ex.addHardwareComponent(c);
     return c ? true : false;
@@ -850,7 +850,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("addJacoRight", [](aff::ExampleActionsECS& ex) -> bool
   {
-    auto c = aff::createComponent(ex.entity, ex.getGraph(),
+    auto c = aff::createComponent(ex.getEntity(), ex.getGraph(),
                                   ex.getScene(), "-jacoShm7r");
     ex.addHardwareComponent(c);
     return c ? true : false;
@@ -896,8 +896,8 @@ PYBIND11_MODULE(pyAffaction, m)
     auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
     lm->setScenePtr(sim->getGraph(), sim->getScene());
 
-    sim->entity.subscribe("PostUpdateGraph", &aff::LandmarkBase::onPostUpdateGraph, lm.get());
-    sim->entity.subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
+    sim->getEntity().subscribe("PostUpdateGraph", &aff::LandmarkBase::onPostUpdateGraph, lm.get());
+    sim->getEntity().subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
 
     return std::move(lm);
   }))

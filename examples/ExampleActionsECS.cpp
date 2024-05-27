@@ -285,6 +285,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
+  parser->getArgument("-earlyExitAction", &earlyExitAction, "Early exit with action prediction's first error");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -969,7 +970,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
 
   auto sType = depthFirst ? PredictionTree::SearchType::DFSMT : PredictionTree::SearchType::BFS;
-  auto tree = ex->getQuery()->planActionTree(sType, seq, ex->entity.getDt(),
+  auto tree = ex->getQuery()->planActionTree(sType, seq, ex->getEntity().getDt(),
                                              maxNumThreads, earlyExitSearch, earlyExitAction);
 
   // Early exit in case tree could not be constructed
@@ -980,7 +981,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     explanation.reason = "The action tree is empty";
     explanation.suggestion = "Send another command that does the same thing";
     explanation.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    ex->entity.publish("ActionResult", false, 0.0, explanation.toStringVec());
+    ex->getEntity().publish("ActionResult", false, 0.0, explanation.toStringVec());
     if (ex->verbose)
     {
       RMSG_CPP("_planActionSequenceThreaded: Error creating tree - returning");
@@ -1037,7 +1038,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   // Needs to go before the return for failure, otherwise we don't see it in the animation
   if (!animations.empty())
   {
-    ex->entity.publish("AnimateSequence", animations, 0);
+    ex->getEntity().publish("AnimateSequence", animations, 0);
   }
 
   // We failed: Create a meaningful error and return. We don't need to set the
@@ -1072,7 +1073,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       }
     }
 
-    ex->entity.publish("ActionResult", false, 0.0, errDescr.toStringVec());
+    ex->getEntity().publish("ActionResult", false, 0.0, errDescr.toStringVec());
 
     REXEC(0)
     {
@@ -1095,7 +1096,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   fbmsg.actionCommand = Rcs::String_concatenate(predictedActions, ";");
 
   RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << fbmsg.toString());
-  ex->entity.publish("ActionSequence", fbmsg.actionCommand);
+  ex->getEntity().publish("ActionSequence", fbmsg.actionCommand);
 
 
   REXEC(0)
@@ -1456,6 +1457,16 @@ const RcsGraph* ExampleActionsECS::getGraph() const
   return controller ? controller->getGraph() : nullptr;
 }
 
+RcsGraph* ExampleActionsECS::getCurrentGraph()
+{
+  return graphC ? graphC->getGraph() : nullptr;
+}
+
+const RcsGraph* ExampleActionsECS::getCurrentGraph() const
+{
+  return graphC ? graphC->getGraph() : nullptr;
+}
+
 RcsBroadPhase* ExampleActionsECS::getBroadPhase()
 {
   return controller ? controller->getBroadPhase() : nullptr;
@@ -1474,6 +1485,16 @@ std::shared_ptr<ConcurrentSceneQuery> ExampleActionsECS::getQuery()
 GraphicsWindow* ExampleActionsECS::getViewer()
 {
   return viewer.get();
+}
+
+const EntityBase& ExampleActionsECS::getEntity() const
+{
+  return entity;
+}
+
+EntityBase& ExampleActionsECS::getEntity()
+{
+  return entity;
 }
 
 void ExampleActionsECS::startThreaded()

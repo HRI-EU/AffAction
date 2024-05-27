@@ -54,7 +54,6 @@ ActionPanTilt::ActionPanTilt(const ActionScene& scene,
   isGazeTargetInHand(false),
   keepTasksActiveAfterEnd(true)
 {
-  defaultDuration = 3.0;
   parseParams(params);
 
   if (params.empty())
@@ -260,6 +259,11 @@ std::string ActionPanTilt::getGazeTarget() const
 std::unique_ptr<ActionBase> ActionPanTilt::clone() const
 {
   return std::make_unique<ActionPanTilt>(*this);
+}
+
+double ActionPanTilt::getDefaultDuration() const
+{
+  return 3.0;
 }
 
 }   // namespace aff

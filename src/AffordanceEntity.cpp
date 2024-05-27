@@ -370,7 +370,7 @@ std::string AffordanceEntity::printAffordanceCapabilityMatches()
 
   xmlDocPtr doc;
   xmlNodePtr node = parseXMLMemory(xmlStr.c_str(), xmlStr.length(), &doc);
-  RCHECK_MSG(node, xmlStr.c_str());
+  RCHECK_MSG(node, "%s", xmlStr.c_str());
   RLOG_CPP(1, "Created xml node from:\n" << xmlStr);
 
   AffordanceEntity ntt(node, std::string());
@@ -407,7 +407,7 @@ std::string AffordanceEntity::printAffordanceCapabilityMatches()
   xmlStr += "</Manipulator>";
 
   node = parseXMLMemory(xmlStr.c_str(), xmlStr.length(), &doc);
-  RCHECK_MSG(node, xmlStr.c_str());
+  RCHECK_MSG(node, "%s", xmlStr.c_str());
   RLOG_CPP(1, "Created xml node from:\n" << xmlStr);
 
   Manipulator hand(node, std::string());

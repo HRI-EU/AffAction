@@ -61,7 +61,6 @@ public:
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   void print() const;
   size_t getNumSolutions() const;
-  double getDurationHint() const;
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph) const;
   std::string getActionCommand() const;

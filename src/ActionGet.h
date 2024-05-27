@@ -65,9 +65,9 @@ public:
 
   void print() const;
   std::vector<std::string> getManipulators() const;
-  virtual size_t getNumSolutions() const;
-  virtual double getDurationHint() const;
-  virtual std::string getActionCommand() const;
+  size_t getNumSolutions() const;
+  std::string getActionCommand() const;
+  double getDefaultDuration() const;
 
   // Interface for optimization
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,

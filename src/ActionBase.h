@@ -154,7 +154,8 @@ public:
   virtual std::vector<std::string> createTasksXML() const = 0;
 
   virtual tropic::TCS_sptr createTrajectory() const;
-  virtual double getDurationHint() const;
+  virtual double getDuration() const;
+  virtual double getDefaultDuration() const;
   virtual void setDuration(double duration);
   void setName(const std::string& name);
   std::string getName() const;
@@ -195,14 +196,14 @@ protected:
   virtual std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc, double duration) const;
 
   const RcsBody* resolveBodyName(const RcsGraph* graph, std::string& bdyName);
-  double defaultDuration;
-  bool turbo;
 
 
 private:
 
   virtual size_t addTasks(Rcs::ControllerBase* controller) const;
 
+  double duration;
+  bool turbo;
   std::string actionName;
   std::vector<std::string> actionParams;
   std::vector<double> optimState;

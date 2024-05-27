@@ -56,7 +56,6 @@ ActionPour::ActionPour(const ActionScene& domain,
                        std::vector<std::string> params) :
   glasInHand(false), bottleInRightHand(true), pouringVolume(0.1)
 {
-  defaultDuration = 20.0;
   parseParams(params);
 
   if (params.size()<2)
@@ -476,10 +475,15 @@ std::string ActionPour::getActionCommand() const
 
   if (str.find("duration") == std::string::npos)
   {
-    str += " duration " + std::to_string(getDurationHint());
+    str += " duration " + std::to_string(getDuration());
   }
 
   return str;
+}
+
+double ActionPour::getDefaultDuration() const
+{
+  return 20.0;
 }
 
 
@@ -511,7 +515,6 @@ public:
                             "Correct the action command.");
     }
 
-    defaultDuration = 10.0;
     parseParams(params);
 
     auto it = std::find(params.begin(), params.end(), "angle");
@@ -594,7 +597,7 @@ public:
 
     if (str.find("duration") == std::string::npos)
     {
-      str += " duration " + std::to_string(getDurationHint());
+      str += " duration " + std::to_string(getDuration());
     }
 
     return str;
@@ -642,7 +645,6 @@ public:
                             "Correct the action command.");
     }
 
-    defaultDuration = 10.0;
     parseParams(params);
 
     objectToFix = params[0];
@@ -741,7 +743,7 @@ public:
 
     if (str.find("duration") == std::string::npos)
     {
-      str += " duration " + std::to_string(getDurationHint());
+      str += " duration " + std::to_string(getDuration());
     }
 
     return str;

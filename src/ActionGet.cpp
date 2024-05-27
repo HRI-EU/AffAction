@@ -112,7 +112,7 @@ std::string ActionGet::getActionCommand() const
   // The first manipulator is the one to get the object with.
   std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
   actionCommand += graspTypeToString(graspType);
-  actionCommand += " duration " + std::to_string(getDurationHint());
+  actionCommand += " duration " + std::to_string(getDuration());
 
   return actionCommand;
 }
@@ -165,7 +165,8 @@ void ActionGet::init(const ActionScene& domain,
       // We are done if:
       // - the object is grasped with the hand that has been specified (parameter "manipulator")
       // - the object is grasped, and no hand to grasp it has been specified (parameter "manipulator" is empty)
-      if (graspingHand && ((graspingHand == specifiedHand) || (!specifiedHand)))
+      //if (graspingHand && ((graspingHand == specifiedHand) || (!specifiedHand)))
+      if (graspingHand && ((graspingHand == specifiedHand)))
       {
         throw ActionException(ActionException::NoError,
                               "The " + objectToGet + " is already held in the hand.",
@@ -1041,10 +1042,10 @@ size_t ActionGet::getNumSolutions() const
   return affordanceMap.size();
 }
 
-double ActionGet::getDurationHint() const
+double ActionGet::getDefaultDuration() const
 {
-  const double timeScaling = (graspType == GraspType::TopGrasp) ? 1.5 : 1.0;
-  return timeScaling*defaultDuration;
+  const double scaling = (graspType == GraspType::TopGrasp) ? 3.0 : 1.0;
+  return scaling*ActionBase::getDefaultDuration();
 }
 
 std::string ActionGet::graspTypeToString(GraspType gType)
@@ -1058,7 +1059,8 @@ std::string ActionGet::graspTypeToString(GraspType gType)
       break;
 
     case GraspType::TopGrasp:
-      str = "TopGrasp";
+      //str = "TopGrasp";
+      str = "TwistGrasp";
       break;
 
     case GraspType::BallGrasp:
@@ -1159,8 +1161,6 @@ public:
                  const RcsGraph* graph,
                  std::vector<std::string> params) : ActionGet()
   {
-    defaultDuration = 0.1;
-
     if (params.size()<2)
     {
       throw ActionException(ActionException::ParamNotFound,
@@ -1256,6 +1256,21 @@ public:
   std::string getActionCommand() const
   {
     return "magic_" + ActionGet::getActionCommand();
+  }
+
+  double getDefaultDuration() const
+  {
+    return 0.1;
+  }
+
+  double getDuration() const
+  {
+    return getDefaultDuration();
+  }
+
+  bool turboMode() const
+  {
+    return false;
   }
 
 };

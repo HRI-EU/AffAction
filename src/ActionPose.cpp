@@ -231,7 +231,7 @@ std::vector<double> ActionPose::computeMaxVel(const RcsGraph* graph, double& max
     MatNd_set(&desc, 0, 3, 0.0);
     MatNd_set(&desc, 0, 4, 7);
 
-    MatNd_set(&desc, 1, 0, defaultDuration);
+    MatNd_set(&desc, 1, 0, getDefaultDuration());
     MatNd_set(&desc, 1, 1, q_des);
     MatNd_set(&desc, 1, 2, 0.0);
     MatNd_set(&desc, 1, 3, 0.0);
@@ -273,7 +273,7 @@ std::string ActionPose::getActionCommand() const
     aCmd += " " + std::to_string(poses[solutionIndex].timeStamp);
   }
 
-  aCmd += " duration " + std::to_string(getDurationHint());
+  aCmd += " duration " + std::to_string(getDuration());
 
   return aCmd;
 }

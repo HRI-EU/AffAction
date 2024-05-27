@@ -54,9 +54,6 @@
 #include <algorithm>
 
 
-// \todo(MG): This is only for testing and should be 1 and 1
-const double scaleDurationHint = 1.0;   // More than 1 makes trajectories longer
-const double scaleDtPrediction = 1.0;   // Higher makes predictions compute faster
 
 
 namespace aff
@@ -181,7 +178,7 @@ void ActionComponent::actionThread(std::string text)
         RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
               localAction->getActionCommand().c_str());
         double dt_predict = Timer_getSystemTime();
-        predictions[i] = localAction->predict(domain, graph, broadphase, scaleDurationHint*localAction->getDurationHint(),
+        predictions[i] = localAction->predict(domain, graph, broadphase, localAction->getDuration(),
                                               getEntity()->getDt(), earlyExitPrediction);
         predictions[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
@@ -211,7 +208,7 @@ void ActionComponent::actionThread(std::string text)
       RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
       action->initialize(domain, graph, i);
       double dt_predict = Timer_getSystemTime();
-      predictions[i] = action->predict(domain, graph, broadphase, scaleDurationHint*action->getDurationHint(),
+      predictions[i] = action->predict(domain, graph, broadphase, action->getDuration(),
                                        getEntity()->getDt(), earlyExitPrediction);
       predictions[i].idx = i;
       dt_predict = Timer_getSystemTime() - dt_predict;
@@ -330,7 +327,7 @@ void ActionComponent::actionThread(std::string text)
   // step function does properly initialize the last few values for a
   // smooth initialization.
   const double delay = 5.0*getEntity()->getDt();
-  auto tSet = action->createTrajectory(delay, scaleDurationHint*action->getDurationHint()+delay);
+  auto tSet = action->createTrajectory(delay, action->getDuration()+delay);
 
   // From here on, the action will start going.
   if (!startingFinalPose)

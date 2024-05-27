@@ -115,7 +115,7 @@ int main(int argc, char** argv)
                      "Max. number of skeletons to be tracked (default: %zu)", numSkeletons);
     argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
 
-    lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.entity, connection));
+    lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.getEntity(), connection));
     lmc->setScenePtr(ex.getGraph(), ex.getScene());
 
     const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), "camera");
@@ -124,16 +124,16 @@ int main(int argc, char** argv)
 
     // Add skeleton tracker and ALL agents in the scene
     int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    lmc->enableDebugGraphics(ex.viewer.get());
+    lmc->enableDebugGraphics(ex.getViewer());
     RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
 
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
 
-    ex.viewer->setKeyCallback('W', [&ex](char k)
+    ex.getViewer()->setKeyCallback('W', [&ex](char k)
     {
       RLOG(0, "Calibrate camera");
-      ex.entity.publish("EstimateCameraPose", 20);
+      ex.getEntity().publish("EstimateCameraPose", 20);
     }, "Calibrate camera");
 
     RLOG(0, "Done adding trackers");

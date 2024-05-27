@@ -158,7 +158,8 @@ void TrajectoryPredictor::FeedbackMessage::clear()
  ******************************************************************************/
 TrajectoryPredictor::PredictionResult::PredictionResult() :
   idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
-  scaleJointSpeeds(1.0), elbowNS(0.0), wristNS(0.0), t_predict(0.0),
+  //scaleJointSpeeds(1.0),
+  elbowNS(0.0), wristNS(0.0), t_predict(0.0),
   graph(nullptr)
 {
 }
@@ -346,7 +347,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   const double lambda = 1.0e-6;   // \todo (MG): Check if consistent with IK
   const double qFiltDecay = 0.1;  // \todo (MG): Check if consistent with IK
   const bool verbose = false;
-  double scaleJointSpeeds = 1.0;
+  //double scaleJointSpeeds = 1.0;
 
   result.success = true;
 
@@ -406,13 +407,26 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
                           collisionCheck, withSpeedAccLimit,
                           verbose, &jMaskArr, resMsg);
 
-    scaleJointSpeeds = std::min(RcsGraph_checkJointSpeeds(graph, graph->q_dot, 1.0, RcsStateFull), scaleJointSpeeds);
+    //scaleJointSpeeds = std::min(RcsGraph_checkJointSpeeds(graph, graph->q_dot, 1.0, RcsStateFull), scaleJointSpeeds);
 
     // Determine joint speed scaling factor to exactly be at the speed limit
     RCSGRAPH_FOREACH_JOINT(graph)
     {
-      double q_dot = fabs(graph->q_dot->ele[JNT->jointIndex]);
-      jointSpeedScaler = std::max(jointSpeedScaler, q_dot / JNT->speedLimit);
+      const double q_dot = fabs(graph->q_dot->ele[JNT->jointIndex]);
+      const double newScaling = q_dot / JNT->speedLimit;
+
+      if (newScaling > jointSpeedScaler)
+      {
+        REXEC(6)
+        {
+          double sLim = JNT->speedLimit;
+          double toDeg = RcsJoint_isRotation(JNT) ? 180.0/M_PI : 1.0;
+          RMSG("Scaling speeds with %5.5f (due to joint \"%s\": speed=%5.6f %s  "
+               "limit=%5.6f)", newScaling, JNT->name, toDeg*fabs(q_dot),
+               RcsJoint_isRotation(JNT) ? "deg" : "m", toDeg*sLim);
+        }
+        jointSpeedScaler = newScaling;
+      }
     }
 
 

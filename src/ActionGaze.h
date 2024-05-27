@@ -59,6 +59,7 @@ public:
   std::vector<std::string> createTasksXML() const;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
+  double getDefaultDuration() const;
 
   std::string agentName;
   std::string gazeTarget;

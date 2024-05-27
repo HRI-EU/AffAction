@@ -107,6 +107,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
                                   std::vector<std::string> words,
                                   TrajectoryPredictor::FeedbackMessage& explanation)
 {
+  RCHECK(!words.empty());
   std::string aname = words[0];
   words.erase(words.begin());
   return ActionFactory::create(domain, graph, aname, words, explanation);
@@ -132,7 +133,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
     explanation.suggestion = "Check your typing";
     explanation.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
     RLOG_CPP(1, explanation.toString());
-    return NULL;
+    return nullptr;
   }
 
   try
@@ -145,14 +146,14 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
   {
     explanation = ex.getFeedbackMsg();
     RLOG_CPP(1, explanation.toString());
-    action = NULL;
+    action = nullptr;
   }
   catch (const std::exception& ex)
   {
     explanation.error = ex.what();
     explanation.developer = "std::exception thrown " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
     RLOG_CPP(1, explanation.toString());
-    action = NULL;
+    action = nullptr;
   }
   catch (...)
   {

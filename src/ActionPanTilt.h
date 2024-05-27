@@ -61,6 +61,7 @@ public:
   std::vector<std::string> createTasksPanTiltXML() const;
   tropic::TCS_sptr createTrajectoryPanTilt(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
+  double getDefaultDuration() const;
 
   std::string gazeTarget;
   std::string gazeTargetInstance;

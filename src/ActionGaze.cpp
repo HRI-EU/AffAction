@@ -52,7 +52,6 @@ ActionGaze::ActionGaze(const ActionScene& scene,
                        std::vector<std::string> params) :
   isGazeTargetInHand(false), keepTasksActiveAfterEnd(false)
 {
-  defaultDuration = 3.0;
   parseParams(params);
 
   if (params.empty())
@@ -240,6 +239,11 @@ std::string ActionGaze::getGazeTarget() const
 std::unique_ptr<ActionBase> ActionGaze::clone() const
 {
   return std::make_unique<ActionGaze>(*this);
+}
+
+double ActionGaze::getDefaultDuration() const
+{
+  return 3.0;
 }
 
 }   // namespace aff

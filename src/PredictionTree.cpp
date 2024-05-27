@@ -770,13 +770,17 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
 
         futures.push_back(predictExecutor.enqueue([i, &domain, broadphase, lookaheadGraph, aPtr, dt, earlyExit, &predResults]
         {
-          const double scaleDurationHint = 1.0;
           auto localAction = aPtr->clone();
           RLOG_CPP(1, "Starting prediction " << i + 1 << " from " << localAction->getNumSolutions());
           localAction->initialize(domain, lookaheadGraph, i);
           double dt_predict = Timer_getSystemTime();
+          double duration = localAction->getDuration();
+          if (localAction->turboMode())
+          {
+            duration = std::max(duration, localAction->getDefaultDuration());
+          }
           predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase,
-                                                scaleDurationHint * localAction->getDurationHint(), dt, earlyExit);
+                                                duration, dt, earlyExit);
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
           predResults[i].feedbackMsg.developer += " command: " + localAction->getActionCommand();
@@ -787,7 +791,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           // Scale duration to make motion as fast as possible
           if (localAction->turboMode())
           {
-            double newDuration = localAction->getDurationHint() * predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
+            double newDuration = duration*predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
             newDuration -= std::fmod(newDuration, dt);
             RLOG(0, "newDuration is %f", newDuration);
             localAction->setDuration(newDuration);
@@ -880,13 +884,19 @@ static void DFS(ActionScene& scene,
   {
     action->initialize(scene, node->graph, i);
     bool actionEarlyExit = true;
-    auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, actionEarlyExit);
-
-    // Scale duration to make motion as fast as possible
-    double merk = action->getDurationHint();
+    double duration = action->getDuration();
     if (action->turboMode())
     {
-      double newDuration = action->getDurationHint() * res.scaleJointSpeeds * TURBO_DURATION_SCALER;
+      duration = std::max(duration, action->getDefaultDuration());
+    }
+
+    auto res = action->predict(scene, node->graph, broadphase, duration, dt, actionEarlyExit);
+
+    // Scale duration to make motion as fast as possible
+    //double merk = action->getDurationHint();
+    if (action->turboMode())
+    {
+      double newDuration = duration*res.scaleJointSpeeds*TURBO_DURATION_SCALER;
       newDuration -= std::fmod(newDuration, dt);
       action->setDuration(newDuration);
     }
@@ -895,7 +905,7 @@ static void DFS(ActionScene& scene,
     PredictionTreeNode* child = new PredictionTreeNode(node, res);
     child->resolvedActionCommand = action->getActionCommand();
     node->children.push_back(child);
-    action->setDuration(merk);
+    //action->setDuration(merk);
 
     // We stop the recursion in case we found a successful leaf node on the last level.
     if (earlyExit && child->success && child->level==actionSequenceStrings.size())
@@ -1017,15 +1027,25 @@ static void expand(ActionScene& scene,
   }
 
   action->initialize(scene, node->graph, solutionIndex);
-  auto res = action->predict(scene, node->graph, broadphase, action->getDurationHint(), dt, earlyExitAction);
+
+  double duration = action->getDuration();
+  if (action->turboMode())
+  {
+    duration = std::max(duration, action->getDefaultDuration());
+  }
+
+  RLOG(0, "duration is %f", duration);
+  auto res = action->predict(scene, node->graph, broadphase, duration, dt, earlyExitAction);
   res.idx = solutionIndex;
 
   // Scale duration to make motion as fast as possible. We also force it to the lower multiple of dt,
   // since we sometimes receive issues with control steps outside index ranges. \todo
   if (action->turboMode())
   {
-    double newDuration = action->getDurationHint() * res.scaleJointSpeeds * TURBO_DURATION_SCALER;
+    double newDuration = duration*res.scaleJointSpeeds*TURBO_DURATION_SCALER;
     newDuration -= std::fmod(newDuration, dt);
+    RLOG(0, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
+    RLOG(0, "newDuration is %f", newDuration);
     action->setDuration(newDuration);
   }
 

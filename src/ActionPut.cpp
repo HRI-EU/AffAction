@@ -946,12 +946,6 @@ ActionPut::createTrajectory(double t_start,
   return a1;
 }
 
-double ActionPut::getDurationHint() const
-{
-  const double timeScaling = putDown ? 0.6 : 1.0;
-  return timeScaling*ActionBase::getDurationHint();
-}
-
 std::vector<std::string> ActionPut::getManipulators() const
 {
   return usedManipulators;
@@ -1064,7 +1058,7 @@ double ActionPut::actionCost(const ActionScene& domain,
 
 std::string ActionPut::getActionCommand() const
 {
-  return detailedActionCommand + " duration " + std::to_string(getDurationHint());
+  return detailedActionCommand + " duration " + std::to_string(getDuration());
 }
 
 
@@ -1377,8 +1371,6 @@ public:
                  const RcsGraph* graph,
                  std::vector<std::string> params) : ActionPut()
   {
-    defaultDuration = 0.1;
-
     parseArgs(domain, graph, params);
 
     objName = params[0];
@@ -1425,6 +1417,21 @@ public:
   std::string getActionCommand() const
   {
     return "magic_" + ActionPut::getActionCommand();
+  }
+
+  double getDefaultDuration() const
+  {
+    return 0.1;
+  }
+
+  double getDuration() const
+  {
+    return getDefaultDuration();
+  }
+
+  bool turboMode() const
+  {
+    return false;
   }
 
 };

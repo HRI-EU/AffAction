@@ -241,7 +241,12 @@ tropic::TCS_sptr ActionDrop::createTrajectory(double t_start, double t_end) cons
   return a1;
 }
 
-double ActionDrop::getDurationHint() const
+double ActionDrop::getDuration() const
+{
+  return getDefaultDuration();
+}
+
+double ActionDrop::getDefaultDuration() const
 {
   return 3.0;
 }

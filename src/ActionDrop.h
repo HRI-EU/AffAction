@@ -55,7 +55,8 @@ public:
   bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  double getDurationHint() const;
+  double getDuration() const;
+  double getDefaultDuration() const;
   std::vector<std::string> getManipulators() const;
   size_t getNumSolutions() const;
 

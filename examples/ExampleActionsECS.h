@@ -92,10 +92,14 @@ public:
   const ActionScene* getScene() const;
   RcsGraph* getGraph();
   const RcsGraph* getGraph() const;
+  RcsGraph* getCurrentGraph();
+  const RcsGraph* getCurrentGraph() const;
   RcsBroadPhase* getBroadPhase();
   const RcsBroadPhase* getBroadPhase() const;
   std::shared_ptr<ConcurrentSceneQuery> getQuery();
   GraphicsWindow* getViewer();
+  const EntityBase& getEntity() const;
+  EntityBase& getEntity();
 
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
@@ -107,29 +111,31 @@ public:
   void lockStepMtx() const;
   void unlockStepMtx() const;
 
-  EntityBase entity;
-  double trajTime;
   std::string xmlFileName;
   std::string config_directory;
   std::string sequenceCommand;
   std::string lastResultMsg;
   std::vector<std::string> lastFeedbackMsg;
-  std::vector<std::string> actionStack;
-  IKComponent::IkSolverType ikType;
-  double dt, dt_max, dt_max2, alpha, lambda;
-  unsigned int speedUp, loopCount;
+  unsigned int speedUp;
   int maxNumThreads;
-  bool pause, noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
-  bool noLimits, zigzag, withEventGui, withTaskGui, noViewer, noTextGui;
-  bool plot, valgrind, unittest, withRobot;
-  bool singleThreaded, verbose, processingAction, turbo, earlyExitAction;
-  double dtProcess, dtEvents;
+  bool noLimits, noViewer, noTextGui, earlyExitAction;
+  bool unittest, verbose, processingAction, turbo;
+  bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
 
-  std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<GraphicsWindow> viewer;
 
 private:
 
+  EntityBase entity;
+  double trajTime;
+  std::vector<std::string> actionStack;
+  IKComponent::IkSolverType ikType;
+  double dt, dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
+  bool plot, valgrind, withRobot, pause, withTaskGui, withEventGui;
+  bool zigzag, singleThreaded;
+  unsigned int loopCount;
+
+  std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<SceneQueryPool> sceneQuery;
   std::unique_ptr<ActionComponent> actionC;

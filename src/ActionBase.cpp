@@ -79,7 +79,7 @@ void ActionBase::setTurboMode(bool enable)
   defaultTurbo = enable;
 }
 
-ActionBase::ActionBase() : defaultDuration(10.0), turbo(defaultTurbo)
+ActionBase::ActionBase() : duration(10.0), turbo(defaultTurbo)
 {
 }
 
@@ -89,11 +89,12 @@ ActionBase::~ActionBase()
 
 void ActionBase::parseParams(std::vector<std::string>& params)
 {
+  duration = getDefaultDuration();
 
   auto it = std::find(params.begin(), params.end(), "duration");
   if (it != params.end())
   {
-    defaultDuration = std::stod(*(it + 1));
+    duration = std::stod(*(it + 1));
     params.erase(it + 1);
     params.erase(it);
   }
@@ -107,20 +108,26 @@ void ActionBase::parseParams(std::vector<std::string>& params)
 
 }
 
-double ActionBase::getDurationHint() const
-{
-  return defaultDuration;
-}
-
 bool ActionBase::turboMode() const
 {
   return turbo;
 }
 
-void ActionBase::setDuration(double duration)
+double ActionBase::getDefaultDuration() const
 {
-  defaultDuration = duration;
+  return 10.0;
 }
+
+double ActionBase::getDuration() const
+{
+  return duration;
+}
+
+void ActionBase::setDuration(double newDuration)
+{
+  duration = newDuration;
+}
+
 double ActionBase::actionCost(const ActionScene& domain,
                               const RcsGraph* graph) const
 {
@@ -240,7 +247,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   REXEC(4)
   {
     RMSG("Prediction result:");
-    result.print();
+    result.print(5);
   }
 
   return result;
@@ -248,7 +255,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
 
 tropic::TCS_sptr ActionBase::createTrajectory() const
 {
-  return createTrajectory(0.0, getDurationHint());
+  return createTrajectory(0.0, getDuration());
 }
 
 void ActionBase::setName(const std::string& name)
@@ -293,7 +300,8 @@ void ActionBase::print() const
     std::cout << t << std::endl;
   }
 
-  std::cout << "Action default duration: " << getDurationHint() << std::endl;
+  std::cout << "Action default duration: " << getDefaultDuration() << std::endl;
+  std::cout << "Action duration: " << getDuration() << std::endl;
   std::cout << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
   std::cout << "Action command: " << getActionCommand() << std::endl;
   std::cout << "Action has " << getNumSolutions() << " solutions" << std::endl;
