@@ -29,14 +29,15 @@
 
 <Graph>
 
+	<!--
   <Body name="bottle_of" physics="dynamic" >
-    <Shape type="SSL" color="RED" distance="true" graphics="false" length="0.16" physics="true" radius="0.0325" transform="0 0 0.035 0 0 0" />
-    <Shape type="CYLINDER" distance="false" graphics="true" length="0.17" physics="false" radius="0.0325" transform="0 0 0.085 0 0 0" />
-    <Shape type="CYLINDER" distance="false" graphics="true" length="0.055" physics="false" radius="0.0175" transform="0 0 0.1975 0 0 0" />
-    <Shape type="FRAME" extents="0.04 0.04 0" marker="true" markerName="aruco_46" scale="0.1" transform="0.0325 0 0.12 90 90 0" />
+    <Shape color="RED" distance="true" graphics="false" length="0.185" physics="true" radius="0.0325" transform="0 0 0.035 0 0 0" type="SSL"/>
+    <Shape distance="false" graphics="true" length="0.17" physics="false" radius="0.0325" transform="0 0 0.085 0 0 0" type="CYLINDER"/>
+    <Shape distance="false" graphics="true" length="0.08" physics="false" radius="0.0175" transform="0 0 0.21 0 0 0" type="CYLINDER"/>
+    <Shape extents="0.04 0.04 0" marker="true" markerName="aruco_26" scale="0.1" transform="0.0325 0 0.071 90 90 0" type="FRAME"/>
   </Body>
   
-  <Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.235 0 0 0">
+  <Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.26 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
 
@@ -47,7 +48,7 @@
   <Body name="grip_bottle_of" prev="bottle_of" transform="0 0 0.1 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
-  
+
   <Body name="inside_bottle_of" prev="bottle_of" transform="0 0 0.01 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
@@ -55,14 +56,53 @@
   <AffordanceModel body="bottle_of" types="bottle">
     <Stackable frame="bottle_of"/>
     <Pourable frame="tip_bottle_of"/>
-    <PincerGraspable frame="topgrasp_bottle_of"/>
+	<PincerGraspable frame="topgrasp_bottle_of"/>
 	<Twistable frame="tip_bottle_of"/>
-    <PowerGraspable frame="grip_bottle_of"/>
+	<PowerGraspable frame="grip_bottle_of"/>
     <PointPokable frame="tip_bottle_of"/>
     <Containable frame="tip_bottle_of" max_volume="0.5">
       <Ingredient name="" volume="0"/>
     </Containable>
     <Openable open="true"/>
   </AffordanceModel>
+-->
 
+
+
+
+	<Body name="bottle_of" physics="dynamic" mass="1" >
+		<Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
+		<Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
+		<Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
+		<Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
+               transform="0.035 0 0.12 0 90 0"/>
+		<Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
+               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+	</Body>
+
+	<Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.23 0 0 0">
+		<Shape type="FRAME" scale="0.1"/>
+	</Body>
+
+	<Body name="topgrasp_bottle_of" prev="tip_bottle_of" transform="0 0 0 0 90 0">
+		<Shape scale="0.1" type="FRAME"/>
+	</Body>
+
+	<Body name="grip_bottle_of" prev="bottle_of" transform="0 0 0.12 0 0 0">
+		<Shape type="FRAME" scale="0.1"/>
+	</Body>
+
+	<AffordanceModel body="bottle_of" type="bottle">
+		<Stackable frame="bottle_of"/>
+		<Pourable frame="tip_bottle_of"/>
+		<PincerGraspable frame="topgrasp_bottle_of"/>
+		<PowerGraspable frame="grip_bottle_of" />
+		<PointPokable frame="tip_bottle_of"/>
+		<Containable frame="tip_bottle_of" max_volume="0.5">
+			<Ingredient name="" volume="0"/>
+		</Containable>
+		<Openable open="true"/>
+	</AffordanceModel>
+	
+	
 </Graph>

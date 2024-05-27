@@ -41,6 +41,25 @@ The action "get apple" leads to:
 
 ## Actions
 
+There are a few parameters that are common for most actions:
+
+```bash
+<action-name>( <"duration" duration_in_seconds (optional)>
+               <"fast" (optional)>)
+```
+The duration parameter specifies the time the action will take in seconds. This 
+has an effect only if the actions's "turbo" flag is not set. 
+
+The parameter fast is enabling the
+"turbo" flag. It can also be set globally with the through the 
+ActionBase::setTurob() method. This will have an effect on all created actions. 
+In case the turbo flag is active, the duration of the action will be determined 
+to be as fast as possible when being planned using the PredictionTree class. 
+In this case, the action prediction will compute a scaling factor that, when 
+applied to the action's duration, will lead to the joint speeds reaching the 
+(maximum_speed/TURBO_DURATION_SCALER).
+
+
 ### The "get" action
 
 Grasps an object and lifts it a little bit up. If no manipulator (which-hand) is given,
@@ -52,7 +71,6 @@ get(<object-to-pick-up>
     <which-hand (optional)> 
     <grasp-to-use (optional, one out of: PowerGrasp, PincerGrasp, PalmGrasp, BallGrasp, CircularGrasp, TwistGrasp)>
     <"from" parent-object (optional)> 
-    <"duration" duration_in_seconds (optional)>
     <"liftHeight" height_in_meters (optional)>)
 ```
 
@@ -60,12 +78,12 @@ Internally, the action matches
 the manipulator's capabilities with the object's affordances. These combinations are
 supprted:
 
-Affordance      | Capability
-----------------| ---------------------
-PowerGraspable  | PowergraspCapability
-PincerGraspable | PincergraspCapability
-BallGraspable   | PincergraspCapability
-PalmGraspable   | PalmgraspCapability
+Affordance      | Capability             | Alignment
+----------------| ---------------------  | ---------------------
+PowerGraspable  | PowergraspCapability   | Affordance frame z - Capability frame z
+PincerGraspable | PincergraspCapability  | Affordance frame -x - Capability frame x
+BallGraspable   | PincergraspCapability  | Position algined, Capability frame x inclined wrt. world
+PalmGraspable   | PalmgraspCapability    | 6-dof frame alignment
 
 The set of matches is evaluated, and the best feasible one is determned. If the "from"
 attribute is used, the object-to-pick-up is determined as being a child of the
@@ -86,7 +104,9 @@ Action to put an entity on another one.
 put(<object-to-put> 
     <target (optional)> 
     <"frame" target_frame (optional)>
-    <"duration" duration_in_seconds (optional)>)
+    <"near" neart_entity (optional)>
+    <"far" far-entity (optional)>
+    <"distance" near-far-distance (optional)>
 ```
 
 The object-to-put must be in one of the agent's hands (previously grasped). It also needs to
@@ -94,15 +114,69 @@ have a Stackable affordance. If no target is given, the closest entity below the
 is searched. If a target is given, it must have a Supportable affordance. If a target is given,
 the "frame" attribute allows to specify a Supportable frame explicitely. This is sometimes 
 helpful if an entity provides many Supportable surfaces, such as a table with a grid of them.
+
+There are currently two additional spatial priors: near and far. Both can specify an entity or 
+an agent. The put locations will pe selected among those that are closer or more far away than 
+a distance threshols, which can be given through the distance keyword. The default is 0.4m.
+All Supportables that are farther away (for "Near") or closer (for "far) will be ignored. All
+remaining supportables are sorted by their distance so that closer (for "near") or fartner (for
+"far") put places are preferred.
+
 For instance:
 
 ```bash
 put lemon cutboard                   // Puts a lemon on the cutboard.
 put lemon table frame tablegrid_1    // Puts a lemon on the table's Supportable tablegrid_4
+put lemon near orange                // Puts a lemon near the orange
 ```
 
+
+### The "magic_get" and "magic_put" actions
+
+These are convenience actions for testing. They follow the same syntax as the get and put actions, 
+but will "beam" the object into the hand of the agent or the target location. It is unsafe to use
+these actions when working with a real robot, since they introduce jumps in the coordinates.
+
+
 ### The "pour" action
+
+Pour an ingredient from a "Pourble" affordance into a "Containable" affordance. It is assumed
+that the Pourable and Containable have a frame with z-axis pointing up. The pour action allows
+to pour into Containables that are placed somewhere in the environemnt, or held by a human
+or robot agent. It is currently assumed that the pouring entity has exactly one Pourable, and
+the entity to be poured in exactly one Containable. 
+
+```bash
 pour(<object to pour from>,<object to pour into>)
+```
+
+There is also some logic included concerning fill levels and transitioning, which needs
+to be reconsidered.
+
+### The "pose" action
+
+```bash
+pose(<name-of-a-model-state-pose>)
+```
+
+This action loads the passed model state from the graph's configuration file and
+moves all joints into this pose. If a joint is not part of the model state, it
+will not be moved. It is possible to specify several poses that are separated by a 
+comma. In that case, they will be treated as alternatives, and the most feasible one
+will be selected. This allows to give the pose command a bit more robistness.
+
+
+### The "point" action
+
+```bash
+point(<object-or-agent-to-point-at> 
+      <manipulator (optional)> 
+```
+
+Points at an object or agent. Anything that is specified as a type is being considered.
+If the entity to point at is a HumanAgent, the pointing will be directed towards the
+agent's head. The hand that points will be selected automatically, except if a second
+argument is passed. This will be interpreted as the manipulator that is to point.
 
 ### The "double_get" action
 double_get (<object1, object2>)
@@ -122,16 +196,6 @@ open_door(<door-object>)
 ### The "close_door" action
 close_door (<door-object>)
 
-
-### The "pose" action
-
-```bash
-pose(<name-of-a-model-state-pose>)
-```
-
-This action loads the passed model state from the graph's configuration file and
-moves all joints into this pose. If a join is not part of the model state, it
-will not be moved.
 
 ### The "push" action (Not yet working)
 push(<object to push>)
@@ -203,7 +267,7 @@ The project is composed of three parts:
 
 ## How to start the websocket action server
 
-  - bin/TestLLMSim -port 35000 (that's the default)
+  - bin/TestLLMSim -websocket (Port is 35000, that's the default)
   - with command line options printed to console: bin/TestLLMSim -h 
 
 ## Todos
@@ -211,8 +275,6 @@ The project is composed of three parts:
   - inf in prediction cost
   - used_manipulators
   - open-world
-  - action trees
-  - pose actions more flexible
   - smart pointers for tree nodes and prediction results
   - Pass explanations from tree to python wrapper
   - nicer function for pose sequences

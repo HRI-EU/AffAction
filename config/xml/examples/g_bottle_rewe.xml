@@ -39,7 +39,11 @@
   <Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.26 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
-  
+
+  <Body name="topgrasp_bottle_of" prev="tip_bottle_of" transform="0 0 0 0 90 0">
+	<Shape scale="0.1" type="FRAME"/>
+  </Body>
+
   <Body name="grip_bottle_of" prev="bottle_of" transform="0 0 0.1 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
@@ -51,8 +55,9 @@
   <AffordanceModel body="bottle_of" types="bottle">
     <Stackable frame="bottle_of"/>
     <Pourable frame="tip_bottle_of"/>
-    <Twistable frame="tip_bottle_of"/>
-    <PowerGraspable frame="grip_bottle_of"/>
+	<PincerGraspable frame="topgrasp_bottle_of"/>
+	<Twistable frame="tip_bottle_of"/>
+	<PowerGraspable frame="grip_bottle_of"/>
     <PointPokable frame="tip_bottle_of"/>
     <Containable frame="tip_bottle_of" max_volume="0.5">
       <Ingredient name="" volume="0"/>

@@ -272,326 +272,59 @@ Cocktail:
     
     
     <!-- bitters_bottle -->
-    <Body name="bitters_bottle" prev="shelf_pos14" rigid_body_joints="true" color="LIGHTGRAY" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="bitters_bottle_tip" prev="bitters_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="bitters_bottle_grip" prev="bitters_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="bitters_bottle" type="bottle">
-      <Stackable frame="bitters_bottle"/>
-      <Pourable frame="bitters_bottle_tip"/>
-      <PowerGraspable frame="bitters_bottle_grip" />
-      <PointPokable frame="bitters_bottle_tip"/>
-      <Containable frame="bitters_bottle" max_volume="1.0" open="true">
-        <Ingredient name="bitters" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos14" name="_bitters" color="LIGHTGRAY" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- brandy_bottle -->
-    <Body name="brandy_bottle" prev="shelf_pos2" rigid_body_joints="true" color="COPPER" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="brandy_bottle_tip" prev="brandy_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="brandy_bottle_grip" prev="brandy_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>coca_cola_bottle
-
-    <AffordanceModel body="brandy_bottle" type="bottle">
-      <Stackable frame="brandy_bottle"/>
-      <Pourable frame="brandy_bottle_tip"/>
-      <PowerGraspable frame="brandy_bottle_grip" />
-      <PointPokable frame="brandy_bottle_tip"/>
-      <Containable frame="brandy_bottle" max_volume="1.0" open="true">
-        <Ingredient name="brandy" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos2" name="_brandy" color="COPPER" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- coca_cola_bottle -->
-    <Body name="coca_cola_bottle" prev="shelf_pos3" rigid_body_joints="true" color="BLACK_RUBBER" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="coca_cola_bottle_tip" prev="coca_cola_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="coca_cola_bottle_grip" prev="coca_cola_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="coca_cola_bottle" type="bottle">
-      <Stackable frame="coca_cola_bottle"/>
-      <Pourable frame="coca_cola_bottle_tip"/>
-      <PowerGraspable frame="coca_cola_bottle_grip" />
-      <PointPokable frame="coca_cola_bottle_tip"/>
-      <Containable frame="coca_cola_bottle" max_volume="1.0" open="true">
-        <Ingredient name="coca_cola" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos3" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- gin_bottle -->
-    <Body name="gin_bottle" prev="shelf_pos4" rigid_body_joints="true" color="TURQUOISE" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="gin_bottle_tip" prev="gin_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="gin_bottle_grip" prev="gin_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="gin_bottle" type="bottle">
-      <Stackable frame="gin_bottle"/>
-      <Pourable frame="gin_bottle_tip"/>
-      <PowerGraspable frame="gin_bottle_grip" />
-      <PointPokable frame="gin_bottle_tip"/>
-      <Containable frame="gin_bottle" max_volume="1.0" open="true">
-        <Ingredient name="gin" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos4" name="_gin" color="TURQUOISE" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- ginger_beer_bottle -->
-    <Body name="ginger_beer_bottle" prev="shelf_pos5" rigid_body_joints="true" color="BRONZE" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="ginger_beer_bottle_tip" prev="ginger_beer_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="ginger_beer_bottle_grip" prev="ginger_beer_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="ginger_beer_bottle" type="bottle">
-      <Stackable frame="ginger_beer_bottle"/>
-      <Pourable frame="ginger_beer_bottle_tip"/>
-      <PowerGraspable frame="ginger_beer_bottle_grip" />
-      <PointPokable frame="ginger_beer_bottle_tip"/>
-      <Containable frame="ginger_beer_bottle" max_volume="1.0" open="true">
-        <Ingredient name="ginger_beer" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos5" name="_ginger_beer" color="BRONZE" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- grenadine_bottle -->
-    <Body name="grenadine_bottle" prev="shelf_pos6" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="grenadine_bottle_tip" prev="grenadine_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="grenadine_bottle_grip" prev="grenadine_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="grenadine_bottle" type="bottle">
-      <Stackable frame="grenadine_bottle"/>
-      <Pourable frame="grenadine_bottle_tip"/>
-      <PowerGraspable frame="grenadine_bottle_grip" />
-      <PointPokable frame="grenadine_bottle_tip"/>
-      <Containable frame="grenadine_bottle" max_volume="1.0" open="true">
-        <Ingredient name="grenadine" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos6" name="_grenadine" color="RUBY" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- salt_bottle -->
-    <Body name="salt_bottle" prev="shelf_pos12" rigid_body_joints="true" color="PEARL_S" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="salt_bottle_tip" prev="salt_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="salt_bottle_grip" prev="salt_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="salt_bottle" type="bottle">
-      <Stackable frame="salt_bottle"/>
-      <Pourable frame="salt_bottle_tip"/>
-      <PowerGraspable frame="salt_bottle_grip" />
-      <PointPokable frame="salt_bottle_tip"/>
-      <Containable frame="salt_bottle" max_volume="0.5" open="true">
-        <Ingredient name="salt" volume="0.5" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos12" name="_salt" color="PEARL_S" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- tomato_juice_bottle -->
-    <Body name="tomato_juice_bottle" prev="shelf_pos8" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="tomato_juice_bottle_tip" prev="tomato_juice_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="tomato_juice_bottle_grip" prev="tomato_juice_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="tomato_juice_bottle" type="bottle">
-      <Stackable frame="tomato_juice_bottle"/>
-      <Pourable frame="tomato_juice_bottle_tip"/>
-      <PowerGraspable frame="tomato_juice_bottle_grip" />
-      <PointPokable frame="tomato_juice_bottle_tip"/>
-      <Containable frame="tomato_juice_bottle" max_volume="1.0" open="true">
-        <Ingredient name="simple_syrup" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos8" name="_tomato_juice" color="RED" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- soda_water_bottle -->
-    <Body name="soda_water_bottle" prev="shelf_pos9" rigid_body_joints="true" color="LIGHTGRAY_TRANS" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-         <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="soda_water_bottle_tip" prev="soda_water_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="soda_water_bottle_grip" prev="soda_water_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="soda_water_bottle" type="bottle">
-      <Stackable frame="soda_water_bottle"/>
-      <Pourable frame="soda_water_bottle_tip"/>
-      <PowerGraspable frame="soda_water_bottle_grip" />
-      <PointPokable frame="soda_water_bottle_tip"/>
-      <Containable frame="soda_water_bottle" max_volume="1.0" open="true">
-        <Ingredient name="soda_water" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos9" name="_soda_water" color="LIGHTGRAY_TRANS" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- tequila_bottle -->
-    <Body name="tequila_bottle" prev="shelf_pos10" rigid_body_joints="true" color="YELLOW_TRANS" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="tequila_bottle_tip" prev="tequila_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="tequila_bottle_grip" prev="tequila_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="tequila_bottle" type="bottle">
-      <Stackable frame="tequila_bottle"/>
-      <Pourable frame="tequila_bottle_tip"/>
-      <PowerGraspable frame="tequila_bottle_grip" />
-      <PointPokable frame="tequila_bottle_tip"/>
-      <Containable frame="tequila_bottle" max_volume="1.0" open="true">
-        <Ingredient name="tequila" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos10" name="_tequila" color="YELLOW_TRANS" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- tonic_water_bottle -->
-    <Body name="tonic_water_bottle" prev="shelf_pos11" rigid_body_joints="true" color="JADE_S" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="MESH" meshFile="object_models/cola_bottle_1/cola_bottle_1.stl" scale="1.0" distance="false" physics="true" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="tonic_water_bottle_tip" prev="tonic_water_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="tonic_water_bottle_grip" prev="tonic_water_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="tonic_water_bottle" type="bottle">
-      <Stackable frame="tonic_water_bottle"/>
-      <Pourable frame="tonic_water_bottle_tip"/>
-      <PowerGraspable frame="tonic_water_bottle_grip" />
-      <PointPokable frame="tonic_water_bottle_tip"/>
-      <Containable frame="tonic_water_bottle" max_volume="1.0" open="true">
-        <Ingredient name="tonic_water" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos11" name="_tonic_water" color="JADE_S" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- TODO (CP) find suitable position-->
     <!-- triple_sec_bottle --> 
@@ -623,91 +356,19 @@ Cocktail:
     </AffordanceModel> -->
 
     <!-- vermouth_bottle -->
-    <Body name="vermouth_bottle" prev="shelf_pos7" rigid_body_joints="true" color="EMERALD_S" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="vermouth_bottle_tip" prev="vermouth_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="vermouth_bottle_grip" prev="vermouth_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="vermouth_bottle" type="bottle">
-      <Stackable frame="vermouth_bottle"/>
-      <Pourable frame="vermouth_bottle_tip"/>
-      <PowerGraspable frame="vermouth_bottle_grip" />
-      <PointPokable frame="vermouth_bottle_tip"/>
-      <Containable frame="vermouth_bottle" max_volume="1.0" open="true">
-        <Ingredient name="vermouth" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos7" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- vodka_bottle -->
-    <Body name="vodka_bottle" prev="shelf_pos13" rigid_body_joints="true" color="BLUE" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="vodka_bottle_tip" prev="vodka_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="vodka_bottle_grip" prev="vodka_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="vodka_bottle" type="bottle">
-      <Stackable frame="vodka_bottle"/>
-      <Pourable frame="vodka_bottle_tip"/>
-      <PowerGraspable frame="vodka_bottle_grip" />
-      <PointPokable frame="vodka_bottle_tip"/>
-      <Containable frame="vodka_bottle" max_volume="1.0" open="true">
-        <Ingredient name="vodka" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos13" name="_vodka" color="BLUE" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     <!-- whiskey_bottle -->
-    <Body name="whiskey_bottle" prev="shelf_pos1" rigid_body_joints="true" color="POLISHED_COPPER" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-               textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="whiskey_bottle_tip" prev="whiskey_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="whiskey_bottle_grip" prev="whiskey_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="whiskey_bottle" type="bottle">
-      <Stackable frame="whiskey_bottle"/>
-      <Pourable frame="whiskey_bottle_tip"/>
-      <PowerGraspable frame="whiskey_bottle_grip" />
-      <PointPokable frame="whiskey_bottle_tip"/>
-      <Containable frame="whiskey_bottle" max_volume="1.0" open="true">
-        <Ingredient name="whiskey" volume="1.0" />
-      </Containable>
-    </AffordanceModel>
+	<Group prev="shelf_pos1" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
 
     
     <!-- 
