@@ -356,7 +356,7 @@ Cocktail:
     </AffordanceModel> -->
 
     <!-- vermouth_bottle -->
-	<Group prev="shelf_pos7" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
+	<Group prev="table_grid_0_0" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
 		<xi:include href="../examples/g_bottle_cocktail.xml"/>
 	</Group>
 
