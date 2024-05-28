@@ -273,7 +273,10 @@ std::string ActionPose::getActionCommand() const
     aCmd += " " + std::to_string(poses[solutionIndex].timeStamp);
   }
 
-  aCmd += " duration " + std::to_string(getDuration());
+  if (getDuration()!=getDefaultDuration())
+  {
+    aCmd += " duration " + std::to_string(getDuration());
+  }
 
   return aCmd;
 }

@@ -288,6 +288,12 @@ std::string ActionBase::getActionCommand() const
     cmd += p;
   }
 
+  if (std::find(actionParams.begin(), actionParams.end(), "duration") != actionParams.end() &&
+      (getDuration()!=getDefaultDuration()))
+  {
+    cmd += " duration " + std::to_string(getDuration());
+  }
+
   return cmd;
 }
 

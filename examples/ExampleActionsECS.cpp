@@ -232,6 +232,9 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
 
 ExampleActionsECS::~ExampleActionsECS()
 {
+  // We destroy the viwer window fist so that it doesn't access any deleted memory
+  viewer.reset();
+
   for (size_t i = 0; i < hwc.size(); ++i)
   {
     delete hwc[i];
@@ -323,7 +326,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Print", &ExampleActionsECS::onPrint, this);
   entity.subscribe("TrajectoryMoving", &ExampleActionsECS::onTrajectoryMoving, this);
   entity.subscribe("ActionSequence", &ExampleActionsECS::onActionSequence, this);
-  entity.subscribe<bool, double, std::vector<std::string>>("ActionResult", &ExampleActionsECS::onActionResult, this);
+  entity.subscribe("ActionResult", &ExampleActionsECS::onActionResult, this);
   entity.subscribe("PlanActionSequence", &ExampleActionsECS::onPlanActionSequenceBFS, this);
   entity.subscribe("PlanDFS", &ExampleActionsECS::onPlanActionSequenceDFS, this);
   entity.subscribe("PlanDFSEE", &ExampleActionsECS::onPlanActionSequenceDFSEE, this);
@@ -508,7 +511,8 @@ bool ExampleActionsECS::initGraphics()
     return true;
   }
 
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, false);
+  bool viewerStartsWithStartEvent = true;
+  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent);
   viewer->add(new NamedMouseDragger(controller->getGraph()));
   viewer->setTitle("ExampleActionsECS");
 
@@ -784,8 +788,6 @@ bool ExampleActionsECS::initGraphics()
   }, "Toggle animation mode: 0: none, 1: successful predictions, 2: all predictions");
 
 
-  viewer->start();
-
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
@@ -976,12 +978,12 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   // Early exit in case tree could not be constructed
   if (!tree)
   {
-    ActionResult explanation;
-    explanation.error = "No solution found";
-    explanation.reason = "The action tree is empty";
-    explanation.suggestion = "Send another command that does the same thing";
-    explanation.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    ex->getEntity().publish("ActionResult", false, 0.0, explanation.toStringVec());
+    std::vector<ActionResult> explanation(1);
+    explanation[0].error = "No solution found";
+    explanation[0].reason = "The action tree is empty";
+    explanation[0].suggestion = "Send another command that does the same thing";
+    explanation[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    ex->getEntity().publish("ActionResult", false, 0.0, explanation);
     if (ex->verbose)
     {
       RMSG_CPP("_planActionSequenceThreaded: Error creating tree - returning");
@@ -1011,7 +1013,8 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
           RLOG_CPP(1, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
         }
 
-        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with " << nd->bodyTransforms.size() << " transforms");
+        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with "
+                 << nd->bodyTransforms.size() << " transforms");
         res.bodyTransforms.insert(res.bodyTransforms.end(),
                                   nd->bodyTransforms.begin(),
                                   nd->bodyTransforms.end());
@@ -1050,7 +1053,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     ex->clearCompletedActionStack();
 
     // Compose a meaningful error description for each failed action sequence
-    ActionResult errDescr;
+    std::vector<ActionResult> actionResults;
 
     for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
     {
@@ -1066,14 +1069,15 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
       if (!errMsg.error.empty())
       {
-        errDescr.error += " Issue " + std::to_string(i) + ": " + errMsg.error;
-        errDescr.reason += " Reason " + std::to_string(i) + ": " + errMsg.reason;
-        errDescr.suggestion += " Suggestion " + std::to_string(i) + ": " + errMsg.suggestion;
-        errDescr.developer += " Developer " + std::to_string(i) + ": " + errMsg.developer;
+        actionResults.push_back(errMsg);
+        // errDescr.error += " Issue " + std::to_string(i) + ": " + errMsg.error;
+        // errDescr.reason += " Reason " + std::to_string(i) + ": " + errMsg.reason;
+        // errDescr.suggestion += " Suggestion " + std::to_string(i) + ": " + errMsg.suggestion;
+        // errDescr.developer += " Developer " + std::to_string(i) + ": " + errMsg.developer;
       }
     }
 
-    ex->getEntity().publish("ActionResult", false, 0.0, errDescr.toStringVec());
+    ex->getEntity().publish("ActionResult", false, 0.0, actionResults);
 
     REXEC(0)
     {
@@ -1154,12 +1158,12 @@ void ExampleActionsECS::onActionSequence(std::string text)
   // Early exit in case we receive an empty string
   if (text.empty())
   {
-    ActionResult fbmsg;
-    fbmsg.error = "ERROR";
-    fbmsg.reason = "Received empty action command string.";
-    fbmsg.suggestion = "Check your spelling.";
-    fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    entity.publish("ActionResult", false, 0.0, fbmsg.toStringVec());
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "ERROR";
+    fbmsg[0].reason = "Received empty action command string.";
+    fbmsg[0].suggestion = "Check your spelling.";
+    fbmsg[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", false, 0.0, fbmsg);
     return;
   }
 
@@ -1197,11 +1201,11 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
   }
 
   // If the trajectory has finshed, we can report success.
-  ActionResult fbmsg;
-  fbmsg.error = "SUCCESS";
-  fbmsg.actionCommand = actionStack.empty() ? std::string() : actionStack[0];
-  fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-  entity.publish("ActionResult", true, 0.0,fbmsg.toStringVec());
+  std::vector<ActionResult> fbmsg(1);
+  fbmsg[0].error = "SUCCESS";
+  fbmsg[0].actionCommand = actionStack.empty() ? std::string() : actionStack[0];
+  fbmsg[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+  entity.publish("ActionResult", true, 0.0,fbmsg);
 
   // We unfreeze the scene after the last action has finished
   if (actionStack.empty())
@@ -1261,12 +1265,13 @@ void ExampleActionsECS::onTextCommand(std::string text)
     std::string textToSpeak = text.c_str() + 5;
     RLOG_CPP(0, "Speak action: " << textToSpeak);
     entity.publish("Speak", textToSpeak);
-    ActionResult fbmsg;
-    fbmsg.error = "SUCCESS";
-    fbmsg.developer = "SUCCESS DEVELOPER: speaking '" +
-                      textToSpeak + "' " + std::string(__FILENAME__) +
-                      " line " + std::to_string(__LINE__);
-    entity.publish("ActionResult", true, 0.0, fbmsg.toStringVec());
+
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "SUCCESS";
+    fbmsg[0].developer = "SUCCESS DEVELOPER: speaking '" +
+                         textToSpeak + "' " + std::string(__FILENAME__) +
+                         " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", true, 0.0, fbmsg);
     return;
   }
   else if (STRNEQ(text.c_str(), "reset", 5) && (!getRobotEnabled()))
@@ -1285,14 +1290,14 @@ void ExampleActionsECS::onTextCommand(std::string text)
       RcsGraph* newGraph = RcsGraph_create(resetCmd[1].c_str());
       if (!newGraph)
       {
-        ActionResult fbmsg;
-        fbmsg.error = "ERROR when doing a reset command";
-        fbmsg.reason = "Reset with xml file '" + resetCmd[1] + "' failed.";
-        fbmsg.suggestion = "Check if the file name is correct.";
-        fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+        std::vector<ActionResult> fbmsg(1);
+        fbmsg[0].error = "ERROR when doing a reset command";
+        fbmsg[0].reason = "Reset with xml file '" + resetCmd[1] + "' failed.";
+        fbmsg[0].suggestion = "Check if the file name is correct.";
+        fbmsg[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
         std::string errStr = "ERROR REASON: Reset with xml file '" + resetCmd[1] +
                              "' failed. SUGGESTION: Check if the file name is correct";
-        entity.publish("ActionResult", false, 0.0, fbmsg.toStringVec());
+        entity.publish("ActionResult", false, 0.0, fbmsg);
 
         if (viewer)
         {
@@ -1318,10 +1323,10 @@ void ExampleActionsECS::onTextCommand(std::string text)
     entity.publish("EmergencyRecover");
     entity.setTime(0.0);
 
-    ActionResult fbmsg;
-    fbmsg.error = "SUCCESS";
-    fbmsg.developer = std::string("Reset succeeded ") + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-    entity.publish("ActionResult", true, 0.0, fbmsg.toStringVec());
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "SUCCESS";
+    fbmsg[0].developer = std::string("Reset succeeded ") + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", true, 0.0, fbmsg);
 
     // The ActionScene is reloaded, since otherwise fill levels etc. remain as
     // they are.
@@ -1349,27 +1354,29 @@ void ExampleActionsECS::onTextCommand(std::string text)
   }
 }
 
-void ExampleActionsECS::onActionResult(bool success, double quality, std::vector<std::string> resMsg)
+void ExampleActionsECS::onActionResult(bool success, double quality,
+                                       std::vector<ActionResult> resMsg)
 {
+  RCHECK(!resMsg.empty());
   std::string resAsString;
   if (verbose)
   {
     for (const auto& s : resMsg)
     {
-      resAsString += s + " ";
+      resAsString += s.toString() + " ";
     }
 
     RMSG_CPP(resAsString);
   }
 
-  lastFeedbackMsg = resMsg;
-  lastResultMsg = resMsg[1];   // That's the action command
+  lastActionResult = resMsg;
+  lastResultMsg = resMsg[0].error;
   entity.publish("SetTextLine", lastResultMsg, 1);
 
   // This needs to be done independent of failure or success
   if (!actionStack.empty())
   {
-    addToCompletedActionStack(actionStack[0], resMsg[1]);
+    addToCompletedActionStack(actionStack[0], resMsg[0].actionCommand); // That's the action command
 
     REXEC(1)
     {
@@ -1503,7 +1510,7 @@ std::shared_ptr<ConcurrentSceneQuery> ExampleActionsECS::getQuery()
 
 GraphicsWindow* ExampleActionsECS::getViewer()
 {
-  return viewer.get();
+  return viewer ? viewer.get() : nullptr;
 }
 
 const EntityBase& ExampleActionsECS::getEntity() const

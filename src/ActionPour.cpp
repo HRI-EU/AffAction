@@ -469,18 +469,6 @@ std::unique_ptr<ActionBase> ActionPour::clone() const
   return std::make_unique<ActionPour>(*this);
 }
 
-std::string ActionPour::getActionCommand() const
-{
-  std::string str = ActionBase::getActionCommand();
-
-  if (str.find("duration") == std::string::npos)
-  {
-    str += " duration " + std::to_string(getDuration());
-  }
-
-  return str;
-}
-
 double ActionPour::getDefaultDuration() const
 {
   return 20.0;
@@ -593,11 +581,6 @@ public:
     if (str.find("angle") == std::string::npos)
     {
       str += " angle " + std::to_string(RCS_RAD2DEG(tiltAngle));
-    }
-
-    if (str.find("duration") == std::string::npos)
-    {
-      str += " duration " + std::to_string(getDuration());
     }
 
     return str;
@@ -735,18 +718,6 @@ public:
   std::unique_ptr<ActionBase> clone() const
   {
     return std::make_unique<ActionFixPosition>(*this);
-  }
-
-  std::string getActionCommand() const
-  {
-    std::string str = ActionBase::getActionCommand();
-
-    if (str.find("duration") == std::string::npos)
-    {
-      str += " duration " + std::to_string(getDuration());
-    }
-
-    return str;
   }
 
   std::vector<std::string> getManipulators() const

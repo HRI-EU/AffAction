@@ -171,12 +171,12 @@ void TrajectoryComponent::onEmergencyStop()
   tc->clear();
   this->eStop = true;
   getEntity()->publish("ClearTrajectory");
-  ActionResult fbmsg;
-  fbmsg.error = "FATAL_ERROR";
-  fbmsg.reason = "EmergencyStop triggered";
-  fbmsg.suggestion = "Ask for help from an engineer";
-  fbmsg.developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
-  getEntity()->publish("ActionResult", false, 0.0, fbmsg.toStringVec());
+  std::vector<ActionResult> fbmsg(1);
+  fbmsg[0].error = "FATAL_ERROR";
+  fbmsg[0].reason = "EmergencyStop triggered";
+  fbmsg[0].suggestion = "Ask for help from an engineer";
+  fbmsg[0].developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+  getEntity()->publish("ActionResult", false, 0.0, fbmsg);
 }
 
 void TrajectoryComponent::onEmergencyRecover()
@@ -271,12 +271,12 @@ void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
   // we ignore incoming trajectories and return.
   if (this->eStop==true)
   {
-    ActionResult fbmsg;
-    fbmsg.error = "FATAL_ERROR";
-    fbmsg.reason = "EmergencyStop triggered";
-    fbmsg.suggestion = "Ask for help from an engineer";
-    fbmsg.developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
-    getEntity()->publish("ActionResult", false, 0.0, fbmsg.toStringVec());
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "FATAL_ERROR";
+    fbmsg[0].reason = "EmergencyStop triggered";
+    fbmsg[0].suggestion = "Ask for help from an engineer";
+    fbmsg[0].developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+    getEntity()->publish("ActionResult", false, 0.0, fbmsg);
     return;
   }
 
@@ -345,17 +345,19 @@ void TrajectoryComponent::checkerThread(TCS_sptr tSet, bool simulateOnly,
   // Early exit without applying the trajectory if the predictor reports issues
   if (!trajOk)
   {
-    getEntity()->publish("ActionResult", false, 0.0, result.feedbackMsg.toStringVec());
+    std::vector<ActionResult> fbmsg;
+    fbmsg.push_back(result.feedbackMsg);
+    getEntity()->publish("ActionResult", false, 0.0, fbmsg);
     return;
   }
   else if (simulateOnly)
   {
     double quality = 1.0/(1.0+result.jlCost);   // \todo: Discuss and match expectations
-    ActionResult fbmsg;
-    fbmsg.error = "SUCCESS";
-    fbmsg.developer = "Simulated trajectory is valid";
-    fbmsg.developer += std::string(__FILENAME__) + " " + std::to_string(__LINE__);
-    getEntity()->publish("ActionResult", true, quality, fbmsg.toStringVec());
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "SUCCESS";
+    fbmsg[0].developer = "Simulated trajectory is valid";
+    fbmsg[0].developer += std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+    getEntity()->publish("ActionResult", true, quality, fbmsg);
   }
 
   // We can't directly set it here, since this runs concurrently with the event

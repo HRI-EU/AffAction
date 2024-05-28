@@ -124,17 +124,24 @@ int main(int argc, char** argv)
 
     // Add skeleton tracker and ALL agents in the scene
     int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    lmc->enableDebugGraphics(ex.getViewer());
+
+    if (ex.getViewer())
+    {
+      lmc->enableDebugGraphics(ex.getViewer());
+    }
     RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
 
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
 
-    ex.getViewer()->setKeyCallback('W', [&ex](char k)
+    if (ex.getViewer())
     {
-      RLOG(0, "Calibrate camera");
-      ex.getEntity().publish("EstimateCameraPose", 20);
-    }, "Calibrate camera");
+      ex.getViewer()->setKeyCallback('W', [&ex](char k)
+      {
+        RLOG(0, "Calibrate camera");
+        ex.getEntity().publish("EstimateCameraPose", 20);
+      }, "Calibrate camera");
+    }
 
     RLOG(0, "Done adding trackers");
   }

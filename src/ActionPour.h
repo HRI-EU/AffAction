@@ -54,7 +54,6 @@ public:
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
-  std::string getActionCommand() const;
   double getDefaultDuration() const;
 
 protected:

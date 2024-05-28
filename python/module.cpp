@@ -589,25 +589,23 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
     //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-    bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
-
-    std::string fbmsgAsString;
-    size_t i = 0;
-    for (const auto& fb : ex.lastFeedbackMsg)
-    {
-      if (i<3)
-      {
-        fbmsgAsString += fb + " ";
-      }
-      i++;
-    }
-
-    RLOG(0, "Success=%s, Feedback is: \n'%s'", success ? "true" : "false", fbmsgAsString.c_str());
+    bool success = STRNEQ(ex.lastActionResult[0].error.c_str(), "SUCCESS", 7);
 
     if (success)
     {
-      fbmsgAsString = "SUCCESS";
+      RLOG_CPP(0, "SUCCESS");
+      return "SUCCESS";
     }
+
+    std::string fbmsgAsString = "I couldn't find a solution:\n";
+    size_t i = 0;
+    for (const auto& fb : ex.lastActionResult)
+    {
+      fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
+      ++i;
+    }
+
+    RLOG_CPP(0, fbmsgAsString);
 
     return fbmsgAsString;
   })
@@ -618,7 +616,7 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
     //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-    bool success = STRNEQ(ex.lastFeedbackMsg[0].c_str(), "SUCCESS", 7);
+    bool success = STRNEQ(ex.lastActionResult[0].error.c_str(), "SUCCESS", 7);
     RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
 
     return success;

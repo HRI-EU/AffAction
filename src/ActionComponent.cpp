@@ -117,7 +117,9 @@ void ActionComponent::actionThread(std::string text)
   // depends on the action and is returned in the explanation string.
   if ((!action) || (action->getNumSolutions()==0))
   {
-    getEntity()->publish("ActionResult", false, 0.0, explanation.toStringVec());
+    std::vector<ActionResult> fbmsg;
+    fbmsg.push_back(explanation);
+    getEntity()->publish("ActionResult", false, 0.0, fbmsg);
     return;
   }
 
@@ -249,19 +251,19 @@ void ActionComponent::actionThread(std::string text)
     // the trajectory with the 'd' key.
     if (predictions.empty() || (!predictions[0].success))
     {
-      ActionResult errMsg;
+      std::vector<ActionResult> errMsg(1);
       if (predictions.empty())
       {
-        errMsg.error = "ERROR";
-        errMsg.reason = "Gaze action could not find solution";
-        errMsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+        errMsg[0].error = "ERROR";
+        errMsg[0].reason = "Gaze action could not find solution";
+        errMsg[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
       }
       else
       {
-        errMsg = predictions[0].feedbackMsg;
+        errMsg[0] = predictions[0].feedbackMsg;
       }
 
-      getEntity()->publish("ActionResult", false, 0.0, errMsg.toStringVec());
+      getEntity()->publish("ActionResult", false, 0.0, errMsg);
       return;
     }
 
@@ -280,11 +282,12 @@ void ActionComponent::actionThread(std::string text)
 
   if (taskVec.empty())
   {
-    explanation.error = "Found invalid tasks for action";
-    explanation.reason = "That's an error in the program";
-    explanation.suggestion = "File a bug report for my program.";
-    explanation.developer = "Action command: " + action->getActionCommand();
-    getEntity()->publish("ActionResult", false, 0.0, explanation.toStringVec());
+    std::vector<ActionResult> errMsg(1);
+    errMsg[0].error = "Found invalid tasks for action";
+    errMsg[0].reason = "That's an error in the program";
+    errMsg[0].suggestion = "File a bug report for my program.";
+    errMsg[0].developer = "Action command: " + action->getActionCommand();
+    getEntity()->publish("ActionResult", false, 0.0, errMsg);
     return;
   }
 

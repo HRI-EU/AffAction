@@ -112,7 +112,11 @@ std::string ActionGet::getActionCommand() const
   // The first manipulator is the one to get the object with.
   std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
   actionCommand += graspTypeToString(graspType);
-  actionCommand += " duration " + std::to_string(getDuration());
+
+  if (getDuration()!=getDefaultDuration())
+  {
+    actionCommand += " duration " + std::to_string(getDuration());
+  }
 
   return actionCommand;
 }

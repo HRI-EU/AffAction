@@ -115,7 +115,7 @@ public:
   std::string config_directory;
   std::string sequenceCommand;
   std::string lastResultMsg;
-  std::vector<std::string> lastFeedbackMsg;
+  std::vector<ActionResult> lastActionResult;
   unsigned int speedUp;
   int maxNumThreads;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
@@ -159,7 +159,7 @@ private:
   void onTrajectoryMoving(bool isMoving);
   void onTextCommand(std::string text);
   void onChangeBackgroundColorFreeze(bool freeze);
-  void onActionResult(bool success, double quality, std::vector<std::string> resMsg);
+  void onActionResult(bool success, double quality, std::vector<ActionResult> results);
   void onProcess();
   void onSetTurboMode(bool enable);
 

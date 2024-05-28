@@ -1058,7 +1058,14 @@ double ActionPut::actionCost(const ActionScene& domain,
 
 std::string ActionPut::getActionCommand() const
 {
-  return detailedActionCommand + " duration " + std::to_string(getDuration());
+  std::string str = detailedActionCommand;
+
+  if (getDuration()!=getDefaultDuration())
+  {
+    str += " duration " + std::to_string(getDuration());
+  }
+
+  return str;
 }
 
 

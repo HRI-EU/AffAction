@@ -310,7 +310,14 @@ std::unique_ptr<ActionBase> ActionPoint::clone() const
 
 std::string ActionPoint::getActionCommand() const
 {
-  return "point " + pointBdyName + " " + pointerFrame + " duration " + std::to_string(getDuration());
+  std::string str = "point " + pointBdyName + " " + pointerFrame;
+
+  if (getDuration()!=getDefaultDuration())
+  {
+    str += " duration " + std::to_string(getDuration());
+  }
+
+  return str;
 }
 
 double ActionPoint::actionCost(const ActionScene& scene, const RcsGraph* graph) const
