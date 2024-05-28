@@ -119,7 +119,7 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
 
 
 
-  TrajectoryPredictor::FeedbackMessage resMsg;
+  ActionResult resMsg;
   int ikOk = TrajectoryPredictor::computeIK(ikSolver, a, x, getEntity()->getDt(), alpha*blending,
                                             lambda, qFilt, phase, speedLimitCheck, jointLimitCheck,
                                             collisionCheck, applySpeedAndAccLimits, true, NULL, resMsg);

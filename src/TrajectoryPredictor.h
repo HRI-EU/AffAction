@@ -33,6 +33,8 @@
 #ifndef AFF_TRAJECTORYPREDICTOR_H
 #define AFF_TRAJECTORYPREDICTOR_H
 
+#include "ActionResult.h"
+
 #include <TrajectoryController.h>
 #include <IkSolverRMR.h>
 
@@ -43,18 +45,6 @@ namespace aff
 class TrajectoryPredictor
 {
 public:
-  struct FeedbackMessage
-  {
-    std::string error;
-    std::string reason;
-    std::string suggestion;
-    std::string developer;
-    std::string actionCommand;
-
-    std::string toString() const;
-    std::vector<std::string> toStringVec() const;
-    void clear();
-  };
 
   struct PredictionResult
   {
@@ -79,7 +69,7 @@ public:
     double scaleJointSpeeds;
     double elbowNS, wristNS;
     double t_predict;
-    FeedbackMessage feedbackMsg;
+    ActionResult feedbackMsg;
     std::string resolvedActionCommand;
     std::string minDistBdy1, minDistBdy2;
     std::vector<double> jMask;
@@ -118,7 +108,7 @@ public:
                        double dt, double alpha, double lambda,
                        double qFilt, double phase, bool speedLimitCheck, bool jointLimitCheck,
                        bool collisionCheck, bool withSpeedAccLimit,
-                       bool verbose, MatNd* jMask, FeedbackMessage& resMsg);
+                       bool verbose, MatNd* jMask, ActionResult& resMsg);
 
   static void setAnimationMode(int mode);
   static int toggleAnimationMode();
@@ -144,7 +134,7 @@ private:
   static int checkState(const Rcs::ControllerBase* controller,
                         bool speedLimitCheck, bool jointLimitCheck,
                         bool collisionCheck, bool verbose,
-                        FeedbackMessage& resMsg);
+                        ActionResult& resMsg);
 
   TrajectoryPredictor(const TrajectoryPredictor&) = delete;
   TrajectoryPredictor& operator=(const TrajectoryPredictor&) = delete;

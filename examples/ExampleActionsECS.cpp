@@ -415,9 +415,9 @@ bool ExampleActionsECS::initAlgo()
 
 #if 1
   // Misuse contacts shape flag for Collision trajectory constraint
-  for (size_t i=0; i<actionC->getDomain()->entities.size(); ++i)
+  for (size_t i=0; i< getScene()->entities.size(); ++i)
   {
-    RcsBody* ntt = actionC->getDomain()->entities[i].body(controller->getGraph());
+    RcsBody* ntt = getScene()->entities[i].body(controller->getGraph());
 
     // If we find one or more shapes that have the distance flag active, we
     // set this flag to true, and set all shapes to be resizeable (except for
@@ -470,8 +470,8 @@ bool ExampleActionsECS::initAlgo()
   graphToInitializeWith = RcsGraph_clone(controller->getGraph());
 
   // Initialize robot components from command line
-  this->hwc = createHardwareComponents(entity, controller->getGraph(), actionC->getDomain(), false);
-  this->components = createComponents(entity, controller->getGraph(), actionC->getDomain(), false);
+  this->hwc = createHardwareComponents(entity, controller->getGraph(), getScene(), false);
+  this->components = createComponents(entity, controller->getGraph(), getScene(), false);
 
   addComponent(new AnimationSequence(&entity, controller->getGraph()));
   if (!hwc.empty())
@@ -603,11 +603,11 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('f', [this](char k)
   {
     RLOG(0, "Test occlusions");
-    nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", actionC->getDomain(),
+    nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
                                                      controller->getGraph());
     RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
 
-    json = getOccludedObjectsForAgent("Daniel", actionC->getDomain(), controller->getGraph());
+    json = getOccludedObjectsForAgent("Daniel", getScene(), controller->getGraph());
     RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
 
   }, "Test occlusions");
@@ -617,7 +617,7 @@ bool ExampleActionsECS::initGraphics()
     RLOG(0, "Showing actions and affordances");
     std::string str = ActionFactory::printToString();
     str += "\n\n";
-    str += actionC->getDomain()->printAffordancesToString();
+    str += actionC->getScene()->printAffordancesToString();
     new Rcs::TextGui(str, "Actions and affordances");
   }, "Showing actions and affordances in text window");
 
@@ -736,7 +736,7 @@ bool ExampleActionsECS::initGraphics()
       return;
     }
 
-    const ActionScene* scene = actionC->getDomain();
+    const ActionScene* scene = getScene();
     std::vector<const Manipulator*> om = scene->getOccupiedManipulators(controller->getGraph());
     RLOG_CPP(0, "Found " << om.size() << " occupied manipulators");
 
@@ -976,7 +976,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   // Early exit in case tree could not be constructed
   if (!tree)
   {
-    TrajectoryPredictor::FeedbackMessage explanation;
+    ActionResult explanation;
     explanation.error = "No solution found";
     explanation.reason = "The action tree is empty";
     explanation.suggestion = "Send another command that does the same thing";
@@ -1050,7 +1050,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     ex->clearCompletedActionStack();
 
     // Compose a meaningful error description for each failed action sequence
-    TrajectoryPredictor::FeedbackMessage errDescr;
+    ActionResult errDescr;
 
     for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
     {
@@ -1062,7 +1062,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       }
 
       auto finalNode = path.empty() ? tree->root : path.back();
-      const TrajectoryPredictor::FeedbackMessage& errMsg = finalNode->feedbackMsg;
+      const ActionResult& errMsg = finalNode->feedbackMsg;
 
       if (!errMsg.error.empty())
       {
@@ -1090,7 +1090,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   }
 
   // From here on, we succeeded
-  TrajectoryPredictor::FeedbackMessage fbmsg;
+  ActionResult fbmsg;
   fbmsg.error = "SUCCESS";
   fbmsg.developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
   fbmsg.actionCommand = Rcs::String_concatenate(predictedActions, ";");
@@ -1154,7 +1154,7 @@ void ExampleActionsECS::onActionSequence(std::string text)
   // Early exit in case we receive an empty string
   if (text.empty())
   {
-    TrajectoryPredictor::FeedbackMessage fbmsg;
+    ActionResult fbmsg;
     fbmsg.error = "ERROR";
     fbmsg.reason = "Received empty action command string.";
     fbmsg.suggestion = "Check your spelling.";
@@ -1168,7 +1168,7 @@ void ExampleActionsECS::onActionSequence(std::string text)
   // From here on, any sequence has been expanded
   RLOG_CPP(1, "Sequence expanded to '" << text << "'");
 
-  // // From here on, any sequence has been expanded
+  // From here on, any sequence has been expanded
   actionStack = Rcs::String_split(text, ";");
 
   // Strip individual actions from white spaces etc.
@@ -1184,7 +1184,7 @@ void ExampleActionsECS::onPrint()
 {
   RcsCollisionModel_fprint(stderr, controller->getCollisionMdl());
   ActionFactory::print();
-  actionC->getDomain()->print();
+  getScene()->print();
   std::cout << help();
 }
 
@@ -1197,7 +1197,7 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
   }
 
   // If the trajectory has finshed, we can report success.
-  TrajectoryPredictor::FeedbackMessage fbmsg;
+  ActionResult fbmsg;
   fbmsg.error = "SUCCESS";
   fbmsg.actionCommand = actionStack.empty() ? std::string() : actionStack[0];
   fbmsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
@@ -1239,6 +1239,12 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
 // This only handles the "reset" keyword
 void ExampleActionsECS::onTextCommand(std::string text)
 {
+  RLOG_CPP(0, "RECEIVED: " << text);
+
+  // All sequences must have been resolved before this point.
+  RCHECK_MSG(text.find(';') == std::string::npos,
+             "Received string with semicolon: '%s'", text.c_str());
+
   if (text=="get_state")
   {
     std::thread feedbackThread([this]()
@@ -1248,14 +1254,22 @@ void ExampleActionsECS::onTextCommand(std::string text)
     });
     feedbackThread.detach();
   }
-
-  if (getRobotEnabled())
+  // Here we catch the speak actions. This does not yet support the grammar
+  // with parallel actions (concatenated with +)
+  else if (STRNEQ(text.c_str(), "speak", 5))
   {
-    RLOG(0, "Skipping reset during real robot operation");
+    std::string textToSpeak = text.c_str() + 5;
+    RLOG_CPP(0, "Speak action: " << textToSpeak);
+    entity.publish("Speak", textToSpeak);
+    ActionResult fbmsg;
+    fbmsg.error = "SUCCESS";
+    fbmsg.developer = "SUCCESS DEVELOPER: speaking '" +
+                      textToSpeak + "' " + std::string(__FILENAME__) +
+                      " line " + std::to_string(__LINE__);
+    entity.publish("ActionResult", true, 0.0, fbmsg.toStringVec());
     return;
   }
-
-  if (STRNEQ(text.c_str(), "reset", 5))
+  else if (STRNEQ(text.c_str(), "reset", 5) && (!getRobotEnabled()))
   {
     if (viewer)
     {
@@ -1271,7 +1285,7 @@ void ExampleActionsECS::onTextCommand(std::string text)
       RcsGraph* newGraph = RcsGraph_create(resetCmd[1].c_str());
       if (!newGraph)
       {
-        TrajectoryPredictor::FeedbackMessage fbmsg;
+        ActionResult fbmsg;
         fbmsg.error = "ERROR when doing a reset command";
         fbmsg.reason = "Reset with xml file '" + resetCmd[1] + "' failed.";
         fbmsg.suggestion = "Check if the file name is correct.";
@@ -1304,7 +1318,7 @@ void ExampleActionsECS::onTextCommand(std::string text)
     entity.publish("EmergencyRecover");
     entity.setTime(0.0);
 
-    TrajectoryPredictor::FeedbackMessage fbmsg;
+    ActionResult fbmsg;
     fbmsg.error = "SUCCESS";
     fbmsg.developer = std::string("Reset succeeded ") + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
     entity.publish("ActionResult", true, 0.0, fbmsg.toStringVec());
@@ -1327,7 +1341,12 @@ void ExampleActionsECS::onTextCommand(std::string text)
 
     return;
   }
-
+  // reset and get_state are taken care of somewhere else
+  else
+  {
+    std::thread t1(&ActionComponent::actionThread, actionC.get(), text);
+    t1.detach();
+  }
 }
 
 void ExampleActionsECS::onActionResult(bool success, double quality, std::vector<std::string> resMsg)
@@ -1439,12 +1458,12 @@ bool ExampleActionsECS::getRobotEnabled() const
 
 ActionScene* ExampleActionsECS::getScene()
 {
-  return actionC ? actionC->getDomain() : nullptr;
+  return actionC ? actionC->getScene() : nullptr;
 }
 
 const ActionScene* ExampleActionsECS::getScene() const
 {
-  return actionC ? actionC->getDomain() : nullptr;
+  return actionC ? actionC->getScene() : nullptr;
 }
 
 RcsGraph* ExampleActionsECS::getGraph()

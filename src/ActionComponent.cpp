@@ -65,7 +65,6 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
   broadphase(broadphase_), limitsEnabled(true), multiThreaded(true),
   startingFinalPose(false), earlyExitPrediction(true)
 {
-  subscribe("TextCommand", &ActionComponent::onTextCommand);
   subscribe("Print", &ActionComponent::onPrint);
   subscribe("Stop", &ActionComponent::onStop);
 
@@ -83,39 +82,6 @@ void ActionComponent::onStop()
   std::lock_guard<std::mutex> lock(actionThreadMtx);
 }
 
-void ActionComponent::onTextCommand(std::string text)
-{
-  RLOG_CPP(0, "RECEIVED: " << text);
-
-  // All sequences must have been resolved before this point.
-  RCHECK_MSG(text.find(';') == std::string::npos,
-             "Received string with semicolon: '%s'", text.c_str());
-
-  // Here we catch the speak actions. This does not yet support the grammar
-  // with parallel actions (concatenated with +)
-  if (STRNEQ(text.c_str(), "speak", 5))
-  {
-    std::string textToSpeak = text.c_str()+5;
-    RLOG_CPP(0, "Speak action: " << textToSpeak);
-    getEntity()->publish("Speak", textToSpeak);
-    TrajectoryPredictor::FeedbackMessage fbmsg;
-    fbmsg.error = "SUCCESS";
-    fbmsg.developer = "SUCCESS DEVELOPER: speaking '" +
-                      textToSpeak + "' " + std::string(__FILENAME__) +
-                      " line " + std::to_string(__LINE__);
-    getEntity()->publish("ActionResult", true, 0.0, fbmsg.toStringVec());
-    return;
-  }
-
-  // reset and get_state are taken care of somewhere else
-  if ((!STRNEQ(text.c_str(), "reset", 5)) && (text!="get_state"))
-  {
-    std::thread t1(&ActionComponent::actionThread, this, text);
-    t1.detach();
-  }
-
-}
-
 void ActionComponent::onPrint()
 {
   domain.print();
@@ -128,7 +94,7 @@ void ActionComponent::actionThread(std::string text)
   // Reentrancy lock
   std::lock_guard<std::mutex> lock(actionThreadMtx);
 
-  TrajectoryPredictor::FeedbackMessage explanation;
+  ActionResult explanation;
   std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
   std::unique_ptr<ActionBase> action;
 
@@ -158,7 +124,7 @@ void ActionComponent::actionThread(std::string text)
 
   std::vector<TrajectoryPredictor::PredictionResult> predictions(action->getNumSolutions());
 
-  if (getMultiThreaded())
+  if (getMultiThreaded() && (action->getNumSolutions()>1))
   {
     std::vector<std::future<void>> futures;
 
@@ -283,7 +249,7 @@ void ActionComponent::actionThread(std::string text)
     // the trajectory with the 'd' key.
     if (predictions.empty() || (!predictions[0].success))
     {
-      TrajectoryPredictor::FeedbackMessage errMsg;
+      ActionResult errMsg;
       if (predictions.empty())
       {
         errMsg.error = "ERROR";
@@ -338,12 +304,12 @@ void ActionComponent::actionThread(std::string text)
   getEntity()->publish("CheckAndSetTrajectory", tSet);
 }
 
-const ActionScene* ActionComponent::getDomain() const
+const ActionScene* ActionComponent::getScene() const
 {
   return &domain;
 }
 
-ActionScene* ActionComponent::getDomain()
+ActionScene* ActionComponent::getScene()
 {
   return &domain;
 }

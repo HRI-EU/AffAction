@@ -80,7 +80,7 @@ void ActionFactory::print()
 ActionBase* ActionFactory::create(const ActionScene& domain,
                                   const RcsGraph* graph,
                                   std::string actionCommand,
-                                  TrajectoryPredictor::FeedbackMessage& explanation)
+                                  ActionResult& explanation)
 {
   Rcs::String_trim(actionCommand);
   std::vector<std::string> actionStrings = Rcs::String_split(actionCommand, "+");
@@ -105,7 +105,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
 ActionBase* ActionFactory::create(const ActionScene& domain,
                                   const RcsGraph* graph,
                                   std::vector<std::string> words,
-                                  TrajectoryPredictor::FeedbackMessage& explanation)
+                                  ActionResult& explanation)
 {
   RCHECK(!words.empty());
   std::string aname = words[0];
@@ -120,7 +120,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
                                   const RcsGraph* graph,
                                   std::string actionName,
                                   std::vector<std::string> params,
-                                  TrajectoryPredictor::FeedbackMessage& explanation)
+                                  ActionResult& explanation)
 {
   ActionBase* action = NULL;
   std::map<std::string, ActionMaker>::iterator it;

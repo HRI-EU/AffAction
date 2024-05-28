@@ -171,7 +171,7 @@ void TrajectoryComponent::onEmergencyStop()
   tc->clear();
   this->eStop = true;
   getEntity()->publish("ClearTrajectory");
-  TrajectoryPredictor::FeedbackMessage fbmsg;
+  ActionResult fbmsg;
   fbmsg.error = "FATAL_ERROR";
   fbmsg.reason = "EmergencyStop triggered";
   fbmsg.suggestion = "Ask for help from an engineer";
@@ -271,7 +271,7 @@ void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
   // we ignore incoming trajectories and return.
   if (this->eStop==true)
   {
-    TrajectoryPredictor::FeedbackMessage fbmsg;
+    ActionResult fbmsg;
     fbmsg.error = "FATAL_ERROR";
     fbmsg.reason = "EmergencyStop triggered";
     fbmsg.suggestion = "Ask for help from an engineer";
@@ -351,7 +351,7 @@ void TrajectoryComponent::checkerThread(TCS_sptr tSet, bool simulateOnly,
   else if (simulateOnly)
   {
     double quality = 1.0/(1.0+result.jlCost);   // \todo: Discuss and match expectations
-    TrajectoryPredictor::FeedbackMessage fbmsg;
+    ActionResult fbmsg;
     fbmsg.error = "SUCCESS";
     fbmsg.developer = "Simulated trajectory is valid";
     fbmsg.developer += std::string(__FILENAME__) + " " + std::to_string(__LINE__);

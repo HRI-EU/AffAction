@@ -128,7 +128,7 @@ public:
     return str;
   }
 
-  TrajectoryPredictor::FeedbackMessage getFeedbackMsg() const
+  ActionResult getFeedbackMsg() const
   {
     return feedbackMsg;
   }
@@ -136,7 +136,7 @@ public:
 protected:
 
   std::string msg;
-  TrajectoryPredictor::FeedbackMessage feedbackMsg;
+  ActionResult feedbackMsg;
   ActionError error;
 };
 

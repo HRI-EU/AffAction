@@ -230,6 +230,7 @@ FIND_PACKAGE(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 SET(CMAKE_AUTOMOC ON)
 
 SET(ACTION_SRCS
+src/ActionResult.cpp
 src/ActionBase.cpp
 src/ActionGet.cpp
 src/ActionPass.cpp

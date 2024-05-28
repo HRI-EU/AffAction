@@ -122,45 +122,13 @@ using namespace tropic;
 
 namespace aff
 {
-/*******************************************************************************
- *
- ******************************************************************************/
-std::string TrajectoryPredictor::FeedbackMessage::toString() const
-{
-  std::string res = "ERROR: " + error + " REASON: " + reason + " SUGGESTION: "
-                    + suggestion + " DEVELOPER:" + developer + " ACTION: " + actionCommand;
-  return res;
-}
-
-std::vector<std::string> TrajectoryPredictor::FeedbackMessage::toStringVec() const
-{
-  std::vector<std::string> res(5);
-
-  res[0] = error;
-  res[1] = actionCommand;
-  res[2] = reason;
-  res[3] = suggestion;
-  res[4] = developer;
-
-  return res;
-}
-
-void TrajectoryPredictor::FeedbackMessage::clear()
-{
-  error.clear();
-  reason.clear();
-  suggestion.clear();
-  developer.clear();
-}
 
 /*******************************************************************************
  *
  ******************************************************************************/
 TrajectoryPredictor::PredictionResult::PredictionResult() :
   idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
-  //scaleJointSpeeds(1.0),
-  elbowNS(0.0), wristNS(0.0), t_predict(0.0),
-  graph(nullptr)
+  elbowNS(0.0), wristNS(0.0), t_predict(0.0), graph(nullptr)
 {
 }
 
@@ -394,7 +362,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     }
 
     // Updates graph with new state
-    FeedbackMessage resMsg;
+    ActionResult resMsg;
 
     // The phase computation must match the one in the TrajectoryComponent so that predictor and
     // run-time lead to the same results. \todo(MG): This should not be duplicate code.
@@ -829,7 +797,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
                                    double dt, double alpha, double lambda, double qFilt, double phase,
                                    bool speedLimitCheck, bool jointLimitCheck,
                                    bool collisionCheck, bool withSpeedAccLimit,
-                                   bool verbose, MatNd* jMask, FeedbackMessage& resMsg)
+                                   bool verbose, MatNd* jMask, ActionResult& resMsg)
 {
   Rcs::ControllerBase* controller = solver->getController();
   RcsGraph* graph = controller->getGraph();
@@ -1007,7 +975,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
 int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
                                     bool speedLimitCheck, bool jointLimitCheck,
                                     bool collisionCheck, bool verbose,
-                                    FeedbackMessage& resMsg)
+                                    ActionResult& resMsg)
 {
   const RcsGraph* graph = controller->getGraph();
   resMsg.clear();

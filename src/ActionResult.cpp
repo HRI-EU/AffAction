@@ -30,58 +30,38 @@
 
 *******************************************************************************/
 
-#ifndef AFF_ACTIONCOMPONENT_H
-#define AFF_ACTIONCOMPONENT_H
-
-#include "ComponentBase.h"
-#include "ActionScene.h"
-
-#include <TrajectoryPredictor.h>
+#include "ActionResult.h"
 
 
 namespace aff
 {
 
-class ActionComponent : public ComponentBase
+std::string ActionResult::toString() const
 {
-public:
-
-  ActionComponent(EntityBase* parent, const RcsGraph* graph,
-                  const RcsBroadPhase* broadphase);
-  ~ActionComponent();
-
-  const ActionScene* getScene() const;
-  ActionScene* getScene();
-  void setLimitCheck(bool enable);
-  void setMultiThreaded(bool enable);
-  bool getLimitCheck() const;
-  bool getMultiThreaded() const;
-  void setFinalPoseRunning(bool enable);
-  bool isFinalPoseRunning() const;
-  void setEarlyExitPrediction(bool enable);
-  bool getEarlyExitPrediction() const;
-  void actionThread(std::string text);
-
-private:
-
-  void onPrint();
-  void onStop();
-
-  ActionScene domain;
-  const RcsGraph* graph;
-  const RcsBroadPhase* broadphase;
-  bool limitsEnabled;
-  bool multiThreaded;
-  bool startingFinalPose;
-  bool earlyExitPrediction;
-
-  mutable std::mutex actionThreadMtx;
-
-  // Avoid copying this class
-  ActionComponent(const ActionComponent&) = delete;
-  ActionComponent& operator=(const ActionComponent&) = delete;
-};
-
+  std::string res = "ERROR: " + error + " REASON: " + reason + " SUGGESTION: "
+                    + suggestion + " DEVELOPER:" + developer + " ACTION: " + actionCommand;
+  return res;
 }
 
-#endif   // AFF_ACTIONCOMPONENT_H
+std::vector<std::string> ActionResult::toStringVec() const
+{
+  std::vector<std::string> res(5);
+
+  res[0] = error;
+  res[1] = actionCommand;
+  res[2] = reason;
+  res[3] = suggestion;
+  res[4] = developer;
+
+  return res;
+}
+
+void ActionResult::clear()
+{
+  error.clear();
+  reason.clear();
+  suggestion.clear();
+  developer.clear();
+}
+
+}   // namespace aff

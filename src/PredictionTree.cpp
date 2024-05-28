@@ -653,9 +653,9 @@ std::vector<std::string> PredictionTree::findSolutionPathAsStrings(size_t index,
   return predictedActions;
 }
 
-std::vector<TrajectoryPredictor::FeedbackMessage> PredictionTree::getSolutionErrorStrings(size_t index) const
+std::vector<ActionResult> PredictionTree::getSolutionErrorStrings(size_t index) const
 {
-  std::vector<TrajectoryPredictor::FeedbackMessage> errs;
+  std::vector<ActionResult> errs;
   auto sln = findSolutionPath(index, false);
 
   for (const auto& nd : sln)
@@ -720,7 +720,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
       break;
     }
 
-    TrajectoryPredictor::FeedbackMessage explanation;
+    ActionResult explanation;
     std::vector<std::string> actionStrings = Rcs::String_split(text, "+");
     std::unique_ptr<ActionBase> action;
 
@@ -868,7 +868,7 @@ static void DFS(ActionScene& scene,
                 PredictionTreeNode* node,
                 bool& finished)
 {
-  TrajectoryPredictor::FeedbackMessage err;
+  ActionResult err;
   std::vector<std::string> actionParams = Rcs::String_split(actionSequenceStrings[node->level], " ");
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, actionParams, err));
 
@@ -1088,7 +1088,7 @@ void DFSMT(ActionScene& scene,
            bool earlyExitAction,
            bool& finished)
 {
-  TrajectoryPredictor::FeedbackMessage err;
+  ActionResult err;
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, levelCommands[node->level], err));
 
   // If we can't create the action for this command, we don't expand any childred.

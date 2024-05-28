@@ -62,7 +62,7 @@ public:
   std::vector<PredictionTreeNode*> children; /**< Vector of child nodes. */
   RcsGraph* graph; /**< Pointer to the Rcs graph associated with the action. */
   std::string resolvedActionCommand;
-  TrajectoryPredictor::FeedbackMessage feedbackMsg;
+  ActionResult feedbackMsg;
   int threadNumber;
   static size_t uniqueIdCount;
 
@@ -264,7 +264,7 @@ public:
   std::vector<PredictionTreeNode*> findSolutionPath(size_t index = 0, bool onlySuccessfulOnes = true) const;
   std::vector<std::string> findSolutionPathAsStrings(size_t index = 0, bool onlySuccessfulOnes = true) const;
 
-  std::vector<TrajectoryPredictor::FeedbackMessage> getSolutionErrorStrings(size_t index = 0) const;
+  std::vector<ActionResult> getSolutionErrorStrings(size_t index = 0) const;
 
   /**
    * @brief Gets the maximum depth of the tree.
