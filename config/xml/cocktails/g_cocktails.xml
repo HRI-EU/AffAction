@@ -66,7 +66,7 @@ Cocktail:
 
 	<!-- The model for the dining table. -->
 	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
-		<Shape distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" type="BOX"/>
+		<Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
 		<Shape scale="0.2" type="FRAME"/>
 	</Body>
 	<Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />
@@ -193,32 +193,32 @@ Cocktail:
     <Body name="shelf" prev="table" rigid_body_joints="0.20 0 0.01 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <!-- bottom shelf -->
-        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
+        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.04 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
-        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.29 0 0 0" graphics="true"
+        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.34 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
     </Body>
 	
     <!-- bottom shelf frames-->
-    <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.001 0 0 0" >
+    <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos2" prev="shelf" transform="0 +0.4 0.001 0 0 0" >
+    <Body name="shelf_pos2" prev="shelf" transform="0 +0.4 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos3" prev="shelf" transform="0 +0.2 0.001 0 0 0" >
+    <Body name="shelf_pos3" prev="shelf" transform="0 +0.2 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos4" prev="shelf" transform="0 0 0.001 0 0 0" >
+    <Body name="shelf_pos4" prev="shelf" transform="0 0 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos5" prev="shelf" transform="0 -0.2 0.001 0 0 0" >
+    <Body name="shelf_pos5" prev="shelf" transform="0 -0.2 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos6" prev="shelf" transform="0 -0.4 0.001 0 0 0" >
+    <Body name="shelf_pos6" prev="shelf" transform="0 -0.4 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos7" prev="shelf" transform="0 -0.6 0.001 0 0 0" >
+    <Body name="shelf_pos7" prev="shelf" transform="0 -0.6 0.051 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
     <!-- top shelf frames-->

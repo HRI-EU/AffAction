@@ -279,6 +279,10 @@ The project is composed of three parts:
   - Pass explanations from tree to python wrapper
   - nicer function for pose sequences
   - improve Affordance documentation
+  - When doing tree prediction, check for substantial errors and only 
+    report this one rather than the n best ones. Substantial errors 
+    are ones that disallow to create an action regardless of its 
+    parametrization, for instance by naming objects that don't exist.
 
 
 
