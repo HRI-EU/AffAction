@@ -281,9 +281,10 @@ HTr Manipulator::getBaseJointTransform(const RcsGraph* graph) const
 
 const RcsJoint* Manipulator::getBaseJoint(const RcsGraph* graph) const
 {
-  const RcsJoint* jnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
-  RCHECK_MSG(jnt, "Base joint '%s' not found in graph", baseJointName.c_str());
-  return jnt;
+  const RcsJoint* baseJnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
+  RCHECK_MSG(baseJnt, "Manipulator '%s' ('%s'): Base joint '%s' not found in graph",
+             name.c_str(), bdyName.c_str(), baseJointName.c_str());
+  return baseJnt;
 }
 
 std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const
@@ -531,19 +532,21 @@ bool Manipulator::canReachTo(const ActionScene* scene,
   // No grasp capabilities - no reaching
   if (getCapabilities<GraspCapability>(this).empty())
   {
+    RLOG(1, "Manipulator '%s' ('%s') has no GraspCapability", name.c_str(), bdyName.c_str());
     return false;
   }
 
   bool reachable = false;
 
-  const RcsJoint* baseJnt = RcsGraph_getJointByName(graph, baseJointName.c_str());
-  RCHECK_MSG(baseJnt, "Manipulator '%s' ('%s'): Base joint '%s' not found in graph",
-             name.c_str(), bdyName.c_str(), baseJointName.c_str());
+  const RcsJoint* baseJnt = getBaseJoint(graph);
+  const double objDistance = Vec3d_distance(position, baseJnt->A_JI.org);
 
-  if (Vec3d_distance(position, baseJnt->A_JI.org) < reach)
+  if (objDistance < reach)
   {
     reachable = true;
   }
+
+  RLOG(1, "objDistance=%f   reach=%f", objDistance, reach);
 
   return reachable;
 }

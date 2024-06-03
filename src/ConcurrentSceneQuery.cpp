@@ -148,6 +148,66 @@ nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::strin
   return aff::getObjectOccludersForAgent(agentName, objectName, &scene, graph);
 }
 
+
+nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& objectName,
+                                                       const std::string& cameraName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+
+  nlohmann::json json;
+  std::vector<const AffordanceEntity*> objectEntities = scene.getAffordanceEntities(objectName);
+
+  if (objectEntities.size()!=1)
+  {
+    RLOG(0, "Expect 1 match for '%s' but got %lu", objectName.c_str(), objectEntities.size());
+    return json;
+  }
+
+  std::vector<const AffordanceEntity*> cameraEntities = scene.getAffordanceEntities(cameraName);
+
+  if (cameraEntities.size()!=1)
+  {
+    RLOG(0, "Expect 1 match for '%s' but got %lu", cameraName.c_str(), cameraEntities.size());
+    return json;
+  }
+
+  const RcsBody* objectBdy = objectEntities[0]->body(graph);
+  const RcsBody* cameraBdy = cameraEntities[0]->body(graph);
+
+  // From camera to object frame: A_CO
+  HTr objectInCamera;
+  HTr_invTransform(&objectInCamera, &cameraBdy->A_BI, &objectBdy->A_BI);
+
+  json["x"] = objectInCamera.org[0];
+  json["y"] = objectInCamera.org[1];
+  json["z"] = objectInCamera.org[2];
+
+  // Compute set of 8 3d points (AABB vertices) in camera frame
+  double xyzMin[3], xyzMax[3], verticesBuf[8][3];
+  MatNd vertices = MatNd_fromPtr(8, 3, &verticesBuf[0][0]);
+  bool aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &vertices);
+
+  if (aabbValid)
+  {
+    nlohmann::json vertexJson;
+
+    for (int i=0; i<8; ++i)
+    {
+      Vec3d_invTransformSelf(verticesBuf[i], &cameraBdy->A_BI);
+      vertexJson.push_back(std::vector<double>(verticesBuf[i],verticesBuf[i]+3));
+    }
+
+    json["vertex"] = vertexJson;
+  }
+  else
+  {
+    RLOG(0, "Failed to compute AABB for object %s - skipping vertex calculation", objectName.c_str());
+  }
+
+  return json;
+}
+
 std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
 {
   RLOG_CPP(0, "Checking parent for " << objectName);

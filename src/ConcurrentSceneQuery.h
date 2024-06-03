@@ -102,6 +102,15 @@ public:
   nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
                                             const std::string& objectName);
 
+  /*! \brief Returns empty json if no occluded objects exist, or an array of positions
+   *         and 8 AABB-vertices of the entity, projected into the frame of the given camera. For example:
+   *         {'vertex': [[0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9],
+   *                    [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9]],
+   *          'x': 0.2, 'y': 0.4, 'z': 0.9}
+   */
+  nlohmann::json getObjectInCamera(const std::string& objectName,
+                                   const std::string& cameraName);
+
   /*! \brief Returns the name of the kinematic parent of the object, or an empty
    *         string if:
    *         - objectName is not the name / type of an AffordanceEntity

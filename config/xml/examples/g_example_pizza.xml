@@ -52,13 +52,18 @@
   </Body>
 
   <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
     <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
     <Shape graphics="true" scale="0.2" type="FRAME"/>
   </Body>
+  <AffordanceModel body="camera_0" name="camera" types="camera.n.01">
+    <Supportable frame="camera_0"/>
+  </AffordanceModel>
 
+
+  
   <!-- The model of the robot. -->
   <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
