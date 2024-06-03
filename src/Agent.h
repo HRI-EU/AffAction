@@ -121,6 +121,9 @@ public:
   bool canReachTo(const ActionScene* scene,
                   const RcsGraph* graph,
                   const double position[3]) const;
+
+  // All values in world coordinates. vertices must be NULL or of size 8*3 (shape doesn't matter).
+  bool computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
 };
 
 } // namespace aff

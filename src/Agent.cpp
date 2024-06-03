@@ -582,6 +582,43 @@ bool HumanAgent::canReachTo(const ActionScene* scene,
   return false;
 }
 
+bool HumanAgent::computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const
+{
+  if (markers.empty())
+  {
+    return false;
+  }
+
+  Vec3d_copy(xyzMin, markers[0].org);
+  Vec3d_copy(xyzMax, markers[0].org);
+
+  for (size_t i = 1; i < markers.size(); ++i)
+  {
+    const double* markerXYZ = markers[i].org;
+
+    for (size_t j = 0; j < 3; ++j)
+    {
+      xyzMin[j] = std::min(markerXYZ[j], xyzMin[j]);
+      xyzMax[j] = std::max(markerXYZ[j], xyzMax[j]);
+    }
+  }
+
+  // Here we compute all 8 vertices of the boundig box.
+  if (vertices)
+  {
+    double(*bb)[3] = (double(*)[3])vertices->ele;
+    Vec3d_set(bb[0], xyzMin[0], xyzMin[1], xyzMin[2]);
+    Vec3d_set(bb[1], xyzMin[0], -xyzMin[1], xyzMin[2]);
+    Vec3d_set(bb[2], -xyzMin[0], xyzMin[1], xyzMin[2]);
+    Vec3d_set(bb[3], -xyzMin[0], -xyzMin[1], xyzMin[2]);
+    Vec3d_set(bb[4], xyzMax[0], xyzMax[1], xyzMax[2]);
+    Vec3d_set(bb[5], xyzMax[0], -xyzMax[1], xyzMax[2]);
+    Vec3d_set(bb[6], -xyzMax[0], xyzMax[1], xyzMax[2]);
+    Vec3d_set(bb[7], -xyzMax[0], -xyzMax[1], xyzMax[2]);
+  }
+
+  return true;
+}
 
 
 

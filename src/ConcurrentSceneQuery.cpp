@@ -156,27 +156,28 @@ nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& object
   update();
 
   nlohmann::json json;
-  std::vector<const AffordanceEntity*> objectEntities = scene.getAffordanceEntities(objectName);
 
-  if (objectEntities.size()!=1)
+  // Check for exactly one camera with the given name
+  std::vector<const AffordanceEntity*> cameraEntities = scene.getAffordanceEntities(cameraName);
+
+  if (cameraEntities.size() != 1)
   {
-    RLOG(0, "Expect 1 match for '%s' but got %lu", objectName.c_str(), objectEntities.size());
+    RLOG_CPP(0, "Expect 1 match for camera '" << cameraName << "' but got " << cameraEntities.size());
     return json;
   }
 
-  std::vector<const AffordanceEntity*> cameraEntities = scene.getAffordanceEntities(cameraName);
+  std::vector<const SceneEntity*> objectEntities = scene.getSceneEntities(objectName);
 
-  if (cameraEntities.size()!=1)
+  if (objectEntities.size()!=1)
   {
-    RLOG(0, "Expect 1 match for '%s' but got %lu", cameraName.c_str(), cameraEntities.size());
+    RLOG_CPP(0, "Expect 1 match for object '" << objectName << "' but got " << objectEntities.size());
     return json;
   }
 
   const RcsBody* objectBdy = objectEntities[0]->body(graph);
   const RcsBody* cameraBdy = cameraEntities[0]->body(graph);
 
-  // From camera to object frame: A_CO
-  HTr objectInCamera;
+  HTr objectInCamera;   // From camera to object frame: A_CO
   HTr_invTransform(&objectInCamera, &cameraBdy->A_BI, &objectBdy->A_BI);
 
   json["x"] = objectInCamera.org[0];
@@ -186,16 +187,26 @@ nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& object
   // Compute set of 8 3d points (AABB vertices) in camera frame
   double xyzMin[3], xyzMax[3], verticesBuf[8][3];
   MatNd vertices = MatNd_fromPtr(8, 3, &verticesBuf[0][0]);
-  bool aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &vertices);
+  bool aabbValid = false;
+
+  if (dynamic_cast<const AffordanceEntity*>(objectEntities[0]))
+  {
+    aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &vertices);
+  }
+  else if (dynamic_cast<const HumanAgent*>(objectEntities[0]))
+  {
+    const HumanAgent* human = dynamic_cast<const HumanAgent*>(objectEntities[0]);
+    aabbValid = human->computeAABB(xyzMin, xyzMax, &vertices);
+  }
 
   if (aabbValid)
   {
     nlohmann::json vertexJson;
 
-    for (int i=0; i<8; ++i)
+    for (int i = 0; i < 8; ++i)
     {
       Vec3d_invTransformSelf(verticesBuf[i], &cameraBdy->A_BI);
-      vertexJson.push_back(std::vector<double>(verticesBuf[i],verticesBuf[i]+3));
+      vertexJson.push_back(std::vector<double>(verticesBuf[i], verticesBuf[i] + 3));
     }
 
     json["vertex"] = vertexJson;
