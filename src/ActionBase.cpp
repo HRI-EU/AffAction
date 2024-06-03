@@ -199,6 +199,8 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   // actions to bias the solution.
   result.actionCost = actionCost(scene, graph);
 
+  result.feedbackMsg.actionCommand = getActionCommand();
+
   t_clone = Timer_getSystemTime() - t_clone;
   RLOG(4, "Prediction took %.2f msec", 1.0e3 * t_clone);
 
@@ -338,7 +340,7 @@ bool ActionBase::initialize(const ActionScene& domain,
                             const RcsGraph* graph,
                             size_t solutionRank)
 {
-  return true;
+  return (solutionRank<getNumSolutions()) ? true : false;
 }
 
 size_t ActionBase::getNumSolutions() const

@@ -68,7 +68,8 @@ ActionDoor::ActionDoor(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToOpenName +" to open or close is unknown.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto hingeables = getAffordances<Hingeable>(objectToOpen);
@@ -110,14 +111,16 @@ ActionDoor::ActionDoor(const ActionScene& domain,
     {
       std::string reasonMsg = "Can't find a hand with the name " + manipulator;
       std::string suggestionMsg = "Use a hand name that is defined in the environment";
-      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg,
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     if (!hand->isEmpty(graph))
     {
       throw ActionException(ActionException::KinematicallyImpossible,
                             "REASON: The hand " + manipulator + " is already holding something.",
-                            "Free your hand before performing this command, or use another hand");
+                            "Free your hand before performing this command, or use another hand",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     freeManipulators.push_back(hand);
@@ -127,7 +130,8 @@ ActionDoor::ActionDoor(const ActionScene& domain,
   {
     std::string reasonMsg = "All hands are already full";
     std::string suggestionMsg = "Free one or all your hands before performing this command";
-    throw ActionException(ActionException::KinematicallyImpossible, reasonMsg, suggestionMsg);
+    throw ActionException(ActionException::KinematicallyImpossible, reasonMsg, suggestionMsg,
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // From here on we have one or several manipulators that can be tentatively used
@@ -144,7 +148,9 @@ ActionDoor::ActionDoor(const ActionScene& domain,
   if (affordanceMap.empty())
   {
     throw ActionException(ActionException::KinematicallyImpossible,
-                          "Don't have the capability to grasp the handle of the " + objectToOpenName);
+                          "Don't have the capability to grasp the handle of the " + objectToOpenName,
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -168,8 +174,6 @@ bool ActionDoor::initialize(const ActionScene& domain,
   {
     return false;
   }
-
-  std::string errorMsg = "ERROR ";
 
   // Get the frame of the capability from the first entry
   const Capability* winningCap = std::get<1>(affordanceMap[solutionRank]);
@@ -208,31 +212,38 @@ bool ActionDoor::initialize(const ActionScene& domain,
   const RcsBody* doorHandleBdy = RcsGraph_getBodyByName(graph, doorHandle.c_str());
   if (!doorHandleBdy)
   {
-    std::string errMsg = errorMsg + "REASON: The door handle " + doorHandle + " is unknown.";
-    RFATAL("%s", errMsg.c_str());
-    throw ActionException(errMsg, ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The door handle " + doorHandle + " is unknown.",
+                          "Check that the door exists in the scene",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const RcsBody* handleParent = RCSBODY_BY_ID(graph, doorHandleBdy->parentId);
   if (!handleParent)
   {
-    std::string errMsg = errorMsg + "REASON: door handle (" + doorHandle + ") is not part of the " + objectToOpenName;
-    RFATAL("%s", errMsg.c_str());
-    throw ActionException(errMsg, ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The door handle (" + doorHandle + ") is not part of the " + objectToOpenName,
+                          "Check your action command",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const RcsJoint* doorHingeJnt = RCSJOINT_BY_ID(graph, handleParent->jntId);
   if (!doorHingeJnt)
   {
-    std::string errMsg = errorMsg + "REASON: Something is wrong with the door handle. DEVELOPER: Not found: joint of door handle's parent" + std::string(handleParent->name);
-    RFATAL("%s", errMsg.c_str());
-    throw ActionException(errMsg, ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "Something is wrong with the door handle.",
+                          "Check configuration file",
+                          "Not found : joint of door handle's parent " + std::string(handleParent->name) +
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
+
   if (doorHingeJnt->constrained)
   {
-    std::string errMsg = errorMsg + "REASON: Something is wrong with the door handle. DEVELOPER: Joint of door handle's parent" + std::string(handleParent->name) + " is constrained";
-    RFATAL("%s", errMsg.c_str());
-    throw ActionException(errMsg, ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "Something is wrong with the door handle.",
+                          "Check configuration file",
+                          "Joint of door handle's parent" + std::string(handleParent->name) + " is constrained "
+                          + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   doorHingeJoint = doorHingeJnt->name;

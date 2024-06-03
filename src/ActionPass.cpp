@@ -79,20 +79,24 @@ void ActionPass::init(const ActionScene& domain,
 
   if (objects.empty())
   {
-    throw ActionException(ActionException::ParamNotFound,
-                          "REASON: The " + objectToPass + " is unknown.",
-                          "SUGGESTION: Use an object name that is defined in the environment");
+    throw ActionException(ActionException::UnrecoverableError,// was ParamNotFound,
+                          "The " + objectToPass + " is unknown.",
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto gPair = domain.getGraspingHand(graph, objects);
   const Manipulator* graspingHand = std::get<0>(gPair);
   const AffordanceEntity* object = std::get<1>(gPair);
 
+  // We don't treat this as an unrecoverable error, since the hand-object choice might be non-static
+  // when this action is improved.
   if ((!object) || (!graspingHand))
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "The " + objectToPass + " is not held in the hand.",
-                          "First get the " + objectToPass + " in the hand before passing it to somebody");
+                          "The " + objectToPass + " is not held in a hand.",
+                          "First get the " + objectToPass + " in the hand before passing it to somebody",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // From here on, we have a valid object and grasping hand
@@ -105,20 +109,21 @@ void ActionPass::init(const ActionScene& domain,
 
   // Get robot shoulder coordinates. We need this to compute the pass over position
   const RcsJoint* shldr = RcsGraph_getJointByName(graph, graspingHand->baseJointName.c_str());
-
   if (!shldr)
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + graspingHand->name + " is not connected to a shoulder.",
                           "Are you calling this action with a robot agent?",
-                          "baseJntName: " + graspingHand->baseJointName);
+                          "baseJntName: " + graspingHand->baseJointName + " " +
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   if (graspingHand->reach<=0.0)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "The passing agent has no reach.",
-                          "Fix the xml file");
+                          "Fix the xml file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // From here on, we have a valid RcsJoint shldr
@@ -129,16 +134,19 @@ void ActionPass::init(const ActionScene& domain,
 
   if (!agent)
   {
-    throw ActionException(ActionException::ParamNotFound,
+    throw ActionException(ActionException::UnrecoverableError,
                           "The agent " + receivingAgent + " is not in the scene.",
-                          "Pass the " + objectToPass + " to somebody else");
+                          "Pass the " + objectToPass + " to somebody else",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
+  // This is mainly to avoid passing to the agent itself.
   if (!dynamic_cast<const HumanAgent*>(agent))
   {
-    throw ActionException(ActionException::ParamInvalid,
+    throw ActionException(ActionException::UnrecoverableError,
                           "The agent " + receivingAgent + " is not a human.",
-                          "Pass the " + objectToPass + " to a human, and not a robot");
+                          "Pass the " + objectToPass + " to a human, and not a robot",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // From here on, we have a valid agent. Find the agent's head
@@ -156,7 +164,8 @@ void ActionPass::init(const ActionScene& domain,
       {
         throw ActionException(ActionException::ParamNotFound,
                               "The " + agent->name + "'s head manipulator has no RcsBody.",
-                              "Use an object name that is defined in the environment");
+                              "Use an object name that is defined in the environment",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
       else
       {
@@ -169,7 +178,9 @@ void ActionPass::init(const ActionScene& domain,
   if (agentHeadRcsName.empty() ||(!agentHeadPos))
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "The " + agent->name + " has no head. ");
+                          "The " + agent->name + " has no head. ",
+                          "Fix xml file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Compute pass over position. The vector dir points from the shoulder to
@@ -229,13 +240,6 @@ void ActionPass::init(const ActionScene& domain,
   RCHECK(successInit);
 }
 
-bool ActionPass::initialize(const ActionScene& domain,
-                            const RcsGraph* graph,
-                            size_t solutionRank)
-{
-  return true;
-}
-
 std::vector<std::string> ActionPass::createTasksXML() const
 {
   std::vector<std::string> tasks;
@@ -292,11 +296,6 @@ ActionPass::createTrajectory(double t_start, double t_end) const
 std::vector<std::string> ActionPass::getManipulators() const
 {
   return usedManipulators;
-}
-
-size_t ActionPass::getNumSolutions() const
-{
-  return 1;
 }
 
 std::unique_ptr<ActionBase> ActionPass::clone() const

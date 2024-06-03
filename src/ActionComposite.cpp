@@ -336,12 +336,18 @@ public:
     if (params.size() != 2)
     {
       throw ActionException(ActionException::ParamInvalid,
-                            "Action command received with " + std::to_string(params.size()) + " arguments, but 2 are expected");
+                            "Action command received with " + std::to_string(params.size()) + " arguments, but 2 are expected",
+                            "Check syntax",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__)
+                           );
     }
 
     if (domain.manipulators.size() < 2)
     {
-      throw ActionException(ActionException::ParamInvalid, "Action created with " + std::to_string(domain.manipulators.size()) + " manipulators, but 2 or more are expected");
+      throw ActionException(ActionException::ParamInvalid,
+                            "Action created with " + std::to_string(domain.manipulators.size()) + " manipulators, but 2 or more are expected",
+                            "Don't call double_get with less than 2 manipulators",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // Compute the two closest manipulators to the two objects
@@ -357,12 +363,18 @@ public:
 
     if (!obj1)
     {
-      throw ActionException(ActionException::ParamNotFound, "Object " + params[0] + " is unknown");
+      throw ActionException(ActionException::ParamNotFound,
+                            "Object " + params[0] + " is unknown",
+                            "Make sure that the object exists in the scene",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     if (!obj2)
     {
-      throw ActionException(ActionException::ParamNotFound, "Object " + params[1] + " is unknown");
+      throw ActionException(ActionException::ParamNotFound,
+                            "Object " + params[1] + " is unknown",
+                            "Make sure that the object exists in the scene",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     std::vector<std::vector<double>> res;
@@ -448,8 +460,10 @@ public:
   {
     if ((params.size() != 2) && (params.size() != 3) && (params.size() != 4))
     {
-      throw ActionException("ERROR REASON: Action received " + std::to_string(params.size()) +
-                            " arguments, but 2, 3 or 4 are expected", ActionException::ParamInvalid);
+      throw ActionException(ActionException::ParamInvalid,
+                            "ActionDoublePut received " + std::to_string(params.size()) + " arguments, but 2, 3 or 4 are expected",
+                            "Check action command",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     try

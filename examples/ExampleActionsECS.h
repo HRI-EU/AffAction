@@ -39,7 +39,6 @@
 
 #include <GraphComponent.h>
 #include <GraphicsWindow.h>
-#include <TaskGuiComponent.h>
 #include <TextEditComponent.h>
 #include <ActionComponent.h>
 #include <TrajectoryComponent.h>
@@ -112,9 +111,7 @@ public:
   void unlockStepMtx() const;
 
   std::string xmlFileName;
-  std::string config_directory;
-  std::string sequenceCommand;
-  std::string lastResultMsg;
+  std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
   unsigned int speedUp;
   int maxNumThreads;
@@ -128,10 +125,11 @@ private:
 
   EntityBase entity;
   double trajTime;
+  std::string sequenceCommand;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
-  bool plot, valgrind, withRobot, pause, withTaskGui, withEventGui;
+  bool plot, valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
   unsigned int loopCount;
 
@@ -142,7 +140,6 @@ private:
   std::unique_ptr<TextEditComponent> textGui;
   std::unique_ptr<TrajectoryComponent> trajC;
   std::unique_ptr<IKComponent> ikc;
-  std::unique_ptr<TaskGuiComponent> taskGui;
 
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;

@@ -64,6 +64,7 @@ public:
   std::string resolvedActionCommand;
   ActionResult feedbackMsg;
   int threadNumber;
+  bool fatalError;
   static size_t uniqueIdCount;
 
   /**

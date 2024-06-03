@@ -53,6 +53,7 @@ public:
   std::string developer;
   std::string actionCommand;
 
+  bool success() const;
   std::string toString() const;
   std::vector<std::string> toStringVec() const;
   void clear();

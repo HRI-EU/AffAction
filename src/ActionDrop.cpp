@@ -56,7 +56,10 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (params.empty())
   {
-    throw ActionException(ActionException::ParamNotFound, "No object to drop given");
+    throw ActionException(ActionException::ParamNotFound,
+                          "No object to drop given",
+                          "Check syntax of the given action command",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   this->objectToDrop = params[0];
@@ -67,7 +70,10 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (dropEntities.empty())
   {
-    throw ActionException(ActionException::ParamNotFound, "Entity for " + objectToDrop  + " not found in scene");
+    throw ActionException(ActionException::ParamNotFound,
+                          "Entity for " + objectToDrop  + " not found in scene",
+                          "Make sure the object exists in the scene",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto gPair = domain.getGraspingHand(graph, dropEntities);
@@ -76,7 +82,10 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!graspingHand)
   {
-    throw ActionException(ActionException::KinematicallyImpossible, "No hand is grasping the object " + objectToDrop);
+    throw ActionException(ActionException::KinematicallyImpossible,
+                          "No hand is grasping the object " + objectToDrop,
+                          "Grasp the object before dropping it",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   objectToDrop = dropEntity->bdyName;
@@ -111,7 +120,9 @@ ActionDrop::ActionDrop(const ActionScene& domain,
     {
       RLOG_CPP(0, errMsg);
       throw ActionException(ActionException::KinematicallyImpossible,
-                            "There is no surface under the " + objectToDrop + " where I can put it on");
+                            "There is no surface under the " + objectToDrop + " where I can put it on",
+                            "Make sure to frop the object above a valid surface",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     this->surfaceName = surface->bdyName;
@@ -120,7 +131,9 @@ ActionDrop::ActionDrop(const ActionScene& domain,
   if (!surface)
   {
     throw ActionException(ActionException::KinematicallyImpossible,
-                          "No surface entity to drop on found");
+                          "No surface entity to drop on found",
+                          "Make sure to frop the object above a valid surface",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   RLOG_CPP(0, "Dropping object on " << surfaceName);
@@ -137,7 +150,10 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (affordanceMap.empty())
   {
-    throw ActionException(ActionException::ParamNotFound, "Cannot drop object on " + surface->name);
+    throw ActionException(ActionException::ParamNotFound,
+                          "Cannot drop object on " + surface->name,
+                          "",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -149,7 +165,10 @@ ActionDrop::ActionDrop(const ActionScene& domain,
 
   if (!successInit)
   {
-    throw ActionException(ActionException::ParamInvalid, "Failed to initialize best solution");
+    throw ActionException(ActionException::ParamInvalid,
+                          "Failed to initialize best solution",
+                          "",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
 }

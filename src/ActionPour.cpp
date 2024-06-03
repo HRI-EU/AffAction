@@ -62,7 +62,8 @@ ActionPour::ActionPour(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Action has less than two parameters. At least two parameters are needed: The container to pour from, and the container to pour into.",
-                          "Correct the action command.");
+                          "Correct the action command.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const std::string& objectToPourFrom = params[0];
@@ -77,7 +78,8 @@ ActionPour::ActionPour(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamInvalid,
                           "The amount to pour has a negative value. It must be equal or larger than zero.",
-                          "Pour only liquid amounts with positive volume.");
+                          "Pour only liquid amounts with positive volume.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   init(domain, graph, objectToPourFrom, objectToPourInto, amountToPour);
@@ -93,7 +95,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToPourFrom + " cannot be poured in itself.",
-                          "Pour it into another object in the environment");
+                          "Pour it into another object in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   this->pouringVolume = amountToPour;
@@ -105,7 +108,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToPourFrom + " to pour from is unknown.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto openings = getAffordances<Pourable>(pourFromAff);
@@ -115,7 +119,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToPourFrom + " is not a container that can be poured from.",
-                          "Choose another object to pour from.");
+                          "Choose another object to pour from.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const AffordanceEntity* pourToAff = domain.getAffordanceEntity(objToPourInto);
@@ -124,7 +129,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objToPourInto + " to pour into is unknown.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   auto containers = getAffordances<Containable>(pourToAff);
@@ -133,7 +139,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objToPourInto + " to pour into is not a container that can be poured into.",
-                          "Choose another object to pour into.");
+                          "Choose another object to pour into.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // The bottle object must be in a hand
@@ -142,7 +149,8 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objectToPourFrom + " to pour from is not held in a hand.",
-                          "First get the object " + objectToPourFrom + " before performing this action");
+                          "First get the object " + objectToPourFrom + " before performing this action",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   usedManipulators.push_back(pouringHand->name);
@@ -153,13 +161,16 @@ void ActionPour::init(const ActionScene& domain,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The manipulator " + pouringHand->name + " could not be associated with an agent.",
-                          "Check your configuration file");
+                          "Check your configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   if (!dynamic_cast<RobotAgent*>(agent))
   {
     throw ActionException(ActionException::ParamInvalid,
-                          "The agent " + agent->name + " is not a robot agent.");
+                          "The agent " + agent->name + " is not a robot agent.",
+                          "Check your configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // We make a local copy of the body strings, since they might be resolved
@@ -389,14 +400,18 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
   {
     throw ActionException(ActionException::ParamInvalid,
                           "The " + pourFromAff->name + " that is poured from has " +
-                          std::to_string(fromContainers.size()) + " containers - currently only one is supported");
+                          std::to_string(fromContainers.size()) + " containers - currently only one is supported",
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   if (toContainers.size()!=1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "The object " + pourToAff->name + " that is poured into has " +
-                          std::to_string(toContainers.size()) + " containers - currently only one is supported");
+                          std::to_string(toContainers.size()) + " containers - currently only one is supported",
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   Containable* fromContainer = dynamic_cast<Containable*>(fromContainers[0]);
@@ -410,7 +425,8 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
   {
     throw ActionException(ActionException::KinematicallyImpossible,
                           "The container " + toContainer->frame + " does only hold " + std::to_string(toContainer->maxVolume) + " liters, pouring would overflow it.",
-                          "Pour less than " + std::to_string(toContainer->maxVolume - toContainer->getVolume()) + " liters");
+                          "Pour less than " + std::to_string(toContainer->maxVolume - toContainer->getVolume()) + " liters",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Here we do the actual adjustments.
@@ -500,7 +516,8 @@ public:
     {
       throw ActionException(ActionException::ParamInvalid,
                             "Action has no parameters. At least one parameters are needed: The object to tilt.",
-                            "Correct the action command.");
+                            "Correct the action command.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     parseParams(params);
@@ -522,7 +539,8 @@ public:
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + objectToTilt + " to tilt is unknown.",
-                            "Use an object name that is defined in the environment");
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // The bottle object must be in a hand
@@ -531,7 +549,8 @@ public:
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + objectToTilt + " to pour from is not held in a hand.",
-                            "First get the object " + objectToTilt + " before performing this action");
+                            "First get the object " + objectToTilt + " before performing this action",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     usedManipulators.push_back(pouringHand->name);
@@ -625,7 +644,8 @@ public:
     {
       throw ActionException(ActionException::ParamInvalid,
                             "Action has no parameters. At least one parameters are needed: The object to tilt.",
-                            "Correct the action command.");
+                            "Correct the action command.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     parseParams(params);
@@ -647,7 +667,8 @@ public:
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + objectToFix + " to tilt is unknown.",
-                            "Use an object name that is defined in the environment");
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // The bottle object must be in a hand
@@ -656,7 +677,8 @@ public:
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + objectToFix + " to fix is not held in a hand.",
-                            "First get the object " + objectToFix + " before performing this action");
+                            "First get the object " + objectToFix + " before performing this action",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // If a frame was specified, it must belong to the entity
@@ -677,7 +699,8 @@ public:
       {
         throw ActionException(ActionException::ParamNotFound,
                               "The frame " + frame + " is not part of the object to fix " + objectToFix,
-                              "Check your spelling");
+                              "Check your spelling",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
 
     }

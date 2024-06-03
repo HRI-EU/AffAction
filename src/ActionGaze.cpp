@@ -58,14 +58,16 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The object to gaze at is not specified.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   if (!params.size()==1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Received " + std::to_string(params.size()) + " objects to gaze at the same time.",
-                          "Specify only one object to gaze at.DEVELOPER : Number of passed strings is not 1");
+                          "Specify only one object to gaze at.DEVELOPER : Number of passed strings is not 1",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(params[0]);
@@ -119,7 +121,8 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "Can't gaze at " + params[0] + ". It is neither an entity nor an agent nor a body",
-                          "Check if the given target is correct, or use another one");
+                          "Check if the given target is correct, or use another one",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
 
@@ -134,7 +137,10 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   std::vector<const Manipulator*> headsInScene = scene.getManipulatorsOfType("head");
   if (headsInScene.empty())
   {
-    throw ActionException(ActionException::ParamNotFound, "Can't find a head(camera) in the scene to gaze with.");
+    throw ActionException(ActionException::ParamNotFound,
+                          "Can't find a head(camera) in the scene to gaze with.",
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   for (const auto h : headsInScene)
@@ -160,7 +166,10 @@ ActionGaze::ActionGaze(const ActionScene& scene,
 
   if (cameraFrame.empty())
   {
-    throw ActionException(ActionException::ParamNotFound, "Can't find a head with gazing capability in the scene.");
+    throw ActionException(ActionException::ParamNotFound,
+                          "Can't find a head with gazing capability in the scene.",
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const RcsBody* camBdy = RcsGraph_getBodyByNameNoCase(graph, cameraFrame.c_str());
@@ -168,7 +177,9 @@ ActionGaze::ActionGaze(const ActionScene& scene,
   if (!camBdy)
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "Can't find a head with gazing capability. DEVELOPER: Body '" + cameraFrame + "' not found.");
+                          "Can't find a head with gazing capability: Body '" + cameraFrame + "' not found.",
+                          "Check configuration file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Determine if object to be looked at has been grasped

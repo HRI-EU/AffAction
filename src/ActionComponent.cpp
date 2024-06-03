@@ -180,14 +180,14 @@ void ActionComponent::actionThread(std::string text)
                                        getEntity()->getDt(), earlyExitPrediction);
       predictions[i].idx = i;
       dt_predict = Timer_getSystemTime() - dt_predict;
-      RLOG(0, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
+      RLOG(1, "[%s] Action \"%s\" try %zu: took %.1f msec, jlCost=%f, collCost=%f\n\tMessage: %s",
            predictions[i].success ? "SUCCESS" : "FAILURE", action->getName().c_str(), i,
            1.0e3 * dt_predict, predictions[i].jlCost, predictions[i].collCost,
            predictions[i].feedbackMsg.toString().c_str());
     }
   }
 
-  RLOG_CPP(0, "Sorting " << predictions.size() << " predictions");
+  RLOG_CPP(1, "Sorting " << predictions.size() << " predictions");
   std::sort(predictions.begin(), predictions.end(), TrajectoryPredictor::PredictionResult::lesser);
 
   REXEC(0)

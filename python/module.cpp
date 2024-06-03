@@ -340,65 +340,6 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("run", &aff::ExampleActionsECS::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Simulates the action command in a copy of the simulator class.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("simulate", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> bool
-  {
-    auto sim = std::unique_ptr<aff::ExampleActionsECS>(new aff::ExampleActionsECS());
-    sim->initParameters();
-    sim->noTextGui = true;
-    sim->unittest = true;
-    sim->speedUp = 1e8;
-    sim->sequenceCommand = actionCommand;
-    sim->xmlFileName = ex.xmlFileName;
-    sim->config_directory = ex.config_directory;
-    sim->verbose = ex.verbose;
-    sim->initAlgo();
-    ex.lockStepMtx();
-    RcsGraph_copy(sim->getGraph(), ex.getGraph());
-    sim->getScene()->agents = ex.getScene()->agents;
-    ex.unlockStepMtx();
-    sim->start();
-
-    return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
-  })
-  .def("isGraspable", [](aff::ExampleActionsECS& ex, std::string agentName, std::string objName) -> bool
-  {
-    auto sim = std::unique_ptr<aff::ExampleActionsECS>(new aff::ExampleActionsECS());
-    sim->initParameters();
-    sim->noTextGui = true;
-    sim->unittest = true;
-    sim->speedUp = 1e8;
-    sim->sequenceCommand = "get " + objName;
-    sim->xmlFileName = ex.xmlFileName;
-    sim->config_directory = ex.config_directory;
-    sim->verbose = ex.verbose;
-    sim->initAlgo();
-    ex.lockStepMtx();
-    RcsGraph_copy(sim->getGraph(), ex.getGraph());
-    sim->getScene()->agents = ex.getScene()->agents;
-    ex.unlockStepMtx();
-    sim->start();
-
-    return STRNEQ(sim->lastResultMsg.c_str(), "SUCCESS", 7) ? true : false;
-  })
-
-  .def("run", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> std::string
-  {
-    double t_calc = Timer_getSystemTime();
-    ex.sequenceCommand = actionCommand;
-    ex.start();
-    t_calc = Timer_getSystemTime() - t_calc;
-
-    std::string starLine(80, '*');
-    std::cerr << "\n\n" + starLine + "\n* LLMSim exits with "
-              << ex.getNumFailedActions() << " failed actions";
-    std::cerr << " after " << std::to_string(t_calc) << " seconds\n";
-    std::cerr << starLine << "\n";
-
-    return ex.lastResultMsg;
-  })
   .def("callEvent", [](aff::ExampleActionsECS& ex, std::string eventName)
   {
     ex.getEntity().publish(eventName);
@@ -497,9 +438,9 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.getEntity().publish("ActionSequence", actionCommand);
     blocker.wait();
     RLOG_CPP(0, "Finished: " << actionCommand);
-    bool success =  STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
+    bool success = ex.lastActionResult[0].success();
 
-    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
+    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
     return success;
   })
   .def("getRobotCapabilities", [](aff::ExampleActionsECS& ex)
@@ -571,8 +512,8 @@ PYBIND11_MODULE(pyAffaction, m)
     if (blocking)
     {
       blocker.wait();
-      success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-      RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
+      success = ex.lastActionResult[0].success();
+      RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
     }
 
     RLOG_CPP(0, "Finished: " << newCmd);
@@ -588,10 +529,8 @@ PYBIND11_MODULE(pyAffaction, m)
     PollBlockerComponent blocker(&ex);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
-    //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-    bool success = STRNEQ(ex.lastActionResult[0].error.c_str(), "SUCCESS", 7);
 
-    if (success)
+    if (ex.lastActionResult[0].success())
     {
       RLOG_CPP(0, "SUCCESS");
       return "SUCCESS";
@@ -615,66 +554,8 @@ PYBIND11_MODULE(pyAffaction, m)
     PollBlockerComponent blocker(&ex);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
-    //bool success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-    bool success = STRNEQ(ex.lastActionResult[0].error.c_str(), "SUCCESS", 7);
-    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
-
-    return success;
-  })
-
-  .def("plan2", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
-  {
-    sequenceCommand = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
-    std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.getEntity().getDt(), 0, true, true);
-    if (!tree)
-    {
-      RLOG_CPP(0, "Could not find solution for: '" << sequenceCommand << "'");
-      return false;
-    }
-
-    std::vector<std::string> predictedActions;  // Action sequence which will be returned
-
-    auto sln = tree->findSolutionPath();
-    for (const auto& nd : sln)
-    {
-      predictedActions.push_back(nd->actionCommand());
-      RLOG_CPP(0, "Action: " << nd->actionCommand() <<
-               " cost: " << nd->cost);
-    }
-
-    if (predictedActions.empty())
-    {
-      RLOG_CPP(0, "Could not find solution");
-      return false;
-    }
-
-    RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps");
-
-    std::string newCmd;
-    for (size_t i = 0; i < predictedActions.size(); ++i)
-    {
-      newCmd += predictedActions[i];
-      newCmd += ";";
-    }
-
-    RLOG_CPP(0, "Command : " << newCmd);
-
-    PollBlockerComponent blocker(&ex);
-    ex.getEntity().publish("ActionSequence", newCmd);
-
-    bool success = true;
-    bool blocking = true;
-
-    if (blocking)
-    {
-      blocker.wait();
-      success = STRNEQ(ex.lastResultMsg.c_str(), "SUCCESS", 7);
-      RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastResultMsg.c_str());
-    }
-
-    RLOG_CPP(0, "Finished: " << newCmd);
+    bool success = ex.lastActionResult[0].success();
+    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
 
     return success;
   })
@@ -861,10 +742,9 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def_readwrite("unittest", &aff::ExampleActionsECS::unittest)
   .def_readwrite("noTextGui", &aff::ExampleActionsECS::noTextGui)
-  .def_readwrite("sequenceCommand", &aff::ExampleActionsECS::sequenceCommand)
   .def_readwrite("speedUp", &aff::ExampleActionsECS::speedUp)
   .def_readwrite("xmlFileName", &aff::ExampleActionsECS::xmlFileName)
-  .def_readwrite("configDirectory", &aff::ExampleActionsECS::config_directory)
+  .def_readwrite("configDirectory", &aff::ExampleActionsECS::configDirectory)
   .def_readwrite("noLimits", &aff::ExampleActionsECS::noLimits)
   .def_readwrite("noCollCheck", &aff::ExampleActionsECS::noCollCheck)   // Set before init()
   .def_readwrite("noTrajCheck", &aff::ExampleActionsECS::noTrajCheck)

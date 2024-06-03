@@ -204,7 +204,6 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   noLimits = false;
   zigzag = false;
   withEventGui = false;
-  withTaskGui = false;
   noViewer = false;
   noTextGui = false;
   plot = false;
@@ -245,14 +244,14 @@ ExampleActionsECS::~ExampleActionsECS()
     delete components[i];
   }
 
-  Rcs_removeResourcePath(config_directory.c_str());
+  Rcs_removeResourcePath(configDirectory.c_str());
   RcsGraph_destroy(graphToInitializeWith);
 }
 
 bool ExampleActionsECS::initParameters()
 {
   xmlFileName = "g_group_6.xml";
-  config_directory = "config/xml/AffAction/xml/examples";
+  configDirectory = "config/xml/AffAction/xml/examples";
   speedUp = 3;
 
   return true;
@@ -265,8 +264,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-dt", &dt, "Time step (default is %f)", dt);
   parser->getArgument("-f", &xmlFileName, "Configuration file name "
                       "(default is %s)", xmlFileName.c_str());
-  parser->getArgument("-dir", &config_directory, "Configuration file directory "
-                      "(default is %s)", config_directory.c_str());
+  parser->getArgument("-dir", &configDirectory, "Configuration file directory "
+                      "(default is %s)", configDirectory.c_str());
   parser->getArgument("-alpha", &alpha, "Null space scaling factor (default is %f)", alpha);
   parser->getArgument("-lambda", &lambda, "Regularization (default: %f)", lambda);
   parser->getArgument("-pause", &pause, "Pause after each process() call");
@@ -277,7 +276,6 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-noLimits", &noLimits, "Ignore all robot limits");
   parser->getArgument("-zigzag", &zigzag, "Zig-zag trajectory");
   parser->getArgument("-eventGui", &withEventGui, "Launch event gui");
-  parser->getArgument("-taskGui", &withTaskGui, "Launch task gui");
   parser->getArgument("-noViewer", &noViewer, "Do not launch viewer");
   parser->getArgument("-noTextGui", &noTextGui, "Do not launch TextGui");
   parser->getArgument("-plot", &plot, "Enable debug plotting");
@@ -308,7 +306,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
 bool ExampleActionsECS::initAlgo()
 {
   Rcs_addResourcePath(RCS_CONFIG_DIR);
-  Rcs_addResourcePath(config_directory.c_str());
+  Rcs_addResourcePath(configDirectory.c_str());
 
   if (noLimits)
   {
@@ -810,14 +808,6 @@ bool ExampleActionsECS::initGuis()
     return true;
   }
 
-  // Optional task gui to inspect task-level coordinates. We don't use a static
-  // instance since this will not be cleaned up after exiting main.
-  if (withTaskGui)
-  {
-    taskGui = std::make_unique<TaskGuiComponent>(&entity, controller.get());
-    taskGui->setPassive(true);
-  }
-
   // Gui for manually triggering events with basic data types.
   if (withEventGui)
   {
@@ -834,32 +824,9 @@ bool ExampleActionsECS::initGuis()
 
 void ExampleActionsECS::run()
 {
-  // Start all threads of components. We also publish a sequence command. If it
-  // has not been set, it is an empty string that immediately returns.
+  // Start all threads of components.
   entity.publish("Start");
   entity.process();
-
-  if (valgrind)
-  {
-    // get fanta_bottle;put fanta_bottle lego_box;pose default
-    std::vector<std::string> seqCmd;
-    seqCmd.push_back("get bottle_of_cola");
-    seqCmd.push_back("pour bottle_of_cola glass_blue");
-    seqCmd.push_back("put bottle_of_cola");
-
-    auto tree = PredictionTree::planActionTree(PredictionTree::SearchType::DFSMT, *getScene(), getGraph(), getBroadPhase(),
-                                               seqCmd, entity.getDt(), 0, false, false);
-
-    tree->toDotFile("PredictionTree.dot");
-
-    // RLOG_CPP(0, "Command : " << newCmd);
-    runLoop = false;
-  }
-
-  if (!sequenceCommand.empty())
-  {
-    entity.publish("ActionSequence", sequenceCommand);
-  }
 
   while (runLoop)
   {
@@ -885,12 +852,6 @@ void ExampleActionsECS::step()
   setJointCommand->call(ikc->getJointCommandPtr());
   setRenderCommand->call();
   dtEvents = Timer_getSystemTime() - dtProcess;
-
-  if (withTaskGui)
-  {
-    MatNd_copy(graphC->getGraph()->q, ikc->getGraph()->q);
-  }
-
   entity.process();
   entity.stepTime();
   stepMtx.unlock();
@@ -958,18 +919,19 @@ void ExampleActionsECS::onQuit()
  * Builds a search tree, finds solutions, and handles events.
  ******************************************************************************/
 static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
-                                        std::string sequenceCommand,
+                                        std::string actionSequence,
                                         size_t maxNumThreads,
                                         bool depthFirst,
                                         bool earlyExitSearch,
                                         bool earlyExitAction)
 {
+  ex->processingAction = true;
+  actionSequence = ActionSequence::resolve(ex->getGraph()->cfgFile, actionSequence);
   if (ex->verbose)
   {
-    RMSG_CPP("_planActionSequenceThreaded received sequence: '" << sequenceCommand << "'");
+    RMSG_CPP("_planActionSequenceThreaded received sequence: '" << actionSequence << "'");
   }
-  ex->processingAction = true;
-  std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
+  std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
 
   auto sType = depthFirst ? PredictionTree::SearchType::DFSMT : PredictionTree::SearchType::BFS;
   auto tree = ex->getQuery()->planActionTree(sType, seq, ex->getEntity().getDt(),
@@ -983,6 +945,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     explanation[0].reason = "The action tree is empty";
     explanation[0].suggestion = "Send another command that does the same thing";
     explanation[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    explanation[0].actionCommand = actionSequence;
     ex->getEntity().publish("ActionResult", false, 0.0, explanation);
     if (ex->verbose)
     {
@@ -995,7 +958,16 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   std::vector<std::string> predictedActions;
   std::vector<TrajectoryPredictor::PredictionResult> animations;
 
-  for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
+  // We first check if there is any fatal error in the tree. In this case, we
+  // only report one failed issue raather than FIRST_N_SOLUTIONS.
+  auto slnPath = tree->findSolutionPath(0, false);
+  size_t numSols = FIRST_N_SOLUTIONS;
+  if (!slnPath.empty() && slnPath.back()->fatalError)
+  {
+    numSols = 1;
+  }
+
+  for (size_t i = 0; i < numSols; ++i)
   {
     TrajectoryPredictor::PredictionResult res;
     auto path = tree->findSolutionPath(i, false);
@@ -1055,7 +1027,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     // Compose a meaningful error description for each failed action sequence
     std::vector<ActionResult> actionResults;
 
-    for (size_t i = 0; i < FIRST_N_SOLUTIONS; ++i)
+    for (size_t i = 0; i < numSols; ++i)
     {
       auto path = tree->findSolutionPath(i, false);
       std::string actionSeq;
@@ -1070,10 +1042,6 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       if (!errMsg.error.empty())
       {
         actionResults.push_back(errMsg);
-        // errDescr.error += " Issue " + std::to_string(i) + ": " + errMsg.error;
-        // errDescr.reason += " Reason " + std::to_string(i) + ": " + errMsg.reason;
-        // errDescr.suggestion += " Suggestion " + std::to_string(i) + ": " + errMsg.suggestion;
-        // errDescr.developer += " Developer " + std::to_string(i) + ": " + errMsg.developer;
       }
     }
 
@@ -1094,14 +1062,9 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   }
 
   // From here on, we succeeded
-  ActionResult fbmsg;
-  fbmsg.error = "SUCCESS";
-  fbmsg.developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
-  fbmsg.actionCommand = Rcs::String_concatenate(predictedActions, ";");
-
-  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << fbmsg.toString());
-  ex->getEntity().publish("ActionSequence", fbmsg.actionCommand);
-
+  std::string detailedActionCommand = Rcs::String_concatenate(predictedActions, ";");
+  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << detailedActionCommand);
+  ex->getEntity().publish("ActionSequence", detailedActionCommand);
 
   REXEC(0)
   {
@@ -1114,34 +1077,30 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     tree->printTreeVisual(tree->root, 0);
   }
 
-  RLOG_CPP(0, "Took " << tree->t_calc << " secs for " << tree->getNumNodes() << " nodes");
   if (ex->verbose)
   {
     RMSG_CPP("_planActionSequenceThreaded: SUCCESS - returning");
   }
 }
 
-void ExampleActionsECS::onPlanActionSequenceBFS(std::string sequenceCommand)
+void ExampleActionsECS::onPlanActionSequenceBFS(std::string actionSequence)
 {
   bool dfs = false;
-  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false, earlyExitAction);
+  std::thread t1(_planActionSequenceThreaded, this, actionSequence, maxNumThreads, dfs, false, earlyExitAction);
   t1.detach();
 }
 
-void ExampleActionsECS::onPlanActionSequenceDFS(std::string sequenceCommand)
+void ExampleActionsECS::onPlanActionSequenceDFS(std::string actionSequence)
 {
   bool dfs = true;
-  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, false, earlyExitAction);
+  std::thread t1(_planActionSequenceThreaded, this, actionSequence, maxNumThreads, dfs, false, earlyExitAction);
   t1.detach();
 }
 
-void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string sequenceCommand)
+void ExampleActionsECS::onPlanActionSequenceDFSEE(std::string actionSequence)
 {
   bool dfs = true;
-  sequenceCommand = ActionSequence::resolve(controller->getGraph()->cfgFile, sequenceCommand);
-  std::thread t1(_planActionSequenceThreaded, this, sequenceCommand, maxNumThreads, dfs, true, earlyExitAction);
+  std::thread t1(_planActionSequenceThreaded, this, actionSequence, maxNumThreads, dfs, true, earlyExitAction);
   t1.detach();
 }
 
@@ -1370,15 +1329,14 @@ void ExampleActionsECS::onActionResult(bool success, double quality,
   }
 
   lastActionResult = resMsg;
-  lastResultMsg = resMsg[0].error;
-  entity.publish("SetTextLine", lastResultMsg, 1);
+  entity.publish("SetTextLine", lastActionResult[0].error, 1);
 
   // This needs to be done independent of failure or success
   if (!actionStack.empty())
   {
-    addToCompletedActionStack(actionStack[0], resMsg[0].actionCommand); // That's the action command
+    addToCompletedActionStack(actionStack[0], resMsg[0].error);
 
-    REXEC(1)
+    REXEC(0)
     {
       printCompletedActionStack();
     }
@@ -1408,13 +1366,20 @@ void ExampleActionsECS::onActionResult(bool success, double quality,
 
   // After the last action command of a sequence has been finished (the
   // trajectory has ended), or we face a failure, we "unfreeze" the perception
-  // and accept updates from the perceived scene.
+  // and accept updates from the perceived scene. The "processingAction" flag
+  // must be resetted after assigning the lastActionResult.
   if (actionStack.empty())
   {
     RLOG(0, "ActionStack is empty, unfreezing perception");
     entity.publish("FreezePerception", false);
     processingAction = false;
     actionC->setFinalPoseRunning(false);
+
+    RLOG_CPP(0, "lastActionResult has " << lastActionResult.size() << " entries:");
+    for (const auto& fb : lastActionResult)
+    {
+      RLOG_CPP(0, fb.toString());
+    }
   }
 
   if ((actionStack.size()==1) && STRNEQ(actionStack[0].c_str(), "pose", 4))
@@ -1559,8 +1524,9 @@ void ExampleActionsECS::printCompletedActionStack() const
   RMSG("completedActionStack has %zu entries", completedActionStack.size());
   for (size_t i=0; i<completedActionStack.size(); ++i)
   {
-    RMSG("completedActionStack[%zu]: Action='%s' result='%s'",
-         i, completedActionStack[i].first.c_str(), completedActionStack[i].second.c_str());
+    std::cout << "  completedActionStack[" << i << "]: " << std::endl
+              << "    Action = '" << completedActionStack[i].first << "'" << std::endl
+              << "    Result = '" << completedActionStack[i].second << "'" << std::endl;
   }
 }
 

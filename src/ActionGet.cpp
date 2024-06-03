@@ -104,23 +104,6 @@ ActionGet::ActionGet(const ActionScene& domain,
   init(domain, graph, objectToGet, manipulator, graspToUse, whereFrom);
 }
 
-std::string ActionGet::getActionCommand() const
-{
-  auto get_manipulators = getManipulators();
-  RCHECK(!get_manipulators.empty());
-
-  // The first manipulator is the one to get the object with.
-  std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
-  actionCommand += graspTypeToString(graspType);
-
-  if (getDuration()!=getDefaultDuration())
-  {
-    actionCommand += " duration " + std::to_string(getDuration());
-  }
-
-  return actionCommand;
-}
-
 void ActionGet::init(const ActionScene& domain,
                      const RcsGraph* graph,
                      const std::string& objectToGet,
@@ -131,10 +114,8 @@ void ActionGet::init(const ActionScene& domain,
   RLOG_CPP(1, "Calling get with manipulator='" << manipulator
            << "' object='" << objectToGet << "' from='" << whereFrom << "'");
 
-  std::string errorMsg = "ERROR: ";
-
   // Initialize object to get.
-  const AffordanceEntity* entityToGet = NULL;
+  const AffordanceEntity* entityToGet = nullptr;
 
   if (whereFrom.empty())
   {
@@ -144,7 +125,7 @@ void ActionGet::init(const ActionScene& domain,
 
     if (nttsToGet.empty())
     {
-      throw ActionException(ActionException::ParamNotFound,
+      throw ActionException(ActionException::UnrecoverableError,
                             "The " + objectToGet + " is unknown.",
                             "Use an object name that is defined in the environment",
                             std::string(__FILENAME__) + " " + std::to_string(__LINE__));
@@ -211,7 +192,8 @@ void ActionGet::init(const ActionScene& domain,
       {
         std::string reasonMsg = "The " + whereFrom + " is neither a hand nor a part of the environment";
         std::string suggestionMsg = "Use an object name or a hand that is defined in the environment";
-        throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
+        throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg,
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
 
       fromBdyName = fromHand->bdyName;
@@ -235,7 +217,8 @@ void ActionGet::init(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + whereFrom + " is empty",
-                            "Use an alternative object");
+                            "Use an alternative object",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
   }
@@ -249,7 +232,9 @@ void ActionGet::init(const ActionScene& domain,
   if (graspables.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
-                          objectToGet + " cannot be grasped");
+                          objectToGet + " cannot be grasped",
+                          "Grasp another object or learn how to grasp it",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // ResolveBodyName changes the objectName in certain cases (e.g. generic bodies)
@@ -306,7 +291,8 @@ void ActionGet::init(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "Can't find a hand with the name " + manipulator,
-                            "Use a hand name that is defined in the environment");
+                            "Use a hand name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     if (!hand->isEmpty(graph))
@@ -315,8 +301,9 @@ void ActionGet::init(const ActionScene& domain,
 
       if (heldObjects.empty())
       {
-        throw ActionException(ActionException::UnknownError, "Internal error", "",
-                              "Internal error: the hand is not empty, but no grasped entity was found");
+        throw ActionException(ActionException::UnknownError, "Internal error",
+                              "Internal error: the hand is not empty, but no grasped entity was found",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
       }
 
       std::string reasonMsg = "The hand " + manipulator + " is already holding the " + heldObjects[0]->name;
@@ -326,7 +313,8 @@ void ActionGet::init(const ActionScene& domain,
       }
 
       std::string suggestionMsg = "Free your hand before performing this command, or use another hand";
-      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg);
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg,
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     freeManipulators.push_back(hand);
@@ -407,7 +395,9 @@ void ActionGet::init(const ActionScene& domain,
   if (affordanceMap.empty())
   {
     throw ActionException(ActionException::KinematicallyImpossible,
-                          "I don't have the capability of grasping the " + objectToGet);
+                          "I don't have the capability of grasping the " + objectToGet,
+                          "Check robot capabilities",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // We have one or several matches and sort them according to their cost. Lower
@@ -584,6 +574,23 @@ bool ActionGet::initialize(const ActionScene& domain,
 
 ActionGet::~ActionGet()
 {
+}
+
+std::string ActionGet::getActionCommand() const
+{
+  auto get_manipulators = getManipulators();
+  RCHECK(!get_manipulators.empty());
+
+  // The first manipulator is the one to get the object with.
+  std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
+  actionCommand += graspTypeToString(graspType);
+
+  if (getDuration() != getDefaultDuration())
+  {
+    actionCommand += " duration " + std::to_string(getDuration());
+  }
+
+  return actionCommand;
 }
 
 tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const

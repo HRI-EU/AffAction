@@ -122,7 +122,8 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
                                   std::vector<std::string> params,
                                   ActionResult& explanation)
 {
-  ActionBase* action = NULL;
+  ActionBase* action = nullptr;
+  std::string actionCmd = actionName + " " + Rcs::String_concatenate(params, " ");
   std::map<std::string, ActionMaker>::iterator it;
   it = constructorMap().find(actionName);
 
@@ -132,6 +133,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
     explanation.reason = "The action " + actionName + " does not exist";
     explanation.suggestion = "Check your typing";
     explanation.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+    explanation.actionCommand = actionCmd;
     RLOG_CPP(1, explanation.toString());
     return nullptr;
   }
@@ -145,12 +147,17 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
   catch (const ActionException& ex)
   {
     explanation = ex.getFeedbackMsg();
+    if (explanation.actionCommand.empty())
+    {
+      explanation.actionCommand = actionCmd;
+    }
     RLOG_CPP(1, explanation.toString());
     action = nullptr;
   }
   catch (const std::exception& ex)
   {
     explanation.error = ex.what();
+    explanation.actionCommand = actionCmd;
     explanation.developer = "std::exception thrown " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
     RLOG_CPP(1, explanation.toString());
     action = nullptr;
@@ -158,6 +165,7 @@ ActionBase* ActionFactory::create(const ActionScene& domain,
   catch (...)
   {
     explanation.error = "Failed to create action: unknown reason";
+    explanation.actionCommand = actionCmd;
     explanation.developer = "Unhandled exception thrown " + std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
     RLOG_CPP(1, explanation.toString());
     action = NULL;

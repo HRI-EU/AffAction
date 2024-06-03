@@ -53,7 +53,10 @@ ActionWait::ActionWait(const ActionScene& scene,
 {
   if (params.empty())
   {
-    throw ActionException("ERROR REASON: Didn't receive time to wait. SUGGESTION: Specify time to wait", ActionException::ParamInvalid);
+    throw ActionException(ActionException::ParamInvalid,
+                          "Didn't receive time to wait.",
+                          "Specify time to wait",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   waitingTime = std::stod(params[0]);
@@ -63,7 +66,11 @@ ActionWait::ActionWait(const ActionScene& scene,
   const RcsBody* camBdy = RcsGraph_getBodyByNameNoCase(graph, cameraFrame.c_str());
   if (!camBdy)
   {
-    throw ActionException("FATAL_ERROR REASON: Can't find a task to wait for. DEVELOPER: Body '" + cameraFrame + "' not found.", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "Can't find a task to wait for.",
+                          "",
+                          "DEVELOPER: Body '" + cameraFrame + "' not found."
+                          + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Task naming
@@ -117,8 +124,9 @@ std::vector<std::string> ActionWait::getManipulators() const
   return std::vector<std::string>();
 }
 
-std::unique_ptr<ActionBase> ActionWait::clone() const {
-      return std::make_unique<ActionWait>(*this);
+std::unique_ptr<ActionBase> ActionWait::clone() const
+{
+  return std::make_unique<ActionWait>(*this);
 }
 
 }   // namespace aff

@@ -223,9 +223,10 @@ ActionPut::ActionPut(const ActionScene& domain,
 
   if (objectToPut == surfaceToPutOn)
   {
-    throw ActionException(ActionException::ParamNotFound,
+    throw ActionException(ActionException::UnrecoverableError,
                           "The " + objectToPut + " cannot be put on itself.",
-                          "Put it onto another object in the environment");
+                          "Put it onto another object in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   const AffordanceEntity* object = initHands(domain, graph, objectToPut);
@@ -289,9 +290,10 @@ void ActionPut::parseArgs(const ActionScene& domain,
 
     if (!nearTo.empty() && domain.getSceneEntities(nearTo).empty())
     {
-      throw ActionException(ActionException::ParamNotFound,
+      throw ActionException(ActionException::UnrecoverableError,
                             "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
-                            "Put it near another object in the environment");
+                            "Put it near another object in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     params.erase(it + 1);
@@ -305,9 +307,10 @@ void ActionPut::parseArgs(const ActionScene& domain,
 
     if (!farFrom.empty() && domain.getSceneEntities(farFrom).empty())
     {
-      throw ActionException(ActionException::ParamNotFound,
+      throw ActionException(ActionException::UnrecoverableError,
                             "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
-                            "Put it far away of another object in the environment");
+                            "Put it far away of another object in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     params.erase(it + 1);
@@ -332,7 +335,7 @@ const AffordanceEntity* ActionPut::initHands(const ActionScene& domain,
 
   if (objects.empty())
   {
-    throw ActionException(ActionException::ParamNotFound,
+    throw ActionException(ActionException::UnrecoverableError,
                           "The " + objectToPut + " is unknown.",
                           "Use an object name that is defined in the environment",
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
@@ -415,7 +418,7 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
   // If a non-empty name for the surface has been given, we enforce that it exists
   if ((!surface) && (!surfaceToPutOn.empty()))
   {
-    throw ActionException(ActionException::ParamNotFound,
+    throw ActionException(ActionException::UnrecoverableError,
                           "The surface '" + surfaceToPutOn + "' to put the '" + object->bdyName + "' on is unknown.",
                           "Use an object name that is defined in the environment",
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
@@ -458,7 +461,8 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
     std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
                           "I can't put the " + object->bdyName + " on the " + surfaceName + " because it does not support it.",
-                          "Specify another object to put it on");
+                          "Specify another object to put it on",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   RLOG_CPP(1, "Affordance map has " << aMap.size() << " entries");
@@ -577,7 +581,8 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
     std::string surfaceName = surface ? surface->name : "surface";
     throw ActionException(ActionException::ParamNotFound,
                           "I can't put the " + object->bdyName + " on the " + surfaceName + ". There is already something on it.",
-                          "Put the object somewhere else, or remove the blocking object.");
+                          "Put the object somewhere else, or remove the blocking object.",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Create a vector of tuples with the third argument being the cost to be sorted for

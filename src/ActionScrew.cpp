@@ -63,15 +63,14 @@ ActionScrew::ActionScrew(const ActionScene& scene,
                          const std::string& objectToScrew,
                          const std::string& screwingHandName)
 {
-  std::string errorMsg = "ERROR: ";
-
   std::vector<const AffordanceEntity*> nttsToScrew = scene.getAffordanceEntities(objectToScrew);
 
   if (nttsToScrew.empty())
   {
-    std::string reasonMsg = " REASON: The " + objectToScrew +
-                            " is unknown. SUGGESTION: Use an object name that is defined in the environment";
-    throw ActionException(errorMsg + reasonMsg, ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToScrew + " is unknown.",
+                          " Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " line " + std::to_string(__LINE__));
   }
 
   // We take the first one \todo(MG): Make generic.
@@ -83,8 +82,10 @@ ActionScrew::ActionScrew(const ActionScene& scene,
   // Both bottle and glas need to have an opening
   if (screwables.empty())
   {
-    throw ActionException("ERROR RASON: " + objectToScrew + " cannot be screwed open or close SUGGESTION: "
-                          "Open it differently or use an alternative container", ActionException::ParamNotFound);
+    throw ActionException(ActionException::ParamNotFound,
+                          "The " + objectToScrew + " cannot be screwed open or close.",
+                          "Open it differently or use an alternative container",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // We make a local copy of the body strings, since they might be resolved
@@ -108,23 +109,24 @@ ActionScrew::ActionScrew(const ActionScene& scene,
     // If a manipulator has been passed but cannot be found, we consider this as an error.
     if (!screwingHand)
     {
-      std::string reasonMsg = " REASON: Can't find a hand with the name " + screwingHandName;
-      std::string suggestionMsg = " SUGGESTION: Use a hand name that is defined in the environment";
-      throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+      std::string reasonMsg = "Can't find a hand with the name " + screwingHandName;
+      std::string suggestionMsg = "Use a hand name that is defined in the environment";
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg,
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     if (!screwingHand->isEmpty(graph))
     {
       auto heldObjects = screwingHand->getGraspedEntities(scene, graph);
       RCHECK(!heldObjects.empty());
-      std::string reasonMsg = " REASON: The hand " + screwingHandName + " is already holding the " +
-                              heldObjects[0]->name;
+      std::string reasonMsg = "The hand " + screwingHandName + " is already holding the " + heldObjects[0]->name;
       if (heldObjects.size()>1)
       {
         reasonMsg = " and some other objects";
       }
-      std::string suggestionMsg = " SUGGESTION: Free your hand before performing this command, or use another hand";
-      throw ActionException(errorMsg + reasonMsg + suggestionMsg, ActionException::ParamNotFound);
+      std::string suggestionMsg = "Free your hand before performing this command, or use another hand";
+      throw ActionException(ActionException::ParamNotFound, reasonMsg, suggestionMsg,
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
   }
   else
@@ -134,9 +136,10 @@ ActionScrew::ActionScrew(const ActionScene& scene,
 
     if (freeHands.empty())
     {
-      std::string reasonMsg = " REASON: All hands are already full";
-      std::string suggestionMsg = " SUGGESTION: Free one or all your hands before performing this command";
-      throw ActionException("ERROR " + reasonMsg + suggestionMsg, ActionException::KinematicallyImpossible);
+      throw ActionException(ActionException::KinematicallyImpossible,
+                            "All hands are already full",
+                            "Free one or all your hands before performing this command",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
     else if (freeHands.size() == 1)
     {

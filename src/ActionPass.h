@@ -55,9 +55,6 @@ public:
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
 
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
-  size_t getNumSolutions() const;
-
 protected:
 
   void init(const ActionScene& domain,

@@ -60,31 +60,19 @@ public:
     ParamInvalid,             //!< Parameter is invalid
     KinematicallyImpossible,  //!< Out of reached, hand occupied ...
     NoError,
+    UnrecoverableError,
     UnknownError
   };
 
   ActionException(ActionError e,
                   std::string reasonMsg_,
-                  std::string suggestionMsg_=std::string(),
-                  std::string developerMsg_=std::string()) : error(e)
+                  std::string suggestionMsg_,
+                  std::string developerMsg_) : error(e)
   {
     feedbackMsg.error = err2str(e);
     feedbackMsg.reason = reasonMsg_;
     feedbackMsg.suggestion = suggestionMsg_;
     feedbackMsg.developer = developerMsg_;
-
-    // Create legacy message
-    msg = (e==NoError) ? "SUCCESS" : "ERROR";
-    msg += " REASON: " + feedbackMsg.reason + " SUGGESTION: " + feedbackMsg.suggestion;
-    if (!feedbackMsg.developer.empty())
-    {
-      msg += " DEVELEOPER: " + feedbackMsg.developer;
-    }
-  }
-
-  ActionException(const std::string& message, ActionError e) : msg(message), error(e)
-  {
-    msg = err2str(e) + message;
   }
 
   virtual ~ActionException() noexcept
@@ -93,39 +81,13 @@ public:
 
   virtual const char* what() const noexcept
   {
-    return msg.c_str();
-  }
-
-  std::string err2str(ActionError e) const
-  {
-    // \todo(MG): somehow improve developer feeback msg.
-    return std::string();
-    std::string str;
-
-    switch (e)
+    std::string msg = (error == NoError) ? "SUCCESS" : "ERROR";
+    msg += " REASON: " + feedbackMsg.reason + " SUGGESTION: " + feedbackMsg.suggestion;
+    if (!feedbackMsg.developer.empty())
     {
-      case ParamNotFound:
-        str = "ParamNotFound: ";
-        break;
-
-      case ParamInvalid:
-        str = "ParamInvalid: ";
-        break;
-
-      case KinematicallyImpossible:
-        str = "KinematicallyImpossible: ";
-        break;
-
-      case NoError:
-        str = "NoError: ";
-        break;
-
-      default:
-        str = "UnknownError: ";
-        break;
+      msg += " DEVELEOPER: " + feedbackMsg.developer;
     }
-
-    return str;
+    return msg.c_str();
   }
 
   ActionResult getFeedbackMsg() const
@@ -135,7 +97,40 @@ public:
 
 protected:
 
-  std::string msg;
+  std::string err2str(ActionError e) const
+  {
+    std::string str;
+
+    switch (e)
+    {
+      case ParamNotFound:
+        str = "ParamNotFound";
+        break;
+
+      case ParamInvalid:
+        str = "ParamInvalid";
+        break;
+
+      case KinematicallyImpossible:
+        str = "KinematicallyImpossible";
+        break;
+
+      case NoError:
+        str = "NoError";
+        break;
+
+      case UnrecoverableError:
+        str = "UnrecoverableError";
+        break;
+
+      default:
+        str = "UnknownError";
+        break;
+    }
+
+    return str;
+  }
+
   ActionResult feedbackMsg;
   ActionError error;
 };

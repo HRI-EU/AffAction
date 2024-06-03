@@ -32,14 +32,26 @@
 
 #include "ActionResult.h"
 
+#include <Rcs_macros.h>
+
 
 namespace aff
 {
 
 std::string ActionResult::toString() const
 {
-  std::string res = "ERROR: " + error + " REASON: " + reason + " SUGGESTION: "
-                    + suggestion + " DEVELOPER:" + developer + " ACTION: " + actionCommand;
+  std::string res;
+
+  if (success())
+  {
+    res = "ACTION: '" + actionCommand + "' : SUCCESS";
+  }
+  else
+  {
+    res = "ACTION: '" + actionCommand + "' ERROR: '" + error + "' REASON: '" + reason
+          + "' SUGGESTION: '" + suggestion + "' DEVELOPER: '" + developer + "'";
+  }
+
   return res;
 }
 
@@ -62,6 +74,11 @@ void ActionResult::clear()
   reason.clear();
   suggestion.clear();
   developer.clear();
+}
+
+bool ActionResult::success() const
+{
+  return STRNEQ(error.c_str(), "SUCCESS", 7);
 }
 
 }   // namespace aff

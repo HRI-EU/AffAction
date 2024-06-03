@@ -59,14 +59,15 @@ size_t PredictionTreeNode::uniqueIdCount = 0;
 
 PredictionTreeNode::PredictionTreeNode() :
   success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(uniqueIdCount++),
-  level(0), parent(nullptr), graph(nullptr), threadNumber(0)
+  level(0), parent(nullptr), graph(nullptr), threadNumber(0), fatalError(false)
 {
 }
 
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
   success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
-  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), feedbackMsg(pr.feedbackMsg), threadNumber(0)
+  bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), feedbackMsg(pr.feedbackMsg),
+  threadNumber(0), fatalError(false)
 {
   accumulatedCost = parent->accumulatedCost + cost;
   level = parent->level+1;
@@ -1099,7 +1100,12 @@ void DFSMT(ActionScene& scene,
     node->feedbackMsg = err;
     std::string tmp = "Failed to create action: " + node->feedbackMsg.error;
     node->feedbackMsg.error = tmp;
-    node->success = false;
+    if (err.error=="UnrecoverableError")
+    {
+      node->success = false;
+      node->fatalError = true;
+    }
+    finished = true;
     return;
   }
 

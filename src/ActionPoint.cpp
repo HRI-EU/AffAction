@@ -64,7 +64,8 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The object to point at is not specified.",
-                          "Use an object name that is defined in the environment");
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   std::vector<const SceneEntity*> nttsToPointAt;
@@ -129,7 +130,9 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   if (hands.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
-                          "Can't find a hand of robot " + robots[0]->name + " to point with");
+                          "Can't find a hand of robot " + robots[0]->name + " to point with",
+                          "Check xml file",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   // Assemble all combinations

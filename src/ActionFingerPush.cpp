@@ -71,7 +71,9 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
   if (params.empty())
   {
     throw ActionException(ActionException::ParamInvalid,
-                          "Action expects at least 1 parameter, but received 0");
+                          "Action expects at least 1 parameter, but received 0",
+                          "Check syntax",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
   {
@@ -82,7 +84,8 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "ERROR REASON: The " + params[0] + " is unknown. ",
-                            "Use an object name that is defined in the environment");
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     auto pushables = getAffordances<PointPushable>(object);
@@ -90,14 +93,17 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The " + params[0] + " is not switchable.",
-                            "Replace this action with a more clever one.");
+                            "Replace this action with a more clever one.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // \todo(MG)
     if (pushables.size() != 1)
     {
       throw ActionException(ActionException::ParamInvalid,
-                            "Found " + std::to_string(pushables.size()) + " frames, but only 1 is supported");
+                            "Found " + std::to_string(pushables.size()) + " frames, but only 1 is supported",
+                            "Check configuration file",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     RLOG_CPP(1, "Found object to push: " << object->name);
@@ -120,7 +126,8 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "The tool to push with " + params[1] + " is unknown.",
-                            "Use an object name that is defined in the environment");
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
     auto pokables = getAffordances<PointPokable>(pusher);
 
@@ -128,7 +135,8 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "ERROR REASON: The tool " + params[1] + " cannot be used to switch something on.",
-                            "Use another tool");
+                            "Use another tool",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     // \todo(MG)
@@ -136,7 +144,9 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamInvalid,
                             "Found " + std::to_string(pokables.size()) +
-                            " pokables, but only 1 is supported");
+                            " pokables, but only 1 is supported",
+                            "",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     frameThatPokes = pokables[0]->frame;
@@ -177,7 +187,8 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     {
       throw ActionException(ActionException::ParamNotFound,
                             "Agent has no fingers to perform this action.",
-                            "Use a tool");
+                            "Use a tool",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }
 
     if (frameThatPokes.empty())
