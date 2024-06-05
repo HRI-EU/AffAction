@@ -495,75 +495,67 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
     if (!human->markers.empty())
     {
       const double tmc = 0.05;
+
+      // Transform pelvis
       const RcsBody* bdy = RcsGraph_getBodyByName(graph, human->name.c_str());
       int jidx = RcsBody_getJointIndex(graph, bdy);
       if (jidx!=-1)
       {
-        lpFiltTrf(&graph->q->ele[jidx], &human->markers[PELVIS], tmc);
+        const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
+        const HTr* A_MI = &human->markers[PELVIS];   // marker transform in world
+        HTr A_MP;   // Transform from pelvis's parent to its raw percept
+        HTr_invTransform(&A_MP, A_PI, A_MI);
+        lpFiltTrf(&graph->q->ele[jidx], &A_MP, tmc);
+        //lpFiltTrf(&graph->q->ele[jidx], A_MI, tmc);
       }
 
       for (const auto& mName : human->manipulators)
       {
-        // RLOG_CPP(0, "Agent " << human->name << " has manipulator " << mName);
-
+        // The marker transforms are represented in world coordinates.
+        // In order to consider that the manipulator might have a parent
+        // different to the world frame, we transform the raw percepts
+        // into the (M)anipulator's (P)arent frame.
+        // A_PI is the Manipulator's parent transform
         const aff::Manipulator* m = scene->getManipulator(mName);
-        RCHECK(m);
+        RCHECK_MSG(m, "Manipulator '%s' not found", mName.c_str());
         bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
-        const int jidx = RcsBody_getJointIndex(graph, bdy);
+        jidx = RcsBody_getJointIndex(graph, bdy);
         if (jidx==-1)
         {
           continue;
         }
+        const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
+        double* q_rbj = &graph->q->ele[jidx];
+        HTr A_MP;   // Transform from manipulator's parent to its raw percept
 
         if (m->isOfType("head"))
         {
-          // \todo: Same as below.
-          const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
           const HTr* A_MI = &human->markers[HEAD];   // marker transform in world
-          HTr A_PM;   // Transform from manipulator's raw percept to its parent
-          HTr_invTransform(&A_PM, A_MI, A_PI);
-          //lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
-          lpFiltTrf(&graph->q->ele[jidx], &human->markers[HEAD], tmc);
+          HTr_invTransform(&A_MP, A_PI, A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          //lpFiltTrf(q_rbj, A_MI, tmc);
 
-          const double* gazePos = bdy->A_BI.org;   // \todo(MG): That's one step behind
-          const double* gazeDir = bdy->A_BI.rot[1];
+          // Get transform from q-vector so that estimate is not one step lagging behind
+          HTr headTrf;
+          HTr_from6DVector(&headTrf, &graph->q->ele[jidx]);
+          const double* gazePos = headTrf.org;
+          const double* gazeDir = headTrf.rot[1];
           Vec3d_copy(human->headPosition, gazePos);
           Vec3d_copy(human->gazeDirection, gazeDir);
-
-
-          // RLOG(0, "FIXME");
-          // double* q_rbj = &graph->q->ele[jidx];
-          // lpFiltTrf(q_rbj, &human->markers[HEAD], tmc);
-          // HTr gaze;
-          // HTr_from6DVector(&gaze, q_rbj);
-          // const double* gazePos = gaze.org;
-          // const double* gazeDir = gaze.rot[1];
-          // Vec3d_copy(human->headPosition, gazePos);
-          // Vec3d_copy(human->gazeDirection, gazeDir);
-
         }
         else if (m->isOfType("hand_left"))
         {
-          // A_PI is the Manipulator's parent transform
-          const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
           const HTr* A_MI = &human->markers[HANDTIP_LEFT];   // marker transform in world
-          HTr A_PM;   // Transform from manipulator's raw percept to its parent
-          HTr_invTransform(&A_PM, A_MI, A_PI);
-          //lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
-          lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_LEFT], tmc);
+          HTr_invTransform(&A_MP, A_PI, A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          //lpFiltTrf(q_rbj, A_MI, tmc);
         }
         else if (m->isOfType("hand_right"))
         {
-          // The marker transforms are represented in world coordinates.
-          // In order to consider that the manipulator might have a parent
-          // different to the world frame, we transform the raw percepts
-          // into the (M)anipulator's (P)arent frame.
-          const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;   // Manipulator's parent transform
           const HTr* A_MI = &human->markers[HANDTIP_RIGHT];   // marker transform in world
-          HTr A_PM;   // Transform from manipulator's raw percept to its parent
-          HTr_invTransform(&A_PM, A_MI, A_PI);
-          //lpFiltTrf(&graph->q->ele[jidx], &A_PM, tmc);
-          lpFiltTrf(&graph->q->ele[jidx], &human->markers[HANDTIP_RIGHT], tmc);
+          HTr_invTransform(&A_MP, A_PI, A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          //lpFiltTrf(q_rbj, A_MI, tmc);
         }
 
       }
