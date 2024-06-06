@@ -35,6 +35,7 @@
 #include "Manipulator.h"
 
 #include <Rcs_typedef.h>
+#include <Rcs_geometry.h>
 #include <Rcs_shape.h>
 #include <Rcs_parser.h>
 #include <Rcs_stlParser.h>
@@ -426,7 +427,7 @@ HumanAgent::HumanAgent(const xmlNodePtr node,
   defaultRadius = DBL_MAX;
 
   tracker = Rcs::getXMLNodePropertySTLString(node, "tracker");
-  getXMLNodePropertyVec3(node, "defaultPosition", defaultPos);
+  Rcs::getXMLNodePropertyVecSTLDouble(node, "defaultPosition", defaultPos);
   getXMLNodePropertyDouble(node, "defaultRadius", &defaultRadius);
 
   auto m = getManipulatorsOfType(scene, "head");
@@ -641,15 +642,9 @@ bool HumanAgent::computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices
   // Here we compute all 8 vertices of the boundig box.
   if (vertices)
   {
+    MatNd_reshape(vertices, 8, 3);
     double(*bb)[3] = (double(*)[3])vertices->ele;
-    Vec3d_set(bb[0], xyzMin[0], xyzMin[1], xyzMin[2]);
-    Vec3d_set(bb[1], xyzMin[0], -xyzMin[1], xyzMin[2]);
-    Vec3d_set(bb[2], -xyzMin[0], xyzMin[1], xyzMin[2]);
-    Vec3d_set(bb[3], -xyzMin[0], -xyzMin[1], xyzMin[2]);
-    Vec3d_set(bb[4], xyzMax[0], xyzMax[1], xyzMax[2]);
-    Vec3d_set(bb[5], xyzMax[0], -xyzMax[1], xyzMax[2]);
-    Vec3d_set(bb[6], -xyzMax[0], xyzMax[1], xyzMax[2]);
-    Vec3d_set(bb[7], -xyzMax[0], -xyzMax[1], xyzMax[2]);
+    Math_computeVerticesAABB(bb, xyzMin, xyzMax);
   }
 
   return true;
@@ -680,12 +675,12 @@ double HumanAgent::getDefaultPosition(size_t index) const
 
 std::vector<double> HumanAgent::getDefaultPosition() const
 {
-  return std::vector<double>(defaultPos, defaultPos+3);
+  return defaultPos;
 }
 
 void HumanAgent::setDefaultPosition(const double pos[3])
 {
-  Vec3d_copy(defaultPos, pos);
+  defaultPos = std::vector<double>(pos, pos+3);
 }
 
 void HumanAgent::setMarkers(const std::vector<HTr>& newMarkers)
