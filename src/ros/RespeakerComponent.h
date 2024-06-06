@@ -82,9 +82,11 @@ private:
   void toggleASR();
   void toggleHandRaised();
   const HumanAgent* getSpeaker(const double micPosition[3],
-                               const double soundDir[3]) const;
+                               const double soundDir[3],
+                               const RcsGraph* graph) const;
   const Agent* getListener(const double micPosition[3],
-                           const HumanAgent* speaker);
+                           const HumanAgent* speaker,
+                           const RcsGraph* graph);
   void updateSoundDirection(RcsGraph* graph, const std::string& spoken,
                             double micPos[3], double soundDir[3]);
 

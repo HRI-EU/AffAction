@@ -48,9 +48,9 @@ public:
   std::vector<std::string> manipulators;
 
   Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
-  Agent(const Agent& other);
-  Agent& operator = (const Agent&);
-  virtual ~Agent();
+  // Agent(const Agent& other);
+  // Agent& operator = (const Agent&);
+  virtual ~Agent() = default;
 
   static Agent* createAgent(const xmlNodePtr node, const std::string& groupSuffix, ActionScene* scene);
   virtual void print() const;
@@ -74,9 +74,9 @@ class RobotAgent : public Agent
 {
 public:
   RobotAgent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
-  RobotAgent(const RobotAgent& other);
-  RobotAgent& operator = (const RobotAgent&);
-  virtual ~RobotAgent();
+  // RobotAgent(const RobotAgent& other);
+  // RobotAgent& operator = (const RobotAgent&);
+  //virtual ~RobotAgent() = default;
   static int getPanTilt(const RcsGraph* graph, const std::string& gazeTarget,
                         double panTilt[2], size_t maxIter, double eps,
                         double err[2]);
@@ -84,46 +84,67 @@ public:
   bool canReachTo(const ActionScene* scene,
                   const RcsGraph* graph,
                   const double position[3]) const;
-  bool check(const ActionScene* scene,
-             const RcsGraph* graph) const;
+  bool check(const ActionScene* scene, const RcsGraph* graph) const;
 };
 
 class HumanAgent : public Agent
 {
 public:
-  double lastTimeSeen;
-  bool visible;
-  std::string tracker;
-  std::vector<HTr> markers;   // Vector of tracked body links
-  double defaultRadius;
-  double defaultPos[3];
-  std::string gazeTarget;
-  std::string gazeTargetPrev;
-  double gazeDirection[3];
-  double headPosition[3];
-
   HumanAgent(const xmlNodePtr node,
              const std::string& groupSuffix,
              const ActionScene* scene);
-  HumanAgent(const HumanAgent& other);
-  HumanAgent& operator = (const HumanAgent&);
-  virtual ~HumanAgent();
+  // HumanAgent(const HumanAgent& other);
+  // HumanAgent& operator = (const HumanAgent&);
+  // virtual ~HumanAgent();
 
   Agent* clone() const;
   void setVisibility(const bool newVisibilty);
-  bool hasHead() const;
-  bool getHeadTransform(HTr* A_HI) const;
-  bool getHeadPosition(double pos[3]) const;
-  bool getGazeDirection(double dir[3]) const;
-  bool getHeadUpAxis(double dir[3]) const;
+  bool hasHead(const RcsGraph* graph) const;
+  bool getHeadTransform(HTr* A_HI, const RcsGraph* graph) const;
+  bool getHeadPosition(double pos[3], const RcsGraph* graph) const;
+  bool getGazeDirection(double dir[3], const RcsGraph* graph) const;
+  bool getHeadUpAxis(double dir[3], const RcsGraph* graph) const;
+  double getDefaultPosition(size_t index) const;
+  std::vector<double> getDefaultPosition() const;
+  void setDefaultPosition(const double pos[3]);
+
+  // Remembers old one in gazeTargetPrev
+  void setGazeTarget(const std::string& newGazeTarget);
+  bool gazeTargetChanged() const;
+  std::string getGazeTarget() const;
+
+  void setMarkers(const std::vector<HTr>& markers);
+  bool hasMarkers() const;
+  HTr getMarker(size_t index) const;
+
   std::string isLookingAt() const;
   bool isVisible() const;
+  void setLastTimeSeen(double time);
   bool canReachTo(const ActionScene* scene,
                   const RcsGraph* graph,
                   const double position[3]) const;
 
   // All values in world coordinates. vertices must be NULL or of size 8*3 (shape doesn't matter).
   bool computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
+  bool check(const ActionScene* scene, const RcsGraph* graph) const;
+
+private:
+  double lastTimeSeen;
+  bool visible;
+  std::string tracker;
+  std::vector<HTr> markers;   // Vector of tracked body links
+  double defaultRadius;
+  std::vector<double> defaultPos;
+
+  std::string gazeTarget;
+  std::string gazeTargetPrev;
+
+  // double gazeDirection[3];
+  // double headPosition[3];
+  std::string headBdyName;
+  std::string leftHandBdyName;
+  std::string rightHandBdyName;
+
 };
 
 } // namespace aff

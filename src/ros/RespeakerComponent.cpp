@@ -225,9 +225,9 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
     if (human && human->isVisible())
     {
       // HANDTIP_RIGHT = 16, HANDTIP_LEFT = 9, HEAD = 26
-      const double* headPos = human->markers[26].org;
-      const double* lhPos = human->markers[9].org;
-      const double* rhPos = human->markers[16].org;
+      const double* headPos = human->getMarker(26).org;
+      const double* lhPos = human->getMarker(9).org;
+      const double* rhPos = human->getMarker(16).org;
 
       //RLOG(0, "*** head: %.3f   lh: %.3f   rh: %.3f", headPos[2], lhPos[2], rhPos[2]);
 
@@ -303,8 +303,8 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
 
 
   // Check which agent is speaking
-  const HumanAgent* speaker = getSpeaker(micPos, soundDir);
-  const Agent* listener = getListener(micPos, speaker);
+  const HumanAgent* speaker = getSpeaker(micPos, soundDir, current);
+  const Agent* listener = getListener(micPos, speaker, current);
 
   /* Create output json in this format:
   (
@@ -491,7 +491,8 @@ void RespeakerComponent::onStop()
 
 // Check which agent is speaking
 const HumanAgent* RespeakerComponent::getSpeaker(const double micPosition[3],
-                                                 const double soundDir[3]) const
+                                                 const double soundDir[3],
+                                                 const RcsGraph* graph) const
 {
   const HumanAgent* speaker = nullptr;
   double ang = 2.0*M_PI;
@@ -504,12 +505,12 @@ const HumanAgent* RespeakerComponent::getSpeaker(const double micPosition[3],
          agent->name.c_str(),
          human ? " human" : " not human",
          (human && human->isVisible()) ? "visible" : "not visible",
-         (human && !human->markers.empty()) ? "markers" : "no markers");
+         (human && human->hasMarkers()) ? "markers" : "no markers");
 
-    if (human && human->isVisible() && human->hasHead())
+    if (human && human->isVisible() && human->hasHead(graph))
     {
       double headPosition[3];
-      bool hasHead = human->getHeadPosition(headPosition);
+      bool hasHead = human->getHeadPosition(headPosition, graph);
       RCHECK(hasHead);
       double humanDir[3];
       Vec3d_sub(humanDir, headPosition, micPosition);
@@ -528,13 +529,14 @@ const HumanAgent* RespeakerComponent::getSpeaker(const double micPosition[3],
 }
 
 const Agent* RespeakerComponent::getListener(const double micPosition[3],
-                                             const HumanAgent* speaker_)
+                                             const HumanAgent* speaker_,
+                                             const RcsGraph* graph)
 {
   HumanAgent* speaker = (HumanAgent*) speaker_;   // \todo(MG): Move to somewhere where ActionScene is not const
 
   const Agent* lookedAt = nullptr;
 
-  if (!speaker || !speaker->isVisible() || !speaker->hasHead())
+  if (!speaker || !speaker->isVisible() || !speaker->hasHead(graph))
   {
     RLOG(1, "No speaker: Can't determine listener");
     return lookedAt;
@@ -557,15 +559,18 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
     double candidateDir[3], otherHead[3];
     if (otherHuman)
     {
-      otherHuman->getHeadPosition(otherHead);
+      otherHuman->getHeadPosition(otherHead, graph);
     }
     else
     {
       Vec3d_copy(otherHead, micPosition);
     }
 
-    Vec3d_sub(candidateDir, otherHead, speaker->headPosition);
-    double ang_i = Vec3d_diffAngle(speaker->gazeDirection, candidateDir);
+    double headPosition[3], gazeDirection[3];
+    speaker->getHeadPosition(headPosition, graph);
+    speaker->getGazeDirection(gazeDirection, graph);
+    Vec3d_sub(candidateDir, otherHead, headPosition);
+    double ang_i = Vec3d_diffAngle(gazeDirection, candidateDir);
 
     if (ang_i<ang)
     {
@@ -586,12 +591,13 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
     return lookedAt;
   }
 
-  speaker->gazeTargetPrev = speaker->gazeTarget;
-  speaker->gazeTarget = lookedAt->name;
+  speaker->setGazeTarget(lookedAt->name);
+  // speaker->gazeTargetPrev = speaker->gazeTarget;
+  // speaker->gazeTarget = lookedAt->name;
 
-  // if (speaker->gazeTargetPrev != speaker->gazeTarget)
+  // if (speaker->gazeTargetChanged())
   // {
-  //   std::string msg = speaker->name + " is looking at " + speaker->gazeTarget;
+  //   std::string msg = speaker->name + " is looking at " + speaker->getGazeTarget();
   //   getEntity()->publish("Speak", msg);
   // }
 

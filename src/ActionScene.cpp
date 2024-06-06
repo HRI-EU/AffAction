@@ -744,21 +744,12 @@ void ActionScene::initializeKinematics(const RcsGraph* graph)
     if (parent)
     {
       RLOG_CPP(5, "Transforming defaultPos of agent " << human->bdyName);
-      Vec3d_transformSelf(human->defaultPos, &parent->A_BI);
+      std::vector<double> defaultPos = human->getDefaultPosition();
+      Vec3d_transformSelf(defaultPos.data(), &parent->A_BI);
+      human->setDefaultPosition(defaultPos.data());
     }
   }
 
 }
 
 } // namespace aff
-
-
-
-
-
-
-
-
-
-
-

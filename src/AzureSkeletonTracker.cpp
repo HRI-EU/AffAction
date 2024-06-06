@@ -483,16 +483,16 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
       {
         if (skeletons[i]->isVisible)
         {
-          human->markers = skeletons[i]->markers;
+          human->setMarkers(skeletons[i]->markers);
         }
 
         human->setVisibility(skeletons[i]->isVisible);
-        human->lastTimeSeen = skeletons[i]->age;
+        human->setLastTimeSeen(skeletons[i]->age);
       }
 
     }
 
-    if (!human->markers.empty())
+    if (human->hasMarkers())
     {
       const double tmc = 0.05;
 
@@ -502,9 +502,10 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
       if (jidx!=-1)
       {
         const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
-        const HTr* A_MI = &human->markers[PELVIS];   // marker transform in world
+        //const HTr* A_MI = &human->markers[PELVIS];   // marker transform in world
+        HTr A_MI = human->getMarker(PELVIS);   // marker transform in world
         HTr A_MP;   // Transform from pelvis's parent to its raw percept
-        HTr_invTransform(&A_MP, A_PI, A_MI);
+        HTr_invTransform(&A_MP, A_PI, &A_MI);
         lpFiltTrf(&graph->q->ele[jidx], &A_MP, tmc);
         //lpFiltTrf(&graph->q->ele[jidx], A_MI, tmc);
       }
@@ -530,30 +531,33 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
 
         if (m->isOfType("head"))
         {
-          const HTr* A_MI = &human->markers[HEAD];   // marker transform in world
-          HTr_invTransform(&A_MP, A_PI, A_MI);
+          //const HTr* A_MI = &human->markers[HEAD];   // marker transform in world
+          HTr A_MI = human->getMarker(HEAD);   // marker transform in world
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
           //lpFiltTrf(q_rbj, A_MI, tmc);
 
           // Get transform from q-vector so that estimate is not one step lagging behind
-          HTr headTrf;
-          HTr_from6DVector(&headTrf, &graph->q->ele[jidx]);
-          const double* gazePos = headTrf.org;
-          const double* gazeDir = headTrf.rot[1];
-          Vec3d_copy(human->headPosition, gazePos);
-          Vec3d_copy(human->gazeDirection, gazeDir);
+          // HTr headTrf;
+          // HTr_from6DVector(&headTrf, &graph->q->ele[jidx]);
+          // const double* gazePos = headTrf.org;
+          // const double* gazeDir = headTrf.rot[1];
+          // Vec3d_copy(human->headPosition, gazePos);
+          // Vec3d_copy(human->gazeDirection, gazeDir);
         }
         else if (m->isOfType("hand_left"))
         {
-          const HTr* A_MI = &human->markers[HANDTIP_LEFT];   // marker transform in world
-          HTr_invTransform(&A_MP, A_PI, A_MI);
+          //const HTr* A_MI = &human->markers[HANDTIP_LEFT];   // marker transform in world
+          HTr A_MI = human->getMarker(HANDTIP_LEFT);   // marker transform in world
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
           //lpFiltTrf(q_rbj, A_MI, tmc);
         }
         else if (m->isOfType("hand_right"))
         {
-          const HTr* A_MI = &human->markers[HANDTIP_RIGHT];   // marker transform in world
-          HTr_invTransform(&A_MP, A_PI, A_MI);
+          //const HTr* A_MI = &human->markers[HANDTIP_RIGHT];   // marker transform in world
+          HTr A_MI = human->getMarker(HANDTIP_RIGHT);   // marker transform in world
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
           //lpFiltTrf(q_rbj, A_MI, tmc);
         }
@@ -856,9 +860,9 @@ void AzureSkeletonTracker::addAgent(const std::string& agentName)
           skeletons[skeletonIndex]->setAgent(humanAgent);
 
           setSkeletonDefaultPosition(skeletonIndex,
-                                     humanAgent->defaultPos[0],
-                                     humanAgent->defaultPos[1],
-                                     humanAgent->defaultPos[2]);
+                                     humanAgent->getDefaultPosition(0),
+                                     humanAgent->getDefaultPosition(1),
+                                     humanAgent->getDefaultPosition(2));
 
           RLOG(0, "Matched agent `%s` with skeleton %zu", agentName.c_str(), skeletonIndex);
 
