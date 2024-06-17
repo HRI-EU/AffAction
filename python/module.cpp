@@ -558,12 +558,41 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree
+  // Predict action sequence as tree, non-blocking version
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
     ex.processingAction = true;
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Query non-blocking planner
+  //////////////////////////////////////////////////////////////////////////////
+  .def("query_fb_nonblock", [](aff::ExampleActionsECS& ex) -> std::string
+  {
+    if (!sim->processingAction)
+    {
+      return std::string();
+    }
+
+    if (ex.lastActionResult[0].success())
+    {
+      RLOG_CPP(0, "SUCCESS");
+      return "SUCCESS";
+    }
+
+    std::string fbmsgAsString = "I couldn't find a solution:\n";
+    size_t i = 0;
+    for (const auto& fb : ex.lastActionResult)
+    {
+      fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
+      ++i;
+    }
+
+    RLOG_CPP(0, fbmsgAsString);
+
+    return fbmsgAsString;
   })
 
   .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
