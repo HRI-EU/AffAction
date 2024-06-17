@@ -557,6 +557,15 @@ PYBIND11_MODULE(pyAffaction, m)
     return fbmsgAsString;
   })
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Predict action sequence as tree
+  //////////////////////////////////////////////////////////////////////////////
+  .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
+  {
+    ex.processingAction = true;
+    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
+  })
+
   .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
   {
     PollBlockerComponent blocker(&ex);
