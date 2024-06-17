@@ -925,7 +925,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
                                         bool earlyExitSearch,
                                         bool earlyExitAction)
 {
-  ex->processingAction = true;
+  ex->setProcessingAction(true);
   actionSequence = ActionSequence::resolve(ex->getGraph()->cfgFile, actionSequence);
   if (ex->verbose)
   {
@@ -1565,6 +1565,16 @@ void ExampleActionsECS::lockStepMtx() const
 void ExampleActionsECS::unlockStepMtx() const
 {
   stepMtx.unlock();
+}
+
+bool ExampleActionsECS::isProcessingAction() const
+{
+  return processingAction.load();
+}
+
+void ExampleActionsECS::setProcessingAction(bool isProcessing)
+{
+  processingAction = isProcessing;
 }
 
 }   // namespace aff

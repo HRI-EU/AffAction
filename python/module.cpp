@@ -81,7 +81,7 @@ void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
   if (res.empty())
   {
     RLOG_CPP(0, "Could not find solution");
-    ex.processingAction = false;
+    ex.setProcessingAction(false);
     ex.clearCompletedActionStack();
     return;
   }
@@ -109,12 +109,12 @@ public:
 
   PollBlockerComponent(aff::ExampleActionsECS* sim_) : sim(sim_)
   {
-    sim->processingAction = true;
+    sim->setProcessingAction(true);
   }
 
   void wait()
   {
-    while (sim->processingAction)
+    while (sim->isProcessingAction())
     {
       Timer_waitDT(0.1);
     }
@@ -476,7 +476,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("planActionSequenceThreaded", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
-    ex.processingAction = true;
+    ex.setProcessingAction(true);
     const size_t maxNumthreads = 0;   // 0 means auto-select
     std::thread t1(_planActionSequenceThreaded, std::ref(ex), sequenceCommand, maxNumthreads);
     t1.detach();
@@ -562,7 +562,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
-    ex.processingAction = true;
+    ex.setProcessingAction(true);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
   })
 
@@ -571,7 +571,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("query_fb_nonblock", [](aff::ExampleActionsECS& ex) -> std::string
   {
-    if (!sim->processingAction)
+    if (ex.isProcessingAction())
     {
       return std::string();
     }
@@ -795,7 +795,6 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("noCollCheck", &aff::ExampleActionsECS::noCollCheck)   // Set before init()
   .def_readwrite("noTrajCheck", &aff::ExampleActionsECS::noTrajCheck)
   .def_readwrite("verbose", &aff::ExampleActionsECS::verbose)
-  .def_readwrite("processingAction", &aff::ExampleActionsECS::processingAction)
   .def_readwrite("noViewer", &aff::ExampleActionsECS::noViewer)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)

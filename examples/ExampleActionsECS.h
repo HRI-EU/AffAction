@@ -57,6 +57,8 @@
 #include <MatNdWidget.h>
 #include <ActionBase.h>
 
+#include <atomic>
+
 
 
 extern "C" {
@@ -110,13 +112,16 @@ public:
   void lockStepMtx() const;
   void unlockStepMtx() const;
 
+  bool isProcessingAction() const;
+  void setProcessingAction(bool isProcessing);
+
   std::string xmlFileName;
   std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
   unsigned int speedUp;
   int maxNumThreads;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
-  bool unittest, verbose, processingAction, turbo;
+  bool unittest, verbose, turbo;
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
 
   std::unique_ptr<GraphicsWindow> viewer;
@@ -132,6 +137,7 @@ private:
   bool plot, valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
   unsigned int loopCount;
+  std::atomic<bool> processingAction;
 
   std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<Rcs::ControllerBase> controller;
