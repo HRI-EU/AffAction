@@ -44,6 +44,8 @@
 #include <algorithm>
 #include <sstream>
 
+#define DEFAULT_NUM_SHAKES (3)
+
 
 namespace aff
 {
@@ -51,11 +53,11 @@ REGISTER_ACTION(ActionShake, "shake");
 
 ActionShake::ActionShake(const ActionScene& scene,
                          const RcsGraph* graph,
-                         std::vector<std::string> params) : numUpAndDowns(3)
+                         std::vector<std::string> params) : numUpAndDowns(DEFAULT_NUM_SHAKES)
 {
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "up_and_downs");
+  auto it = std::find(params.begin(), params.end(), "number_of_shakes");
   if (it != params.end())
   {
     std::stringstream stream(*(it + 1));
@@ -277,7 +279,12 @@ std::unique_ptr<ActionBase> ActionShake::clone() const
 
 std::string ActionShake::getActionCommand() const
 {
-  std::string str = "shake " + shakeEntityName + " up_and_downs " + std::to_string(numUpAndDowns);
+  std::string str = "shake " + shakeEntityName;
+
+  if (numUpAndDowns != DEFAULT_NUM_SHAKES)
+  {
+    str += " number_of_shakes " + std::to_string(numUpAndDowns);
+  }
 
   if (getDuration()!=getDefaultDuration())
   {

@@ -178,6 +178,19 @@ If the entity to point at is a HumanAgent, the pointing will be directed towards
 agent's head. The hand that points will be selected automatically, except if a second
 argument is passed. This will be interpreted as the manipulator that is to point.
 
+
+### The "shake" action
+
+```bash
+shake(<object-to-shake> 
+      <"number_of_shakes" integer_number (optional, default is 3)> 
+```
+
+Points at an object or agent. Anything that is specified as a type is being considered.
+If the entity to point at is a HumanAgent, the pointing will be directed towards the
+agent's head. The hand that points will be selected automatically, except if a second
+argument is passed. This will be interpreted as the manipulator that is to point.
+
 ### The "double_get" action
 double_get (<object1, object2>)
 
