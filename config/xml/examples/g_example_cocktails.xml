@@ -29,8 +29,9 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
+	<ActionSequence name="1" text="get glass_green; shake glass_green" />
 
-  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
+	<Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
   </Body>
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->

@@ -245,6 +245,7 @@ src/ActionDoor.cpp
 src/ActionDrop.cpp
 src/ActionWait.cpp
 src/ActionScrew.cpp
+src/ActionShake.cpp
 src/ActionFingerPush.cpp
 src/ActionComposite.cpp
 src/Affordance.cpp
