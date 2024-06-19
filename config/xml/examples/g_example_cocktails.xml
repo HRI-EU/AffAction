@@ -30,6 +30,8 @@
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
 	<ActionSequence name="1" text="get glass_green; shake glass_green" />
+	<ActionSequence name="2" text="get glass_green; inspect glass_green" />
+	<ActionSequence name="3" text="get glass_blue; inspect glass_blue" />
 
 	<Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
   </Body>

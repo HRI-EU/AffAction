@@ -93,6 +93,10 @@ public:
    */
   const RcsJoint* getBaseJoint(const RcsGraph* graph) const;
 
+  /*! \brief Returns the parent body of the base joint. If that does not exist, this function will exit.
+   */
+  const RcsBody* getBaseJointBody(const RcsGraph* graph) const;
+
   /*! \brief Returns the base joint transformation in world coordinates.
      */
   HTr getBaseJointTransform(const RcsGraph* graph) const;

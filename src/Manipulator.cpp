@@ -37,6 +37,7 @@
 
 #include <Rcs_typedef.h>
 #include <Rcs_shape.h>
+#include <Rcs_joint.h>
 #include <Rcs_parser.h>
 #include <Rcs_stlParser.h>
 #include <Rcs_utilsCPP.h>
@@ -287,6 +288,20 @@ const RcsJoint* Manipulator::getBaseJoint(const RcsGraph* graph) const
   return baseJnt;
 }
 
+const RcsBody* Manipulator::getBaseJointBody(const RcsGraph* graph) const
+{
+  const RcsJoint* baseJnt = getBaseJoint(graph);
+
+  int bdyId = RcsJoint_getConnectedBodyId(graph, baseJnt);
+  const RcsBody* bdy = RCSBODY_BY_ID(graph, bdyId);
+  RCHECK_MSG(bdy, "Joint \"%s\" not connected to body", baseJnt->name);
+
+  const RcsBody* baseBdy = RCSBODY_BY_ID(graph, bdy->parentId);
+  RCHECK_MSG(baseBdy, "Body \"%s\" has no parent", bdy->name);
+
+  return baseBdy;
+}
+
 std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const
 {
   return std::vector<double>(3, 1.0-fingerTipDistanceInMeters/0.175);
@@ -476,7 +491,9 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
                                        const RcsGraph* graph)
 {
   auto graspCapabilities = getCapabilities<GraspCapability>(this);
-  if (graspCapabilities.empty())
+  auto gazeCapabilities = getCapabilities<GazeCapability>(this);
+
+  if (graspCapabilities.empty() && gazeCapabilities.empty())
   {
     return;
   }

@@ -30,8 +30,8 @@
 
 *******************************************************************************/
 
-#ifndef AFF_ACTIONSHAKE_H
-#define AFF_ACTIONSHAKE_H
+#ifndef AFF_ACTIONGAZEATHAND_H
+#define AFF_ACTIONGAZEATHAND_H
 
 
 #include "ActionBase.h"
@@ -41,20 +41,19 @@
 namespace aff
 {
 
-class ActionShake : public ActionBase
+class ActionGazeAtHand : public ActionBase
 {
 public:
 
-  ActionShake(const ActionScene& domain,
-              const RcsGraph* graph,
-              std::vector<std::string> params);
+  ActionGazeAtHand(const ActionScene& domain,
+                   const RcsGraph* graph,
+                   std::vector<std::string> params);
 
-  virtual ~ActionShake();
+  virtual ~ActionGazeAtHand();
   std::unique_ptr<ActionBase> clone() const override;
   std::string getActionCommand() const;
   void print() const;
   std::vector<std::string> getManipulators() const;
-  double getDefaultDuration() const;
 
 protected:
 
@@ -63,16 +62,15 @@ protected:
 
   std::string graspingHandName;
   std::string shakeEntityName;
-  std::string roboBaseFrameName;
-  std::string taskPosX, taskPosY, taskPosZ, taskOri;
+  std::string shoulderBaseFrame;
+  std::string cameraBaseFrame;
+  std::string roboBaseFrame;
+  std::string taskCenterXYZ, taskRelShoulderY, taskObjectOri;
   std::vector<std::string> usedManipulators;
-  size_t numUpAndDowns;
-  double amplitude;
-  HTr shakeTransform;   // Shake position roboBaseFrame
 };
 
 }   // namespace aff
 
 
 
-#endif // AFF_ACTIONSHAKE_H
+#endif // AFF_ACTIONGAZEATHAND_H
