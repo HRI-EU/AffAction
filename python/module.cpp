@@ -782,6 +782,7 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("getCompletedActionStack", &aff::ExampleActionsECS::getCompletedActionStack)
   .def("isFinalPoseRunning", &aff::ExampleActionsECS::isFinalPoseRunning)
+  .def("isProcessingAction", &aff::ExampleActionsECS::isProcessingAction)
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
