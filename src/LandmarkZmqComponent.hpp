@@ -84,7 +84,7 @@ static void sendRequest(zmq::socket_t& socket, const nlohmann::json& request)
   std::string json_str = request.dump();
   zmq::message_t query(json_str.length());
   memcpy(query.data(), json_str.c_str(), json_str.size());
-#if ZMQ_VERSION <= 040301
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
   socket.send(query);
 #else
   socket.send(query, zmq::send_flags::none);
@@ -94,7 +94,7 @@ static void sendRequest(zmq::socket_t& socket, const nlohmann::json& request)
 static std::string receiveReply(zmq::socket_t& socket)
 {
   zmq::message_t reply;
-#if ZMQ_VERSION <= 040301
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
   socket.recv(&reply);
 #else
   (void) socket.recv(reply);
@@ -234,7 +234,8 @@ public:
 
     // set receive timeout to 3 seconds
     int timeout_ms = this->socketTimeoutInMsec;
-#if ZMQ_VERSION <= 40700
+
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
     socket.setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(int));
 #else
     socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
