@@ -53,7 +53,6 @@
 static void appendToFile(const std::string& fileName, const std::string& str)
 {
   std::ofstream of;
-  //std::fstream f;
 
   // opening file using ofstream
   of.open(fileName, std::ios::app);
@@ -69,6 +68,7 @@ static void appendToFile(const std::string& fileName, const std::string& str)
     // string word;
 
     // // opening file using fstream
+    //std::fstream f;
     // f.open("Geeks for Geeks.txt");
     // while (f >> word)
     // {
@@ -234,7 +234,7 @@ public:
 
     // set receive timeout to 3 seconds
     int timeout_ms = this->socketTimeoutInMsec;
-#if ZMQ_VERSION <= 040700
+#if ZMQ_VERSION <= 40700
     socket.setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(int));
 #else
     socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
