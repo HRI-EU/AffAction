@@ -44,6 +44,8 @@
 #include <sapi.h>
 #endif
 
+static const std::string piperPath = std::string(AFFACTION_PIPER_PATH);
+
 
 namespace aff
 {
@@ -55,6 +57,7 @@ TTSComponent::TTSComponent(EntityBase* parent, std::string whichTTS_) :
   subscribe("Stop", &TTSComponent::onStop);
   subscribe<std::string>("Speak", &TTSComponent::onSpeak);
   subscribe<>("EmergencyStop", &TTSComponent::onEmergencyStop);
+  setPiperVoice("kathleen");
 }
 
 TTSComponent::~TTSComponent()
@@ -99,6 +102,29 @@ void TTSComponent::onEmergencyStop()
   onSpeak("Oh no, emergency stop detected");
 }
 
+void TTSComponent::setPiperVoice(const std::string& voice)
+{
+  if (voice == "joe")
+  {
+    onnxStr = std::string("\"") + piperPath + "/en_US-joe-medium.onnx\"";
+    jsonStr = std::string("\"") + piperPath + "/en_en_US_joe_medium_en_US-joe-medium.onnx.json\"";
+  }
+  else if (voice == "alan")
+  {
+    onnxStr = std::string("\"") + piperPath + "/en_GB-alan-medium.onnx\"";
+    jsonStr = std::string("\"") + piperPath + "/en_en_GB_alan_medium_en_GB-alan-medium.onnx.json\"";
+  }
+  else if (voice == "kathleen")
+  {
+    onnxStr = std::string("\"") + piperPath + "/en_US-kathleen-low.onnx\"";
+    jsonStr = std::string("\"") + piperPath + "/en_en_US_kathleen_low_en_US-kathleen-low.onnx.json\"";
+  }
+  else
+  {
+    RMSG_CPP("Unsupported voice: '" << voice << "'");
+  }
+}
+
 // If port is set to -1, this thread runs espeak on the local machine
 #if defined (_MSC_VER)
 
@@ -123,7 +149,9 @@ void TTSComponent::localThread()
 
   while (this->threadRunning)
   {
-    std::string text;
+    std::string text, consCmd;
+    Timer_usleep(100000);   // 10Hz
+
     {
       std::lock_guard<std::mutex> lock(mtx);
       text = this->textToSpeak;
@@ -132,13 +160,36 @@ void TTSComponent::localThread()
 
     if (!text.empty())
     {
-      // The text to be converted to speech
-      std::wstring widestr = std::wstring(text.begin(), text.end());
-      const wchar_t* textToSpeak = widestr.c_str();
 
-      // Speak the text
-      pVoice->Speak(textToSpeak, 0, NULL);
-      pVoice->WaitUntilDone(INFINITE);
+      if (whichTTS == "piper")
+      {
+        std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+        consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
+        consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr + " -f \"piper.wav\" >NUL 2>&1 && ";
+        consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";
+
+        int err = system(consCmd.c_str());
+
+        if (err == -1)
+        {
+          RMSG_CPP("Couldn't call " << whichTTS << ": " << consCmd);
+        }
+        else
+        {
+          RLOG(1, "TTS success: Console command \"%s\"", consCmd.c_str());
+        }
+
+      }
+      else
+      {
+        // The text to be converted to speech
+        std::wstring widestr = std::wstring(text.begin(), text.end());
+        const wchar_t* textToSpeak = widestr.c_str();
+
+        // Speak the text
+        pVoice->Speak(textToSpeak, 0, NULL);
+        pVoice->WaitUntilDone(INFINITE);
+      }
     }
 
   }
@@ -170,7 +221,7 @@ void TTSComponent::localThread()
       continue;
     }
 
-    if (whichTTS=="espeak")
+    if (whichTTS=="native")
     {
       consCmd = "espeak " + std::string("\"") + text + std::string("\"");
     }
@@ -183,17 +234,10 @@ void TTSComponent::localThread()
       // Piper command line:
       // echo "Hello, this is a test" | ./piper  -m en_US-joe-medium.onnx
       // -c en_en_US_john_medium_en_US-john-medium.onnx.json -f test1.wav; aplay test1.wav
-      std::string piperPath = "/hri/storage/user/mgienger/Repos/piper/";
-      std::string piperExe = piperPath + "piper";
-      // std::string onnxStr = piperPath + "en_US-joe-medium.onnx";
-      // std::string jsonStr = piperPath + "en_en_US_john_medium_en_US-john-medium.onnx.json";
-      // std::string onnxStr = piperPath + "en_GB-alan-medium.onnx";
-      // std::string jsonStr = piperPath + "en_en_GB_alan_medium_en_GB-alan-medium.onnx.json";
-      std::string onnxStr = piperPath + "en_US-kathleen-low.onnx";
-      std::string jsonStr = piperPath + "en_en_US_kathleen_low_en_US-kathleen-low.onnx.json";
+      std::string piperExe = piperPath + "/piper";
       consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
       consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr +
-                 " -f test1.wav > piper.txt 2>&1; aplay test1.wav > aplay.txt 2>&1";
+                 " -f piper.wav > piper.txt 2>&1; aplay piper.wav > aplay.txt 2>&1";
     }
 
     int err = system(consCmd.c_str());

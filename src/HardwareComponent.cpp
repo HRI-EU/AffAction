@@ -189,9 +189,23 @@ ComponentBase* createComponent(EntityBase& entity,
   {
     return new TTSComponent(&entity);
   }
-  else if (componentName == "-piper_tts")
+  else if (componentName == "-piper_tts_alan")
   {
-    return new TTSComponent(&entity, "piper");
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("alan");
+    return tts;
+  }
+  else if (componentName == "-piper_tts_joe")
+  {
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("joe");
+    return tts;
+  }
+  else if (componentName == "-piper_tts_kathleen")
+  {
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("kathleen");
+    return tts;
   }
   else if (componentName == "-websocket")
   {

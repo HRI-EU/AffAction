@@ -45,8 +45,9 @@ class TTSComponent : public ComponentBase
 {
 public:
 
-  TTSComponent(EntityBase* parent, std::string whichTTS="espeak");
+  TTSComponent(EntityBase* parent, std::string whichTTS="native");
   virtual ~TTSComponent();
+  void setPiperVoice(const std::string& voice); // kathleen (default), alan, joe
 
 private:
 
@@ -59,6 +60,7 @@ private:
   bool threadRunning;
   std::string textToSpeak;
   std::string whichTTS;
+  std::string onnxStr, jsonStr;
   std::mutex mtx;
   std::thread ttsThread;
 

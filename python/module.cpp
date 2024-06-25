@@ -757,10 +757,24 @@ PYBIND11_MODULE(pyAffaction, m)
       ex.addComponent(c);
       return c ? true : false;
     }
-    else if (type == "piper")
+    else if (type == "piper" || type=="piper_kathleen")
     {
       auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-piper_tts");
+                               ex.getScene(), "-piper_tts_kathleen");
+      ex.addComponent(c);
+      return c ? true : false;
+    }
+    else if (type == "piper_alan")
+    {
+      auto c = createComponent(ex.getEntity(), ex.getGraph(),
+                               ex.getScene(), "-piper_tts_alan");
+      ex.addComponent(c);
+      return c ? true : false;
+    }
+    else if (type == "piper_joe")
+    {
+      auto c = createComponent(ex.getEntity(), ex.getGraph(),
+                               ex.getScene(), "-piper_tts_joe");
       ex.addComponent(c);
       return c ? true : false;
     }

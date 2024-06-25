@@ -31,6 +31,13 @@
 ################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
 SET(BST_INSTALL_CATEGORY Libraries)
+IF(UNIX)
+  SET(AFFACTION_PIPER_PATH "/hri/storage/user/mgienger/Repos/piper" CACHE STRING "Path to piper executable")
+ELSE()
+  STRING (REPLACE "\\" "/" PIPER_PATH "$ENV{SIT}/External/piper")
+  SET(AFFACTION_PIPER_PATH "${PIPER_PATH}" CACHE STRING "Path to piper executable")
+ENDIF()
+
 OPTION(AFFACTION_WITH_OPTIM "Build with optimization" OFF)
 
 ################################################################################
@@ -130,7 +137,6 @@ ELSE()
 ENDIF()
 
 ADD_DEFINITIONS(-DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-
 
 ################################################################################
 # Compile settings
@@ -298,6 +304,8 @@ IF (USE_AFFACTION_ROS)
   src/ros/NuanceTTSComponent.cpp
 )
 ENDIF(USE_AFFACTION_ROS)
+
+SET_PROPERTY(SOURCE src/TTSComponent.cpp PROPERTY COMPILE_DEFINITIONS AFFACTION_PIPER_PATH="${AFFACTION_PIPER_PATH}")
 
 ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
 
