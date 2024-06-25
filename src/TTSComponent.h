@@ -54,6 +54,7 @@ private:
   void onStart();
   void onStop();
   void onSpeak(std::string text);
+  std::string getAndClearText();
   void onEmergencyStop();
   void localThread();
 

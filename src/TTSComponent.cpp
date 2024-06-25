@@ -96,6 +96,14 @@ void TTSComponent::onSpeak(std::string text)
   this->textToSpeak = text;
 }
 
+std::string TTSComponent::getAndClearText()
+{
+  std::lock_guard<std::mutex> lock(mtx);
+  std::string text = this->textToSpeak;
+  this->textToSpeak.clear();
+  return text;
+}
+
 void TTSComponent::onEmergencyStop()
 {
   RLOG(0, "EmergencyStop");
@@ -149,47 +157,43 @@ void TTSComponent::localThread()
 
   while (this->threadRunning)
   {
-    std::string text, consCmd;
     Timer_usleep(100000);   // 10Hz
 
+    std::string text = getAndClearText();
+
+    if (text.empty())
     {
-      std::lock_guard<std::mutex> lock(mtx);
-      text = this->textToSpeak;
-      this->textToSpeak.clear();
+      continue;
     }
 
-    if (!text.empty())
+    if (whichTTS == "piper")
     {
+      std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+      std::string consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
+      consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr + " -f \"piper.wav\" >NUL 2>&1 && ";
+      consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";
 
-      if (whichTTS == "piper")
+      int err = system(consCmd.c_str());
+
+      if (err == -1)
       {
-        std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
-        consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
-        consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr + " -f \"piper.wav\" >NUL 2>&1 && ";
-        consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";
-
-        int err = system(consCmd.c_str());
-
-        if (err == -1)
-        {
-          RMSG_CPP("Couldn't call " << whichTTS << ": " << consCmd);
-        }
-        else
-        {
-          RLOG(1, "TTS success: Console command \"%s\"", consCmd.c_str());
-        }
-
+        RMSG_CPP("Couldn't call " << whichTTS << ": " << consCmd);
       }
       else
       {
-        // The text to be converted to speech
-        std::wstring widestr = std::wstring(text.begin(), text.end());
-        const wchar_t* textToSpeak = widestr.c_str();
-
-        // Speak the text
-        pVoice->Speak(textToSpeak, 0, NULL);
-        pVoice->WaitUntilDone(INFINITE);
+        RLOG(1, "TTS success: Console command \"%s\"", consCmd.c_str());
       }
+
+    }
+    else
+    {
+      // The text to be converted to speech
+      std::wstring widestr = std::wstring(text.begin(), text.end());
+      const wchar_t* textToSpeak = widestr.c_str();
+
+      // Speak the text
+      pVoice->Speak(textToSpeak, 0, NULL);
+      pVoice->WaitUntilDone(INFINITE);
     }
 
   }
@@ -207,14 +211,10 @@ void TTSComponent::localThread()
 
   while (this->threadRunning)
   {
-    std::string text, consCmd;
     Timer_usleep(100000);   // 10Hz
 
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      text = this->textToSpeak;
-      this->textToSpeak.clear();
-    }
+    std::string text = getAndClearText();
+    std::string consCmd;
 
     if (text.empty())
     {
