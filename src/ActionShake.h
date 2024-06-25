@@ -50,16 +50,16 @@ public:
               std::vector<std::string> params);
 
   virtual ~ActionShake();
-  std::unique_ptr<ActionBase> clone() const override;
-  std::string getActionCommand() const;
+  virtual std::unique_ptr<ActionBase> clone() const override;
+  virtual std::string getActionCommand() const;
   void print() const;
   std::vector<std::string> getManipulators() const;
-  double getDefaultDuration() const;
+  virtual double getDefaultDuration() const;
 
 protected:
 
   std::vector<std::string> createTasksXML() const;
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  virtual tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
 
   std::string graspingHandName;
   std::string shakeEntityName;

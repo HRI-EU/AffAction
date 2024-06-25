@@ -75,6 +75,11 @@ public:
   nlohmann::json getObjects();
 
   /*! \brief Returns empty json if there are no objects or a json in the form:
+   *         {"objects": ['iphone', 'red_glass'] }
+   */
+  nlohmann::json getObjectsHeldBy(const std::string& agentName);
+
+  /*! \brief Returns empty json if there are no objects or a json in the form:
    *         {"agents": ['Daniel', 'Felix', 'Robot'] }
    */
   nlohmann::json getAgents();

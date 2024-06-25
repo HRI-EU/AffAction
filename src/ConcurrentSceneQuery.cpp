@@ -389,6 +389,35 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
   return json;
 }
 
+nlohmann::json ConcurrentSceneQuery::getObjectsHeldBy(const std::string& agentName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json;
+  json["objects"] = std::vector<nlohmann::json>();
+
+  auto agent = scene.getAgent(agentName);
+
+  if (!agent)
+  {
+    return json;
+  }
+
+  auto hands = agent->getManipulatorsOfType(&scene, "hand");
+
+  for (const auto& h : hands)
+  {
+    auto graspedNtts = h->getGraspedEntities(scene, graph);
+
+    for (const auto& ntt : graspedNtts)
+    {
+      json["objects"].push_back(ntt->name);
+    }
+  }
+
+  return json;
+}
+
 nlohmann::json ConcurrentSceneQuery::getAgents()
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);

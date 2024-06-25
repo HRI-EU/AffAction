@@ -54,6 +54,7 @@ public:
   std::string getActionCommand() const;
   void print() const;
   std::vector<std::string> getManipulators() const;
+  virtual double getDefaultDuration() const;
 
 protected:
 

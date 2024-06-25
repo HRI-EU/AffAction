@@ -424,9 +424,23 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getAgents();
   })
 
-  .def("step", &aff::ExampleActionsECS::step)
-  .def("stop", &aff::ExampleActionsECS::stop)
-  .def("isRunning", &aff::ExampleActionsECS::isRunning)
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns an empty string if there are no objects held in the hand, or the
+  // name of the holding hand
+  //////////////////////////////////////////////////////////////////////////////
+  .def("is_held_by", [](aff::ExampleActionsECS& ex, std::string ntt) -> std::string
+  {
+    return ex.getQuery()->getHoldingHand(ntt);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns an empty string if there are no objects held in the hand, or the
+  // name of the holding hand
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_objects_held_by", [](aff::ExampleActionsECS& ex, std::string agent) -> nlohmann::json
+  {
+    return ex.getQuery()->getObjectsHeldBy(agent);
+  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Execute the action command, and return immediately.
@@ -783,6 +797,9 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("getCompletedActionStack", &aff::ExampleActionsECS::getCompletedActionStack)
   .def("isFinalPoseRunning", &aff::ExampleActionsECS::isFinalPoseRunning)
   .def("isProcessingAction", &aff::ExampleActionsECS::isProcessingAction)
+  .def("step", &aff::ExampleActionsECS::step)
+  .def("stop", &aff::ExampleActionsECS::stop)
+  .def("isRunning", &aff::ExampleActionsECS::isRunning)
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer

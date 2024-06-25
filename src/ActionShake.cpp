@@ -286,4 +286,78 @@ double ActionShake::getDefaultDuration() const
 }
 
 
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionWeigh : public ActionShake
+{
+public:
+
+  ActionWeigh(const ActionScene& scene,
+              const RcsGraph* graph,
+              std::vector<std::string> params) : ActionShake(scene, graph, params)
+  {
+    numUpAndDowns = 0;
+  }
+
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionWeigh>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    std::string str = "weigh " + shakeEntityName;
+
+    if (getDuration() != getDefaultDuration())
+    {
+      str += " duration " + std::to_string(getDuration());
+    }
+
+    return str;
+  }
+
+  double getDefaultDuration() const
+  {
+    return 10.0;
+  }
+
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
+  {
+    const double afterTime = 0.5;
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    a1->addActivation(t_start, true, 0.5, taskPosX);
+    a1->addActivation(t_start, true, 0.5, taskPosY);
+    a1->addActivation(t_start, true, 0.5, taskPosZ);
+    a1->addActivation(t_start, true, 0.5, taskOri);
+
+    a1->addActivation(t_end + afterTime, false, 0.5, taskPosX);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskPosY);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskPosZ);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskOri);
+
+    a1->add(t_end, shakeTransform.org[0], 0.0, 0.0, 7, taskPosX + " 0");
+    a1->add(t_end, shakeTransform.org[1], 0.0, 0.0, 7, taskPosY + " 0");
+    a1->add(t_end, shakeTransform.org[2], 0.0, 0.0, 7, taskPosZ + " 0");
+
+    return a1;
+  }
+
+};
+
+REGISTER_ACTION(ActionWeigh, "weigh");
+
+
 }   // namespace aff

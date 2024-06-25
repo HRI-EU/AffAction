@@ -232,4 +232,9 @@ std::string ActionGazeAtHand::getActionCommand() const
   return str;
 }
 
+double ActionGazeAtHand::getDefaultDuration() const
+{
+  return 15.0;
+}
+
 }   // namespace aff
