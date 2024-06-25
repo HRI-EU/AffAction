@@ -1,0 +1,465 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+
+
+<!--
+
+Cocktail:
+
+1. Vodka
+2. Gin
+3. Rum (light and dark)
+4. Tequila (silver or blanco)
+5. Whiskey (bourbon or rye)
+6. Vermouth (dry and sweet)
+7. Triple sec or orange liqueur
+8. Brandy
+9. Bitters (Angostura or other flavors)
+10. Simple syrup
+11. Fresh citrus fruits (lemons, limes, oranges)
+12. Grenadine
+13. Cranberry juice
+14. Pineapple juice
+15. Tomato juice
+16. Soda water
+17. Tonic water
+18. Ginger beer
+19. Cola
+20. Cream or milk
+21. Fresh herbs (mint, basil, rosemary)
+22. Sugar cubes
+23. Salt
+24. Ice cubes
+
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+
+
+
+	<!-- The model for the dining table. -->
+	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
+	  <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
+		 transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
+		<Shape scale="0.2" type="FRAME"/>
+	</Body>
+	<Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />
+	<Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+
+	<Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<!--
+-->
+	<Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+
+	<xxBody color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</xxBody>
+	<Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</Body>
+	<xxBody color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	</xxBody>
+
+
+	<AffordanceModel body="table" name="table" types="furniture">
+		<Supportable frame="table_grid_0_0"/>
+		<Supportable frame="table_grid_0_1"/>
+		<Supportable frame="table_grid_0_2"/>
+		<Supportable frame="table_grid_0_3"/>
+		<Supportable frame="table_grid_0_4"/>
+		<Supportable frame="table_grid_0_5"/>
+		<Supportable frame="table_grid_0_6"/>
+		<Supportable frame="table_grid_0_7"/>
+		<Supportable frame="table_grid_0_8"/>
+
+		 <Supportable frame="table_grid_1_0"/> 
+		 <Supportable frame="table_grid_1_1"/> 
+		 <Supportable frame="table_grid_1_2"/> 
+		 <Supportable frame="table_grid_1_3"/> 
+		 <Supportable frame="table_grid_1_4"/> 
+		 <Supportable frame="table_grid_1_5"/> 
+		 <Supportable frame="table_grid_1_6"/> 
+		 <Supportable frame="table_grid_1_7"/> 
+		 <Supportable frame="table_grid_1_8"/> 
+
+		 <xxSupportable frame="table_grid_2_0"/> 
+		 <Supportable frame="table_grid_2_1"/> 
+		 <Supportable frame="table_grid_2_2"/> 
+		 <Supportable frame="table_grid_2_3"/> 
+		 <Supportable frame="table_grid_2_4"/> 
+		 <Supportable frame="table_grid_2_5"/> 
+		 <Supportable frame="table_grid_2_6"/> 
+		 <Supportable frame="table_grid_2_7"/> 
+		 <xxSupportable frame="table_grid_2_8"/> 
+	</AffordanceModel>
+
+
+
+    <!-- 
+
+    ===========================================================================
+
+    Shelf items 
+    
+    ===========================================================================
+    -->
+    
+    
+    <!-- fanta_bottle -->
+	<Group prev="table_grid_0_0" name="_fanta" color="YELLOW" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
+
+    <!-- coca_cola_bottle -->
+	<Group prev="table_grid_2_6" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
+		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+	</Group>
+
+    
+    <!-- 
+
+    ===========================================================================
+
+    Table objects 
+    
+    ===========================================================================
+
+    -->
+
+
+	<Group prev="table_grid_1_6" name="_blue" color="BLUE" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
+
+	<Group prev="table_grid_0_7" name="_red" color="RED" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
+
+	<Group prev="table_grid_1_2" name="_green" color="GREEN" rigid_body_joints="true" >
+		<xi:include href="../examples/g_glass_quadratic.xml"/>
+	</Group>
+
+
+    <!-- 
+
+    ===========================================================================
+
+    Table ingredients 
+    
+    ===========================================================================
+
+    -->
+
+    <!-- ice_cubes_bowl -->
+    <Body name="ice_cubes_bowl" prev="table_grid_2_5" rigid_body_joints="true" color="BLUE">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="ice_cubes_bowl_inside" prev="ice_cubes_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="ice_cubes_bowl_tip" prev="ice_cubes_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="ice_cubes_bowl_grip_1" prev="ice_cubes_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="ice_cubes_bowl" name="bowl">
+        <Stackable frame="ice_cubes_bowl"/>
+        <Supportable frame="ice_cubes_bowl_inside"/>
+        <Containable frame="ice_cubes_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="ice_cubes_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- ice_cubes_1 -->
+    <Body name="ice_cubes_1" prev="ice_cubes_bowl_inside" rigid_body_joints="true" color="LIGHTGRAY_TRANS" physics="dynamic" mass="0.1" >
+        <Shape type="BOX" extents="0.02 0.02 0.02" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="ice_cubes_1_center" prev="ice_cubes_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="ice_cubes" body="ice_cubes_1" type="ingredient">
+        <Stackable frame="ice_cubes_1"  />
+        <BallGraspable frame="ice_cubes_1_center"/>
+    </AffordanceModel>
+
+    <!-- lemon_slice_bowl -->
+    <Body name="lemon_slice_bowl" prev="table_grid_2_4" rigid_body_joints="true" color="GREEN">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lemon_slice_bowl_inside" prev="lemon_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="lemon_slice_bowl_tip" prev="lemon_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="lemon_slice_bowl_grip_1" prev="lemon_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="lemon_slice_bowl" name="bowl">
+        <Stackable frame="lemon_slice_bowl"/>
+        <Supportable frame="lemon_slice_bowl_inside"/>
+        <Containable frame="lemon_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="lemon_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- lemon_slice_1 -->
+    <Body name="lemon_slice_1" prev="lemon_slice_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lemon_slice_1_center" prev="lemon_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="lemon_slice" body="lemon_slice_1" type="ingredient">
+        <Stackable frame="lemon_slice_1"  />
+        <BallGraspable frame="lemon_slice_1_center"/>
+    </AffordanceModel>
+
+    <!-- lime_slice_bowl -->
+    <Body name="lime_slice_bowl" prev="table_grid_2_2" rigid_body_joints="true" color="DARKGREEN">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lime_slice_bowl_inside" prev="lime_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="lime_slice_bowl_tip" prev="lime_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="lime_slice_bowl_grip_1" prev="lime_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="lime_slice_bowl" name="bowl">
+        <Stackable frame="lime_slice_bowl"/>
+        <Supportable frame="lime_slice_bowl_inside"/>
+        <Containable frame="lime_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="lime_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- lime_slice_1 -->
+    <Body name="lime_slice_1" prev="lime_slice_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="lime_slice_1_center" prev="lime_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="lime_slice" body="lime_slice_1" type="ingredient">
+        <Stackable frame="lime_slice_1"  />
+        <BallGraspable frame="lime_slice_1_center"/>
+    </AffordanceModel>
+
+    <!-- mint_bowl -->
+    <Body name="mint_bowl" prev="table_grid_0_8" rigid_body_joints="true" color="LIGHTBLUE">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="mint_bowl_inside" prev="mint_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="mint_bowl_tip" prev="mint_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="mint_bowl_grip_1" prev="mint_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="mint_bowl" name="bowl">
+        <Stackable frame="mint_bowl"/>
+        <Supportable frame="mint_bowl_inside"/>
+        <Containable frame="mint_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="mint_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- mint_1 -->
+    <Body name="mint_1" prev="mint_bowl_inside" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="mint_1_center" prev="mint_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="mint" body="mint_1" type="ingredient">
+        <Stackable frame="mint_1"  />
+        <BallGraspable frame="mint_1_center"/>
+    </AffordanceModel>
+
+    <!-- orange_slice_bowl -->
+    <Body name="orange_slice_bowl" prev="table_grid_1_8" rigid_body_joints="true" color="ORANGE">
+        <Shape type="CYLINDER" radius="0.06" length="0.02" graphics="true" distance="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="orange_slice_bowl_inside" prev="orange_slice_bowl" transform="0 0 0.08 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false" extentsX="0.02" extentsY="0.02"/>
+    </Body>
+
+    <Body name="orange_slice_bowl_tip" prev="orange_slice_bowl" transform="0 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <Body name="orange_slice_bowl_grip_1" prev="orange_slice_bowl" transform="-0.06 0 0.06 0 0 0">
+        <Shape type="FRAME" scale="0.3" graphics="false"/>
+    </Body>
+
+    <AffordanceModel body="orange_slice_bowl" name="bowl">
+        <Stackable frame="orange_slice_bowl"/>
+        <Supportable frame="orange_slice_bowl_inside"/>
+        <Containable frame="orange_slice_bowl_tip" max_volume="0.5" open="true">
+        </Containable>
+        <PowerGraspable frame="orange_slice_bowl_grip_1"/>
+    </AffordanceModel>
+
+    <!-- orange_slice_1 -->
+    <Body name="orange_slice_1" prev="orange_slice_bowl_inside" rigid_body_joints="true" color="ORANGE" physics="dynamic" mass="0.1" >
+        <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
+               transform="0 0 0.01 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="false" />
+    </Body>
+
+    <Body name="orange_slice_1_center" prev="orange_slice_1" transform="0 0 0.01 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="false"/>
+    </Body>
+
+    <AffordanceModel name="orange_slice" body="orange_slice_1" type="ingredient">
+        <Stackable frame="orange_slice_1"  />
+        <BallGraspable frame="orange_slice_1_center"/>
+    </AffordanceModel>
+
+</Graph>

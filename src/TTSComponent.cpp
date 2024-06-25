@@ -33,6 +33,7 @@
 #include "TTSComponent.h"
 
 #include <Rcs_macros.h>
+#include <Rcs_timer.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -47,8 +48,8 @@
 namespace aff
 {
 
-TTSComponent::TTSComponent(EntityBase* parent) :
-  ComponentBase(parent), threadRunning(false)
+TTSComponent::TTSComponent(EntityBase* parent, std::string whichTTS_) :
+  ComponentBase(parent), threadRunning(false), whichTTS(whichTTS_)
 {
   subscribe("Start", &TTSComponent::onStart);
   subscribe("Stop", &TTSComponent::onStop);
@@ -155,28 +156,57 @@ void TTSComponent::localThread()
 
   while (this->threadRunning)
   {
-    std::string text;
+    std::string text, consCmd;
+    Timer_usleep(100000);   // 10Hz
+
     {
       std::lock_guard<std::mutex> lock(mtx);
       text = this->textToSpeak;
       this->textToSpeak.clear();
     }
 
-    if (!text.empty())
+    if (text.empty())
     {
-      //std::string consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
-      std::string consCmd = "espeak " + std::string("\"") + text + std::string("\"");
-      int err = system(consCmd.c_str());
-
-      if (err == -1)
-      {
-        RMSG("Couldn't call spd-say (%s)", consCmd.c_str());
-      }
-      else
-      {
-        RLOG(1, "Console command \"%s\"", consCmd.c_str());
-      }
+      continue;
     }
+
+    if (whichTTS=="espeak")
+    {
+      consCmd = "espeak " + std::string("\"") + text + std::string("\"");
+    }
+    if (whichTTS=="spd-say")
+    {
+      consCmd = "spd-say " + std::string("\"") + text + std::string("\"");
+    }
+    else if (whichTTS=="piper")
+    {
+      // Piper command line:
+      // echo "Hello, this is a test" | ./piper  -m en_US-joe-medium.onnx
+      // -c en_en_US_john_medium_en_US-john-medium.onnx.json -f test1.wav; aplay test1.wav
+      std::string piperPath = "/hri/storage/user/mgienger/Repos/piper/";
+      std::string piperExe = piperPath + "piper";
+      // std::string onnxStr = piperPath + "en_US-joe-medium.onnx";
+      // std::string jsonStr = piperPath + "en_en_US_john_medium_en_US-john-medium.onnx.json";
+      // std::string onnxStr = piperPath + "en_GB-alan-medium.onnx";
+      // std::string jsonStr = piperPath + "en_en_GB_alan_medium_en_GB-alan-medium.onnx.json";
+      std::string onnxStr = piperPath + "en_US-kathleen-low.onnx";
+      std::string jsonStr = piperPath + "en_en_US_kathleen_low_en_US-kathleen-low.onnx.json";
+      consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
+      consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr +
+                 " -f test1.wav > piper.txt 2>&1; aplay test1.wav > aplay.txt 2>&1";
+    }
+
+    int err = system(consCmd.c_str());
+
+    if (err == -1)
+    {
+      RMSG_CPP("Couldn't call " << whichTTS << ": " << consCmd);
+    }
+    else
+    {
+      RLOG(1, "TTS success: Console command \"%s\"", consCmd.c_str());
+    }
+
   }
 
 }

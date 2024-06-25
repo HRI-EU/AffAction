@@ -189,6 +189,10 @@ ComponentBase* createComponent(EntityBase& entity,
   {
     return new TTSComponent(&entity);
   }
+  else if (componentName == "-piper_tts")
+  {
+    return new TTSComponent(&entity, "piper");
+  }
   else if (componentName == "-websocket")
   {
     return new WebsocketActionComponent(&entity);

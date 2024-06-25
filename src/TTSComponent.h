@@ -45,7 +45,7 @@ class TTSComponent : public ComponentBase
 {
 public:
 
-  TTSComponent(EntityBase* parent);
+  TTSComponent(EntityBase* parent, std::string whichTTS="espeak");
   virtual ~TTSComponent();
 
 private:
@@ -58,6 +58,7 @@ private:
 
   bool threadRunning;
   std::string textToSpeak;
+  std::string whichTTS;
   std::mutex mtx;
   std::thread ttsThread;
 

@@ -62,10 +62,10 @@
 
   <!--  Pizza scenario -->
   <Group prev="aruco_base" >
-    <xi:include href="../cocktails/g_cocktails_with_agent.xml"/>
+    <xi:include href="../cocktails/g_spezi_with_agent.xml"/>
   </Group>
 
-  <Group prev="aruco_base" name="Daniel" color="ORANGE" transform="0.7 0 0.5 0 0 0" >
+  <Group prev="aruco_base" name="Sheekeemy-sun" color="ORANGE" transform="0.7 0 0.5 0 0 0" >
     <xi:include href="g_human_agent.xml"/>
   </Group>
 
