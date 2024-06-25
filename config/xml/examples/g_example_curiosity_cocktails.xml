@@ -80,9 +80,9 @@
     <joint_state joint="j2s7s300_joint_5_right" position="0"/>
     <joint_state joint="j2s7s300_joint_6_right" position="200"/>
     <joint_state joint="j2s7s300_joint_7_right" position="0"/>
-    <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
-    <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
-    <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/> -->
     <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
     <joint_state joint="j2s7s300_joint_2_left" position="80"/>
     <joint_state joint="j2s7s300_joint_3_left" position="90"/>
@@ -90,9 +90,9 @@
     <joint_state joint="j2s7s300_joint_5_left" position="0"/>
     <joint_state joint="j2s7s300_joint_6_left" position="160"/>
     <joint_state joint="j2s7s300_joint_7_left" position="0"/>
-    <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
-    <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
-    <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/> -->
   </model_state>
 
   <model_state model="TableCalibration" time_stamp="0">
@@ -135,7 +135,7 @@
     <joint_state joint="j2s7s300_joint_4_left" position="264.559658"/>
     <joint_state joint="j2s7s300_joint_5_left" position="-26.915878"/>
     <joint_state joint="j2s7s300_joint_6_left" position="177.589587"/>
-    <joint_state joint="j2s7s300_joint_7_left" position="189.750884"/>
+    <joint_state joint="j2s7s300_joint_7_left" position="90"/>
     <joint_state joint="j2s7s300_joint_finger_1_left" position="0"/>
     <joint_state joint="j2s7s300_joint_finger_2_left" position="0"/>
     <joint_state joint="j2s7s300_joint_finger_3_left" position="0"/>
@@ -148,10 +148,33 @@
     <joint_state joint="j2s7s300_joint_4_right" position="56.589729" />
     <joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
     <joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
+    <joint_state joint="j2s7s300_joint_7_right" position="-40"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_right" position="10" /> -->
+    <joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
+    <joint_state joint="j2s7s300_joint_2_left" position="91.110953" />
+    <joint_state joint="j2s7s300_joint_3_left" position="111.355557" />
+    <joint_state joint="j2s7s300_joint_4_left" position="303.410269" />
+    <joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
+    <joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
+    <joint_state joint="j2s7s300_joint_7_left" position="40"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_left" position="10" /> -->
+  </model_state>
+ 
+  <model_state model="default_up_hands_hor" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_right" position="32.21316" />
+    <joint_state joint="j2s7s300_joint_2_right" position="268.890114" />
+    <joint_state joint="j2s7s300_joint_3_right" position="-111.356621" />
+    <joint_state joint="j2s7s300_joint_4_right" position="56.589729" />
+    <joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
+    <joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
     <joint_state joint="j2s7s300_joint_7_right" position="32.099303" />
-    <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
-    <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
-    <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_right" position="10" /> -->
     <joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
     <joint_state joint="j2s7s300_joint_2_left" position="91.110953" />
     <joint_state joint="j2s7s300_joint_3_left" position="111.355557" />
@@ -159,9 +182,32 @@
     <joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
     <joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
     <joint_state joint="j2s7s300_joint_7_left" position="-32.103809" />
-    <joint_state joint="j2s7s300_joint_finger_1_left" position="10" />
-    <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
-    <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_left" position="10" /> -->
+  </model_state>
+ 
+  <model_state model="default_high" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_right" position="32.21316" />
+    <joint_state joint="j2s7s300_joint_2_right" position="210" />
+    <joint_state joint="j2s7s300_joint_3_right" position="-141.356621" />
+    <joint_state joint="j2s7s300_joint_4_right" position="80" />
+    <joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
+    <joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
+    <joint_state joint="j2s7s300_joint_7_right" position="-80"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_right" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_right" position="10" /> -->
+    <joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
+    <joint_state joint="j2s7s300_joint_2_left" position="150" />
+    <joint_state joint="j2s7s300_joint_3_left" position="141.355557" />
+    <joint_state joint="j2s7s300_joint_4_left" position="280" />
+    <joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
+    <joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
+    <joint_state joint="j2s7s300_joint_7_left" position="80"/>
+    <!-- <joint_state joint="j2s7s300_joint_finger_1_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_2_left" position="10" /> -->
+    <!-- <joint_state joint="j2s7s300_joint_finger_3_left" position="10" /> -->
   </model_state>
 
   <model_state model="watchit_eye" time_stamp="0">
@@ -203,6 +249,15 @@
     <joint_state joint="j2s7s300_joint_6_left" position="85.310938" />
     <joint_state joint="j2s7s300_joint_7_left" position="94.673017" />
     <joint_state joint="j2s7s300_joint_finger_1_left" position="80" />
+    <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left" position="10" />
     <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
     <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
   </model_state>
