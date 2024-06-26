@@ -156,6 +156,26 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-tts"));
   }
 
+  if (argP.hasArgument("-piper_tts_alan", "Start with piper text-to-speech, Alan's voice") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-piper_tts_alan"));
+  }
+
+  if (argP.hasArgument("-piper_tts_joe", "Start with piper text-to-speech, Joe's voice") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-piper_tts_joe"));
+  }
+
+  if (argP.hasArgument("-piper_tts_kathleen", "Start with piper text-to-speech, Kathleen's voice") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-piper_tts_kathleen"));
+  }
+
+  if (argP.hasArgument("-piper", "Start with piper text-to-speech, Kathleen's voice") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-piper_tts_kathleen"));
+  }
+
   if (argP.hasArgument("-websocket", "Start with websocket connection on port 35000") && (!dryRun))
   {
     components.push_back(createComponent(entity, graph, scene, "-websocket"));

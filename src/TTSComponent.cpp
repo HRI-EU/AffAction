@@ -34,6 +34,7 @@
 
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
+#include <Rcs_utils.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -45,6 +46,11 @@
 #endif
 
 static const std::string piperPath = std::string(AFFACTION_PIPER_PATH);
+#if defined (_MSC_VER)
+static const std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+#else
+static const std::string piperExe = piperPath + "/piper";
+#endif
 
 
 namespace aff
@@ -58,6 +64,13 @@ TTSComponent::TTSComponent(EntityBase* parent, std::string whichTTS_) :
   subscribe<std::string>("Speak", &TTSComponent::onSpeak);
   subscribe<>("EmergencyStop", &TTSComponent::onEmergencyStop);
   setPiperVoice("kathleen");
+
+  if ((whichTTS=="piper") && (!File_exists(piperExe.c_str())))
+  {
+    RLOG_CPP(0, "Piper TTS not found (" + piperExe + ") - falling back to native TTS");
+    whichTTS = "native";
+  }
+
 }
 
 TTSComponent::~TTSComponent()
@@ -168,7 +181,6 @@ void TTSComponent::localThread()
 
     if (whichTTS == "piper")
     {
-      std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
       std::string consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
       consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr + " -f \"piper.wav\" >NUL 2>&1 && ";
       consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";
@@ -234,7 +246,6 @@ void TTSComponent::localThread()
       // Piper command line:
       // echo "Hello, this is a test" | ./piper  -m en_US-joe-medium.onnx
       // -c en_en_US_john_medium_en_US-john-medium.onnx.json -f test1.wav; aplay test1.wav
-      std::string piperExe = piperPath + "/piper";
       consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
       consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr +
                  " -f piper.wav > piper.txt 2>&1; aplay piper.wav > aplay.txt 2>&1";

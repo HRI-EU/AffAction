@@ -27,39 +27,6 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-
-
-<!--
-
-Cocktail:
-
-1. Vodka
-2. Gin
-3. Rum (light and dark)
-4. Tequila (silver or blanco)
-5. Whiskey (bourbon or rye)
-6. Vermouth (dry and sweet)
-7. Triple sec or orange liqueur
-8. Brandy
-9. Bitters (Angostura or other flavors)
-10. Simple syrup
-11. Fresh citrus fruits (lemons, limes, oranges)
-12. Grenadine
-13. Cranberry juice
-14. Pineapple juice
-15. Tomato juice
-16. Soda water
-17. Tonic water
-18. Ginger beer
-19. Cola
-20. Cream or milk
-21. Fresh herbs (mint, basil, rosemary)
-22. Sugar cubes
-23. Salt
-24. Ice cubes
-
--->
-
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
 
@@ -196,7 +163,7 @@ Cocktail:
 
     ===========================================================================
 
-    Shelf items 
+    Table objects
     
     ===========================================================================
     -->
@@ -211,18 +178,6 @@ Cocktail:
 	<Group prev="table_grid_2_6" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
 		<xi:include href="../examples/g_bottle_cocktail.xml"/>
 	</Group>
-
-    
-    <!-- 
-
-    ===========================================================================
-
-    Table objects 
-    
-    ===========================================================================
-
-    -->
-
 
 	<Group prev="table_grid_1_6" name="_blue" color="BLUE" rigid_body_joints="true" >
 		<xi:include href="../examples/g_glass_quadratic.xml"/>
