@@ -55,6 +55,9 @@ public:
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
   double getDefaultDuration() const;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  size_t getNumSolutions() const;
+  std::string getActionCommand() const;
 
 protected:
 
@@ -82,8 +85,11 @@ protected:
   std::vector<std::string> particlesToPour;
 
   bool glasInHand;
-  bool bottleInRightHand;
+  bool bottleRightOfGlas;
   double pouringVolume;
+  double tiltAngleAbs;
+  double tiltAngle;
+  size_t numSolutions;
 };
 
 }   // namespace aff

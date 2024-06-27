@@ -42,6 +42,7 @@
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
+#include <Rcs_basicMath.h>
 
 #include <algorithm>
 
@@ -54,9 +55,19 @@ REGISTER_ACTION(ActionPour, "pour");
 ActionPour::ActionPour(const ActionScene& domain,
                        const RcsGraph* graph,
                        std::vector<std::string> params) :
-  glasInHand(false), bottleInRightHand(true), pouringVolume(0.1)
+  glasInHand(false), bottleRightOfGlas(true), pouringVolume(0.1), tiltAngleAbs(RCS_DEG2RAD(150.0)), tiltAngle(RCS_DEG2RAD(150.0)), numSolutions(2)
 {
   parseParams(params);
+
+  auto it = std::find(params.begin(), params.end(), "tiltAngle");
+  if (it != params.end())
+  {
+    numSolutions = 1;
+    tiltAngle = RCS_DEG2RAD(std::stod(*(it + 1)));
+    tiltAngleAbs = fabs(tiltAngle);
+    params.erase(it + 1);
+    params.erase(it);
+  }
 
   if (params.size()<2)
   {
@@ -83,6 +94,10 @@ ActionPour::ActionPour(const ActionScene& domain,
   }
 
   init(domain, graph, objectToPourFrom, objectToPourInto, amountToPour);
+
+  // Initialize with the best solution.
+  bool successInit = initialize(domain, graph, 0);
+  RCHECK(successInit);
 }
 
 void ActionPour::init(const ActionScene& domain,
@@ -227,17 +242,8 @@ void ActionPour::init(const ActionScene& domain,
 
   double R_r_bottle[3];   // Bottle origin in robot base frame
   Vec3d_invTransform(R_r_bottle, A_RI, bottleBdy->A_BI.org);
-
-  if (R_r_bottle[1] < R_r_glas[1])   // Pouring with right hand
-  {
-    bottleInRightHand = true;
-    RLOG(5, "Pouring with right hand");
-  }
-  else   // Pouring with left hand
-  {
-    RLOG(5, "Pouring with left hand");
-    bottleInRightHand = false;
-  }
+  bottleRightOfGlas = (R_r_bottle[1] < R_r_glas[1]) ? true : false;
+  RLOG(5, "Bottle is %s of glass", bottleRightOfGlas ? "right" : "left");
 
   // Determine if glas is held in the hand or standing around. We use this
   // intormation for trajectory generation to constrain the glas orientation
@@ -256,6 +262,28 @@ void ActionPour::init(const ActionScene& domain,
     glasInHand = false;
   }
 
+}
+
+bool ActionPour::initialize(const ActionScene& domain,
+                            const RcsGraph* graph,
+                            size_t solutionRank)
+{
+  if (solutionRank >= getNumSolutions())
+  {
+    return false;
+  }
+
+  if (getNumSolutions() != 1)
+  {
+    tiltAngle = (solutionRank==0) ? tiltAngleAbs : -tiltAngleAbs;
+  }
+
+  return true;
+}
+
+size_t ActionPour::getNumSolutions() const
+{
+  return numSolutions;
 }
 
 ActionPour::~ActionPour()
@@ -326,10 +354,10 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   const double t_up = t_start + 0.45 * duration;
   const double t_down = t_start + 0.9 * duration;
   const double afterTime = 0.5;
-  const double thetaTilt = (bottleInRightHand) ? M_PI_2 : -M_PI_2;
+  const double thetaTilt = M_PI_2;//Math_dsign(tiltAngle)*M_PI_2;
 
   // How much do hands go away from each other once pouring finished
-  const double d_separate = (bottleInRightHand) ? -0.25 : +0.25;
+  const double d_separate = (bottleRightOfGlas) ? -0.25 : +0.25;
   const double heightAboveGlas = 0.08;
 
   auto a1 = std::make_shared<tropic::ActivationSet>();
@@ -357,10 +385,9 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   // Orientations
   a1->addActivation(t_start, true, 0.5, taskBottleOri);
   a1->addActivation(t_end + afterTime, false, 0.5, taskBottleOri);
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_prep, RCS_DEG2RAD(30.0), thetaTilt, taskBottleOri, 1));
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_up, RCS_DEG2RAD(150.0), thetaTilt, taskBottleOri));
-  //a1->add(std::make_shared<tropic::PolarConstraint>(t_down, RCS_DEG2RAD(30.0), thetaTilt, taskBottleOri));
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_end, RCS_DEG2RAD(10.0), thetaTilt, taskBottleOri));
+  a1->add(std::make_shared<tropic::PolarConstraint>(t_prep, tiltAngle*(RCS_DEG2RAD(30.0)/M_PI), thetaTilt, taskBottleOri, 1));
+  a1->add(std::make_shared<tropic::PolarConstraint>(t_up, tiltAngle*(RCS_DEG2RAD(150.0)/M_PI), thetaTilt, taskBottleOri));
+  a1->add(std::make_shared<tropic::PolarConstraint>(t_end, tiltAngle*(RCS_DEG2RAD(10.0)/M_PI), thetaTilt, taskBottleOri));
 
   if (glasInHand)
   {
@@ -424,7 +451,8 @@ void ActionPour::performLiquidTransition(const AffordanceEntity* pourFromAff,
   if (volumeToBePoured + toContainer->getVolume() > toContainer->maxVolume)
   {
     throw ActionException(ActionException::KinematicallyImpossible,
-                          "The container " + toContainer->frame + " does only hold " + std::to_string(toContainer->maxVolume) + " liters, pouring would overflow it.",
+                          "The container " + toContainer->frame + " does only hold " + std::to_string(toContainer->maxVolume) +
+                          " liters, pouring would overflow it.",
                           "Pour less than " + std::to_string(toContainer->maxVolume - toContainer->getVolume()) + " liters",
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
@@ -488,6 +516,15 @@ std::unique_ptr<ActionBase> ActionPour::clone() const
 double ActionPour::getDefaultDuration() const
 {
   return 20.0;
+}
+
+std::string ActionPour::getActionCommand() const
+{
+  std::string str = ActionBase::getActionCommand();
+
+  str += " tiltAngle " + std::to_string(RCS_RAD2DEG(tiltAngle));
+
+  return str;
 }
 
 
