@@ -45,6 +45,10 @@
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
 
+#include <algorithm>
+
+
+
 #define fingersOpen   (0.01)
 #define fingersClosed (0.7)
 #define t_fingerMove  (2.0)

@@ -29,7 +29,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 *******************************************************************************/
-
+#if 0
 #ifndef TROPIC_COLLISIONMODELCONSTRAINT_H
 #define TROPIC_COLLISIONMODELCONSTRAINT_H
 
@@ -184,3 +184,4 @@ protected:
 
 
 #endif   // TROPIC_COLLISIONMODELCONSTRAINT_H
+#endif//0
