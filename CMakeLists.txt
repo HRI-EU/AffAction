@@ -234,6 +234,7 @@ SET(CMAKE_AUTOMOC ON)
 SET(ACTION_SRCS
 src/ActionResult.cpp
 src/ActionBase.cpp
+src/ActionFromXML.cpp
 src/ActionGazeAtHand.cpp
 src/ActionGet.cpp
 src/ActionPass.cpp
