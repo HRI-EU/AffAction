@@ -401,9 +401,20 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getSceneState().dump();
   })
 
-  .def("get_parent", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
+  .def("get_parent_entity", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
   {
-    return ex.getQuery()->getParent(child);
+    return ex.getQuery()->getParentEntity(child);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Looks for the topoligical parent entity, and determines the closest frame
+  // with the given type. Returns an empty string if none is found, or the name
+  // of the affordance frame
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_closest_parent_affordance", [](aff::ExampleActionsECS& ex,
+                                           std::string child, std::string affordanceType) -> std::string
+  {
+    return ex.getQuery()->getClosestParentAffordance(child, affordanceType);
   })
 
   //////////////////////////////////////////////////////////////////////////////

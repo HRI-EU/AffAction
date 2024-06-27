@@ -160,6 +160,7 @@ public:
   virtual void print() const;
   virtual double actionCost(const ActionScene& domain,
                             const RcsGraph* graph) const;
+  virtual bool toXML(const std::string& fileName) const;
 
   static void setTurboMode(bool enable);
 

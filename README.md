@@ -210,6 +210,15 @@ open_door(<door-object>)
 close_door (<door-object>)
 
 
+### The "load" action
+
+```bash
+load(<file-name> 
+```
+
+Loads an action from a file. The file needs to be a valid xml file, some examples are given in the config/data folder.
+
+
 ### The "push" action (Not yet working)
 push(<object to push>)
 

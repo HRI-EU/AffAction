@@ -219,7 +219,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& object
   return json;
 }
 
-std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
+std::string ConcurrentSceneQuery::getParentEntity(const std::string& objectName)
 {
   RLOG_CPP(0, "Checking parent for " << objectName);
   std::lock_guard<std::mutex> lock(reentrancyLock);
@@ -240,6 +240,66 @@ std::string ConcurrentSceneQuery::getParent(const std::string& objectName)
   const Manipulator* holdingHand = scene.getParentManipulator(graph, ntt);
 
   return holdingHand ? holdingHand->name : std::string();
+}
+
+std::string ConcurrentSceneQuery::getClosestParentAffordance(const std::string& objectName,
+                                                             const std::string& parentAffordanceType)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  const AffordanceEntity* ntt = scene.getAffordanceEntity(objectName);
+  if (!ntt)
+  {
+    RLOG_CPP(1, "No entity found with name " << objectName);
+    return std::string();
+  }
+
+  const RcsBody* nttBdy = ntt->body(graph);
+  if (!nttBdy)
+  {
+    RLOG_CPP(1, "Entity " << objectName << " has no RcsBody attached");
+    return std::string();
+  }
+
+  const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
+  if (!parent)
+  {
+    RLOG_CPP(1, "No parent entity found for " << objectName);
+    return std::string();
+  }
+
+  // From here, we have a parent. We collect all affordances with the name
+  double d_min = DBL_MAX;
+  std::string closestFrame;
+  for (const auto& parentAff : parent->affordances)
+  {
+    RLOG_CPP(1, "Checking affordance " << parentAff->frame << " of type " << parentAff->className);
+
+    if (parentAffordanceType!=parentAff->className)
+    {
+      RLOG_CPP(1, "Ignoring affordance " << parentAff->frame << " of type " << parentAff->className);
+      continue;
+    }
+
+    const RcsBody* frm_i = parentAff->getFrame(graph);
+    if (frm_i)
+    {
+      double d = Vec3d_distance(frm_i->A_BI.org, nttBdy->A_BI.org);
+
+      if (d < d_min)
+      {
+        d_min = d;
+        closestFrame = parentAff->frame;
+        RLOG_CPP(1, "Current closest affordance is " << closestFrame << " of type " << parentAff->className);
+      }
+    }
+
+  }
+
+  RLOG_CPP(1, "Closest frame of type " << parentAffordanceType << " to entity " << objectName
+           << " is " << closestFrame << " with distance " << std::to_string(d_min));
+
+  return closestFrame;
 }
 
 bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double distanceThreshold)

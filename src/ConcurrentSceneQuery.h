@@ -134,7 +134,13 @@ public:
    *         - the object has no parent.
    *         If objectName refers to more than one entities, the first one found is used.
    */
-  std::string getParent(const std::string& objectName);
+  std::string getParentEntity(const std::string& objectName);
+
+  /*! \brief Returns the name of the parent's affordance frame that is closest to the
+   *         object.
+   */
+  std::string getClosestParentAffordance(const std::string& objectName,
+                                         const std::string& parentAffordanceType);
 
   /*! \brief Returns the name of the holding hand of the object, or an empty
    *         string if:

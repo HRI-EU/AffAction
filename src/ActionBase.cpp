@@ -43,7 +43,8 @@
 
 #include <ctype.h>
 #include <algorithm>
-
+#include <iostream>
+#include <fstream>
 
 
 
@@ -399,6 +400,40 @@ const AffordanceEntity* ActionBase::raycastSurface(const ActionScene& domain,
   }
 
   return surface;
+}
+
+bool ActionBase::toXML(const std::string& fileName) const
+{
+  std::ofstream fd;
+  fd.open(fileName.c_str());
+
+  if (!fd.good())
+  {
+    RLOG_CPP(1, "Failed to open file " << fileName);
+    return false;
+  }
+
+  // Open set's xml description. The class name is polymorphic
+  fd << "<Action name=\"" << getName() << "\" command=\"" << getActionCommand() << "\" >" << std::endl << std::endl;
+
+  // Here come the tasks
+  auto tasks = createTasksXML();
+  for (const auto& t : tasks)
+  {
+    fd << "  " << t << std::endl;
+  }
+  fd << std::endl;
+
+  // That's the trajectory
+  auto tSet = createTrajectory(0.0, getDuration());
+  tSet->toXML(fd, 2);
+  fd << std::endl;
+
+  // Close set's xml description
+  fd << "</Action>" << std::endl;
+
+  fd.close();
+  return true;
 }
 
 }   // namespace aff

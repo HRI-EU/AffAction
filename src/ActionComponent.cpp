@@ -217,6 +217,11 @@ void ActionComponent::actionThread(std::string text)
   RLOG_CPP(0, "Initializing with solution " << predictions[0].idx);
   action->initialize(domain, graph, predictions[0].idx);
 
+  REXEC(1)
+  {
+    action->toXML("action.xml");
+  }
+
   // Debug visualization.
   getEntity()->publish("AnimateSequence", predictions, 1);
 
