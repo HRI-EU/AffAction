@@ -1,0 +1,41 @@
+<Action name="my_new_action" >
+
+<Task name="bottle_of_cola-hand_left_powergrasp-XYZ" controlVariable="XYZ" effector="grip_bottle_of_cola" refBdy="hand_left_powergrasp" guiMin="-2.5 -2.5 -2.5" guiMax="2.5 2.5 2.5" active="true" />
+<Task name="bottle_of_cola-X" controlVariable="X" effector="bottle_of_cola" guiMin="-1" guiMax="1" active="true" />
+<Task name="bottle_of_cola-Y" controlVariable="Y" effector="bottle_of_cola" guiMin="-1" guiMax="1" active="true" />
+<Task name="bottle_of_cola-Z" controlVariable="Z" effector="bottle_of_cola" guiMin="-1" guiMax="1" active="true" />
+<Task name="bottle_of_cola-POLAR" controlVariable="POLAR" effector="grip_bottle_of_cola" guiMin="-180 -180" guiMax="180 180" active="true" />
+<Task name="hand_left_powergrasp-bottle_of_cola-PowerGrasp" controlVariable="POLAR" effector="hand_left_powergrasp" refBdy="grip_bottle_of_cola" guiMin="-180 -180" guiMax="180 180" active="true" />
+<Task name="hand_left_powergrasp_fingers" controlVariable="Joints" jnts="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left" active="true" />
+
+
+<ConstraintSet type="ActivationSet" >
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ" />
+  <Activation t="2.9672" switchesOn="false" horizon="0.5" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="hand_left_powergrasp-bottle_of_cola-PowerGrasp" />
+  <Activation t="2.9672" switchesOn="false" horizon="0.5" trajectory="hand_left_powergrasp-bottle_of_cola-PowerGrasp" />
+  <Activation t="2.9672" switchesOn="true" horizon="0.5" trajectory="bottle_of_cola-POLAR" />
+  <Activation t="4.97" switchesOn="false" horizon="0.5" trajectory="bottle_of_cola-POLAR" />
+  <Activation t="2.9672" switchesOn="true" horizon="0.5" trajectory="bottle_of_cola-Z" />
+  <Activation t="4.97" switchesOn="false" horizon="0.5" trajectory="bottle_of_cola-Z" />
+  <Activation t="2.9672" switchesOn="true" horizon="0.5" trajectory="bottle_of_cola-X" />
+  <Activation t="4.97" switchesOn="false" horizon="0.5" trajectory="bottle_of_cola-X" />
+  <Activation t="2.9672" switchesOn="true" horizon="0.5" trajectory="bottle_of_cola-Y" />
+  <Activation t="4.97" switchesOn="false" horizon="0.5" trajectory="bottle_of_cola-Y" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="hand_left_powergrasp_fingers" />
+  <Constraint t="1.5086" pos="0.2" vel="0" acc="0" flag="1" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ 0" id="410"  />
+  <Constraint t="1.5086" pos="0" vel="0" acc="0" flag="7" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ 1" id="411"  />
+  <Constraint t="1.5086" pos="0" vel="0" acc="0" flag="7" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ 2" id="412"  />
+  <Constraint t="4.47" pos="0.821" vel="0" acc="0" flag="7" trajectory="bottle_of_cola-Z 0" id="419"  />
+  <ConstraintSet type="PositionConstraint" t="2.9672" pos="0 0 0" trajectory="bottle_of_cola-hand_left_powergrasp-XYZ" id="413 414 415"  />
+  <ConstraintSet type="PolarConstraint" t="2.9672" pos="0 0" trajectory="hand_left_powergrasp-bottle_of_cola-PowerGrasp" id="416 417 418"  />
+  <ConstraintSet type="ConnectBodyConstraint" t="2.9672" parent="hand_left_powergrasp" child="bottle_of_cola" id=""  />
+  <ConstraintSet type="VectorConstraint" t="1.9672" pos="0.01 0.01 0.01" vel="0 0 0" acc="0 0 0" trajectory="hand_left_powergrasp_fingers" id="420 421 422"  />
+  <ConstraintSet type="VectorConstraint" t="3.9672" pos="0.7 0.7 0.7" vel="0 0 0" acc="0 0 0" trajectory="hand_left_powergrasp_fingers" id="423 424 425"  />
+  <ConstraintSet type="CollisionModelConstraint" >
+  </ConstraintSet>
+  <ConstraintSet type="CollisionModelConstraint" >
+  </ConstraintSet>
+</ConstraintSet>
+
+</Action>
