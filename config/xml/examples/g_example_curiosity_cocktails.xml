@@ -32,8 +32,11 @@
 	<ActionSequence name="1" text="get glass_green; shake glass_green" />
 	<ActionSequence name="2" text="get glass_green; inspect glass_green" />
 	<ActionSequence name="3" text="get glass_blue; inspect glass_blue" />
+	<ActionSequence name="4" text="get bottle_of_fanta; move bottle_of_fanta above glass_green; pour glass_green bottle_of_fanta; put bottle_of_fanta table; pose default" />
+	<ActionSequence name="5" text="get bottle_of_fanta; move bottle_of_fanta above glass_green; pour bottle_of_fanta glass_green; put bottle_of_fanta table frame table_grid_0_1; pose default" />
+	<ActionSequence name="6" text="get bottle_of_fanta; move bottle_of_fanta above glass_green; pour bottle_of_fanta glass_green; put bottle_of_fanta table frame table_grid_0_3; pose default" />
 
-  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
+	<Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
   </Body>
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->

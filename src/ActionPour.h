@@ -85,7 +85,6 @@ protected:
   std::vector<std::string> particlesToPour;
 
   bool glasInHand;
-  bool bottleRightOfGlas;
   double pouringVolume;
   double tiltAngleAbs;
   double tiltAngle;

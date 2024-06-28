@@ -55,7 +55,7 @@ REGISTER_ACTION(ActionPour, "pour");
 ActionPour::ActionPour(const ActionScene& domain,
                        const RcsGraph* graph,
                        std::vector<std::string> params) :
-  glasInHand(false), bottleRightOfGlas(true), pouringVolume(0.1), tiltAngleAbs(RCS_DEG2RAD(150.0)), tiltAngle(RCS_DEG2RAD(150.0)), numSolutions(2)
+  glasInHand(false), pouringVolume(0.1), tiltAngleAbs(RCS_DEG2RAD(150.0)), tiltAngle(RCS_DEG2RAD(150.0)), numSolutions(2)
 {
   parseParams(params);
 
@@ -231,20 +231,6 @@ void ActionPour::init(const ActionScene& domain,
   this->taskGlasOri = glas + "-POLAR";
   this->taskGlasPosX = glas + "-X";
 
-  // Determine if pouring from left to right or from right to left.
-  // The robot base frame's y-axis points to left. We transform the
-  // bottle and gles into the robot's base frame and check which
-  // y-component is larger. That's the left body.
-  const HTr* A_RI = &roboBaseBdy->A_BI;
-
-  double R_r_glas[3];   // Glas origin in robot base frame
-  Vec3d_invTransform(R_r_glas, A_RI, glasBdy->A_BI.org);
-
-  double R_r_bottle[3];   // Bottle origin in robot base frame
-  Vec3d_invTransform(R_r_bottle, A_RI, bottleBdy->A_BI.org);
-  bottleRightOfGlas = (R_r_bottle[1] < R_r_glas[1]) ? true : false;
-  RLOG(5, "Bottle is %s of glass", bottleRightOfGlas ? "right" : "left");
-
   // Determine if glas is held in the hand or standing around. We use this
   // intormation for trajectory generation to constrain the glas orientation
   // if in the hand. We shouldn't do this for a glas not connected to any
@@ -275,7 +261,7 @@ bool ActionPour::initialize(const ActionScene& domain,
 
   if (getNumSolutions() != 1)
   {
-    tiltAngle = (solutionRank==0) ? tiltAngleAbs : -tiltAngleAbs;
+    tiltAngle = (solutionRank == 0) ? tiltAngleAbs : -tiltAngleAbs;
   }
 
   return true;
@@ -356,12 +342,12 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   const double afterTime = 0.5;
   const double thetaTilt = M_PI_2;//Math_dsign(tiltAngle)*M_PI_2;
 
-  // How much do hands go away from each other once pouring finished
-  const double d_separate = (bottleRightOfGlas) ? -0.25 : +0.25;
+  // How much do hands go away from each other once pouring finished. We move it into
+  // the direction of the bottle bottom.
+  const double d_separate = (tiltAngle>=0.0) ? -0.25 : 0.25;
   const double heightAboveGlas = 0.08;
 
   auto a1 = std::make_shared<tropic::ActivationSet>();
-
 
   // Hand position with respect to bottle. We move the bottle tip over the
   // glas tip, keep it a little bit (while the bottle tilts), and then
