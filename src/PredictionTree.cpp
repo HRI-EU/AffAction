@@ -373,10 +373,13 @@ bool PredictionTree::toDotFile(const std::string& filename) const
     label += "\\n(level " + std::to_string(n->level) + " of " +
              std::to_string(incomingActionSequence.size()) + ")";
 
-    if (!n->success)
-    {
-      label += "\\n(" + n->feedbackMsg.toString() + ")";
-    }
+    //REXEC(1)
+    //{
+    //  if (!n->success)
+    //  {
+    //    label += "\\n(" + n->feedbackMsg.toString() + ")";
+    //  }
+    //}
 
     fd << n->uniqueId << "[label=\"" << label << "\" ";
 
