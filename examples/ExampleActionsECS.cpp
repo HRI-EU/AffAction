@@ -985,11 +985,14 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
           RLOG_CPP(1, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
         }
 
-        RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with "
-                 << nd->bodyTransforms.size() << " transforms");
-        res.bodyTransforms.insert(res.bodyTransforms.end(),
-                                  nd->bodyTransforms.begin(),
-                                  nd->bodyTransforms.end());
+        if (!nd->bodyTransforms.empty())
+        {
+          RLOG_CPP(0, "Adding transforms for : " << i << " " << nd->actionCommand() << " with "
+                   << nd->bodyTransforms.size() << " transforms");
+          res.bodyTransforms.insert(res.bodyTransforms.end(),
+                                    nd->bodyTransforms.begin(),
+                                    nd->bodyTransforms.end());
+        }
       }
     }
     else
@@ -1019,9 +1022,11 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   // We failed: Create a meaningful error and return. We don't need to set the
   // processingAction flag here, since that's handled inside the onActionResult
   // method if success is false.
-  if (predictedActions.empty())
+  //if (predictedActions.empty())
+  if (predictedActions.size()!=seq.size())
   {
-    RLOG_CPP(0, "Could not find solution");
+    RLOG_CPP(0, "Could not find solution: Only " << predictedActions.size()
+             << " steps of " << seq.size() << " are valid");
     ex->clearCompletedActionStack();
 
     // Compose a meaningful error description for each failed action sequence
@@ -1061,11 +1066,6 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
     return;
   }
 
-  // From here on, we succeeded
-  std::string detailedActionCommand = Rcs::String_concatenate(predictedActions, ";");
-  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << detailedActionCommand);
-  ex->getEntity().publish("ActionSequence", detailedActionCommand);
-
   REXEC(0)
   {
     bool success = tree->toDotFile("PredictionTreeDFS.dot");
@@ -1076,6 +1076,11 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   {
     tree->printTreeVisual(tree->root, 0);
   }
+
+  // From here on, we succeeded
+  std::string detailedActionCommand = Rcs::String_concatenate(predictedActions, ";");
+  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << detailedActionCommand);
+  ex->getEntity().publish("ActionSequence", detailedActionCommand);
 
   if (ex->verbose)
   {
