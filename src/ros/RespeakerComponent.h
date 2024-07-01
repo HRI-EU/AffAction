@@ -64,6 +64,11 @@ public:
    */
   bool setParameter(const std::string& parameterName, bool flag);
 
+  /*! \brief Currently these parameters can be set:
+   *         - HandAboveHeadThreshold             (default is 10.0 meters, which essentially means that the hand-over-head speaker detection is not active. A good default would be 0.0)
+   */
+  bool setParameter(const std::string& parameterName, double value);
+
 private:
 
   void setPublishDialogueWithRaisedHandOnly(bool enable);
@@ -118,6 +123,7 @@ private:
   bool publishDialogueWithRaisedHandOnly;
   bool gazeAtSpeaker;
   bool speakOutSpeakerListenerText;
+  double handAboveHeadThreshold;
   std::vector<double> soundDirection, soundDirectionFilt;
 };
 

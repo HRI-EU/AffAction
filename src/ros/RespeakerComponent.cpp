@@ -88,8 +88,9 @@ namespace aff
 
 RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* scene_) :
   ComponentBase(parent), scene(scene_), respeakerBdyName("respeaker"), isASREnabled(false),
-  isSoundDirectionEstimationEnabled(true), isSomebodySpeaking(false), isAnyHandRaised(false), isAnyHandRaisedOverride(false),
-  publishDialogueWithRaisedHandOnly(true), gazeAtSpeaker(true), speakOutSpeakerListenerText(false)
+  isSoundDirectionEstimationEnabled(true), isSomebodySpeaking(false), isAnyHandRaised(false),
+  isAnyHandRaisedOverride(false), publishDialogueWithRaisedHandOnly(true), gazeAtSpeaker(true),
+  speakOutSpeakerListenerText(false), handAboveHeadThreshold(10.0)
 {
   soundDirection.resize(3);
   soundDirection[0] = 0.0;
@@ -134,6 +135,20 @@ bool RespeakerComponent::setParameter(const std::string& parameterName, bool fla
   }
 
   RLOG_CPP(1, "Parameter " << parameterName << " not supported - can't set to " << flag);
+
+  return false;
+}
+
+bool RespeakerComponent::setParameter(const std::string& parameterName, double value)
+{
+  if (parameterName=="HandAboveHeadThreshold")
+  {
+    handAboveHeadThreshold = value;
+    return true;
+  }
+
+  RLOG_CPP(1, "Parameter " << parameterName << " not supported - can't set to value "
+           << value);
 
   return false;
 }
@@ -231,8 +246,8 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
 
       //RLOG(0, "*** head: %.3f   lh: %.3f   rh: %.3f", headPos[2], lhPos[2], rhPos[2]);
 
-      const double handBelowHead = -0.2 - 10.0;
-      if ((lhPos[2]>headPos[2]-handBelowHead) || (rhPos[2]>headPos[2]-handBelowHead))
+      const double handAboveHead = 0.2 + handAboveHeadThreshold;
+      if ((lhPos[2]>headPos[2]+handAboveHead) || (rhPos[2]>headPos[2]+handAboveHead))
       {
         // Transform into respeaker frame
         Vec3d_invTransform(soundDirection.data(), &respeakerBdy->A_BI, headPos);
