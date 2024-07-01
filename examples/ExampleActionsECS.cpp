@@ -169,7 +169,7 @@ private:
 /*******************************************************************************
  *
  ******************************************************************************/
-RCS_REGISTER_EXAMPLE(ExampleActionsECS, "Actions", "ECS");
+RCS_REGISTER_EXAMPLE(ExampleActionsECS, "Actions", "Attentive Support");
 
 ExampleActionsECS::ExampleActionsECS() : ExampleActionsECS(0, NULL)
 {
@@ -1581,5 +1581,61 @@ void ExampleActionsECS::setProcessingAction(bool isProcessing)
 {
   processingAction = isProcessing;
 }
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+class ExampleCocktail : public ExampleActionsECS
+{
+public:
+
+  ExampleCocktail(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleCocktail()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_example_curiosity_cocktails.xml";
+    return true;
+  }
+};
+
+RCS_REGISTER_EXAMPLE(ExampleCocktail, "Actions", "Cocktail");
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+class ExamplePizza : public ExampleActionsECS
+{
+public:
+
+  ExamplePizza(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExamplePizza()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_example_pizza.xml";
+    return true;
+  }
+};
+
+RCS_REGISTER_EXAMPLE(ExamplePizza, "Actions", "Pizza");
 
 }   // namespace aff

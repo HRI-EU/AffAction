@@ -497,7 +497,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
           result.feedbackMsg.developer = "Tracking error at t=" + std::to_string(t) + " is " + std::to_string(err);
           result.feedbackMsg.developer += " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__);
-          std::string unreachableObject;
+          std::string unreachableObject = "object", reachingEffector = "hand";
 
           // Here we add details about the "guilty" task and its dimension.
           size_t count = 0;
@@ -510,12 +510,30 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
                 result.feedbackMsg.developer += ": Task " + controller->getTaskName(i) + "[dim " + std::to_string(j) + "] ";
                 const RcsBody* effBdy = RCSBODY_BY_ID(controller->getGraph(), controller->getTask(i)->getEffectorId());
                 const RcsBody* refBdy = RCSBODY_BY_ID(controller->getGraph(), controller->getTask(i)->getRefBodyId());
+
                 if (effBdy && refBdy)
                 {
-                  unreachableObject = std::string(!RcsBody_isArticulated(controller->getGraph(), effBdy) ? effBdy->name : "") + " " +
-                                      std::string(!RcsBody_isArticulated(controller->getGraph(), refBdy) ? refBdy->name : "");
+                  if (!RcsBody_isArticulated(controller->getGraph(), effBdy))
+                  {
+                    unreachableObject = effBdy->name;
+                  }
+                  else if (!RcsBody_isArticulated(controller->getGraph(), refBdy))
+                  {
+                    unreachableObject = refBdy->name;
+                  }
+
+                  if (unreachableObject==effBdy->name)
+                  {
+                    reachingEffector = refBdy->name;
+                  }
+                  else if (unreachableObject==refBdy->name)
+                  {
+                    reachingEffector = effBdy->name;
+                  }
+
                   result.feedbackMsg.developer += "effector: " + std::string(effBdy->name);
                   result.feedbackMsg.developer += " refBdy: " + std::string(refBdy->name);
+                  result.feedbackMsg.developer += " reachingEffector: " + reachingEffector;
                   result.feedbackMsg.developer += " unreachable object: " + unreachableObject + "\n";
                 }
               }
@@ -525,11 +543,11 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
           if (unreachableObject.empty())
           {
-            result.feedbackMsg.reason = "Can't reach the object - it is too far away";
+            result.feedbackMsg.reason = "Can't reach the object with the " + reachingEffector + " - it is too far away";
           }
           else
           {
-            result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " - it is too far away";
+            result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " with the " + reachingEffector + " - it is too far away";
           }
 
           result.success = false;
