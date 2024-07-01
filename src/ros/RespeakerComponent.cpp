@@ -231,7 +231,7 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
 
       //RLOG(0, "*** head: %.3f   lh: %.3f   rh: %.3f", headPos[2], lhPos[2], rhPos[2]);
 
-      const double handBelowHead = -0.2;
+      const double handBelowHead = -0.2 - 10.0;
       if ((lhPos[2]>headPos[2]-handBelowHead) || (rhPos[2]>headPos[2]-handBelowHead))
       {
         // Transform into respeaker frame
@@ -246,7 +246,7 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph, const std::string
 
   // In the mode when publishing with a raised hand, we enable the ASR when the
   // hand is raised, and disable it when no hand is raised.
-  if ((publishDialogueWithRaisedHandOnly || isAnyHandRaisedOverride) && (handRaised!=isAnyHandRaised))
+  if (publishDialogueWithRaisedHandOnly && (handRaised!=isAnyHandRaised))
   {
     enableASR(handRaised);
   }
