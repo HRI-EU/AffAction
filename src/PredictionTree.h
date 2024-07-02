@@ -303,6 +303,12 @@ public:
                                                         bool earlyExitSearch=true,
                                                         bool earlyExitAction=true);
 
+  static void setTurboDurationScaler(double value);
+
+  static double getTurboDurationScaler();
+
+  static double getDefaultTurboDurationScaler();
+
 private:
 
   /**

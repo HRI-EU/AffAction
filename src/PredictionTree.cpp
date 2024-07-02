@@ -51,6 +51,8 @@
 // be at the limit. This scaling factor extends the duration so that there
 // is a margin between the max. reached joint velocity and its limit.
 #define TURBO_DURATION_SCALER (1.2)
+static double defaultTurboDurationScale = TURBO_DURATION_SCALER;
+
 
 
 namespace aff
@@ -795,7 +797,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           // Scale duration to make motion as fast as possible
           if (localAction->turboMode())
           {
-            double newDuration = duration*predResults[i].scaleJointSpeeds*TURBO_DURATION_SCALER;
+            double newDuration = duration*predResults[i].scaleJointSpeeds*defaultTurboDurationScale;
             newDuration -= std::fmod(newDuration, dt);
             RLOG(0, "newDuration is %f", newDuration);
             localAction->setDuration(newDuration);
@@ -900,7 +902,7 @@ static void DFS(ActionScene& scene,
     //double merk = action->getDurationHint();
     if (action->turboMode())
     {
-      double newDuration = duration*res.scaleJointSpeeds*TURBO_DURATION_SCALER;
+      double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
       newDuration -= std::fmod(newDuration, dt);
       action->setDuration(newDuration);
     }
@@ -1046,7 +1048,7 @@ static void expand(ActionScene& scene,
   // since we sometimes receive issues with control steps outside index ranges. \todo
   if (action->turboMode())
   {
-    double newDuration = duration*res.scaleJointSpeeds*TURBO_DURATION_SCALER;
+    double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
     newDuration -= std::fmod(newDuration, dt);
     RLOG(0, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
     RLOG(0, "newDuration is %f", newDuration);
@@ -1237,6 +1239,25 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
   }
 
   return tree;
+}
+
+
+/*******************************************************************************
+ * Global scaling of durations
+ ******************************************************************************/
+void PredictionTree::setTurboDurationScaler(double value)
+{
+  defaultTurboDurationScale = value;
+}
+
+double PredictionTree::getTurboDurationScaler()
+{
+  return defaultTurboDurationScale;
+}
+
+double PredictionTree::getDefaultTurboDurationScaler()
+{
+  return TURBO_DURATION_SCALER;
 }
 
 }; // namespace aff

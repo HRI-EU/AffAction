@@ -44,6 +44,7 @@ namespace py = pybind11;
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
 #include <LandmarkZmqComponent.hpp>
+#include <PredictionTree.h>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -569,13 +570,25 @@ PYBIND11_MODULE(pyAffaction, m)
       return "SUCCESS";
     }
 
-    std::string fbmsgAsString = "I couldn't find a solution:\n";
-    size_t i = 0;
-    for (const auto& fb : ex.lastActionResult)
+    std::string fbmsgAsString = "No solution found:\n";
+    std::string fbLine, fbLinePrev;
+    for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
     {
-      fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
-      ++i;
+      const aff::ActionResult& fb = ex.lastActionResult[i];
+      fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
+
+      if (fbLine!=fbLinePrev)
+      {
+        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
+      }
+      fbLinePrev = fbLine;
     }
+    // size_t i = 0;
+    // for (const auto& fb : ex.lastActionResult)
+    // {
+    //   fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
+    //   ++i;
+    // }
 
     RLOG_CPP(0, fbmsgAsString);
 
@@ -607,12 +620,18 @@ PYBIND11_MODULE(pyAffaction, m)
       return "SUCCESS";
     }
 
-    std::string fbmsgAsString = "I couldn't find a solution:\n";
-    size_t i = 0;
-    for (const auto& fb : ex.lastActionResult)
+    std::string fbmsgAsString = "No solution found:\n";
+    std::string fbLine, fbLinePrev;
+    for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
     {
-      fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
-      ++i;
+      const aff::ActionResult& fb = ex.lastActionResult[i];
+      fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
+
+      if (fbLine!=fbLinePrev)
+      {
+        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
+      }
+      fbLinePrev = fbLine;
     }
 
     RLOG_CPP(0, fbmsgAsString);
@@ -832,6 +851,22 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("step", &aff::ExampleActionsECS::step)
   .def("stop", &aff::ExampleActionsECS::stop)
   .def("isRunning", &aff::ExampleActionsECS::isRunning)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Scales the durations of actions (global scope)
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setDurationScaling", [](aff::ExampleActionsECS& ex, double value)
+  {
+    aff::PredictionTree::setTurboDurationScaler(value);
+  })
+  .def("setDefaultDurationScaling", [](aff::ExampleActionsECS& ex)
+  {
+    aff::PredictionTree::setTurboDurationScaler(aff::PredictionTree::getDefaultTurboDurationScaler());
+  })
+  .def("getDurationScaling", [](aff::ExampleActionsECS& ex) -> double
+  {
+    return aff::PredictionTree::getTurboDurationScaler();
+  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
