@@ -543,7 +543,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
           if (unreachableObject.empty())
           {
-            result.feedbackMsg.reason = "Can't reach the object with the " + reachingEffector + " - it is too far away";
+            result.feedbackMsg.reason = "Can't move the " + reachingEffector + " fast enough - the action duration is too short.";
           }
           else
           {

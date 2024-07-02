@@ -96,6 +96,7 @@ void ActionBase::parseParams(std::vector<std::string>& params)
   if (it != params.end())
   {
     duration = std::stod(*(it + 1));
+    turbo = false;
     params.erase(it + 1);
     params.erase(it);
   }

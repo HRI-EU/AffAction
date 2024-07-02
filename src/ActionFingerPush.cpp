@@ -92,7 +92,7 @@ ActionFingerPush::ActionFingerPush(const ActionScene& domain,
     if (pushables.empty())
     {
       throw ActionException(ActionException::ParamNotFound,
-                            "The " + params[0] + " is not switchable.",
+                            "The entity " + object->name + " is not pushable.",
                             "Replace this action with a more clever one.",
                             std::string(__FILENAME__) + " " + std::to_string(__LINE__));
     }

@@ -64,10 +64,11 @@ protected:
   std::string graspingHandName;
   std::string shakeEntityName;
   std::string roboBaseFrameName;
-  std::string taskPosX, taskPosY, taskPosZ, taskOri;
+  std::string taskPosX, taskPosY, taskPosZ, taskOri, taskInclY, taskInclZ;
   std::vector<std::string> usedManipulators;
   size_t numUpAndDowns;
-  double amplitude;
+  double up_down_amplitude;
+  double tilt_amplitude;
   HTr shakeTransform;   // Shake position roboBaseFrame
 };
 

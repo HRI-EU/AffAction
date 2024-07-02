@@ -46,7 +46,8 @@
 #include <sstream>
 
 #define DEFAULT_NUM_SHAKES (3)
-#define DEFAULT_AMPLITUDE  (0.05)
+#define DEFAULT_UP_DOWN_AMPLITUDE  (0.03)
+#define DEFAULT_TILT_AMPLITUDE  (8.0*M_PI/180.0)
 
 
 namespace aff
@@ -56,7 +57,9 @@ REGISTER_ACTION(ActionShake, "shake");
 ActionShake::ActionShake(const ActionScene& scene,
                          const RcsGraph* graph,
                          std::vector<std::string> params) :
-  numUpAndDowns(DEFAULT_NUM_SHAKES), amplitude(DEFAULT_AMPLITUDE)
+  numUpAndDowns(DEFAULT_NUM_SHAKES),
+  up_down_amplitude(DEFAULT_UP_DOWN_AMPLITUDE),
+  tilt_amplitude(DEFAULT_TILT_AMPLITUDE)
 {
   parseParams(params);
 
@@ -69,11 +72,22 @@ ActionShake::ActionShake(const ActionScene& scene,
     params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "amplitude");
+  it = std::find(params.begin(), params.end(), "up_down_amplitude");
   if (it != params.end())
   {
     std::stringstream stream(*(it + 1));
-    stream >> amplitude;
+    stream >> up_down_amplitude;
+    up_down_amplitude *= M_PI / 180.0;   // input in deg
+    params.erase(it + 1);
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "tilt_amplitude");
+  if (it != params.end())
+  {
+    std::stringstream stream(*(it + 1));
+    stream >> tilt_amplitude;
+    tilt_amplitude *= M_PI / 180.0;   // input in deg
     params.erase(it + 1);
     params.erase(it);
   }
@@ -152,7 +166,9 @@ ActionShake::ActionShake(const ActionScene& scene,
   this->taskPosX = "PosX-" + shakeEntityName;
   this->taskPosY = "PosY-" + shakeEntityName;
   this->taskPosZ = "PosZ-" + shakeEntityName;
-  this->taskOri = "Polar-" + shakeEntityName;
+  this->taskOri = "Polar-" + graspingHandName;
+  this->taskInclY = "InclinationY-" + graspingHandName;
+  this->taskInclZ = "InclinationZ-" + graspingHandName;
 }
 
 ActionShake::~ActionShake()
@@ -189,6 +205,14 @@ std::vector<std::string> ActionShake::createTasksXML() const
             "controlVariable=\"POLAR\" effector=\"" + shakeEntityName + "\" />";
   tasks.push_back(xmlTask);
 
+  xmlTask = "<Task name=\"" + taskInclY + "\" " +
+            "controlVariable=\"Inclination\" effector=\"" + graspingHandName + "\" axisDirection=\"Y\" />";
+  tasks.push_back(xmlTask);
+
+  xmlTask = "<Task name=\"" + taskInclZ + "\" " +
+            "controlVariable=\"Inclination\" effector=\"" + graspingHandName + "\" axisDirection=\"Z\" />";
+  tasks.push_back(xmlTask);
+
   return tasks;
 }
 
@@ -197,8 +221,10 @@ tropic::TCS_sptr ActionShake::createTrajectory(double t_start, double t_end) con
   const size_t numOsc = numUpAndDowns;
   const double afterTime = 0.5;
   const double duration = (t_end - t_start);
-  const double t_dt_swing = 0.5*(0.9 - 0.3) * duration / (double)numOsc;
-  const double t_mid = t_start + 0.3 * duration;
+  const double t_reach = std::max(0.3 * duration, 4.0);
+  const double t_mid = t_start + t_reach;
+  //const double t_dt_swing = 0.5 * (0.9 - 0.3) * duration / (double)numOsc;
+  const double t_dt_swing = (0.5 * (0.9 * duration - t_reach)) / (double)numOsc;
   std::vector<double> t_shake;
 
   for (size_t i = 0; i < numOsc; ++i)
@@ -207,9 +233,9 @@ tropic::TCS_sptr ActionShake::createTrajectory(double t_start, double t_end) con
     t_shake.push_back(t_mid + (i*2+2)*t_dt_swing);
   }
 
-  REXEC(1)
+  REXEC(0)
   {
-    RLOG_CPP(0, "amplitude = " << amplitude);
+    RLOG_CPP(0, "up_down_amplitude = " << up_down_amplitude);
     RLOG_CPP(0, "duration = " << duration);
     RLOG_CPP(0, "t_dt_swing = " << t_dt_swing);
     RLOG_CPP(0, "t_mid = " << t_mid);
@@ -226,24 +252,40 @@ tropic::TCS_sptr ActionShake::createTrajectory(double t_start, double t_end) con
   a1->addActivation(t_start, true, 0.5, taskPosX);
   a1->addActivation(t_start, true, 0.5, taskPosY);
   a1->addActivation(t_start, true, 0.5, taskPosZ);
-  a1->addActivation(t_start, true, 0.5, taskOri);
+  //a1->addActivation(t_start, true, 0.5, taskOri);
+  a1->addActivation(t_start, true, 0.5, taskInclY);
+  a1->addActivation(t_start, true, 0.5, taskInclZ);
 
   a1->addActivation(t_end + afterTime, false, 0.5, taskPosX);
   a1->addActivation(t_end + afterTime, false, 0.5, taskPosY);
   a1->addActivation(t_end + afterTime, false, 0.5, taskPosZ);
-  a1->addActivation(t_end + afterTime, false, 0.5, taskOri);
+  //a1->addActivation(t_end + afterTime, false, 0.5, taskOri);
+  a1->addActivation(t_end + afterTime, false, 0.5, taskInclY);
+  a1->addActivation(t_end + afterTime, false, 0.5, taskInclZ);
 
   a1->add(t_mid, shakeTransform.org[0], 0.0, 0.0, 7, taskPosX + " 0");
   a1->add(t_mid, shakeTransform.org[1], 0.0, 0.0, 7, taskPosY + " 0");
   a1->add(t_mid, height, 0.0, 0.0, 7, taskPosZ + " 0");
+  a1->add(t_mid, M_PI_2, 0.0, 0.0, 7, taskInclY + " 0");
 
   for (size_t i = 0; i < numOsc; ++i)
   {
-    a1->add(t_shake[i*2], height + amplitude, 0.0, 0.0, 7, taskPosZ + " 0");
-    a1->add(t_shake[(i*2)+1], height - amplitude, 0.0, 0.0, 7, taskPosZ + " 0");
+    // Up and down
+    a1->add(t_shake[i*2], height + up_down_amplitude, 0.0, 0.0, 7, taskPosZ + " 0");
+    a1->add(t_shake[(i*2)+1], height - up_down_amplitude, 0.0, 0.0, 7, taskPosZ + " 0");
+
+    // Rotate
+    const double t_top = t_shake[i * 2];
+    const double t_bottom = t_shake[(i * 2) + 1];
+    const double t_half = 0.5 * fabs(t_bottom - t_top);
+    a1->add(t_top, M_PI_2 + tilt_amplitude, 0.0, 0.0, 7, taskInclY + " 0");
+    a1->add(t_top + t_half, M_PI_2 - tilt_amplitude, 0.0, 0.0, 7, taskInclY + " 0");
+    a1->add(t_bottom, M_PI_2 + tilt_amplitude, 0.0, 0.0, 7, taskInclY + " 0");
+    a1->add(t_bottom + t_half, M_PI_2 - tilt_amplitude, 0.0, 0.0, 7, taskInclY + " 0");
   }
 
   a1->add(t_end, height, 0.0, 0.0, 7, taskPosZ + " 0");
+  a1->add(t_end, M_PI_2, 0.0, 0.0, 7, taskInclY + " 0");
 
   return a1;
 }
@@ -267,9 +309,14 @@ std::string ActionShake::getActionCommand() const
     str += " number_of_shakes " + std::to_string(numUpAndDowns);
   }
 
-  if (amplitude != DEFAULT_AMPLITUDE)
+  if (up_down_amplitude != DEFAULT_UP_DOWN_AMPLITUDE)
   {
-    str += " amplitude " + std::to_string(amplitude);
+    str += " up_down_amplitude " + std::to_string(RCS_RAD2DEG(up_down_amplitude));
+  }
+
+  if (tilt_amplitude != DEFAULT_TILT_AMPLITUDE)
+  {
+    str += " tilt_amplitude " + std::to_string(RCS_RAD2DEG(tilt_amplitude));
   }
 
   if (getDuration()!=getDefaultDuration())
@@ -282,7 +329,9 @@ std::string ActionShake::getActionCommand() const
 
 double ActionShake::getDefaultDuration() const
 {
-  return 4.0 + (amplitude/DEFAULT_AMPLITUDE)*(numUpAndDowns*2.0);
+  const double amplitudeScaler = std::max(up_down_amplitude/DEFAULT_UP_DOWN_AMPLITUDE,
+                                          tilt_amplitude/DEFAULT_TILT_AMPLITUDE);
+  return 4.0 + amplitudeScaler * (numUpAndDowns * 3.0);
 }
 
 
