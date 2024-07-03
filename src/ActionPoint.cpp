@@ -53,8 +53,7 @@ REGISTER_ACTION(ActionPoint, "point");
 
 ActionPoint::ActionPoint(const ActionScene& scene,
                          const RcsGraph* graph,
-                         std::vector<std::string> params) :
-  reach(0.0), keepTasksActiveAfterEnd(true)
+                         std::vector<std::string> params) : keepTasksActiveAfterEnd(true)
 {
   Vec3d_setZero(pointDirection);
   Vec3d_setZero(fingerTipPosition);
@@ -224,7 +223,7 @@ bool ActionPoint::initialize(const ActionScene& scene,
                           "Normalization failed - eye and object coincide");
   }
 
-  this->reach = std::min(0.7*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, objBdy.org)-0.3);
+  const double reach = std::min(0.7*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, objBdy.org)-0.3);
   Vec3d_constMulAndAdd(fingerTipPosition, shldrJnt->A_JI.org, pointDirection, -reach);
   this->taskOri = "Align-" + pointerFrame + "-" + pointBdyName;
   this->taskFingers = pointerFrame + "_fingers";

@@ -75,7 +75,6 @@ protected:
   bool keepTasksActiveAfterEnd;
   double pointDirection[3];
   double fingerTipPosition[3];
-  double reach;
   std::vector<std::tuple<std::string, std::string,double>> manipulatorEntityMap;
 };
 
