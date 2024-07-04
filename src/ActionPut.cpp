@@ -1454,4 +1454,122 @@ public:
 
 REGISTER_ACTION(ActionMagicPut, "magic_put");
 
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionWipe : public ActionPut
+{
+public:
+
+  ActionWipe(const ActionScene& scene,
+             const RcsGraph* graph,
+             std::vector<std::string> params) : ActionPut(scene, graph, params)
+  {
+  }
+
+  virtual ~ActionWipe()
+  {
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionWipe>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    auto words = Rcs::String_split(ActionPut::getActionCommand(), " ");
+    RCHECK(!words.empty());
+    words[0] = "wipe";
+
+    std::string res;
+    for (const auto& w : words)
+    {
+      res += w + " ";
+    }
+
+    return res;
+  }
+
+  double getDefaultDuration() const
+  {
+    return 10.0;
+  }
+
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
+  {
+    const double afterTime = 0.5;
+    const double t_put = t_start + 0.33 * (t_end - t_start);
+    RLOG_CPP(0, "t_start: " << t_start << " t_put: " << t_put << " t_end: " << t_end);
+
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    a1->addActivation(t_start, true, 0.5, taskSurfaceOri);
+    a1->addActivation(t_end, false, 0.5, taskSurfaceOri);
+
+    // Put object on surface
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosX);
+    a1->addActivation(t_end, false, 0.5, taskObjSurfacePosX);
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosY);
+    a1->addActivation(t_end, false, 0.5, taskObjSurfacePosY);
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePosZ);
+    a1->addActivation(t_end, false, 0.5, taskObjSurfacePosZ);
+
+    const double* x = endPoint;
+
+    a1->add(t_put, x[0], 0.0, 0.0, 7, taskObjSurfacePosX + " 0");
+    a1->add(t_put, x[1], 0.0, 0.0, 7, taskObjSurfacePosY + " 0");
+    a1->add(t_put, x[2], 0.0, 0.0, 7, taskObjSurfacePosZ + " 0");
+
+    // Wiping moves
+    // t_put t_back1 t_forth1 t_back1 t_forth1 t_back1 t_forth1 t_end
+    std::vector<double> t_wipe;
+    const int n_wipes = 3;
+    const double dt_wipe = (t_end-t_put) / (double)(2*n_wipes+1);
+    const double wipeAmplitues = 0.05;
+    for (size_t i = 0; i < 2 * n_wipes + 1; ++i)
+    {
+      double wipeSgn = i % 2 == 0 ? 1.0 : -1.0;
+      const double t_wipe = t_put + (i+1) * dt_wipe;
+      //a1->add(t_put + i * t_dt_wipe, x[0], 0.0, 0.0, 7, taskObjSurfacePosX + " 0");
+      a1->add(t_wipe, x[1]+ wipeAmplitues * wipeSgn, 0.0, 0.0, 7, taskObjSurfacePosY + " 0");
+      RLOG_CPP(0, "t_wipe[" << i << "]: " << t_wipe);
+    }
+
+
+    // Lift it a little bit up after wiping
+    a1->add(t_end-dt_wipe, x[2], 0.0, 0.0, 7, taskObjSurfacePosZ + " 0");
+    a1->add(t_end, x[2] + 0.15, 0.0, 0.0, 7, taskObjSurfacePosZ + " 0");
+
+    // Object orientation wrt world frame. The object is re-connected to the
+    // table at t=t_put. Therefore we must switch of the hand-object relative
+    // orientation to avoid conflicting constraints. If we want the hand to
+    // remain upright a bit longer, we would need to activate an orientation
+    // task that is absolute with respect to the hand, for instance taskHandObjPolar.
+    a1->addActivation(t_start, true, 0.5, taskObjSurfacePolar);
+    a1->addActivation(t_end - dt_wipe, false, 0.5, taskObjSurfacePolar);
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfacePolar));
+
+    //if (!isPincerGrasped)
+    {
+      a1->addActivation(t_put, true, 0.5, taskHandObjPolar);
+      a1->addActivation(t_put + 0.5 * (t_end - t_put), false, 0.5, taskHandObjPolar);
+    }
+
+    return a1;
+  }
+
+};
+
+REGISTER_ACTION(ActionWipe, "wipe");
+
 }   // namespace aff

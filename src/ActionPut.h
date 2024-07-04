@@ -91,12 +91,12 @@ protected:
                    double t_grasp,
                    double t_end) const;
 
-  std::string graspFrame;    // Name of grasp frame, needed for retract motion
-  std::string objName;   // For ConnectBodyConstraint only
-  std::string objBottomName; // For CollisionModelConstraint
-  std::string objGraspFrame; // For retracting only
-  std::string surfaceFrameName;   // Rcs body name of surface
-  std::string fingerJoints;
+  std::string graspFrame;       // Name of grasp frame, needed for retract motion
+  std::string objName;          // RcsBody name For ConnectBodyConstraint only
+  std::string objBottomName;    // RcsBody name For CollisionModelConstraint
+  std::string objGraspFrame;    // For retracting only
+  std::string surfaceFrameName; // Rcs body name of surface
+  std::string fingerJoints;     // Space-separated finger joint names
 
   std::string taskObjHandPos;       // XYZ-task with effector=object and refBdy=hand
   std::string taskHandSurfacePos;   // XYZ-task with effector=hand, refBdy=object and refFrame=surface
