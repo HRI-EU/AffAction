@@ -603,6 +603,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
     ex.setProcessingAction(true);
+    ex.getEntity().publish("FreezePerception", true);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
   })
 
@@ -615,6 +616,9 @@ PYBIND11_MODULE(pyAffaction, m)
     {
       return std::string();
     }
+
+    // We unfreeze the perception the first time we see that processing has finished
+    ex.getEntity().publish("FreezePerception", false);
 
     if (ex.lastActionResult[0].success())
     {
