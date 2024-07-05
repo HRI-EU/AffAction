@@ -560,9 +560,11 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::string
   {
+    ex.getEntity().publish("FreezePerception", true);
     PollBlockerComponent blocker(&ex);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
+    ex.getEntity().publish("FreezePerception", false);
 
     if (ex.lastActionResult[0].success())
     {
