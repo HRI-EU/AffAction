@@ -107,6 +107,8 @@ put(<object-to-put>
     <"near" neart_entity (optional)>
     <"far" far-entity (optional)>
     <"distance" near-far-distance (optional)>
+    <"putAligned" (optional)>
+    <"alignAngleZ" angle_in_degrees (optional)>
 ```
 
 The object-to-put must be in one of the agent's hands (previously grasped). It also needs to
@@ -121,6 +123,11 @@ a distance threshols, which can be given through the distance keyword. The defau
 All Supportables that are farther away (for "Near") or closer (for "far) will be ignored. All
 remaining supportables are sorted by their distance so that closer (for "near") or fartner (for
 "far") put places are preferred.
+
+The object is put on its put location by aligning the vertical orientations. The rotation about
+the vertical axis is not determined. If this is required, the option "putAligned" makes the
+object's Stackable frame align its 3d orientation with the Supportable frame. In case an
+additional orientation is required, the "alignAngleZ" allows to specify this angle (in degrees).
 
 For instance:
 

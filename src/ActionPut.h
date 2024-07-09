@@ -131,6 +131,7 @@ protected:
   double startPoint[3];
   double midPoint[3];
   double endPoint[3];
+  double putOri3d[3];
 
   std::vector<std::tuple<Affordance*, Affordance*>> affordanceMap;
 };

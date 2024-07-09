@@ -215,6 +215,7 @@ ActionPut::ActionPut() :
   Vec3d_setZero(startPoint);
   Vec3d_setZero(midPoint);
   Vec3d_setZero(endPoint);
+  Vec3d_setZero(putOri3d);
 }
 
 ActionPut::ActionPut(const ActionScene& domain,
@@ -284,6 +285,14 @@ void ActionPut::parseArgs(const ActionScene& domain,
   if (it != params.end())
   {
     putPolar = false;
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "alignAngleZ");
+  if (it != params.end())
+  {
+    putOri3d[2] = RCS_DEG2RAD(std::stod(*(it + 1)));
+    params.erase(it + 1);
     params.erase(it);
   }
 
@@ -741,6 +750,11 @@ bool ActionPut::initialize(const ActionScene& domain,
     detailedActionCommand += " putAligned";
   }
 
+  if (putOri3d[2]!=0.0)
+  {
+    detailedActionCommand += " alignAngleZ " + std::to_string(RCS_RAD2DEG(putOri3d[2]));
+  }
+
   // We add the duration in the getActionCommand() function, since initialize() is not
   // called after predict(), and we might adapt the duration after that.
   return true;
@@ -952,7 +966,7 @@ ActionPut::createTrajectory(double t_start,
   }
   else
   {
-    a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+    a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
   }
 
   if (!isPincerGrasped)
@@ -1024,6 +1038,8 @@ void ActionPut::print() const
   std::cout << "whereOn: " << whereOn << std::endl;
   std::cout << "nearTo: " << nearTo << std::endl;
   std::cout << "farFrom: " << farFrom << std::endl;
+  std::cout << "putOri3d: " << putOri3d[0] << putOri3d[1] << putOri3d[2] << std::endl;
+  std::cout << "putPolar: " << putPolar << std::endl;
 
   ActionBase::print();
 
@@ -1181,7 +1197,7 @@ public:
     }
     else
     {
-      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
     }
 
     if (!isPincerGrasped)
@@ -1596,7 +1612,7 @@ public:
     }
     else
     {
-      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
     }
 
     //if (!isPincerGrasped)
