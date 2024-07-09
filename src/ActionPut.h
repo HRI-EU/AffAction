@@ -103,7 +103,7 @@ protected:
   std::string taskObjSurfacePosX;
   std::string taskObjSurfacePosY;
   std::string taskObjSurfacePosZ;
-  std::string taskObjSurfacePolar;
+  std::string taskObjSurfaceOri;
   std::string taskHandObjPolar;
   std::string taskHandPolar;    // Hand Polar angles in world coordinates (for freezing orienttion when retracting upwards)
   std::string taskSurfaceOri;   // In case the object to put on is in the robot's hand
@@ -121,6 +121,7 @@ protected:
   bool putDown;
   bool isObjCollidable;
   bool isPincerGrasped;
+  bool putPolar;
   double supportRegionX, supportRegionY;
   unsigned int polarAxisIdx;
   double distance;

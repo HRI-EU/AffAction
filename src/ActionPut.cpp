@@ -37,6 +37,7 @@
 #include <ActivationSet.h>
 #include <PositionConstraint.h>
 #include <PolarConstraint.h>
+#include <EulerConstraint.h>
 #include <ConnectBodyConstraint.h>
 #include <VectorConstraint.h>
 
@@ -208,7 +209,7 @@ namespace aff
 REGISTER_ACTION(ActionPut, "put");
 
 ActionPut::ActionPut() :
-  above(false), putDown(false), isObjCollidable(false), isPincerGrasped(false),
+  above(false), putDown(false), isObjCollidable(false), isPincerGrasped(false), putPolar(true),
   supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2), distance(0.0), heightAboveGoal(0.0)
 {
   Vec3d_setZero(startPoint);
@@ -276,6 +277,13 @@ void ActionPut::parseArgs(const ActionScene& domain,
   if (it != params.end())
   {
     putDown = true;
+    params.erase(it);
+  }
+
+  it = std::find(params.begin(), params.end(), "putAligned");
+  if (it != params.end())
+  {
+    putPolar = false;
     params.erase(it);
   }
 
@@ -696,7 +704,7 @@ bool ActionPut::initialize(const ActionScene& domain,
   this->taskObjSurfacePosX = objBottomName + "-" + surfaceFrameName + "-X";
   this->taskObjSurfacePosY = objBottomName + "-" + surfaceFrameName + "-Y";
   this->taskObjSurfacePosZ = objBottomName + "-" + surfaceFrameName + "-Z";
-  this->taskObjSurfacePolar = objBottomName + "-" + surfaceFrameName + "-POLAR";
+  this->taskObjSurfaceOri = objBottomName + "-" + surfaceFrameName + "-ORI";
   this->taskHandPolar = graspFrame + "-POLAR";
   this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
   this->taskSurfaceOri = surfaceFrameName + "-POLAR";
@@ -726,6 +734,11 @@ bool ActionPut::initialize(const ActionScene& domain,
   if (putDown)
   {
     detailedActionCommand += " putDown";
+  }
+
+  if (!putPolar)
+  {
+    detailedActionCommand += " putAligned";
   }
 
   // We add the duration in the getActionCommand() function, since initialize() is not
@@ -789,19 +802,25 @@ std::vector<std::string> ActionPut::createTasksXML() const
             "refBdy=\"" + surfaceFrameName + "\" />";
   tasks.push_back(xmlTask);
 
-  // taskObjSurfacePolar: Relative Polar angle orientation between
+  // taskObjSurfaceOri: Relative Polar angle orientation between
   // object and surface   polarAxisIdx
-  xmlTask = "<Task name=\"" + taskObjSurfacePolar + "\" " +
-            "controlVariable=\"POLAR\" " + "effector=\"" +
+  std::string taskDir = putPolar ? "POLAR" : "ABC";
+  xmlTask = "<Task name=\"" + taskObjSurfaceOri + "\" " +
+            "controlVariable=\"" + taskDir + "\" " + "effector=\"" +
             objBottomName + "\" refBdy=\"" + surfaceFrameName + "\" ";
 
-  if (polarAxisIdx==0)
+  RLOG_CPP(0, "****************************** TASK_DIR=" << taskDir);
+
+  if (putPolar)
   {
-    xmlTask += "axisDirection=\"X\" ";
-  }
-  else if (polarAxisIdx == 1)
-  {
-    xmlTask += "axisDirection=\"Y\" ";
+    if (polarAxisIdx==0)
+    {
+      xmlTask += "axisDirection=\"X\" ";
+    }
+    else if (polarAxisIdx == 1)
+    {
+      xmlTask += "axisDirection=\"Y\" ";
+    }
   }
 
   xmlTask += " />";
@@ -925,9 +944,16 @@ ActionPut::createTrajectory(double t_start,
   // orientation to avoid conflicting constraints. If we want the hand to
   // remain upright a bit longer, we would need to activate an orientation
   // task that is absolute with respect to the hand, for instance taskHandObjPolar.
-  a1->addActivation(t_start, true, 0.5, taskObjSurfacePolar);
-  a1->addActivation(t_put, false, 0.5, taskObjSurfacePolar);
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfacePolar));
+  a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
+  a1->addActivation(t_put, false, 0.5, taskObjSurfaceOri);
+  if (putPolar)
+  {
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+  }
+  else
+  {
+    a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+  }
 
   if (!isPincerGrasped)
   {
@@ -988,7 +1014,7 @@ void ActionPut::print() const
   std::cout << "taskObjSurfacePosX: " << taskObjSurfacePosX << std::endl;
   std::cout << "taskObjSurfacePosY: " << taskObjSurfacePosY << std::endl;
   std::cout << "taskObjSurfacePosZ: " << taskObjSurfacePosZ << std::endl;
-  std::cout << "taskObjSurfacePolar: " << taskObjSurfacePolar << std::endl;
+  std::cout << "taskObjSurfaceOri: " << taskObjSurfaceOri << std::endl;
   std::cout << "taskHandObjPolar: " << taskHandObjPolar << std::endl;
   std::cout << "taskHandPolar: " << taskHandPolar << std::endl;
   std::cout << "taskSurfaceOri: " << taskSurfaceOri << std::endl;
@@ -1147,9 +1173,16 @@ public:
     // orientation to avoid conflicting constraints. If we want the hand to
     // remain upright a bit longer, we would need to activate an orientation
     // task that is absolute with respect to the hand, for instance taskHandObjPolar.
-    a1->addActivation(t_start, true, 0.5, taskObjSurfacePolar);
-    a1->addActivation(t_put, false, 0.5, taskObjSurfacePolar);
-    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfacePolar));
+    a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfaceOri);
+    if (putPolar)
+    {
+      a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+    }
+    else
+    {
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+    }
 
     if (!isPincerGrasped)
     {
@@ -1291,7 +1324,7 @@ public:
     // Task naming
     this->taskObjHandPos = objGraspFrame + "-" + graspFrame + "-XYZ";
     this->taskHandSurfacePos = graspFrame + "-" + surfaceFrameName + "-XYZ";
-    this->taskObjSurfacePolar = objBottomName + "-" + surfaceFrameName + "-POLAR";
+    this->taskObjSurfaceOri = objBottomName + "-" + surfaceFrameName + "-ORI";
     this->taskHandPolar = graspFrame + "-POLAR";
     this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
     this->taskFingers = graspFrame + "_fingers";
@@ -1555,9 +1588,16 @@ public:
     // orientation to avoid conflicting constraints. If we want the hand to
     // remain upright a bit longer, we would need to activate an orientation
     // task that is absolute with respect to the hand, for instance taskHandObjPolar.
-    a1->addActivation(t_start, true, 0.5, taskObjSurfacePolar);
-    a1->addActivation(t_end - dt_wipe, false, 0.5, taskObjSurfacePolar);
-    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfacePolar));
+    a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
+    a1->addActivation(t_end - dt_wipe, false, 0.5, taskObjSurfaceOri);
+    if (putPolar)
+    {
+      a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+    }
+    else
+    {
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, 0.0, 0.0, 0.0, taskObjSurfaceOri));
+    }
 
     //if (!isPincerGrasped)
     {
@@ -1571,5 +1611,41 @@ public:
 };
 
 REGISTER_ACTION(ActionWipe, "wipe");
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionPutAligned : public ActionPut
+{
+public:
+
+  ActionPutAligned(const ActionScene& scene,
+                   const RcsGraph* graph,
+                   std::vector<std::string> params) : ActionPut(scene, graph, params)
+  {
+    putPolar = false;
+  }
+
+  virtual ~ActionPutAligned()
+  {
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionPutAligned>(*this);
+  }
+
+};
+
+REGISTER_ACTION(ActionPutAligned, "put_aligned");
 
 }   // namespace aff
