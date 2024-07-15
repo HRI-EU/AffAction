@@ -604,39 +604,52 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
 
   // Determine the closest listener of all agents
   double ang = 2.0*M_PI;
+  double headPosition[3], gazeDirection[3];
+  speaker->getHeadPosition(headPosition, graph);
+  speaker->getGazeDirection(gazeDirection, graph);
 
 
   for (auto& other : scene->agents)
   {
+    RLOG_CPP(1, "getListener: checking " << other->name);
     HumanAgent* otherHuman = dynamic_cast<HumanAgent*>(other);
 
     // We inhibit that the listener is the speaker
     if (otherHuman && otherHuman->name==speaker->name)
     {
+      RLOG_CPP(1, "getListener: ignoring " << otherHuman->name << " because it is the speaker");
       continue;
     }
 
     double candidateDir[3], otherHead[3];
     if (otherHuman)
     {
-      otherHuman->getHeadPosition(otherHead, graph);
+      bool success = otherHuman->getHeadPosition(otherHead, graph);
+      if (!success)
+      {
+        RLOG_CPP(0, "Failed to obtain the head position of agent " << otherHuman->name);
+      }
     }
     else
     {
       Vec3d_copy(otherHead, micPosition);
     }
 
-    double headPosition[3], gazeDirection[3];
-    speaker->getHeadPosition(headPosition, graph);
-    speaker->getGazeDirection(gazeDirection, graph);
     Vec3d_sub(candidateDir, otherHead, headPosition);
     double ang_i = Vec3d_diffAngle(gazeDirection, candidateDir);
+    RLOG_CPP(1, "getListener: checking " << lookedAt->name << ". Angle: " << RCS_RAD2DEG(ang));
+    RLOG_CPP(1, "getListener: speaker head position is " <<
+             headPosition[0] << " " << headPosition[1] << " " << headPosition[2]);
+    RLOG_CPP(1, "getListener: candidate listener head position is " <<
+             otherHead[0] << " " << otherHead[1] << " " << otherHead[2]);
+    RLOG_CPP(1, "getListener: candidate gaze direction is " <<
+             candidateDir[0] << " " << candidateDir[1] << " " << candidateDir[2]);
 
     if (ang_i<ang)
     {
       lookedAt = other;
       ang = ang_i;
-      RLOG_CPP(1, "Setting listener to: Ang: " << RCS_RAD2DEG(ang) << " " << lookedAt->name);
+      RLOG_CPP(1, "getListener: setting listener to: " << lookedAt->name << " Angle: " << RCS_RAD2DEG(ang));
     }
 
   }
@@ -644,8 +657,6 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
   // Only when the listener is inside the speaker's view cone, we will identify
   // her or him as the listener. Otherwise, we assume that the speaker talks
   // to all.
-  RLOG_CPP(1, "Ang: " << RCS_RAD2DEG(ang) << " " << lookedAt->name);
-
   if ((!lookedAt) || (ang>AGENT_DETECTION_CONE_ANGLE))
   {
     RLOG(1, "No listener found");
