@@ -107,6 +107,7 @@ RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* sc
   subscribe("ToggleASR", &RespeakerComponent::toggleASR);
   subscribe("ToggleHandRaised", &RespeakerComponent::toggleHandRaised);
   subscribe("EnableSoundDirection", &RespeakerComponent::enableSoundDirectionEstimation);
+  subscribe("AgentChanged", &RespeakerComponent::onAgentChanged);
   onStart();
 }
 
@@ -409,6 +410,50 @@ void RespeakerComponent::onStart()
 
 void RespeakerComponent::onReplayLog()
 {
+#if defined (USE_ROS)
+
+  RLOG(0, "RespeakerComponent::onReplayLog()");
+  if (nh)
+  {
+    std_msgs::String resetLLMString;
+
+
+    nlohmann::json outerJson;
+
+    nlohmann::json json;
+    json["id"] = "speaking";
+
+    nlohmann::json assignment;
+    assignment["text"] = "replay_log";
+    assignment["sender"] = nullptr;
+    assignment["receiver"] = nullptr;
+
+    json["assignment"] = assignment;
+    json["present"] = true;
+    json["publish"] = true;
+    json["speech_template"] = "{sender} said to {receiver}: {text}";
+    json["speech"] = "None said to None: clear_history";
+    json["speech_template_past"] = "{sender} said to {receiver}: {text}";
+
+    nlohmann::json dataJson;
+    dataJson["data"] = json;
+
+    outerJson.push_back(dataJson);
+
+    resetLLMString.data = outerJson.dump();
+
+    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
+    reset_llm_pub.publish(resetLLMString);
+  }
+
+#endif
+}
+
+void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appear)
+{
+  std::string appearStr = appear ? " appeared" : " disappered";
+  RLOG_CPP(0, "Agent " << agentName << appearStr);
+
 #if defined (USE_ROS)
 
   RLOG(0, "RespeakerComponent::onReplayLog()");

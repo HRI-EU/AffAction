@@ -289,6 +289,11 @@ const ActionScene* LandmarkBase::getScene() const
   return this->scene;
 }
 
+ActionScene* LandmarkBase::getScene()
+{
+  return this->scene;
+}
+
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
 {
   return this->trackers;

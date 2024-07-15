@@ -82,6 +82,7 @@ private:
   void onStop();
   void onResetLLM();
   void onReplayLog();
+  void onAgentChanged(const std::string& agentName, bool appear);
   void enableASR(bool enable);
   void enableSoundDirectionEstimation(bool enable);
   void toggleASR();

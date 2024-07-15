@@ -42,6 +42,7 @@
 
 #include <map>
 #include <memory>
+#include <functional>
 
 
 
@@ -83,6 +84,8 @@ public:
 
   void jsonFromSkeletons(nlohmann::json& json) const;
 
+  void registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback);
+
   // bool setParameter(const std::string& parameterName, void* ptr);
 
 private:
@@ -96,6 +99,7 @@ private:
 
   std::vector<int> findCorrespondences(std::map<int, std::vector<HTr>> markerMap) const;
   std::vector<std::unique_ptr<Skeleton>> skeletons;
+  std::vector<std::function<void(const std::string&, bool)>> agentAppearDisappearCb;
   bool newAzureUpdate;
   double defaultPosRadius;
   HTr A_CI;

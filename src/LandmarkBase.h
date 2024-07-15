@@ -77,6 +77,7 @@ public:
 
   const RcsGraph* getGraph() const;
   const ActionScene* getScene() const;
+  ActionScene* getScene();
   virtual void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
   std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
 

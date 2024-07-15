@@ -916,7 +916,45 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::move(lm);
   }))
   .def("addArucoTracker", &aff::LandmarkBase::addArucoTracker)
-  .def("addSkeletonTrackerForAgents", &aff::LandmarkBase::addSkeletonTrackerForAgents)
+  .def("addSkeletonTrackerForAgents_org", &aff::LandmarkBase::addSkeletonTrackerForAgents)
+  .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r) -> int
+  {
+    aff::ExampleActionsECS* sim = sim_.cast<aff::ExampleActionsECS*>();
+    if (!lm.getScene())
+    {
+      RLOG(0, "Can't add skeleton tracker for agents - scene has not been set");
+      return 0;
+    }
+
+    int numHumanAgents = 0;
+    for (const auto& agent : lm.getScene()->agents)
+    {
+      if (dynamic_cast<aff::HumanAgent*>(agent))
+      {
+        numHumanAgents++;
+      }
+    }
+
+    if (numHumanAgents == 0)
+    {
+      RLOG(0, "Can't add skeleton tracker for agents - no human agent found");
+      return 0;
+    }
+
+    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents);
+    tracker->setScene(lm.getScene());
+    lm.addTracker(std::unique_ptr<aff::AzureSkeletonTracker>(tracker));
+    tracker->addAgents();
+    tracker->setSkeletonDefaultPositionRadius(r);
+    tracker->registerAgentAppearDisappearCallback([sim](const std::string& agentName, bool appear)
+    {
+      std::string appearStr = appear ? " appeared" : " disappered";
+      RLOG_CPP(0, "Agent " << agentName << appearStr);
+      sim->getEntity().publish("AgentChanged", agentName, appear);
+    });
+
+    return numHumanAgents;
+  })
   .def("setJsonInput", &aff::LandmarkBase::setJsonInput)
   .def("getTrackerState", &aff::LandmarkBase::getTrackerState)
   .def("startCalibration", &aff::LandmarkBase::startCalibration)

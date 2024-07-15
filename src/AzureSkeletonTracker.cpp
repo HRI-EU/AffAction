@@ -600,11 +600,20 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
     if ((!skeletons[i]->wasVisible) && skeletons[i]->isVisible)
     {
       RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " appeared");
+      for (const auto& cb : agentAppearDisappearCb)
+      {
+        cb(skeletons[i]->agentName, true);
+      }
+
       updateSkeletonGraphics = true;
     }
     else if (skeletons[i]->wasVisible && (!skeletons[i]->isVisible))
     {
       RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " disappeared");
+      for (const auto& cb : agentAppearDisappearCb)
+      {
+        cb(skeletons[i]->agentName, false);
+      }
       updateSkeletonGraphics = true;
     }
 
@@ -970,5 +979,9 @@ void AzureSkeletonTracker::jsonFromSkeletons(nlohmann::json& json) const
 //   return false;
 // }
 
+void AzureSkeletonTracker::registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback)
+{
+  agentAppearDisappearCb.push_back(callback);
+}
 
 } // namespace aff
