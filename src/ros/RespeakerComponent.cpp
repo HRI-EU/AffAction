@@ -621,7 +621,7 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
       continue;
     }
 
-    double candidateDir[3], otherHead[3];
+    double otherHead[3];
     if (otherHuman)
     {
       bool success = otherHuman->getHeadPosition(otherHead, graph);
@@ -635,9 +635,10 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
       Vec3d_copy(otherHead, micPosition);
     }
 
+    double candidateDir[3];
     Vec3d_sub(candidateDir, otherHead, headPosition);
     double ang_i = Vec3d_diffAngle(gazeDirection, candidateDir);
-    RLOG_CPP(1, "getListener: checking " << lookedAt->name << ". Angle: " << RCS_RAD2DEG(ang));
+    RLOG_CPP(1, "getListener: checking " << other->name << ". Angle: " << RCS_RAD2DEG(ang));
     RLOG_CPP(1, "getListener: speaker head position is " <<
              headPosition[0] << " " << headPosition[1] << " " << headPosition[2]);
     RLOG_CPP(1, "getListener: candidate listener head position is " <<
@@ -682,7 +683,7 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
 void RespeakerComponent::isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg)
 {
   isSomebodySpeaking = msg->data;
-  RLOG(1, "isSpeakingRosCallback: %s", isSomebodySpeaking ? "SPEAKING" : "NOT SPEAKING");
+  RLOG(2, "isSpeakingRosCallback: %s", isSomebodySpeaking ? "SPEAKING" : "NOT SPEAKING");
 }
 
 /*
