@@ -377,7 +377,7 @@ void Skeleton::updateGraphics()
       viewer->unlock();
       visualNodes.insert(visualNodes.end(), nodes.begin(), nodes.end());
     }
-    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualNodes.size() << " nodes");
+    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualNodes.size() << " nodes");
   }
   else
   {
