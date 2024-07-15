@@ -319,8 +319,8 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
 
 
   // Check which agent is speaking
-  const HumanAgent* speaker = getSpeaker(micPos, soundDir, current);
-  const Agent* listener = getListener(micPos, speaker, current);
+  const HumanAgent* speaker = getSpeaker(micPos, soundDir, graph);//current);
+  const Agent* listener = getListener(micPos, speaker, graph);//, current);
 
   /* Create output json in this format:
   (
