@@ -369,7 +369,7 @@ void Skeleton::updateGraphics()
   {
     visualNodes.clear();
     // Get all graph nodes for transparency
-    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualBodies.size() << " bodies");
+    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualBodies.size() << " bodies");
     for (const auto& manipulator : visualBodies)
     {
       viewer->lock();
@@ -381,7 +381,7 @@ void Skeleton::updateGraphics()
   }
   else
   {
-    RLOG_CPP(1, "Skeleton " << agentName << " has " << visualNodes.size() << " osg nodes and alpha " << alpha);
+    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualNodes.size() << " osg nodes and alpha " << alpha);
     for (auto& nd : visualNodes)
     {
       //setAlphaRecursive(nd, alpha);

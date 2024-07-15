@@ -636,6 +636,7 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
     {
       lookedAt = other;
       ang = ang_i;
+      RLOG_CPP(1, "Setting listener to: Ang: " << RCS_RAD2DEG(ang) << " " << lookedAt->name);
     }
 
   }
