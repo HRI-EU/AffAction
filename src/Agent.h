@@ -102,7 +102,9 @@ public:
   bool hasHead(const RcsGraph* graph) const;
   bool getHeadTransform(HTr* A_HI, const RcsGraph* graph) const;
   bool getHeadPosition(double pos[3], const RcsGraph* graph) const;
+  bool getHeadPositionInWorld(double pos[3], const RcsGraph* graph) const;
   bool getGazeDirection(double dir[3], const RcsGraph* graph) const;
+  bool getGazeDirectionInWorld(double dir[3], const RcsGraph* graph) const;
   bool getHeadUpAxis(double dir[3], const RcsGraph* graph) const;
   double getDefaultPosition(size_t index) const;
   std::vector<double> getDefaultPosition() const;

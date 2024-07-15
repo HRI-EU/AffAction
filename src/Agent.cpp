@@ -555,6 +555,19 @@ bool HumanAgent::getHeadPosition(double pos[3], const RcsGraph* graph) const
   return true;
 }
 
+bool HumanAgent::getHeadPositionInWorld(double pos[3], const RcsGraph* graph) const
+{
+  const RcsBody* body = RcsGraph_getBodyByName(graph, headBdyName.c_str());
+  if (!body)
+  {
+    return false;
+  }
+
+  Vec3d_copy(pos, body->A_BI.org);
+
+  return true;
+}
+
 bool HumanAgent::getGazeDirection(double dir[3], const RcsGraph* graph) const
 {
   HTr A_head;
@@ -564,6 +577,19 @@ bool HumanAgent::getGazeDirection(double dir[3], const RcsGraph* graph) const
   }
 
   Vec3d_copy(dir, A_head.rot[1]);
+
+  return true;
+}
+
+bool HumanAgent::getGazeDirectionInWorld(double dir[3], const RcsGraph* graph) const
+{
+  const RcsBody* body = RcsGraph_getBodyByName(graph, headBdyName.c_str());
+  if (!body)
+  {
+    return false;
+  }
+
+  Vec3d_copy(dir, body->A_BI.rot[1]);
 
   return true;
 }
