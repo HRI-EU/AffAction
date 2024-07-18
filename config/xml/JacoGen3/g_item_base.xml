@@ -1,0 +1,135 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
+
+    <Body name="Johnnie" >
+    </Body>
+
+    <Body name="base_footprint" prev="Johnnie" mass="0.001" inertia="1 0 0 0 1 0 0 0 1">
+        <Shape type="FRAME" scale="0.5"/>
+    </Body>
+
+    <Body name="base_link" prev="base_footprint" transform="0 0 0.0498 0 0 0" physics="none" mass="30"
+          inertia="1 0 0 0 1 0 0 0 1">
+        <Joint name="DofBaseX" type="TransX" range="-5 0 5" weightJL="0.1" weightMetric="0.01" constraint="true"/>
+        <Joint name="DofBaseY" type="TransY" range="-5 0 5" weightJL="0.0" weightMetric="0.01" constraint="true"/>
+        <Joint name="DofBaseThZ" type="RotZ" range="-360 0 360" weightJL="0.1" weightMetric="0.01" constraint="true"/>
+    </Body>
+
+    <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.534 0 0 0" physics="none">
+      <Shape type="BOX" extents="0.08 0.107 0.004" distance="false" physics="false" graphics="true"
+	     transform="0 0 0.633 0 0 0"/>
+        <Shape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true"
+               transform="0 0 0.131 0 0 0"/>
+        <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false"
+               transform="0 0 0 0 0 0"/>
+    </Body>
+
+    <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0">
+    </Body>
+
+    <Body name="screen_link" prev="screen_mount_3_link" transform="0.042 0 0 0 0 0" physics="none">
+      <Shape type="BOX" extents="0.03 0.2 0.28" distance="true" physics="true" graphics="true"
+	     transform="0.02 0 0 90 0 0" />
+        <Shape type="FRAME" scale="0.2"/>
+    </Body>
+
+    <Body name="ptu_link" prev="center_post_link" transform="0 0 0.633 0 0 90" physics="none" mass="0.01"
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
+      <Shape type="CYLINDER" radius="0.035" length="0.04" distance="false" physics="false" graphics="true"
+	     transform="0 0 0.022 0 0 0" />
+    </Body>
+
+    <Body name="ptu_pan_link" prev="ptu_link" physics="none" mass="0.01"
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
+        <Joint name="ptu_pan_joint" range="-90 0 90" type="RotZ" transform="0 0 0.095 0 0 0" torqueLimit="200"
+               speedLimit="360" constraint="false" weightJL="0"/>
+        <Shape type="BOX" extents="0.09 0.07 0.111" distance="false" physics="false" graphics="true"
+	       transform="0 0 0 -180 0 0" />
+    </Body>
+
+    <Body name="ptu_tilt_link" prev="ptu_pan_link" physics="none" mass="0.01"
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001" transform="0 0 0 0 0 0" >
+      <Joint name="ptu_tilt_joint" range="-85 0 85" was_range="-45 30 45" type="RotX" torqueLimit="12"
+	     speedLimit="234.912696" constraint="false" weightJL="0"/>
+       <Shape type="BOX" extents="0.107 0.07 0.008" distance="false" physics="false" graphics="true"
+	       transform="0 0 0.066 0 0 0" />
+        <Shape type="BOX" extents="0.007 0.07 0.07" distance="false" physics="false" graphics="true"
+	       transform="0.05 0 0.028 0 0 0" />
+         <Shape type="BOX" extents="0.007 0.07 0.07" distance="false" physics="false" graphics="true"
+	       transform="-0.05 0 0.028 0 0 0" />
+         <Shape type="CYLINDER" radius="0.035" length="0.025" distance="false" physics="false" graphics="true"
+	       transform="-0.05875 0 0 0 90 0" />
+         <Shape type="CYLINDER" radius="0.035" length="0.025" distance="false" physics="false" graphics="true"
+	       transform="0.05875 0 0 0 90 0" />
+         <Shape type="BOX" extents="0.07 0.07 0.025" distance="false" physics="false" graphics="true"
+	       transform="0.06575 0 0 0 90 0" />
+   </Body>
+
+    <Body name="ptu_tool_link" prev="ptu_tilt_link" transform="0 0 0.07 0 0 0" mass="0.01"
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
+    </Body>
+
+    <Body name="ptu_top_plate_link" prev="ptu_tool_link" transform="0 0 0 0 0 -90" physics="none">
+	<Shape type="BOX" extents="0.1 0.25 0.004" distance="true" physics="true" graphics="true"
+               transform="-0.015 0 0.002 0 0 0"/>
+    </Body>
+
+    <Body name="head_kinect_link" prev="ptu_top_plate_link" transform="0 0 0.004 -180 90 90" physics="none">
+        <Shape type="BOX" extents="0.25 0.04 0.07" distance="true" physics="true" graphics="true"
+               transform="0 -0.04 0 0 0 0"/>
+        <Shape type="FRAME" scale="0.2"/>
+    </Body>
+
+    <Body name="head_kinect_lens" prev="head_kinect_link"  physics="none">
+    </Body>
+
+    <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
+      <Shape type="FRAME" scale="0.2"/>
+      <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
+	     xtransform="0 0.04 -0.115 0 0 -90" color="BLACK_RUBBER" />
+    </Body>
+
+    <!-- Graphics switched on in RespeakerComponent -->
+    <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none" >
+        <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false" 
+	           color="BLUE_TRANS" transform="0 0 0.01 0 0 0" />
+        <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false" physics="false" transform="0.4 0 0 0 -90 0" />
+            <Shape type="FRAME" scale="0.5"/>
+    </Body>
+
+    <Body name="head_kinect_rgb_link" prev="head_kinect_link" transform="0.1 -0.035 0.035 0 0 0" physics="none">
+        <Shape type="FRAME" scale="0.2"/>
+    </Body>
+
+    <Body name="head_kinect_rgb_gazebo_optical_frame" prev="head_kinect_rgb_link" transform="0 0 0 90 0 90">
+    </Body>
+
+</Graph>

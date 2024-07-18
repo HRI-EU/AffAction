@@ -304,6 +304,16 @@ const RcsBody* Manipulator::getBaseJointBody(const RcsGraph* graph) const
 
 std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const
 {
+  if (isOfType("ROBOTIQ-2F140"))
+  {
+    // 0: fully open: 128.6mm (140)
+    // 40 deg: fully closed
+
+    // 140 -> 0
+    // 0 -> RCS_DEG2RAD(40)
+    return std::vector<double>(1, RCS_DEG2RAD(40.0)*(1.0-fingerTipDistanceInMeters/0.14));
+  }
+
   return std::vector<double>(3, 1.0-fingerTipDistanceInMeters/0.175);
 }
 

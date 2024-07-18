@@ -1,0 +1,79 @@
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph>
+
+    <Body name="hand_base_right" prev="end_effector_link_right" transform="0 0 0 180 0 -90" >
+      <Shape type="FRAME" scale="0.1" />
+    </Body>
+
+    <Body name="hand_right_robot" prev="hand_base_right" transform="0 0 -0.1 0 0 0" >
+        <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+               transform="0 0 0.2 180 0 0" color="RED"/>
+        <Shape type="FRAME" scale="0.3"/>
+    </Body>
+
+    <Body name="hand_right_powergrasp" prev="hand_right_robot" transform="0 -0.02 -0.14 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_threefinger_poke" prev="hand_right_robot" transform="0 0 -0.11 0 180 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_palmgrasp" prev="hand_right_robot" transform="0 0 -0.02 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_pincergrasp" prev="hand_right_robot" transform="0 0 -0.09 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_finger_tip_1" prev="thumb_tip_right" transform="0.045 -0.005 0 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_finger_tip_2" prev="second_finger_tip_right" transform="0.045 -0.005 0 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+    <Body name="hand_right_finger_tip_3" prev="third_finger_tip_right" transform="0.045 -0.005 0 0 90 0">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+  <Manipulator body="hand_right_robot" types="hand ROBOTIQ-2F140" >
+    <Joints names="finger_joint_right"/>
+    <PowergraspCapability frame="hand_right_pincergrasp" />
+    <!-- <PalmgraspCapability frame="hand_right_palmgrasp" /> -->
+    <!-- <PincergraspCapability frame="hand_right_pincergrasp" /> -->
+    <!-- <TwistgraspCapability frame="hand_right_pincergrasp" /> -->
+    <!-- <FingerpushCapability frame="hand_right_threefinger_poke" was_frame="hand_right_finger_tip_2" /> -->
+    </Manipulator>
+
+</Graph>

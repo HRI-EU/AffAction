@@ -548,12 +548,13 @@ bool ActionGet::initialize(const ActionScene& domain,
 
 
   // Assemble finger task name
-  fingerJoints.clear();
-  for (auto& f : hand->fingerJoints)
-  {
-    fingerJoints += f;
-    fingerJoints += " ";
-  }
+  // fingerJoints.clear();
+  // for (auto& f : hand->fingerJoints)
+  // {
+  //   fingerJoints += f;
+  //   fingerJoints += " ";
+  // }
+  fingerJoints = Rcs::String_concatenate(hand->fingerJoints, " ");
 
   // Task naming
   this->taskObjHandPos = objectName + "-" + capabilityFrame + "-XYZ";
@@ -898,8 +899,10 @@ ActionGet::createTrajectoryRimGrasp(double t_start,
 
   return a1;
 }
+
 void ActionGet::print() const
 {
+  ActionBase::print();
   std::cout << "objectName: " << objectName << std::endl;
   std::cout << "capabilityFrame: " << capabilityFrame << std::endl;
   std::cout << "affordanceFrame: " << affordanceFrame << std::endl;
