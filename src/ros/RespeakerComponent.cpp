@@ -620,9 +620,9 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
 
 #if defined (USE_ROS)
 
-void RespeakerComponent::talkFlagRosCallback(const std_msgs::Bool::ConstPtr& msg)
+void RespeakerComponent::talkFlagRosCallback(const audio_msgs::TalkFlag& msg)
 {
-  isASREnabled = msg->data;
+  isASREnabled = msg.active;
   RLOG(1, "Received isASREnabled from ROS: %s", isASREnabled ? "ON" : "OFF");
 }
 

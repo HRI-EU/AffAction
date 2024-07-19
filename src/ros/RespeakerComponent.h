@@ -98,7 +98,7 @@ private:
 
 #if defined (USE_ROS)
 
-  void talkFlagRosCallback(const std_msgs::Bool::ConstPtr& msg);
+  void talkFlagRosCallback(const audio_msgs::TalkFlag& msg);
   void isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg);
   void asrRosCallback(const std_msgs::String::ConstPtr& msg);
   void soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
