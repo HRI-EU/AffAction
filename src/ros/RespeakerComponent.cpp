@@ -204,9 +204,6 @@ void RespeakerComponent::enableASR(bool enable)
   talkFlagMsg.start_stamp.nsec = 0;
   robot_should_listen_pub.publish(talkFlagMsg);
 #endif
-
-  std::string bgColor = enable ? std::string("OBSIDIAN") : std::string();
-  getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", bgColor);
 }
 
 void RespeakerComponent::toggleASR()
@@ -299,6 +296,14 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph)
   Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
   Vec3d_copy(tmp.rot[2], Vec3d_ez());      // z-axis points up
   Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
+
+  if (respeakerBdy->parentId!=-1)
+  {
+    // tmp is A_2I, parent is A_1I
+    const RcsBody* respeakerParent = &graph->bodies[respeakerBdy->parentId];
+    HTr_invTransformSelf(&tmp, &respeakerParent->A_BI);
+  }
+
   HTr_to6DVector(&graph->q->ele[jidx], &tmp);
 }
 
@@ -622,7 +627,13 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
 
 void RespeakerComponent::talkFlagRosCallback(const audio_msgs::TalkFlag& msg)
 {
-  isASREnabled = msg.active;
+  if (isASREnabled != msg.active)
+  {
+    isASREnabled = msg.active;
+    std::string bgColor = isASREnabled ? std::string("OBSIDIAN") : std::string();
+    getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", bgColor);
+  }
+
   RLOG(1, "Received isASREnabled from ROS: %s", isASREnabled ? "ON" : "OFF");
 }
 
