@@ -291,18 +291,17 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph)
   }
   int jidx = RcsBody_getJointIndex(graph, soundBeam);
   RCHECK(jidx>=0);
+
+  // In world coordinates
   HTr tmp;
   HTr_setIdentity(&tmp);
+  Vec3d_copy(tmp.org, respeakerBdy->A_BI.org);         // origin is respeaker position
   Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
-  Vec3d_copy(tmp.rot[2], Vec3d_ez());      // z-axis points up
+  Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
   Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
 
-  if (respeakerBdy->parentId!=-1)
-  {
-    // tmp is A_2I, parent is A_1I
-    const RcsBody* respeakerParent = &graph->bodies[respeakerBdy->parentId];
-    HTr_invTransformSelf(&tmp, &respeakerParent->A_BI);
-  }
+  // Now transform it into the respeaker frame
+  HTr_invTransformSelf(&tmp, &respeakerBdy->A_BI);
 
   HTr_to6DVector(&graph->q->ele[jidx], &tmp);
 }
