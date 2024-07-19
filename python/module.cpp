@@ -44,6 +44,7 @@ namespace py = pybind11;
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
 #include <LandmarkZmqComponent.hpp>
+#include <TTSComponent.h>
 #include <PredictionTree.h>
 
 #include <Rcs_resourcePath.h>
@@ -675,8 +676,6 @@ PYBIND11_MODULE(pyAffaction, m)
     if (respeaker)
     {
       respeaker->setParameter("PublishDialogueWithRaisedHandOnly", listenWitHandRaisedOnly);
-      respeaker->setParameter("GazeAtSpeaker", gazeAtSpeaker);
-      respeaker->setParameter("SpeakOutSpeakerListenerText", speakOut);
       ex.addComponent(respeaker);
       return true;
     }
@@ -771,6 +770,11 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return false;
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the path for finding the piper TTS executables, libraries and voices
+  //////////////////////////////////////////////////////////////////////////////
+  .def_static("setPiperPath", &aff::TTSComponent::setPiperPath)
 
   //////////////////////////////////////////////////////////////////////////////
   // Adds a component to connect to enable the text-to-speech functionality.

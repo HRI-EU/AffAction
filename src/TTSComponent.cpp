@@ -45,11 +45,11 @@
 #include <sapi.h>
 #endif
 
-static const std::string piperPath = std::string(AFFACTION_PIPER_PATH);
+static std::string piperPath = std::string(AFFACTION_PIPER_PATH);
 #if defined (_MSC_VER)
-static const std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+static std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
 #else
-static const std::string piperExe = piperPath + "/piper";
+static std::string piperExe = piperPath + "/piper";
 #endif
 
 
@@ -123,22 +123,33 @@ void TTSComponent::onEmergencyStop()
   onSpeak("Oh no, emergency stop detected");
 }
 
+void TTSComponent::setPiperPath(const std::string& path)
+{
+  piperPath = path;
+#if defined (_MSC_VER)
+  piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+#else
+  piperExe = piperPath + "/piper";
+#endif
+  RLOG_CPP(0, "Setting piper path to '" << piperPath << "'");
+}
+
 void TTSComponent::setPiperVoice(const std::string& voice)
 {
   if (voice == "joe")
   {
-    onnxStr = std::string("\"") + piperPath + "/en_US-joe-medium.onnx\"";
-    jsonStr = std::string("\"") + piperPath + "/en_en_US_joe_medium_en_US-joe-medium.onnx.json\"";
+    onnxStr = "en_US-joe-medium.onnx\"";
+    jsonStr = "en_en_US_joe_medium_en_US-joe-medium.onnx.json\"";
   }
   else if (voice == "alan")
   {
-    onnxStr = std::string("\"") + piperPath + "/en_GB-alan-medium.onnx\"";
-    jsonStr = std::string("\"") + piperPath + "/en_en_GB_alan_medium_en_GB-alan-medium.onnx.json\"";
+    onnxStr = "en_GB-alan-medium.onnx\"";
+    jsonStr = "en_en_GB_alan_medium_en_GB-alan-medium.onnx.json\"";
   }
   else if (voice == "kathleen")
   {
-    onnxStr = std::string("\"") + piperPath + "/en_US-kathleen-low.onnx\"";
-    jsonStr = std::string("\"") + piperPath + "/en_en_US_kathleen_low_en_US-kathleen-low.onnx.json\"";
+    onnxStr = "en_US-kathleen-low.onnx\"";
+    jsonStr = "en_en_US_kathleen_low_en_US-kathleen-low.onnx.json\"";
   }
   else
   {
@@ -181,8 +192,10 @@ void TTSComponent::localThread()
 
     if (whichTTS == "piper")
     {
+      std::string onnxPath = std::string("\"") + piperPath + onnxStr + "/";
+      std::string jsonPath = std::string("\"") + piperPath + jsonStr + "/";
       std::string consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
-      consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr + " -f \"piper.wav\" >NUL 2>&1 && ";
+      consCmd += piperExe + " -m " + onnxPath + " -c " + jsonPath + " -f \"piper.wav\" >NUL 2>&1 && ";
       consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";
 
       int err = system(consCmd.c_str());
@@ -246,8 +259,10 @@ void TTSComponent::localThread()
       // Piper command line:
       // echo "Hello, this is a test" | ./piper  -m en_US-joe-medium.onnx
       // -c en_en_US_john_medium_en_US-john-medium.onnx.json -f test1.wav; aplay test1.wav
+      std::string onnxPath = std::string("\"") + piperPath + onnxStr + "/";
+      std::string jsonPath = std::string("\"") + piperPath + jsonStr + "/";
       consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
-      consCmd += piperExe + " -m " + onnxStr + " -c " + jsonStr +
+      consCmd += piperExe + " -m " + onnxPath + " -c " + jsonPath +
                  " -f piper.wav > piper.txt 2>&1; aplay piper.wav > aplay.txt 2>&1";
     }
 

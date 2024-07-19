@@ -47,7 +47,8 @@ public:
 
   TTSComponent(EntityBase* parent, std::string whichTTS="native");
   virtual ~TTSComponent();
-  void setPiperVoice(const std::string& voice); // kathleen (default), alan, joe
+  static void setPiperPath(const std::string& path);   // path containing piper executable, libraries and voices
+  void setPiperVoice(const std::string& voice);        // kathleen (default), alan, joe
 
 private:
 
