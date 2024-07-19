@@ -258,7 +258,8 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph)
   // Transform the ROS sound direction from the respeaker frame into the world frame
   double soundDirectionRaw[3];
   sndDirLock.lock();
-  Vec3d_invTransform(soundDirectionRaw, &respeakerBdy->A_BI, soundDirectionROS.data());
+  Vec3d_copy(soundDirectionRaw, soundDirectionROS.data());
+  //Vec3d_invTransform(soundDirectionRaw, &respeakerBdy->A_BI, soundDirectionROS.data());
   sndDirLock.unlock();
 
   // If the hand is raised, then the sound direction is overwritten with the
@@ -293,14 +294,12 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph)
   // In world coordinates
   HTr tmp;
   HTr_setIdentity(&tmp);
-  Mat3d_fromVec(tmp.rot, soundDirectionFilt.data(), 0);
-  Vec3d_copy(tmp.org, respeakerBdy->A_BI.org);         // origin is respeaker position
-  // Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
-  // Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
-  // Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
+  Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
+  Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
+  Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
 
   // Now transform it into the respeaker frame
-  HTr_invTransformSelf(&tmp, &respeakerBdy->A_BI);
+  // HTr_invTransformSelf(&tmp, &respeakerBdy->A_BI);
 
   HTr_to6DVector(&graph->q->ele[jidx], &tmp);
 }
@@ -322,7 +321,11 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   getMicrophonePosition(graph, micPos);
 
   // Check which agent is speaking
-  HumanAgent* speaker = getSpeaker(micPos, soundDirectionFilt.data(), graph);
+  const RcsBody* respeakerBdy = RcsGraph_getBodyByName(graph, respeakerBdyName.c_str());
+  double sndDirInWorld[3];
+  Vec3d_invTransform(sndDirInWorld, &respeakerBdy->A_BI, soundDirectionFilt.data());
+
+  HumanAgent* speaker = getSpeaker(micPos, sndDirInWorld, graph);
   const Agent* listener = getListener(micPos, speaker, graph);
   if (speaker && listener)
   {
