@@ -39,6 +39,11 @@
         <Shape type="FRAME" scale="0.3"/>
     </Body>
 
+    <Body name="hand_left_pincergrasp" prev="hand_left_robot" transform="0 0 -0.09 0 -90 180">
+        <Shape type="FRAME" scale="0.1"/>
+    </Body>
+
+<!--
     <Body name="hand_left_powergrasp" prev="hand_left_robot" transform="0 -0.02 -0.04 0 -90 180">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
@@ -62,6 +67,7 @@
     <Body name="hand_left_finger_tip_3" prev="third_finger_tip_left" transform="0.045 -0.005 0 180 0 0">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
+-->
 
   <Manipulator body="hand_left_robot" types="hand ROBOTIQ-2F140" >
     <Joints names="finger_joint_left" />

@@ -42,6 +42,7 @@
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
+#include <Rcs_utilsCPP.h>
 
 #include <algorithm>
 
@@ -155,6 +156,7 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   });
 
   initialize(scene, graph, 0);
+  print();
 }
 
 ActionPoint::~ActionPoint()
@@ -183,12 +185,7 @@ bool ActionPoint::initialize(const ActionScene& scene,
   usedManipulators.push_back(hand->name);
 
   // Assemble finger task name
-  fingerJoints.clear();
-  for (auto& f : hand->fingerJoints)
-  {
-    fingerJoints += f;
-    fingerJoints += " ";
-  }
+  fingerJoints = Rcs::String_concatenate(hand->fingerJoints, " ");
 
   // Determine kinematics: direction vector for orientation constraint
   const RcsJoint* shldrJnt = hand->getBaseJoint(graph);

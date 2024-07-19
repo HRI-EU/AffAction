@@ -74,20 +74,20 @@
 
 
   <model_state model="default" time_stamp="0">
-      <joint_state joint="joint_1_right" position="80"/>
-      <joint_state joint="joint_2_right" position="70"/>
+      <joint_state joint="joint_1_right" position="130"/>
+      <joint_state joint="joint_2_right" position="100"/>
       <joint_state joint="joint_3_right" position="80"/>
-      <joint_state joint="joint_4_right" position="-90"/>
+      <joint_state joint="joint_4_right" position="-100"/>
       <joint_state joint="joint_5_right" position="0"/>
-      <joint_state joint="joint_6_right" position="-20"/>
+      <joint_state joint="joint_6_right" position="-50"/>
       <joint_state joint="joint_7_right" position="-90"/>
 
-      <joint_state joint="joint_1_left" position="100"/>
-      <joint_state joint="joint_2_left" position="-70"/>
+      <joint_state joint="joint_1_left" position="50"/>
+      <joint_state joint="joint_2_left" position="-100"/>
       <joint_state joint="joint_3_left" position="-80"/>
-      <joint_state joint="joint_4_left" position="90"/>
+      <joint_state joint="joint_4_left" position="100"/>
       <joint_state joint="joint_5_left" position="0"/>
-      <joint_state joint="joint_6_left" position="20"/>
+      <joint_state joint="joint_6_left" position="50"/>
       <joint_state joint="joint_7_left" position="90"/>
   </model_state>
 
@@ -259,8 +259,8 @@
   </model_state>
 	
   <BroadPhase DistanceThreshold="0.001">
-    <Tree root="upperarm_left"/>
-    <Tree root="upperarm_right"/>
+    <Tree root="half_arm_1_link_left"/>
+    <Tree root="half_arm_1_link_right"/>
     <Body name="center_post_link"/>
     <Body name="screen_link"/>
     <Body name="head_kinect_link"/>

@@ -548,12 +548,6 @@ bool ActionGet::initialize(const ActionScene& domain,
 
 
   // Assemble finger task name
-  // fingerJoints.clear();
-  // for (auto& f : hand->fingerJoints)
-  // {
-  //   fingerJoints += f;
-  //   fingerJoints += " ";
-  // }
   fingerJoints = Rcs::String_concatenate(hand->fingerJoints, " ");
 
   // Task naming
