@@ -196,7 +196,6 @@ void RespeakerComponent::enableASR(bool enable)
   }
 
   RLOG(0, "Setting /robot_should_listen flag to %s", enable ? "TRUE" : "FALSE");
-  //isASREnabled = enable;
 
 #if defined (USE_ROS)// \todo: ROS time
   audio_msgs::TalkFlag talkFlagMsg;
@@ -624,7 +623,7 @@ const Agent* RespeakerComponent::getListener(const double micPosition[3],
 void RespeakerComponent::talkFlagRosCallback(const std_msgs::Bool::ConstPtr& msg)
 {
   isASREnabled = msg->data;
-  RLOG(2, "Received isASREnabled from ROS: %s", isASREnabled ? "ON" : "OFF");
+  RLOG(1, "Received isASREnabled from ROS: %s", isASREnabled ? "ON" : "OFF");
 }
 
 void RespeakerComponent::isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg)

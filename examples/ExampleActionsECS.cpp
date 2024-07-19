@@ -762,7 +762,7 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('a', [this](char k)
   {
     RLOG(0, "Toggling talk flag");
-    entity.publish("ToggleHandRaised");
+    entity.publish("ToggleASR");
 
   }, "Toggle talk flag");
 
