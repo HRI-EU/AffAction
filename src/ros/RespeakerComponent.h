@@ -59,8 +59,6 @@ public:
 
   /*! \brief Currently these parameters can be set:
    *         - PublishDialogueWithRaisedHandOnly (default is true)
-   *         - GazeAtSpeaker                     (default is true)
-   *         - SpeakOutSpeakerListenerText       (default is false)
    */
   bool setParameter(const std::string& parameterName, bool flag);
 
@@ -87,17 +85,20 @@ private:
   void enableSoundDirectionEstimation(bool enable);
   void toggleASR();
   void toggleHandRaised();
-  const HumanAgent* getSpeaker(const double micPosition[3],
-                               const double soundDir[3],
-                               const RcsGraph* graph) const;
+  HumanAgent* getSpeaker(const double micPosition[3],
+                         const double soundDir[3],
+                         const RcsGraph* graph) const;
   const Agent* getListener(const double micPosition[3],
                            const HumanAgent* speaker,
                            const RcsGraph* graph);
-  void updateSoundDirection(RcsGraph* graph, const std::string& spoken,
-                            double micPos[3], double soundDir[3]);
+  void updateSoundDirection(RcsGraph* graph);
+  bool isRaisedHand(const RcsGraph* graph, const HTr* A_micI, double soundDir[3]) const;
+  void getMicrophonePosition(const RcsGraph* graph, double micPos[3]) const;
+  std::string getAndClearTextFromROS();
 
 #if defined (USE_ROS)
 
+  void talkFlagRosCallback(const std_msgs::Bool::ConstPtr& msg);
   void isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg);
   void asrRosCallback(const std_msgs::String::ConstPtr& msg);
   void soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
@@ -105,6 +106,7 @@ private:
   ros::Subscriber asrSubscriber;
   ros::Subscriber soundLocalizationSubscriber;
   ros::Subscriber isSpeakingSubscriber;
+  ros::Subscriber robotShouldListenSubscriber;
   ros::Publisher reset_llm_pub;
   ros::Publisher robot_should_listen_pub;
   ros::Publisher dialogue_pub;
@@ -115,17 +117,16 @@ private:
   const ActionScene* scene;
   std::string receivedTextJson;
   std::string respeakerBdyName;
-  std::mutex textLock;
+  std::mutex textLock, sndDirLock;
   bool isASREnabled;
   bool isSoundDirectionEstimationEnabled;
   bool isSomebodySpeaking;
   bool isAnyHandRaised;
   bool isAnyHandRaisedOverride;
   bool publishDialogueWithRaisedHandOnly;
-  bool gazeAtSpeaker;
-  bool speakOutSpeakerListenerText;
   double handAboveHeadThreshold;
-  std::vector<double> soundDirection, soundDirectionFilt;
+  std::vector<double> soundDirectionROS;   // In respeaker frame, updated from ROS topic
+  std::vector<double> soundDirectionFilt;  // Fitlered in world frame, updated in event loop
 };
 
 }   // namespace

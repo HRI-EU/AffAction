@@ -52,6 +52,7 @@
 #include <exception>
 #include <cfloat>
 
+
 namespace aff
 {
 
@@ -82,31 +83,10 @@ Agent::Agent(const xmlNodePtr node, const std::string& groupSuffix, const Action
   }
 }
 
-// Agent::Agent(const Agent& other) : SceneEntity(other), manipulators(other.manipulators)
-// {
-// }
-
-// Agent& Agent::operator= (const Agent& other)
-// {
-//   if (this == &other)
-//   {
-//     return *this;
-//   }
-
-//   SceneEntity::operator=(other);
-//   manipulators = other.manipulators;
-
-//   return *this;
-// }
-
 Agent* Agent::clone() const
 {
   return new Agent(*this);
 }
-
-// Agent::~Agent()
-// {
-// }
 
 std::string Agent::isLookingAt() const
 {
@@ -237,26 +217,6 @@ RobotAgent::RobotAgent(const xmlNodePtr node,
   Agent(node, groupSuffix, scene)
 {
 }
-
-// RobotAgent::RobotAgent(const RobotAgent& other) : Agent(other)
-// {
-// }
-
-// RobotAgent& RobotAgent::operator= (const RobotAgent& other)
-// {
-//   if (this == &other)
-//   {
-//     return *this;
-//   }
-
-//   Agent::operator=(other);
-
-//   return *this;
-// }
-
-// RobotAgent::~RobotAgent()
-// {
-// }
 
 Agent* RobotAgent::clone() const
 {
@@ -438,54 +398,6 @@ HumanAgent::HumanAgent(const xmlNodePtr node,
   rightHandBdyName = m.empty() ? "" : m[0]->bdyName;
 }
 
-// HumanAgent::HumanAgent(const HumanAgent& other) : Agent(other),
-//   lastTimeSeen(other.lastTimeSeen),
-//   visible(other.visible),
-//   tracker(other.tracker),
-//   markers(other.markers),
-//   gazeTarget(other.gazeTarget),
-//   gazeTargetPrev(other.gazeTargetPrev),
-//   defaultRadius(other.defaultRadius),
-//   headBdyName(other.headBdyName),
-//   leftHandBdyName(other.leftHandBdyName),
-//   rightHandBdyName(other.rightHandBdyName)
-// {
-//   Vec3d_copy(defaultPos, other.defaultPos);
-//   // Vec3d_copy(gazeDirection, other.gazeDirection);
-//   // Vec3d_copy(headPosition, other.headPosition);
-// }
-
-// HumanAgent& HumanAgent::operator= (const HumanAgent& other)
-// {
-//   if (this == &other)
-//   {
-//     return *this;
-//   }
-
-//   Agent::operator=(other);
-
-//   lastTimeSeen = other.lastTimeSeen;
-//   visible = other.visible;
-//   tracker = other.tracker;
-//   markers = other.markers;
-//   gazeTarget = other.gazeTarget;
-//   gazeTargetPrev = other.gazeTargetPrev;
-//   defaultRadius = other.defaultRadius;
-//   headBdyName = other.headBdyName;
-//   leftHandBdyName = other.leftHandBdyName;
-//   rightHandBdyName = other.rightHandBdyName;
-
-//   Vec3d_copy(defaultPos, other.defaultPos);
-//   // Vec3d_copy(gazeDirection, other.gazeDirection);
-//   // Vec3d_copy(headPosition, other.headPosition);
-
-//   return *this;
-// }
-
-// HumanAgent::~HumanAgent()
-// {
-// }
-
 Agent* HumanAgent::clone() const
 {
   return new HumanAgent(*this);
@@ -499,62 +411,26 @@ void HumanAgent::setVisibility(const bool newVisibilty)
 
 bool HumanAgent::hasHead(const RcsGraph* graph) const
 {
-  HTr tmp;
-  return getHeadTransform(&tmp, graph);
-}
-
-// Human head from Azure Kinect: y: fwd, x: up, z: left
-bool HumanAgent::getHeadTransform(HTr* A_HI, const RcsGraph* graph) const
-{
   if (tracker!="azure_kinect")
   {
     RLOG(1, "Unsupported tracker: %s", tracker.c_str());
     return false;
   }
 
-  // if (markers.size()<27)
-  // {
-  //   return false;
-  // }
-
-  //HTr_copy(A_HI, &markers[26]);
-
   const RcsBody* body = RcsGraph_getBodyByName(graph, headBdyName.c_str());
   const double* q_rbj = RcsBody_getStatePtr((RcsGraph*)graph, body);
 
-  if (q_rbj && RcsBody_numJoints(graph, body)>=6)
+  if (!q_rbj || RcsBody_numJoints(graph, body)<6)
   {
-    HTr_from6DVector(A_HI, q_rbj);
-  }
-  else
-  {
-    RLOG_CPP(1, "Failed to get head transform: head body " << headBdyName
+    RLOG_CPP(1, "Failed to get head: head body " << headBdyName
              << " has invalid number of joints:" << RcsBody_numJoints(graph, body));
     return false;
   }
 
-  //HTr_from6DVector(A_HI, &graph->q->ele[jidx]);
-  // const double* gazePos = A_HI->org;
-  // const double* gazeDir = A_HI->rot[1];
-  // Vec3d_copy(human->headPosition, gazePos);
-  // Vec3d_copy(human->gazeDirection, gazeDir);
-
   return true;
 }
 
-bool HumanAgent::getHeadPosition(double pos[3], const RcsGraph* graph) const
-{
-  HTr A_head;
-  if (!getHeadTransform(&A_head, graph))
-  {
-    return false;
-  }
-
-  Vec3d_copy(pos, A_head.org);
-
-  return true;
-}
-
+// Human head from Azure Kinect: y: fwd, x: up, z: left
 bool HumanAgent::getHeadPositionInWorld(double pos[3], const RcsGraph* graph) const
 {
   const RcsBody* body = RcsGraph_getBodyByName(graph, headBdyName.c_str());
@@ -568,19 +444,6 @@ bool HumanAgent::getHeadPositionInWorld(double pos[3], const RcsGraph* graph) co
   return true;
 }
 
-bool HumanAgent::getGazeDirection(double dir[3], const RcsGraph* graph) const
-{
-  HTr A_head;
-  if (!getHeadTransform(&A_head, graph))
-  {
-    return false;
-  }
-
-  Vec3d_copy(dir, A_head.rot[1]);
-
-  return true;
-}
-
 bool HumanAgent::getGazeDirectionInWorld(double dir[3], const RcsGraph* graph) const
 {
   const RcsBody* body = RcsGraph_getBodyByName(graph, headBdyName.c_str());
@@ -590,19 +453,6 @@ bool HumanAgent::getGazeDirectionInWorld(double dir[3], const RcsGraph* graph) c
   }
 
   Vec3d_copy(dir, body->A_BI.rot[1]);
-
-  return true;
-}
-
-bool HumanAgent::getHeadUpAxis(double dir[3], const RcsGraph* graph) const
-{
-  HTr A_head;
-  if (!getHeadTransform(&A_head, graph))
-  {
-    return false;
-  }
-
-  Vec3d_copy(dir, A_head.rot[0]);
 
   return true;
 }

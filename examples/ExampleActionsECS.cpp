@@ -231,6 +231,8 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
 
 ExampleActionsECS::~ExampleActionsECS()
 {
+  stop();
+
   // We destroy the viwer window fist so that it doesn't access any deleted memory
   viewer.reset();
 
@@ -760,7 +762,6 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('a', [this](char k)
   {
     RLOG(0, "Toggling talk flag");
-    //entity.publish("ToggleASR");
     entity.publish("ToggleHandRaised");
 
   }, "Toggle talk flag");
@@ -832,6 +833,7 @@ void ExampleActionsECS::run()
   {
     step();
   }
+
 
   // The runLoop is ended with ExampleBase::stop(). We still need to call each
   // component's stop event.
@@ -1587,7 +1589,6 @@ void ExampleActionsECS::setProcessingAction(bool isProcessing)
 /*******************************************************************************
  *
  ******************************************************************************/
-
 class ExampleCocktail : public ExampleActionsECS
 {
 public:
@@ -1615,7 +1616,6 @@ RCS_REGISTER_EXAMPLE(ExampleCocktail, "Actions", "Cocktail");
 /*******************************************************************************
  *
  ******************************************************************************/
-
 class ExamplePizza : public ExampleActionsECS
 {
 public:
@@ -1637,5 +1637,31 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExamplePizza, "Actions", "Pizza");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleCocktailGen3 : public ExampleActionsECS
+{
+public:
+
+  ExampleCocktailGen3(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleCocktailGen3()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_example_curiosity_cocktails_gen3.xml";
+    return true;
+  }
+};
+
+RCS_REGISTER_EXAMPLE(ExampleCocktailGen3, "Actions", "Cocktails Gen3");
 
 }   // namespace aff

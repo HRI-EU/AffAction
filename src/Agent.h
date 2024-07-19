@@ -48,8 +48,6 @@ public:
   std::vector<std::string> manipulators;
 
   Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
-  // Agent(const Agent& other);
-  // Agent& operator = (const Agent&);
   virtual ~Agent() = default;
 
   static Agent* createAgent(const xmlNodePtr node, const std::string& groupSuffix, ActionScene* scene);
@@ -74,9 +72,6 @@ class RobotAgent : public Agent
 {
 public:
   RobotAgent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
-  // RobotAgent(const RobotAgent& other);
-  // RobotAgent& operator = (const RobotAgent&);
-  //virtual ~RobotAgent() = default;
   static int getPanTilt(const RcsGraph* graph, const std::string& gazeTarget,
                         double panTilt[2], size_t maxIter, double eps,
                         double err[2]);
@@ -93,19 +88,12 @@ public:
   HumanAgent(const xmlNodePtr node,
              const std::string& groupSuffix,
              const ActionScene* scene);
-  // HumanAgent(const HumanAgent& other);
-  // HumanAgent& operator = (const HumanAgent&);
-  // virtual ~HumanAgent();
 
   Agent* clone() const;
   void setVisibility(const bool newVisibilty);
   bool hasHead(const RcsGraph* graph) const;
-  bool getHeadTransform(HTr* A_HI, const RcsGraph* graph) const;
-  bool getHeadPosition(double pos[3], const RcsGraph* graph) const;
   bool getHeadPositionInWorld(double pos[3], const RcsGraph* graph) const;
-  bool getGazeDirection(double dir[3], const RcsGraph* graph) const;
   bool getGazeDirectionInWorld(double dir[3], const RcsGraph* graph) const;
-  bool getHeadUpAxis(double dir[3], const RcsGraph* graph) const;
   double getDefaultPosition(size_t index) const;
   std::vector<double> getDefaultPosition() const;
   void setDefaultPosition(const double pos[3]);
@@ -140,9 +128,6 @@ private:
 
   std::string gazeTarget;
   std::string gazeTargetPrev;
-
-  // double gazeDirection[3];
-  // double headPosition[3];
   std::string headBdyName;
   std::string leftHandBdyName;
   std::string rightHandBdyName;
