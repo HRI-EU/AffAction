@@ -88,9 +88,8 @@ namespace aff
 
 RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* scene_) :
   ComponentBase(parent), scene(scene_), respeakerBdyName("respeaker"), isASREnabled(false),
-  isSoundDirectionEstimationEnabled(true), isSomebodySpeaking(false), isAnyHandRaised(false),
-  isAnyHandRaisedOverride(false), publishDialogueWithRaisedHandOnly(true),
-  handAboveHeadThreshold(10.0)
+  isSoundDirectionEstimationEnabled(true), isAnyHandRaised(false), isAnyHandRaisedOverride(false),
+  publishDialogueWithRaisedHandOnly(true), handAboveHeadThreshold(10.0)
 {
   soundDirectionROS.resize(3);
   soundDirectionROS[0] = 0.0;
@@ -130,7 +129,6 @@ void RespeakerComponent::onStart()
     RLOG_CPP(1, "Subscribing to /sound_localization");
     this->soundLocalizationSubscriber = nh->subscribe("/sound_localization", 10, &RespeakerComponent::soundLocalizationRosCallback, this);
     this->asrSubscriber = nh->subscribe("/word", 10, &RespeakerComponent::asrRosCallback, this);
-    this->isSpeakingSubscriber = nh->subscribe("/is_speaking", 10, &RespeakerComponent::isSpeakingRosCallback, this);
     this->robotShouldListenSubscriber = nh->subscribe("/robot_should_listen", 10, &RespeakerComponent::talkFlagRosCallback, this);
     RLOG(1, "Done subscribing");
 
@@ -295,10 +293,11 @@ void RespeakerComponent::updateSoundDirection(RcsGraph* graph)
   // In world coordinates
   HTr tmp;
   HTr_setIdentity(&tmp);
+  Mat3d_fromVec(tmp.rot, soundDirectionFilt.data(), 0);
   Vec3d_copy(tmp.org, respeakerBdy->A_BI.org);         // origin is respeaker position
-  Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
-  Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
-  Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
+  // Vec3d_copy(tmp.rot[0], soundDirectionFilt.data());   // x-axis is in horizontal plane
+  // Vec3d_copy(tmp.rot[2], Vec3d_ez());                  // z-axis points up
+  // Vec3d_crossProduct(tmp.rot[1], tmp.rot[2], tmp.rot[0]);
 
   // Now transform it into the respeaker frame
   HTr_invTransformSelf(&tmp, &respeakerBdy->A_BI);
@@ -636,12 +635,6 @@ void RespeakerComponent::talkFlagRosCallback(const audio_msgs::TalkFlag& msg)
   RLOG(1, "Received isASREnabled from ROS: %s", isASREnabled ? "ON" : "OFF");
 }
 
-void RespeakerComponent::isSpeakingRosCallback(const std_msgs::Bool::ConstPtr& msg)
-{
-  isSomebodySpeaking = msg->data;
-  RLOG(2, "isSpeakingRosCallback: %s", isSomebodySpeaking ? "SPEAKING" : "NOT SPEAKING");
-}
-
 /*
 {"confidence": 0.857319176197052, "text": "hello I Michael", "end_time": 1698945193.0811708, "frame_id": "respeaker_base", "position": {"x": -0.2756373558169989, "y": -0.961261695938319}}
  */
@@ -662,7 +655,7 @@ std::string RespeakerComponent::getAndClearTextFromROS()
 
 void RespeakerComponent::soundLocalizationRosCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
-  if ((!isSoundDirectionEstimationEnabled) || (!isSomebodySpeaking))
+  if (!isSoundDirectionEstimationEnabled)
   {
     return;
   }
