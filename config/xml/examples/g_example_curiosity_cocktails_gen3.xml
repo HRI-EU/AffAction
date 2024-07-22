@@ -91,6 +91,16 @@
       <joint_state joint="joint_7_left" position="90"/>
   </model_state>
 
+  <model_state model="open_fingers" time_stamp="0">
+	<joint_state joint="finger_joint_right" position="0" />
+	<joint_state joint="finger_joint_left"  position="0" />
+  </model_state>
+
+  <model_state model="point_fingers" time_stamp="0">
+	<joint_state joint="finger_joint_right" position="40" />
+	<joint_state joint="finger_joint_left"  position="40" />
+  </model_state>
+
   <model_state model="TableCalibration" time_stamp="0">
     <joint_state joint="j2s7s300_joint_1_right" position="31.807518"/>
     <joint_state joint="j2s7s300_joint_2_right" position="238.796087"/>
@@ -259,8 +269,8 @@
   </model_state>
 	
   <BroadPhase DistanceThreshold="0.001">
-    <Tree root="half_arm_1_link_left"/>
-    <Tree root="half_arm_1_link_right"/>
+    <Tree root="upperarm_left"/>
+    <Tree root="upperarm_right"/>
     <Body name="center_post_link"/>
     <Body name="screen_link"/>
     <Body name="head_kinect_link"/>
