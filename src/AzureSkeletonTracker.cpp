@@ -497,17 +497,15 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
       const double tmc = 0.05;
 
       // Transform pelvis
-      const RcsBody* bdy = RcsGraph_getBodyByName(graph, human->name.c_str());
+      const RcsBody* bdy = RcsGraph_getBodyByName(graph, human->bdyName.c_str());
       int jidx = RcsBody_getJointIndex(graph, bdy);
       if (jidx!=-1)
       {
         const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
-        //const HTr* A_MI = &human->markers[PELVIS];   // marker transform in world
         HTr A_MI = human->getMarker(PELVIS);   // marker transform in world
         HTr A_MP;   // Transform from pelvis's parent to its raw percept
         HTr_invTransform(&A_MP, A_PI, &A_MI);
         lpFiltTrf(&graph->q->ele[jidx], &A_MP, tmc);
-        //lpFiltTrf(&graph->q->ele[jidx], A_MI, tmc);
       }
 
       for (const auto& mName : human->manipulators)
