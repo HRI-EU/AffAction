@@ -101,8 +101,6 @@ ActionPose::ActionPose(const ActionScene& domain,
     poses.push_back(createPose(graph, mdl, timeStamp));
   }
 
-
-  explanation = "Moving to pose " + mdlStateName;
 }
 
 ActionPose::~ActionPose()
@@ -118,14 +116,6 @@ bool ActionPose::initialize(const ActionScene& domain, const RcsGraph* graph, si
 
   solutionIndex = solutionRank;
 
-  //if (turbo)
-  //{
-  //  RLOG_CPP(0, "Model state: " << poses[solutionIndex].name);
-  //  double ratio = computeMaxVel(graph);
-  //  defaultDuration *= (ratio + 0.01);
-  // RLOG(0, "New duration: %f", defaultDuration);
-  //}
-
   return true;
 }
 
@@ -137,43 +127,33 @@ ActionPose::ModelPose ActionPose::createPose(const RcsGraph* graph,
   pose.name = mdlStateName;
   pose.timeStamp = timeStamp;
 
-  MatNd* q = MatNd_create(graph->dof, 1);
-  MatNd_setElementsTo(q, DBL_MAX);
-  bool success = RcsGraph_getModelStateFromXML(q, graph, mdlStateName.c_str(), timeStamp);
+  auto mState = Rcs::RcsGraph_getModelState(graph, mdlStateName);
 
-  if (!success)
+  if (mState.empty())
   {
-    MatNd_destroy(q);
     std::vector<std::string> modelStates = Rcs::RcsGraph_getModelStateNames(graph);
-    std::string modelStateString;
-    for (size_t i = 0; i != modelStates.size(); ++i)
-    {
-      modelStateString += modelStates[i];
-      if (i < modelStates.size() - 1)
-      {
-        modelStateString += ", ";
-      }
-    }
     throw ActionException(ActionException::ParamNotFound, "Could not find pose " + mdlStateName,
-                          "Use one out of these: " + modelStateString + ".",
+                          "Use one out of these: " + Rcs::String_concatenate(modelStates, ", ") + ".",
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__) +
                           ": Model state with name not found: " + mdlStateName + " with time stamp "
                           + std::to_string(timeStamp));
   }
 
-  RCSGRAPH_FOREACH_JOINT(graph)
+  for (const auto& jointState : mState)
   {
-    const double q_des_i = MatNd_get(q, JNT->jointIndex, 0);
-
-    if (JNT->constrained || (q_des_i == DBL_MAX))
+    if ((jointState.first<0) || (jointState.first>graph->dof-1))
     {
+      RLOG_CPP(1, "Joint index " << jointState.first << " is invalid. Must be >=0 and < " << graph->dof-1);
       continue;
     }
 
-    pose.jnts.push_back(std::make_tuple(std::string(JNT->name), q_des_i));
-  }
+    const RcsJoint* jnt = &graph->joints[jointState.first];
 
-  MatNd_destroy(q);
+    if (!jnt->constrained)
+    {
+      pose.jnts.push_back(std::make_tuple(jnt->name, jointState.second));
+    }
+  }
 
   return pose;
 }

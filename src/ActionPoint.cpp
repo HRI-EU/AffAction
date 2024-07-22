@@ -36,6 +36,7 @@
 #include "ActivationSet.h"
 #include "VectorConstraint.h"
 #include "EulerConstraint.h"
+#include "PolarConstraint.h"
 #include "PositionConstraint.h"
 
 #include <Rcs_typedef.h>
@@ -45,7 +46,6 @@
 #include <Rcs_utilsCPP.h>
 
 #include <algorithm>
-
 
 
 namespace aff
@@ -177,6 +177,35 @@ bool ActionPoint::initialize(const ActionScene& scene,
 
   const Manipulator* hand = scene.getManipulator(pointerFrame);
   RCHECK(hand);
+  //pointingFingerAngles = std::vector<double>(hand->getNumFingers(), 0.0);
+
+
+
+  pointingFingerAngles.clear();
+  auto pointMdlState = Rcs::RcsGraph_getModelState(graph, "point_fingers");
+
+  for (const auto& finger : hand->fingerJoints)
+  {
+    for (const auto& js : pointMdlState)
+    {
+      if (STREQ(graph->joints[js.first].name, finger.c_str()))
+      {
+        pointingFingerAngles.push_back(js.second);
+      }
+    }
+  }
+
+  if (hand->getNumFingers()!=pointingFingerAngles.size())
+  {
+    throw ActionException(ActionException::ParamInvalid,
+                          "Manipulator '" + hand->name + " ' number of fingers mismatch.",
+                          "Check the 'point_fingers' model_state in your config file.",
+                          "Hand " + hand->name + " has " + std::to_string(hand->getNumFingers()) +
+                          " finger joints, but only " + std::to_string(pointingFingerAngles.size()) +
+                          " found in xml file" + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
+
+
   auto objects = scene.getSceneEntities(pointBdyName);
   RCHECK(objects.size()==1);
   auto object = objects[0];
@@ -233,6 +262,11 @@ void ActionPoint::print() const
 {
   ActionBase::print();
 
+  for (size_t i=0; i<pointingFingerAngles.size(); ++i)
+  {
+    RLOG_CPP(0, "Finger point angle[" << i << "] is " << pointingFingerAngles[i]);
+  }
+
   for (size_t i=0; i<manipulatorEntityMap.size(); ++i)
   {
     std::cout << "Solution " << i << ": Manipulator: " << std::get<0>(manipulatorEntityMap[i])
@@ -248,10 +282,21 @@ size_t ActionPoint::getNumSolutions() const
 std::vector<std::string> ActionPoint::createTasksXML() const
 {
   std::vector<std::string> tasks;
+  const bool withOri3d = pointingFingerAngles.size() > 1 ? true : false;
 
   std::string xmlTask;
-  xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"ABC\" " +
-            "effector=\"" + pointerFrame + "\" />";
+
+  if (withOri3d)
+  {
+    xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"ABC\" " +
+              "effector=\"" + pointerFrame + "\" />";
+  }
+  else
+  {
+    xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"POLAR\" " +
+              "effector=\"" + pointerFrame + "\" />";
+  }
+
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
@@ -269,8 +314,9 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
 {
   const double afterTime = 0.5;
   auto a1 = std::make_shared<tropic::ActivationSet>();
+  const bool withOri3d = pointingFingerAngles.size() > 1 ? true : false;
 
-  a1->addActivation(t_start+0.0*(t_end-t_start), true, 0.5, taskOri);
+  a1->addActivation(t_start + 0.0 * (t_end - t_start), true, 0.5, taskOri);
   a1->addActivation(t_start, true, 0.5, taskFingers);
   a1->addActivation(t_start, true, 0.5, taskFingerTip);
 
@@ -287,11 +333,22 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   Vec3d_normalizeSelf(abc[0]);
   Vec3d_crossProduct(abc[1], abc[2], abc[0]);
   RCHECK(Mat3d_isValid(abc));
-  double ea[3];
-  Mat3d_toEulerAngles(ea, abc);
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_start + 0.7*(t_end-t_start), ea, taskOri));
 
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {RCS_DEG2RAD(80.0), RCS_DEG2RAD(10.0), RCS_DEG2RAD(10.0)}, taskFingers));
+  if (withOri3d)
+  {
+    double ea[3];
+    Mat3d_toEulerAngles(ea, abc);
+    a1->add(std::make_shared<tropic::EulerConstraint>(t_start + 0.7 * (t_end - t_start), ea, taskOri));
+  }
+  else
+  {
+    double pa[2];
+    Vec3d_getPolarAngles(pa, pointDirection);
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_start + 0.7 * (t_end - t_start), pa[0], pa[1], taskOri));
+  }
+
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, pointingFingerAngles, taskFingers));
+  //a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {RCS_DEG2RAD(80.0), RCS_DEG2RAD(10.0), RCS_DEG2RAD(10.0)}, taskFingers));
   a1->add(std::make_shared<tropic::PositionConstraint>(t_end, fingerTipPosition, taskFingerTip));
 
   return a1;

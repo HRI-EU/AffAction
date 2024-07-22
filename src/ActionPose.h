@@ -70,7 +70,6 @@ protected:
 
   int solutionIndex;
   std::vector<ModelPose> poses;
-  std::string explanation;
   std::vector<std::string> usedManipulators;
 };
 
