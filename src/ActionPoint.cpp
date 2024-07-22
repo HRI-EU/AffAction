@@ -33,11 +33,13 @@
 #include "ActionPoint.h"
 #include "ActionFactory.h"
 #include "Agent.h"
-#include "ActivationSet.h"
-#include "VectorConstraint.h"
-#include "EulerConstraint.h"
-#include "PolarConstraint.h"
-#include "PositionConstraint.h"
+
+#include <ActivationSet.h>
+#include <VectorConstraint.h>
+#include <EulerConstraint.h>
+#include <PolarConstraint.h>
+#include <PositionConstraint.h>
+#include <CollisionModelConstraint.h>
 
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
@@ -177,10 +179,6 @@ bool ActionPoint::initialize(const ActionScene& scene,
 
   const Manipulator* hand = scene.getManipulator(pointerFrame);
   RCHECK(hand);
-  //pointingFingerAngles = std::vector<double>(hand->getNumFingers(), 0.0);
-
-
-
   pointingFingerAngles.clear();
   auto pointMdlState = Rcs::RcsGraph_getModelState(graph, "point_fingers");
 
@@ -218,26 +216,28 @@ bool ActionPoint::initialize(const ActionScene& scene,
 
   // Determine kinematics: direction vector for orientation constraint
   const RcsJoint* shldrJnt = hand->getBaseJoint(graph);
+  RCHECK(shldrJnt);
+  shoulderFrame = shldrJnt->name;
 
   // Find the body associated with the shoulder joint
-  RCSGRAPH_FOREACH_BODY(graph)
-  {
-    RCSBODY_FOREACH_JOINT(graph, BODY)
-    {
-      if (JNT->id == shldrJnt->id)
-      {
-        shoulderFrame = BODY->name;
-      }
-    }
-  }
+  //RCSGRAPH_FOREACH_BODY(graph)
+  //{
+  //  RCSBODY_FOREACH_JOINT(graph, BODY)
+  //  {
+  //    if (JNT->id == shldrJnt->id)
+  //    {
+  //      shoulderFrame = BODY->name;
+  //    }
+  //  }
+  //}
 
-  if (shoulderFrame.empty())
-  {
-    throw ActionException(ActionException::ParamNotFound,
-                          "Couldn't determine shoulder body for joint " + std::string(shldrJnt->name),
-                          "Check configuration file",
-                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-  }
+  //if (shoulderFrame.empty())
+  //{
+  //  throw ActionException(ActionException::ParamNotFound,
+  //                        "Couldn't determine shoulder body for joint " + std::string(shldrJnt->name),
+  //                        "Check configuration file",
+  //                        std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  //}
 
   HTr objBdy = object->getBodyTransform(graph);
   Vec3d_sub(this->pointDirection, shldrJnt->A_JI.org, objBdy.org);
@@ -327,15 +327,16 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingerTip);
   }
 
-  double abc[3][3];
-  Vec3d_copy(abc[2], pointDirection);   // z-axis from object to shoulder
-  Vec3d_crossProduct(abc[0], abc[2], Vec3d_ez());   // force x-axis to horizontal plane
-  Vec3d_normalizeSelf(abc[0]);
-  Vec3d_crossProduct(abc[1], abc[2], abc[0]);
-  RCHECK(Mat3d_isValid(abc));
 
   if (withOri3d)
   {
+    double abc[3][3];
+    Vec3d_copy(abc[2], pointDirection);   // z-axis from object to shoulder
+    Vec3d_crossProduct(abc[0], abc[2], Vec3d_ez());   // force x-axis to horizontal plane
+    Vec3d_normalizeSelf(abc[0]);
+    Vec3d_crossProduct(abc[1], abc[2], abc[0]);
+
+    RCHECK(Mat3d_isValid(abc));
     double ea[3];
     Mat3d_toEulerAngles(ea, abc);
     a1->add(std::make_shared<tropic::EulerConstraint>(t_start + 0.7 * (t_end - t_start), ea, taskOri));
@@ -348,7 +349,6 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   }
 
   a1->add(std::make_shared<tropic::VectorConstraint>(t_end, pointingFingerAngles, taskFingers));
-  //a1->add(std::make_shared<tropic::VectorConstraint>(t_end, std::vector<double> {RCS_DEG2RAD(80.0), RCS_DEG2RAD(10.0), RCS_DEG2RAD(10.0)}, taskFingers));
   a1->add(std::make_shared<tropic::PositionConstraint>(t_end, fingerTipPosition, taskFingerTip));
 
   return a1;
@@ -394,6 +394,98 @@ double ActionPoint::pointDistance(const ActionScene& scene, const RcsGraph* grap
   RCHECK_MSG(object, "%s", objectName.c_str());
   return Vec3d_distance(finger->getBodyTransform(graph).org, object->getBodyTransform(graph).org);
 }
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionPoke : public ActionPoint
+{
+public:
+
+  ActionPoke(const ActionScene& scene,
+             const RcsGraph* graph,
+             std::vector<std::string> params) : ActionPoint(scene, graph, params)
+  {
+    Vec3d_setZero(retractPosition);
+  }
+
+  virtual ~ActionPoke()
+  {
+  }
+
+  bool initialize(const ActionScene& scene,
+                  const RcsGraph* graph,
+                  size_t solutionRank)
+  {
+    bool success = ActionPoint::initialize(scene, graph, solutionRank);
+
+    auto objects = scene.getSceneEntities(pointBdyName);
+    RCHECK(objects.size() == 1);
+    auto object = objects[0];
+
+    const RcsBody* objBdy = object->body(graph);
+    double xyzMin[3], xyzMax[3];
+    bool aabbValid = RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
+    RCHECK(aabbValid);
+    double centroid[3];
+    Vec3d_set(centroid, 0.5 * (xyzMin[0] + xyzMax[0]), 0.5 * (xyzMin[1] + xyzMax[1]), xyzMin[2]+0.25*(xyzMax[2]-xyzMin[2]));
+
+    pointDirection[2] *= 0.5;
+    Vec3d_normalizeSelf(pointDirection);
+    Vec3d_constMulAndAdd(fingerTipPosition, centroid, pointDirection, 0.1);
+    Vec3d_constMulAndAdd(retractPosition, fingerTipPosition, pointDirection, 0.15);
+
+    return success;
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionPoke>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    std::string pointCmd = ActionPoint::getActionCommand();
+    return "poke" + pointCmd.substr(5);
+  }
+
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
+  {
+    const double afterTime = 0.5;
+    const double duration = t_end - t_start;
+    const double t_push = t_start + 0.6 * duration;
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    a1->add(ActionPoint::createTrajectory(t_start, t_push));
+
+    // Deactivate and reactivate object collisions
+    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_start+0.3*duration, pointBdyName, false));
+    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, pointBdyName, true));
+
+    // Move hand a little bit back
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_end, retractPosition, taskFingerTip));
+
+    // Deactivate tasks after finishing
+    a1->addActivation(t_push, false, 0.5, taskOri);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskFingerTip);
+
+    return a1;
+  }
+
+  double retractPosition[3];
+};
+
+REGISTER_ACTION(ActionPoke, "poke");
 
 
 }   // namespace aff

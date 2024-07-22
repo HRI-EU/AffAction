@@ -50,10 +50,10 @@ public:
               std::vector<std::string> params);
 
   virtual ~ActionPoint();
-  std::unique_ptr<ActionBase> clone() const override;
-  std::string getActionCommand() const;
+  virtual std::unique_ptr<ActionBase> clone() const override;
+  virtual std::string getActionCommand() const;
   size_t getNumSolutions() const;
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   void print() const;
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph) const;

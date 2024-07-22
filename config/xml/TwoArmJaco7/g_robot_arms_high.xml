@@ -49,7 +49,7 @@
         </Body>
 
         <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
-			<Shape type="SSL" radius="0.05" length="0.175" color="RED" distance="true" />
+			<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
             <noShape type="FRAME" scale="0.2"/>
         </Body>
 
@@ -62,7 +62,7 @@
         </Body>
 
         <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
-			<Shape type="SSL" radius="0.05" length="0.175" color="RED" distance="true" />
+			<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
 			<xxShape type="FRAME" scale="0.2"/>
         </Body>
 

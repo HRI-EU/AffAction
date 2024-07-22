@@ -59,7 +59,6 @@
 namespace aff
 {
 REGISTER_ACTION(ActionFingerPush, "finger_push");
-REGISTER_ACTION(ActionFingerPush, "poke");
 
 
 ActionFingerPush::ActionFingerPush(const ActionScene& domain,
