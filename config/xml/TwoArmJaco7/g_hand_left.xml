@@ -47,15 +47,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_left_finger_tip_1" prev="thumb_tip_left" transform="0.045 -0.005 0 180 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_left_finger_tip_2" prev="second_finger_tip_left" transform="0.045 -0.005 0 180 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_left_finger_tip_3" prev="third_finger_tip_left" transform="0.045 -0.005 0 180 0 0">
+    <Body name="hand_left_point" prev="hand_left_robot" transform="0 -0.07 -0.09 0 90 0" >
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
@@ -65,8 +57,7 @@
     <PalmgraspCapability frame="hand_left_palmgrasp" />
     <PincergraspCapability frame="hand_left_pincergrasp" />
     <TwistgraspCapability frame="hand_left_pincergrasp" />
-    <FingerpushCapability frame="hand_left_finger_tip_3" />
-    <CirculargraspCapability frame="hand_left_finger_tip_2 hand_left_finger_tip_3" />
+    <FingerpushCapability frame="hand_left_point" />
   </Manipulator>
 
 </Graph>

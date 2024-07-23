@@ -58,7 +58,6 @@
     <Body name="screen_link" prev="screen_mount_3_link" transform="0.042 0 0 0 0 0" physics="none">
       <Shape type="BOX" extents="0.03 0.2 0.28" distance="true" physics="true" graphics="true"
 	     transform="0.02 0 0 90 0 0" />
-        <Shape type="FRAME" scale="0.2"/>
     </Body>
 
     <Body name="ptu_link" prev="center_post_link" transform="0 0 0.633 0 0 90" physics="none" mass="0.01"

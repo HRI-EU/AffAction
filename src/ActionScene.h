@@ -88,6 +88,7 @@ public:
   //                                                  const RcsBody* child) const;
   const Manipulator* getManipulator(const std::string& manipulatorName) const;
   const Manipulator* getManipulator(const Capability* capability) const;
+  const Manipulator* getManipulatorOwningFrame(const std::string& frame) const;
   std::vector<const Manipulator*> getManipulatorsOfType(const std::string& type) const;
   const Manipulator* getGraspingHand(const RcsGraph* graph,
                                      const AffordanceEntity* entity) const;

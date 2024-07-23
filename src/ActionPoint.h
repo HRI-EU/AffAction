@@ -55,6 +55,7 @@ public:
   size_t getNumSolutions() const;
   virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
   void print() const;
+  virtual double getDefaultDuration() const;
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph) const;
 
@@ -69,6 +70,7 @@ protected:
   std::string pointBdyName;
   std::string pointerFrame;
   std::string shoulderFrame;
+  std::string handName;
   std::string fingerJoints;
   std::string taskOri, taskFingers, taskFingerTip;
   std::vector<std::string> usedManipulators;

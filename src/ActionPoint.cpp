@@ -56,7 +56,7 @@ REGISTER_ACTION(ActionPoint, "point");
 
 ActionPoint::ActionPoint(const ActionScene& scene,
                          const RcsGraph* graph,
-                         std::vector<std::string> params) : keepTasksActiveAfterEnd(true)
+                         std::vector<std::string> params) : keepTasksActiveAfterEnd(false)
 {
   Vec3d_setZero(pointDirection);
   Vec3d_setZero(fingerTipPosition);
@@ -140,10 +140,24 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   // Assemble all combinations
   for (const auto& h : hands)
   {
-    for (const auto& e : nttsToPointAt)
+    auto pointCapabilities = getCapabilities<FingerpushCapability>(h);
+    if (pointCapabilities.empty())
     {
-      manipulatorEntityMap.push_back(std::make_tuple(h->bdyName, e->bdyName,
-                                                     pointDistance(scene, graph, h->bdyName, e->bdyName)));
+      throw ActionException(ActionException::ParamInvalid,
+                            "Specified manipulator '" + params[1] + " ' has no pointing capability.",
+                            "Check if FingerpushCapability has been added in xml file.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+
+
+    for (const auto& pointCapability : pointCapabilities)
+    {
+      for (const auto& e : nttsToPointAt)
+      {
+        const double dist = pointDistance(scene, graph, pointCapability->frame, e->bdyName);
+        manipulatorEntityMap.push_back(std::make_tuple(pointCapability->frame, e->bdyName, dist));
+      }
     }
   }
 
@@ -151,14 +165,13 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   std::sort(manipulatorEntityMap.begin(), manipulatorEntityMap.end(),
             [&](std::tuple<std::string,std::string,double>& t1, std::tuple<std::string,std::string,double>& t2)
   {
-    double d1 = pointDistance(scene, graph, std::get<0>(t1), std::get<1>(t1));
-    double d2 = pointDistance(scene, graph, std::get<0>(t2), std::get<1>(t2));
+    // double d1 = pointDistance(scene, graph, std::get<0>(t1), std::get<1>(t1));
+    // double d2 = pointDistance(scene, graph, std::get<0>(t2), std::get<1>(t2));
 
     return std::get<2>(t1) < std::get<2>(t2);
   });
 
   initialize(scene, graph, 0);
-  print();
 }
 
 ActionPoint::~ActionPoint()
@@ -174,12 +187,13 @@ bool ActionPoint::initialize(const ActionScene& scene,
     return false;
   }
 
-  pointerFrame = std::get<0>(manipulatorEntityMap[solutionRank]);
-  pointBdyName = std::get<1>(manipulatorEntityMap[solutionRank]);
+  this->pointerFrame = std::get<0>(manipulatorEntityMap[solutionRank]);
+  this->pointBdyName = std::get<1>(manipulatorEntityMap[solutionRank]);
 
-  const Manipulator* hand = scene.getManipulator(pointerFrame);
+  const Manipulator* hand = scene.getManipulatorOwningFrame(pointerFrame);
   RCHECK(hand);
-  pointingFingerAngles.clear();
+  this->handName = hand->bdyName;
+  this->pointingFingerAngles.clear();
   auto pointMdlState = Rcs::RcsGraph_getModelState(graph, "point_fingers");
 
   for (const auto& finger : hand->fingerJoints)
@@ -188,7 +202,7 @@ bool ActionPoint::initialize(const ActionScene& scene,
     {
       if (STREQ(graph->joints[js.first].name, finger.c_str()))
       {
-        pointingFingerAngles.push_back(js.second);
+        this->pointingFingerAngles.push_back(js.second);
       }
     }
   }
@@ -208,49 +222,34 @@ bool ActionPoint::initialize(const ActionScene& scene,
   RCHECK(objects.size()==1);
   auto object = objects[0];
 
-  usedManipulators.clear();
-  usedManipulators.push_back(hand->name);
+  this->usedManipulators.clear();
+  this->usedManipulators.push_back(hand->name);
 
   // Assemble finger task name
-  fingerJoints = Rcs::String_concatenate(hand->fingerJoints, " ");
+  this->fingerJoints = Rcs::String_concatenate(hand->fingerJoints, " ");
 
   // Determine kinematics: direction vector for orientation constraint
   const RcsJoint* shldrJnt = hand->getBaseJoint(graph);
-  RCHECK(shldrJnt);
-  shoulderFrame = shldrJnt->name;
+  this->shoulderFrame = shldrJnt->name;
 
-  // Find the body associated with the shoulder joint
-  //RCSGRAPH_FOREACH_BODY(graph)
-  //{
-  //  RCSBODY_FOREACH_JOINT(graph, BODY)
-  //  {
-  //    if (JNT->id == shldrJnt->id)
-  //    {
-  //      shoulderFrame = BODY->name;
-  //    }
-  //  }
-  //}
+  const RcsBody* objBdy = object->body(graph);
+  double xyzMin[3], xyzMax[3], centroid[3];
+  Vec3d_copy(xyzMin, objBdy->A_BI.org);
+  Vec3d_copy(xyzMax, objBdy->A_BI.org);
+  RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
 
-  //if (shoulderFrame.empty())
-  //{
-  //  throw ActionException(ActionException::ParamNotFound,
-  //                        "Couldn't determine shoulder body for joint " + std::string(shldrJnt->name),
-  //                        "Check configuration file",
-  //                        std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-  //}
-
-  HTr objBdy = object->getBodyTransform(graph);
-  Vec3d_sub(this->pointDirection, shldrJnt->A_JI.org, objBdy.org);
+  Vec3d_set(centroid, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), 0.5*(xyzMin[2]+xyzMax[2]));
+  Vec3d_sub(this->pointDirection, centroid, shldrJnt->A_JI.org);  // Point direction is from shoulder to object
   double len = Vec3d_normalizeSelf(pointDirection);
   if (len==0.0)
   {
     throw ActionException(ActionException::KinematicallyImpossible,
-                          "Couldn't determine Polar direction vector", "",
-                          "Normalization failed - eye and object coincide");
+                          "Couldn't determine pointing direction vector", "",
+                          "Normalization failed - shoulder and object centroid coincide");
   }
 
-  const double reach = std::min(0.7*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, objBdy.org)-0.3);
-  Vec3d_constMulAndAdd(fingerTipPosition, shldrJnt->A_JI.org, pointDirection, -reach);
+  const double reach = std::min(0.9*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, centroid)-0.1);
+  Vec3d_constMulAndAdd(this->fingerTipPosition, shldrJnt->A_JI.org, pointDirection, reach);
   this->taskOri = "Align-" + pointerFrame + "-" + pointBdyName;
   this->taskFingers = pointerFrame + "_fingers";
   this->taskFingerTip = pointerFrame + "_XYZ";
@@ -294,7 +293,7 @@ std::vector<std::string> ActionPoint::createTasksXML() const
   else
   {
     xmlTask = "<Task name=\"" + taskOri + "\" " + "controlVariable=\"POLAR\" " +
-              "effector=\"" + pointerFrame + "\" />";
+              "effector=\"" + pointerFrame + "\" axisDirection=\"X\" />";
   }
 
   tasks.push_back(xmlTask);
@@ -331,10 +330,14 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
   if (withOri3d)
   {
     double abc[3][3];
-    Vec3d_copy(abc[2], pointDirection);   // z-axis from object to shoulder
-    Vec3d_crossProduct(abc[0], abc[2], Vec3d_ez());   // force x-axis to horizontal plane
-    Vec3d_normalizeSelf(abc[0]);
-    Vec3d_crossProduct(abc[1], abc[2], abc[0]);
+    Vec3d_copy(abc[0], pointDirection);   // x-axis from shoulder to object
+    Vec3d_crossProduct(abc[1], abc[0], Vec3d_ey());   // force y-axis to point down vertically
+    Vec3d_normalizeSelf(abc[1]);
+    if (abc[1][2]>0.0)
+    {
+      Vec3d_constMulSelf(abc[1], -1.0);
+    }
+    Vec3d_crossProduct(abc[2], abc[0], abc[1]);
 
     RCHECK(Mat3d_isValid(abc));
     double ea[3];
@@ -366,7 +369,7 @@ std::unique_ptr<ActionBase> ActionPoint::clone() const
 
 std::string ActionPoint::getActionCommand() const
 {
-  std::string str = "point " + pointBdyName + " " + pointerFrame;
+  std::string str = "point " + pointBdyName + " " + handName;
 
   if (getDuration()!=getDefaultDuration())
   {
@@ -378,21 +381,24 @@ std::string ActionPoint::getActionCommand() const
 
 double ActionPoint::actionCost(const ActionScene& scene, const RcsGraph* graph) const
 {
-  return pointDistance(scene, graph, pointBdyName, pointerFrame);
+  return pointDistance(scene, graph, pointerFrame, pointBdyName);
 }
 
 double ActionPoint::pointDistance(const ActionScene& scene, const RcsGraph* graph,
                                   const std::string& fingerName, const std::string& objectName) const
 {
-  auto fingers = scene.getSceneEntities(fingerName);
+  const RcsBody* pointFrame = RcsGraph_getBodyByName(graph, fingerName.c_str());
+  RCHECK_MSG(pointFrame, "Name %s is not the pointing frame RcsBody", fingerName.c_str());
   auto objects = scene.getSceneEntities(objectName);
-  RCHECK_MSG(fingers.size()==1, "Name %s has %zu entities", fingerName.c_str(), fingers.size());
   RCHECK_MSG(objects.size()==1, "Name %s has %zu entities", objectName.c_str(), objects.size());
-  auto finger = fingers[0];
   auto object = objects[0];
-  RCHECK_MSG(finger, "%s", fingerName.c_str());
   RCHECK_MSG(object, "%s", objectName.c_str());
-  return Vec3d_distance(finger->getBodyTransform(graph).org, object->getBodyTransform(graph).org);
+  return Vec3d_distance(pointFrame->A_BI.org, object->getBodyTransform(graph).org);
+}
+
+double ActionPoint::getDefaultDuration() const
+{
+  return 15.0;
 }
 
 
@@ -415,6 +421,7 @@ public:
              const RcsGraph* graph,
              std::vector<std::string> params) : ActionPoint(scene, graph, params)
   {
+    keepTasksActiveAfterEnd = true;
     Vec3d_setZero(retractPosition);
   }
 
@@ -433,16 +440,16 @@ public:
     auto object = objects[0];
 
     const RcsBody* objBdy = object->body(graph);
-    double xyzMin[3], xyzMax[3];
-    bool aabbValid = RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
-    RCHECK(aabbValid);
-    double centroid[3];
-    Vec3d_set(centroid, 0.5 * (xyzMin[0] + xyzMax[0]), 0.5 * (xyzMin[1] + xyzMax[1]), xyzMin[2]+0.25*(xyzMax[2]-xyzMin[2]));
+    double xyzMin[3], xyzMax[3], centroid[3];
+    Vec3d_copy(xyzMin, objBdy->A_BI.org);
+    Vec3d_copy(xyzMax, objBdy->A_BI.org);
+    RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
 
-    pointDirection[2] *= 0.5;
+    Vec3d_set(centroid, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), xyzMin[2]+0.75*(xyzMax[2]-xyzMin[2]));
+    pointDirection[2] *= 0.25;
     Vec3d_normalizeSelf(pointDirection);
-    Vec3d_constMulAndAdd(fingerTipPosition, centroid, pointDirection, 0.1);
-    Vec3d_constMulAndAdd(retractPosition, fingerTipPosition, pointDirection, 0.15);
+    Vec3d_copy(fingerTipPosition, centroid);
+    Vec3d_constMulAndAdd(retractPosition, centroid, pointDirection, -0.1);
 
     return success;
   }
@@ -472,10 +479,11 @@ public:
     a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, pointBdyName, true));
 
     // Move hand a little bit back
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_start + 0.4 * duration, retractPosition, taskFingerTip, 1));
     a1->add(std::make_shared<tropic::PositionConstraint>(t_end, retractPosition, taskFingerTip));
 
     // Deactivate tasks after finishing
-    a1->addActivation(t_push, false, 0.5, taskOri);
+    a1->addActivation(t_end, false, 0.5, taskOri);
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingerTip);
 

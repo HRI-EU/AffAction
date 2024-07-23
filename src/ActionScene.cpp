@@ -618,6 +618,26 @@ const Manipulator* ActionScene::getManipulator(const Capability* capability) con
   return NULL;
 }
 
+const Manipulator* ActionScene::getManipulatorOwningFrame(const std::string& frame) const
+{
+  const Manipulator* hand = nullptr;
+  for (const auto& m : manipulators)
+  {
+    auto capabilities = getCapabilities<Capability>(&m);
+
+    for (const auto& c : capabilities)
+    {
+      if (c->frame == frame)
+      {
+        hand = &m;
+        break;
+      }
+    }
+  }
+
+  return hand;
+}
+
 std::vector<const Manipulator*> ActionScene::getManipulatorsOfType(const std::string& type) const
 {
   std::vector<const Manipulator*> typeManipulators;
