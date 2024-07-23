@@ -43,39 +43,14 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-<!--
-    <Body name="hand_right_powergrasp" prev="hand_right_robot" transform="0 -0.02 -0.14 0 90 0">
+    <Body name="hand_right_point" prev="hand_right_robot" transform="0 0 -0.13 -90 0 90">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
-
-    <Body name="hand_right_threefinger_poke" prev="hand_right_robot" transform="0 0 -0.11 0 180 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_right_palmgrasp" prev="hand_right_robot" transform="0 0 -0.02 0 90 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_right_finger_tip_1" prev="thumb_tip_right" transform="0.045 -0.005 0 0 90 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_right_finger_tip_2" prev="second_finger_tip_right" transform="0.045 -0.005 0 0 90 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="hand_right_finger_tip_3" prev="third_finger_tip_right" transform="0.045 -0.005 0 0 90 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
--->
 
   <Manipulator body="hand_right_robot" types="hand ROBOTIQ-2F140" >
     <Joints names="finger_joint_right"/>
     <PowergraspCapability frame="hand_right_pincergrasp" />
-    <!-- <PalmgraspCapability frame="hand_right_palmgrasp" /> -->
-    <!-- <PincergraspCapability frame="hand_right_pincergrasp" /> -->
-    <!-- <TwistgraspCapability frame="hand_right_pincergrasp" /> -->
-    <!-- <FingerpushCapability frame="hand_right_threefinger_poke" was_frame="hand_right_finger_tip_2" /> -->
+    <FingerpushCapability frame="hand_right_point" />
   </Manipulator>
 
 </Graph>

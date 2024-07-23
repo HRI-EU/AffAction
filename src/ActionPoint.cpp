@@ -49,6 +49,7 @@
 
 #include <algorithm>
 
+#define OVERRIDE_3D
 
 namespace aff
 {
@@ -281,7 +282,11 @@ size_t ActionPoint::getNumSolutions() const
 std::vector<std::string> ActionPoint::createTasksXML() const
 {
   std::vector<std::string> tasks;
+#if defined (OVERRIDE_3D)
+  const bool withOri3d = true;
+#else
   const bool withOri3d = pointingFingerAngles.size() > 1 ? true : false;
+#endif
 
   std::string xmlTask;
 
@@ -313,7 +318,11 @@ tropic::TCS_sptr ActionPoint::createTrajectory(double t_start, double t_end) con
 {
   const double afterTime = 0.5;
   auto a1 = std::make_shared<tropic::ActivationSet>();
+#if defined (OVERRIDE_3D)
+  const bool withOri3d = true;
+#else
   const bool withOri3d = pointingFingerAngles.size() > 1 ? true : false;
+#endif
 
   a1->addActivation(t_start + 0.0 * (t_end - t_start), true, 0.5, taskOri);
   a1->addActivation(t_start, true, 0.5, taskFingers);

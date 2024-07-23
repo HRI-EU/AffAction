@@ -59,7 +59,7 @@
   </AffordanceModel>
 
   <!-- The model of the robot. -->
-  <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
+  <Group prev="aruco_base" transform="-1 0 0.05 0 0 0" was_transform="-0.87 0 0 0 0 0">
     <xi:include href="../JacoGen3/g_robo-gen3.xml" />
   </Group>
 
@@ -74,6 +74,24 @@
 
 
   <model_state model="default" time_stamp="0">
+      <joint_state joint="joint_1_right" position="130"/>
+      <joint_state joint="joint_2_right" position="100"/>
+      <joint_state joint="joint_3_right" position="80"/>
+      <joint_state joint="joint_4_right" position="-110"/>
+      <joint_state joint="joint_5_right" position="0"/>
+      <joint_state joint="joint_6_right" position="-20" />
+      <joint_state joint="joint_7_right" position="-90"/>
+
+      <joint_state joint="joint_1_left" position="50"/>
+      <joint_state joint="joint_2_left" position="-100"/>
+      <joint_state joint="joint_3_left" position="-80"/>
+      <joint_state joint="joint_4_left" position="110"/>
+      <joint_state joint="joint_5_left" position="0"/>
+      <joint_state joint="joint_6_left" position="20" />
+      <joint_state joint="joint_7_left" position="90"/>
+  </model_state>
+
+  <model_state model="default_old" time_stamp="0">
       <joint_state joint="joint_1_right" position="130"/>
       <joint_state joint="joint_2_right" position="100"/>
       <joint_state joint="joint_3_right" position="80"/>
