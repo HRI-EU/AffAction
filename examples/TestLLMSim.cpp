@@ -32,9 +32,10 @@
 *******************************************************************************/
 
 #include <ExampleActionsECS.h>
-#include <ArucoTracker.h>
-#include <AzureSkeletonTracker.h>
 #include <LandmarkZmqComponent.hpp>
+#include <CameraViewComponent.h>
+#include <FaceGestureComponent.h>
+#include <FaceTracker.h>
 #include <Rcs_macros.h>
 #include <Rcs_resourcePath.h>
 #include <Rcs_cmdLine.h>
@@ -94,45 +95,66 @@ int main(int argc, char** argv)
 
   if (testSceneQuery)
   {
-    aff::SceneQueryPool::test(&ex);
-    RPAUSE();
+    bool success = aff::SceneQueryPool::test(&ex);
+    RPAUSE_MSG("aff::SceneQueryPool::test() %s", success ? "succeeded" : "failed");
   }
 
 
 
+  bool withAruco = argP.hasArgument("-aruco", "Use aruco tracker");
+  bool withAzure = argP.hasArgument("-azure", "Use azure people tracker");
+  bool withFace = argP.hasArgument("-face", "Use Mediapipe face tracker");
   bool withTracking = argP.hasArgument("-tracking", "Use tracking component");
+
+  if (withAruco || withAzure || withFace)
+  {
+    withTracking = true;
+  }
+
   std::unique_ptr<aff::LandmarkZmqComponent> lmc;
+  const RcsBody* cam = nullptr;
+
 
   if (withTracking)
   {
-    RLOG(0, "Adding trackers");
+    RLOG(0, "Adding LandmarkZmqComponent");
+    cam = RcsGraph_getBodyByName(ex.getGraph(), "camera_0");
+    cam = RcsGraph_getBodyByName(ex.getGraph(), "head_kinect_rgb_link");
+    RCHECK(cam);
     std::string connection="tcp://localhost:5555";
-    size_t numSkeletons = 3;
-    double r_agent = DBL_MAX;
     argP.getArgument("-jsonFile", &connection,
                      "Json file instead of zmq connection (default: python_landmark_input.json)");
+    lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.getEntity(), connection));
+    lmc->setScenePtr(ex.getGraph(), ex.getScene());
+  }
+
+  if (withFace)
+  {
+    auto ft = lmc->addFaceTracker("Daniel", cam->name);
+    ex.addComponent(new aff::CameraViewComponent(&ex.getEntity(), "face", false));
+    ex.addComponent(new aff::FaceGestureComponent(&ex.getEntity(), "face", dynamic_cast<aff::FaceTracker*>(ft)->getMesh()));
+    RLOG(0, "%s adding face tracker", ft ? "SUCCESS" : "FAILURE");
+  }
+
+  if (withAruco)
+  {
+    RCHECK(cam);
+    lmc->addArucoTracker(cam->name, "aruco_base");
+    RLOG(0, "Done adding aruco tracker");
+  }
+
+  if (withAzure)
+  {
+    RCHECK(cam);
+    size_t numSkeletons = 3;
+    double r_agent = DBL_MAX;
     argP.getArgument("-numSkeletons", &numSkeletons,
                      "Max. number of skeletons to be tracked (default: %zu)", numSkeletons);
     argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
 
-    lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.getEntity(), connection));
-    lmc->setScenePtr(ex.getGraph(), ex.getScene());
-
-    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), "camera");
-    RCHECK(cam);
-    lmc->addArucoTracker(cam->name, "aruco_base");
-
     // Add skeleton tracker and ALL agents in the scene
     int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-
-    if (ex.getViewer())
-    {
-      lmc->enableDebugGraphics(ex.getViewer());
-    }
     RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
-
-    // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
 
     if (ex.getViewer())
     {
@@ -143,11 +165,26 @@ int main(int argc, char** argv)
       }, "Calibrate camera");
     }
 
-    RLOG(0, "Done adding trackers");
+    RLOG(0, "Done adding skeleton tracker");
   }
+
+  // Enable debug graphics
+  if (lmc)
+  {
+    // Initialize all tracker camera transforms from the xml file
+    RCHECK(cam);
+    lmc->setCameraTransform(&cam->A_BI);
+
+    if (ex.getViewer())
+    {
+      lmc->createDebugGraphics(ex.getViewer());
+    }
+  }
+
 
   if (success)
   {
+    RLOG(0, "Starting loop");
     ex.start();  // This will block until "Stop" is published
   }
 
