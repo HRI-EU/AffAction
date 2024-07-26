@@ -245,6 +245,15 @@
     <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
     <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
   </model_state>
+	
+  <model_state model="point_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="80" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left"  position="80" />
+    <joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
+  </model_state>
 
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>
