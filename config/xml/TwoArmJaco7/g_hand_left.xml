@@ -47,7 +47,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_left_point" prev="hand_left_robot" transform="0 -0.07 -0.09 0 90 0" >
+    <Body name="hand_left_point" prev="hand_left_robot" transform="0 -0.07 -0.09 0 90 -20" >
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
