@@ -169,8 +169,10 @@ std::vector<std::string> ActionGazeAtHand::createTasksXML() const
   std::vector<std::string> tasks;
 
   std::string xmlTask;
+  //xmlTask = "<Task name=\"" + taskObjectOri + "\" " +
+  //    "controlVariable=\"POLAR\" effector=\"" + shakeEntityName + "\" />";
   xmlTask = "<Task name=\"" + taskObjectOri + "\" " +
-            "controlVariable=\"POLAR\" effector=\"" + shakeEntityName + "\" />";
+            "controlVariable=\"POLAR\" effector=\"" + graspingHandName + "\" />";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskCenterXYZ + "\" " +

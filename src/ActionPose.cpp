@@ -54,6 +54,10 @@ namespace aff
 {
 REGISTER_ACTION(ActionPose, "pose");
 
+ActionPose::ActionPose() : solutionIndex(-1)
+{
+}
+
 ActionPose::ActionPose(const ActionScene& domain,
                        const RcsGraph* graph,
                        std::vector<std::string> params) : solutionIndex(-1)
@@ -141,7 +145,7 @@ ActionPose::ModelPose ActionPose::createPose(const RcsGraph* graph,
 
   for (const auto& jointState : mState)
   {
-    if ((jointState.first<0) || (jointState.first>graph->dof-1))
+    if ((jointState.first<0) || (jointState.first>(int)graph->dof-1))
     {
       RLOG_CPP(1, "Joint index " << jointState.first << " is invalid. Must be >=0 and < " << graph->dof-1);
       continue;
@@ -260,5 +264,164 @@ std::string ActionPose::getActionCommand() const
 
   return aCmd;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionInspectTop : public ActionPose
+{
+public:
+
+  ActionInspectTop() : leftPoseName("inspect_top_left"), rightPoseName("inspect_top_right")
+  {
+  }
+
+  ActionInspectTop(const ActionScene& scene,
+                   const RcsGraph* graph,
+                   std::vector<std::string> params) : ActionInspectTop()
+  {
+    initialize(scene, graph, params);
+  }
+
+  void initialize(const ActionScene& scene,
+                  const RcsGraph* graph,
+                  std::vector<std::string> params)
+  {
+    parseParams(params);
+
+    if (params.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The object to inspect from the top is not specified.",
+                            "Use an object name that is defined in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    std::vector<const AffordanceEntity*> nttsToInspect;
+    for (const auto& e : scene.getAffordanceEntities(params[0]))
+    {
+      nttsToInspect.push_back(e);
+    }
+
+    if (nttsToInspect.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "Could not find entity to inspect for name '" + params[0] + "'.",
+                            "Make sure the object exists in the scene.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    auto gPair = scene.getGraspingHand(graph, nttsToInspect);
+
+    const Manipulator* graspingHand = std::get<0>(gPair);
+    const AffordanceEntity* object = std::get<1>(gPair);
+
+    if (!graspingHand)
+    {
+      throw ActionException(ActionException::KinematicallyImpossible,
+                            "The " + nttsToInspect[0]->name + " is not held in the hand.",
+                            "First get the " + nttsToInspect[0]->name + " in the hand before performing this command",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    RCHECK(object);
+    entityName = object->name;
+    poses.clear();
+
+    if (graspingHand->isOfType("hand_left"))
+    {
+      poses.push_back(createPose(graph, leftPoseName, 0));
+
+    }
+    else if (graspingHand->isOfType("hand_right"))
+    {
+      poses.push_back(createPose(graph, rightPoseName, 0));
+    }
+    else
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "Could not find left or right hand holding the entity '" + params[0] + "'.",
+                            "Make sure the robot has manipulators of type hand_left or hand_right.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    usedManipulators.push_back(graspingHand->bdyName);
+  }
+
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionInspectTop>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    std::string str = "inspect_top " + entityName;
+
+    if (getDuration() != getDefaultDuration())
+    {
+      str += " duration " + std::to_string(getDuration());
+    }
+
+    return str;
+  }
+
+  std::string entityName;
+  std::string leftPoseName, rightPoseName;
+};
+
+REGISTER_ACTION(ActionInspectTop, "inspect_top");
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionInspectFront : public ActionInspectTop
+{
+public:
+
+  ActionInspectFront(const ActionScene& scene,
+                     const RcsGraph* graph,
+                     std::vector<std::string> params)
+  {
+    leftPoseName = "inspect_left";
+    rightPoseName = "inspect_right";
+    initialize(scene, graph, params);
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionInspectFront>(*this);
+  }
+
+  std::string getActionCommand() const
+  {
+    return "inspect_front" + ActionInspectTop::getActionCommand().substr(11);
+  }
+
+};
+
+REGISTER_ACTION(ActionInspectFront, "inspect_front");
 
 }   // namespace aff

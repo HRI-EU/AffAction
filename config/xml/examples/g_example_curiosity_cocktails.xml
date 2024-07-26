@@ -273,7 +273,51 @@
     <joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
     <joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
   </model_state>
+	
+  <model_state model="inspect_right" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_right" position="-70.022505" />
+    <joint_state joint="j2s7s300_joint_2_right" position="243.12705" />
+    <joint_state joint="j2s7s300_joint_3_right" position="-61.566181" />
+    <joint_state joint="j2s7s300_joint_4_right" position="101.739268" />
+    <joint_state joint="j2s7s300_joint_5_right" position="23.090144" />
+    <joint_state joint="j2s7s300_joint_6_right" position="289.659987" />
+    <joint_state joint="j2s7s300_joint_7_right" position="-109.292105" />
+  </model_state>
 
+  <model_state model="inspect_left" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_left" position="70.055565" />
+    <joint_state joint="j2s7s300_joint_2_left" position="116.932587" />
+    <joint_state joint="j2s7s300_joint_3_left" position="61.447979" />
+    <joint_state joint="j2s7s300_joint_4_left" position="258.260936" />
+    <joint_state joint="j2s7s300_joint_5_left" position="-23.033134" />
+    <joint_state joint="j2s7s300_joint_6_left" position="70.372164" />
+    <joint_state joint="j2s7s300_joint_7_left" position="109.205596" />
+  </model_state>
+
+	<!--
+	Polar hand: 50, -180
+	Position hand: -0.4, 0.0, 1.1
+	-->
+	<model_state model="inspect_top_right" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="-76.582162" />
+		<joint_state joint="j2s7s300_joint_2_right" position="244.894413" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-62.20114" />
+		<joint_state joint="j2s7s300_joint_4_right" position="117.898173" />
+		<joint_state joint="j2s7s300_joint_5_right" position="72.732329" />
+		<joint_state joint="j2s7s300_joint_6_right" position="278.534047" />
+		<joint_state joint="j2s7s300_joint_7_right" position="-71.274835" />
+	</model_state>
+	
+	<model_state model="inspect_top_left" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_left" position="76.573402" />
+		<joint_state joint="j2s7s300_joint_2_left" position="115.134075" />
+		<joint_state joint="j2s7s300_joint_3_left" position="62.161633" />
+		<joint_state joint="j2s7s300_joint_4_left" position="242.122426" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-72.678551" />
+		<joint_state joint="j2s7s300_joint_6_left" position="81.52789" />
+		<joint_state joint="j2s7s300_joint_7_left" position="71.27123" />
+	</model_state>
+	
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>
     <Tree root="upperarm_right"/>

@@ -44,6 +44,7 @@ class ActionPose : public ActionBase
 {
 public:
 
+  ActionPose();
   ActionPose(const ActionScene& domain,
              const RcsGraph* graph,
              std::vector<std::string> params);

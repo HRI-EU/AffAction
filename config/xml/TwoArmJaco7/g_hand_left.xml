@@ -51,7 +51,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator body="hand_left_robot" types="hand">
+  <Manipulator body="hand_left_robot" types="hand hand_left">
     <Joints names="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left"/>
     <PowergraspCapability frame="hand_left_powergrasp" />
     <PalmgraspCapability frame="hand_left_palmgrasp" />
