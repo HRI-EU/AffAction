@@ -90,7 +90,7 @@ public:
 
 private:
 
-  // Process aruco frames. Called from perception thread (30Hz or so)
+  // Process landmark frames. Called from perception thread (30Hz or so)
   void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
 
   void updateAgents(RcsGraph* graph);
