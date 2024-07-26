@@ -34,6 +34,7 @@
 #include "LandmarkBase.h"
 #include "ArucoTracker.h"
 #include "AzureSkeletonTracker.h"
+#include "FaceTracker.h"
 #include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
@@ -116,7 +117,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
 
   for (auto& entry : json["data"].items())
   {
-    NLOG_CPP(1, entry.key());
+    //RLOG_CPP(1, entry.key());
 
     for (const auto& tracker : trackers)
     {
@@ -215,6 +216,22 @@ void LandmarkBase::setSkeletonTrackerDefaultPosition(size_t skeletonIndex, doubl
   }
 }
 
+TrackerBase* LandmarkBase::addFaceTracker(const std::string& agent, const std::string& camera)
+{
+  if (!scene)
+  {
+    RLOG(0, "Can't add face tracker - scene has not been set");
+    return nullptr;
+  }
+
+  FaceTracker* tracker = new FaceTracker();
+  tracker->setScene(this->scene);
+  tracker->setCameraName(camera);
+  addTracker(std::unique_ptr<FaceTracker>(tracker));
+
+  return tracker;
+}
+
 void LandmarkBase::startCalibration(const std::string& camera, size_t numFrames)
 {
   for (auto& tracker : trackers)
@@ -299,16 +316,43 @@ std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
   return this->trackers;
 }
 
-void LandmarkBase::enableDebugGraphics(Rcs::Viewer* viewer)
+void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer)
 {
-  // Add skeleton graphics
   for (auto& tracker : getTrackers())
   {
+    // Add skeleton graphics
     aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
     if (st)
     {
       st->initGraphics(getGraph(), viewer);
     }
+
+    // Add facemesh graphics
+    aff::FaceTracker* ft = dynamic_cast<aff::FaceTracker*>(tracker.get());
+    if (ft)
+    {
+      const RcsBody* cam = RcsGraph_getBodyByName(getGraph(), ft->getCameraName().c_str());
+      ft->addGraphics(viewer, cam);
+    }
+
+  }
+
+}
+
+void LandmarkBase::enableDebugGraphics(bool enable)
+{
+  for (auto& tracker : getTrackers())
+  {
+
+
+    // Handle facemesh graphics
+    aff::FaceTracker* ft = dynamic_cast<aff::FaceTracker*>(tracker.get());
+    if (ft)
+    {
+      RLOG(0, "Setting FaceTracker visibility to %s", enable ? "TRUE" : "FALSE");
+      ft->enableDebugGraphics(enable);
+    }
+
   }
 
 }

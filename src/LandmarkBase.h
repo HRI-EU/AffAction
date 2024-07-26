@@ -54,7 +54,6 @@ public:
   void setJsonInput(const nlohmann::json& json);
   std::string getTrackerState() const;
 
-  void enableDebugGraphics(Rcs::Viewer* viewer);
   void updateGraph(RcsGraph* graph);
   void addTracker(std::unique_ptr<TrackerBase> tracker);
   void setCameraTransform(const HTr* A_CI);
@@ -64,6 +63,8 @@ public:
   int addSkeletonTrackerForAgents(double defaultRadius);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
+
+  TrackerBase* addFaceTracker(const std::string& agent, const std::string& camera);
 
   void startCalibration(const std::string& camera, size_t numFrames);
   bool isCalibrating(const std::string& camera) const;
@@ -80,6 +81,10 @@ public:
   ActionScene* getScene();
   virtual void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
   std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
+
+  // Graphics debug
+  void createDebugGraphics(Rcs::Viewer* viewer);
+  void enableDebugGraphics(bool enable);
 
 protected:
 

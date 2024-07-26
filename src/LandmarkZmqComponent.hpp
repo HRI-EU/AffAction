@@ -128,6 +128,7 @@ public:
     subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
     subscribe("EstimateCameraPose", &LandmarkZmqComponent::onEstimateCameraPose);
     subscribe("ToggleJsonLogging", &LandmarkZmqComponent::onToggleJsonLogging);
+    subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
   }
 
   virtual ~LandmarkZmqComponent()
@@ -182,22 +183,22 @@ public:
     RLOG_CPP(0, "Parsing jsons");
     std::vector<nlohmann::json> jsons;
 
-    // try
-    // {
-    //   while (!ifs.eof())
-    //   {
-    //     nlohmann::json j;
-    //     ifs >> j;
-    //     // (CP) disabled for other debugging
-    //     //RLOG_CPP(1, "json: '" << j << "'");
-    //     j["header"]["timestamp"] = 0.0;
-    //     jsons.push_back(j);
-    //   }
-    // }
-    // catch (nlohmann::json::parse_error& ex)
-    // {
-    //   std::cerr << "parse error at byte " << ex.byte << std::endl;
-    // }
+    try
+    {
+      while (!ifs.eof())
+      {
+        nlohmann::json j;
+        ifs >> j;
+        // (CP) disabled for other debugging
+        //RLOG_CPP(1, "json: '" << j << "'");
+        j["header"]["timestamp"] = 0.0;
+        jsons.push_back(j);
+      }
+    }
+    catch (nlohmann::json::parse_error& ex)
+    {
+      std::cerr << "parse error at byte " << ex.byte << std::endl;
+    }
 
     RLOG_CPP(0, "json has " << jsons.size() << " entries");
 
@@ -224,17 +225,18 @@ public:
 
   void zmqThreadFunc()
   {
-    RLOG(0, "zmqThreadFunc()");
+    RLOG(5, "zmqThreadFunc()");
     threadFunctionCompleted = false;
     zmq::context_t context;
     zmq::socket_t socket(context, ZMQ_REQ);
 
-    RLOG(1, "Connecting to tcp://localhost:5555");
+    RLOG(5, "Connecting to tcp://localhost:5555");
     socket.connect("tcp://localhost:5555");
 
     // set receive timeout to 3 seconds
     int timeout_ms = this->socketTimeoutInMsec;
 
+    RLOG(5, "Setting socket timeout");
 #if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
     socket.setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(int));
 #else
@@ -244,6 +246,7 @@ public:
 
 
 
+    RLOG(5, "Starting thread loop");
     while (this->threadRunning && !timedOut)
     {
       double t_mp = Timer_getSystemTime();
@@ -255,8 +258,12 @@ public:
         request[tracker->getRequestKeyword()] = true;
       }
 
+      RLOG_CPP(5, "Sending request: " << request.dump());
       sendRequest(socket, request);
+      RLOG_CPP(5, "Waiting for reply");
       std::string reply_str = receiveReply(socket);
+      RLOG_CPP(5, "Received reply");
+      RLOG_CPP(6, "Received reply: " << reply_str);
 
       if (logging)
       {
@@ -276,15 +283,18 @@ public:
 
       if (!frozen)
       {
+        RLOG_CPP(5, "Parsing reply json");
         nlohmann::json json = nlohmann::json::parse(reply_str);
+        RLOG_CPP(5, "setJsonInput");
         setJsonInput(json);
+        RLOG_CPP(5, "done setJsonInput");
       }
 
       // Timing statistics
       t_mp = Timer_getSystemTime() - t_mp;
       frameRate = (frameRate == 0.0) ? 1.0 / t_mp : 0.99 * frameRate + 0.01 * (1.0 / t_mp);
 
-      NLOG(0, "Framerate: %.2f Hz", this->frameRate);
+      RLOG(5, "Framerate: %.2f Hz", this->frameRate);
     }
 
     // Quit the python server
