@@ -259,8 +259,8 @@ void TTSComponent::localThread()
       // Piper command line:
       // echo "Hello, this is a test" | ./piper  -m en_US-joe-medium.onnx
       // -c en_en_US_john_medium_en_US-john-medium.onnx.json -f test1.wav; aplay test1.wav
-      std::string onnxPath = std::string("\"") + piperPath + onnxStr + "/";
-      std::string jsonPath = std::string("\"") + piperPath + jsonStr + "/";
+      std::string onnxPath = std::string("\"") + piperPath + "/" + onnxStr;
+      std::string jsonPath = std::string("\"") + piperPath + "/" + jsonStr;
       consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
       consCmd += piperExe + " -m " + onnxPath + " -c " + jsonPath +
                  " -f piper.wav > piper.txt 2>&1; aplay piper.wav > aplay.txt 2>&1";
