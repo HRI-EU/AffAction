@@ -215,7 +215,7 @@ public:
 
   std::shared_ptr<ConcurrentSceneQuery> instance();
 
-  static void test(const ExampleActionsECS* sim);
+  static bool test(const ExampleActionsECS* sim);
 
 private:
   std::vector<std::shared_ptr<ConcurrentSceneQuery>> queries;

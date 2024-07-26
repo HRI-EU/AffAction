@@ -71,19 +71,42 @@ std::shared_ptr<ConcurrentSceneQuery> SceneQueryPool::instance()
   return nullptr;
 }
 
-void SceneQueryPool::test(const ExampleActionsECS* sim)
+bool SceneQueryPool::test(const ExampleActionsECS* sim)
 {
   RLOG(0, "SceneQueryFactory::test()");
   SceneQueryPool f(sim, 3);
+  bool success = true;
 
   {
     auto sq1 = f.instance();
     auto sq2 = f.instance();
+    if (sq1 && sq2)
+    {
+      RLOG_CPP(1, "SUCCESS: Getting 2 instances out of 3");
+    }
+    else
+    {
+      RLOG_CPP(1, "FAIL: Getting 2 instances out of 3");
+      success = false;
+    }
   }
+
   auto sq3 = f.instance();
   auto sq4 = f.instance();
   auto sq5 = f.instance();
   auto sq6 = f.instance();
+
+  if (sq3 && sq4 && sq5 && !sq6)
+  {
+    RLOG_CPP(1, "SUCCESS: Getting 3 instances out of 3, not getting the 4th one");
+  }
+  else
+  {
+    RLOG_CPP(1, "FAIL: Getting 3 instances out of 3, not getting the 4th one");
+    success = false;
+  }
+
+  return success;
 }
 
 
