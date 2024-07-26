@@ -60,7 +60,7 @@ class FaceTracker : public TrackerBase
 {
 public:
 
-  FaceTracker();
+  FaceTracker(const std::string& nameOfFaceBody);
   virtual ~FaceTracker();
 
   // Inherited methods
@@ -101,6 +101,7 @@ private:
   HTr faceTrf;
   std::mutex mtx;
   std::string cameraName;
+  std::string faceName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;
   osg::ref_ptr<Rcs::MeshNode> faceMeshNode;
   osg::ref_ptr<Rcs::VertexArrayNode> landmarksNode;

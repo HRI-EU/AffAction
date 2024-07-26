@@ -130,7 +130,7 @@ int main(int argc, char** argv)
 
   if (withFace)
   {
-    auto ft = lmc->addFaceTracker("Daniel", cam->name);
+    auto ft = lmc->addFaceTracker("face", cam->name);
     ex.addComponent(new aff::CameraViewComponent(&ex.getEntity(), "face", false));
     ex.addComponent(new aff::FaceGestureComponent(&ex.getEntity(), "face", dynamic_cast<aff::FaceTracker*>(ft)->getMesh()));
     RLOG(0, "%s adding face tracker", ft ? "SUCCESS" : "FAILURE");

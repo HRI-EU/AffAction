@@ -216,7 +216,7 @@ void LandmarkBase::setSkeletonTrackerDefaultPosition(size_t skeletonIndex, doubl
   }
 }
 
-TrackerBase* LandmarkBase::addFaceTracker(const std::string& agent, const std::string& camera)
+TrackerBase* LandmarkBase::addFaceTracker(const std::string& faceBodyName, const std::string& camera)
 {
   if (!scene)
   {
@@ -224,7 +224,7 @@ TrackerBase* LandmarkBase::addFaceTracker(const std::string& agent, const std::s
     return nullptr;
   }
 
-  FaceTracker* tracker = new FaceTracker();
+  FaceTracker* tracker = new FaceTracker(faceBodyName);
   tracker->setScene(this->scene);
   tracker->setCameraName(camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));

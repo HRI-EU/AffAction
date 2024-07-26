@@ -65,7 +65,8 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 }
 
 // In case the iris is estimated, there are 10 more landmarks
-FaceTracker::FaceTracker() : mesh(NULL), landmarks(NULL), viewer(nullptr), scene(nullptr)
+FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
+  scene(nullptr), mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
 {
   std::string meshFile = Rcs::getAbsoluteFileName("FaceMesh-holes-468.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
@@ -160,12 +161,13 @@ void FaceTracker::updateGraph(RcsGraph* graph)
 
   // Shift
   A_FI.org[0] += 1.75*DISTANCE_FACE_TO_CAM;
-  A_FI.org[2] -= 0.2;
-  Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(20.0));
 
-  double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, "face"));
+  // Look down
+  Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(10.0));
+
+  double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, faceName.c_str()));
   lpFiltTrf(q6, &A_FI, 0.05);
-  RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
+  //RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
 
   for (unsigned int i=0; i<mesh->nVertices; ++i)
   {
@@ -225,7 +227,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
     return false;
   }
 
-  RLOG(5, "Face: Adding debug graphics");
+  RLOG(5, "FaceTracker: Adding debug graphics");
   viewer = viewer_;
 
 
