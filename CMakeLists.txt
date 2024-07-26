@@ -271,6 +271,9 @@ src/AzureSkeletonTracker.cpp
 src/LandmarkBase.cpp
 src/ConcurrentExecutor.cpp
 src/ConcurrentSceneQuery.cpp
+src/FaceTracker.cpp
+src/FaceGestureComponent.cpp
+src/CameraViewComponent.cpp
 )
 
 SET(ECS_SRCS
