@@ -35,6 +35,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
 #include <Rcs_utils.h>
+#include <Rcs_utilsCPP.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -48,6 +49,7 @@
 static std::string piperPath = std::string(AFFACTION_PIPER_PATH);
 #if defined (_MSC_VER)
 static std::string piperExe = std::string("\"") + piperPath + "/piper.exe" + std::string("\"");
+//static std::string piperExe = piperPath + "\\piper.exe";
 #else
 static std::string piperExe = piperPath + "/piper";
 #endif
@@ -65,9 +67,13 @@ TTSComponent::TTSComponent(EntityBase* parent, std::string whichTTS_) :
   subscribe<>("EmergencyStop", &TTSComponent::onEmergencyStop);
   setPiperVoice("kathleen");
 
-  if ((whichTTS=="piper") && (!File_exists(piperExe.c_str())))
+  // Check for existing of the piper executable. If it does not exits,
+  // we fall back to the basic default.
+  std::string checkExePath = piperExe;
+  Rcs::String_trim(checkExePath, "\"");
+  if ((whichTTS=="piper") && (!File_exists(checkExePath.c_str())))
   {
-    RLOG_CPP(0, "Piper TTS not found (" + piperExe + ") - falling back to native TTS");
+    RLOG_CPP(0, "Piper TTS not found (" + checkExePath + ") - falling back to native TTS");
     whichTTS = "native";
   }
 
@@ -192,8 +198,8 @@ void TTSComponent::localThread()
 
     if (whichTTS == "piper")
     {
-      std::string onnxPath = std::string("\"") + piperPath + onnxStr + "/";
-      std::string jsonPath = std::string("\"") + piperPath + jsonStr + "/";
+      std::string onnxPath = std::string("\"") + piperPath + "/" + onnxStr;
+      std::string jsonPath = std::string("\"") + piperPath + "/" + jsonStr;
       std::string consCmd = "echo " + std::string("\"") + text + std::string("\" | ");
       consCmd += piperExe + " -m " + onnxPath + " -c " + jsonPath + " -f \"piper.wav\" >NUL 2>&1 && ";
       consCmd += "powershell -c (New-Object Media.SoundPlayer 'piper.wav').PlaySync() >NUL 2>&1";

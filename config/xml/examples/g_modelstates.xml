@@ -1,0 +1,205 @@
+<Group>
+
+	<model_state model="TableCalibration" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="31.807518"/>
+		<joint_state joint="j2s7s300_joint_2_right" position="238.796087"/>
+		<joint_state joint="j2s7s300_joint_3_right" position="-117.644075"/>
+		<joint_state joint="j2s7s300_joint_4_right" position="134.173386"/>
+		<joint_state joint="j2s7s300_joint_5_right" position="35.843908"/>
+		<joint_state joint="j2s7s300_joint_6_right" position="222.627976"/>
+		<joint_state joint="j2s7s300_joint_7_right" position="-191.251548"/>
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+		<joint_state joint="j2s7s300_joint_1_left" position="-29.282749"/>
+		<joint_state joint="j2s7s300_joint_2_left" position="123.550124"/>
+		<joint_state joint="j2s7s300_joint_3_left" position="114.968897"/>
+		<joint_state joint="j2s7s300_joint_4_left" position="217.534712"/>
+		<joint_state joint="j2s7s300_joint_5_left" position="-32.160248"/>
+		<joint_state joint="j2s7s300_joint_6_left" position="126.182173"/>
+		<joint_state joint="j2s7s300_joint_7_left" position="180.383162"/>
+		<joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+		<joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+		<joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+	</model_state>
+
+	<model_state model="TableCalibration_140" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="39.950832"/>
+		<joint_state joint="j2s7s300_joint_2_right" position="219.972306"/>
+		<joint_state joint="j2s7s300_joint_3_right" position="-88.550723"/>
+		<joint_state joint="j2s7s300_joint_4_right" position="95.440704"/>
+		<joint_state joint="j2s7s300_joint_5_right" position="-34.815626"/>
+		<joint_state joint="j2s7s300_joint_6_right" position="182.694777"/>
+		<joint_state joint="j2s7s300_joint_7_right" position="-130.154601"/>
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="0"/>
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="0"/>
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="0"/>
+		<joint_state joint="j2s7s300_joint_1_left" position="-39.848285"/>
+		<joint_state joint="j2s7s300_joint_2_left" position="138.095356"/>
+		<joint_state joint="j2s7s300_joint_3_left" position="91.216579"/>
+		<joint_state joint="j2s7s300_joint_4_left" position="264.559658"/>
+		<joint_state joint="j2s7s300_joint_5_left" position="-26.915878"/>
+		<joint_state joint="j2s7s300_joint_6_left" position="177.589587"/>
+		<joint_state joint="j2s7s300_joint_7_left" position="90"/>
+		<joint_state joint="j2s7s300_joint_finger_1_left" position="0"/>
+		<joint_state joint="j2s7s300_joint_finger_2_left" position="0"/>
+		<joint_state joint="j2s7s300_joint_finger_3_left" position="0"/>
+	</model_state>
+
+	<model_state model="default_up" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="32.21316" />
+		<joint_state joint="j2s7s300_joint_2_right" position="268.890114" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-111.356621" />
+		<joint_state joint="j2s7s300_joint_4_right" position="56.589729" />
+		<joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
+		<joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
+		<joint_state joint="j2s7s300_joint_7_right" position="-40"/>
+		<joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
+		<joint_state joint="j2s7s300_joint_2_left" position="91.110953" />
+		<joint_state joint="j2s7s300_joint_3_left" position="111.355557" />
+		<joint_state joint="j2s7s300_joint_4_left" position="303.410269" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
+		<joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
+		<joint_state joint="j2s7s300_joint_7_left" position="40"/>
+	</model_state>
+
+	<model_state model="default_up_hands_hor" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="32.21316" />
+		<joint_state joint="j2s7s300_joint_2_right" position="268.890114" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-111.356621" />
+		<joint_state joint="j2s7s300_joint_4_right" position="56.589729" />
+		<joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
+		<joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
+		<joint_state joint="j2s7s300_joint_7_right" position="32.099303" />
+		<joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
+		<joint_state joint="j2s7s300_joint_2_left" position="91.110953" />
+		<joint_state joint="j2s7s300_joint_3_left" position="111.355557" />
+		<joint_state joint="j2s7s300_joint_4_left" position="303.410269" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
+		<joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
+		<joint_state joint="j2s7s300_joint_7_left" position="-32.103809" />
+	</model_state>
+
+	<model_state model="default_high" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="32.21316" />
+		<joint_state joint="j2s7s300_joint_2_right" position="210" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-141.356621" />
+		<joint_state joint="j2s7s300_joint_4_right" position="80" />
+		<joint_state joint="j2s7s300_joint_5_right" position="18.905967" />
+		<joint_state joint="j2s7s300_joint_6_right" position="199.071277" />
+		<joint_state joint="j2s7s300_joint_7_right" position="-80"/>
+		<joint_state joint="j2s7s300_joint_1_left" position="-32.213633" />
+		<joint_state joint="j2s7s300_joint_2_left" position="150" />
+		<joint_state joint="j2s7s300_joint_3_left" position="141.355557" />
+		<joint_state joint="j2s7s300_joint_4_left" position="280" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-18.901325" />
+		<joint_state joint="j2s7s300_joint_6_left" position="160.92917" />
+		<joint_state joint="j2s7s300_joint_7_left" position="80"/>
+	</model_state>
+
+	<model_state model="watchit_eye" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="20.000091" />
+		<joint_state joint="j2s7s300_joint_2_right" position="280" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-90" />
+		<joint_state joint="j2s7s300_joint_4_right" position="70" />
+		<joint_state joint="j2s7s300_joint_6_right" position="200" />
+		<joint_state joint="j2s7s300_joint_7_right" position="0.007183" />
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+		<joint_state joint="j2s7s300_joint_1_left" position="75.458334" />
+		<joint_state joint="j2s7s300_joint_2_left" position="93.970356" />
+		<joint_state joint="j2s7s300_joint_3_left" position="66.817544" />
+		<joint_state joint="j2s7s300_joint_4_left" position="289.739632" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-26.268747" />
+		<joint_state joint="j2s7s300_joint_6_left" position="106.131206" />
+		<joint_state joint="j2s7s300_joint_7_left" position="46.770345" />
+		<joint_state joint="j2s7s300_joint_finger_1_left" position="80" />
+		<joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+	</model_state>
+
+	<model_state model="watchit_point" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="20" />
+		<joint_state joint="j2s7s300_joint_2_right" position="280" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-90" />
+		<joint_state joint="j2s7s300_joint_4_right" position="70" />
+		<joint_state joint="j2s7s300_joint_6_right" position="200" />
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+		<joint_state joint="j2s7s300_joint_1_left" position="69.628878" />
+		<joint_state joint="j2s7s300_joint_2_left" position="91.341382" />
+		<joint_state joint="j2s7s300_joint_3_left" position="106.904354" />
+		<joint_state joint="j2s7s300_joint_4_left" position="311.394809" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-179.939502" />
+		<joint_state joint="j2s7s300_joint_6_left" position="85.310938" />
+		<joint_state joint="j2s7s300_joint_7_left" position="94.673017" />
+		<joint_state joint="j2s7s300_joint_finger_1_left" position="80" />
+		<joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+	</model_state>
+
+	<model_state model="open_fingers" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_1_left" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+	</model_state>
+
+	<model_state model="point_fingers" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_finger_1_right" position="80" />
+		<joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+		<joint_state joint="j2s7s300_joint_finger_1_left"  position="80" />
+		<joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
+		<joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
+	</model_state>
+
+	<model_state model="inspect_right" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="-70.022505" />
+		<joint_state joint="j2s7s300_joint_2_right" position="243.12705" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-61.566181" />
+		<joint_state joint="j2s7s300_joint_4_right" position="101.739268" />
+		<joint_state joint="j2s7s300_joint_5_right" position="23.090144" />
+		<joint_state joint="j2s7s300_joint_6_right" position="289.659987" />
+		<joint_state joint="j2s7s300_joint_7_right" position="-109.292105" />
+	</model_state>
+
+	<model_state model="inspect_left" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_left" position="70.055565" />
+		<joint_state joint="j2s7s300_joint_2_left" position="116.932587" />
+		<joint_state joint="j2s7s300_joint_3_left" position="61.447979" />
+		<joint_state joint="j2s7s300_joint_4_left" position="258.260936" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-23.033134" />
+		<joint_state joint="j2s7s300_joint_6_left" position="70.372164" />
+		<joint_state joint="j2s7s300_joint_7_left" position="109.205596" />
+	</model_state>
+
+	<!--
+	Polar hand: 50, -180
+	Position hand: -0.4, 0.0, 1.1
+	-->
+	<model_state model="inspect_top_right" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_right" position="-76.582162" />
+		<joint_state joint="j2s7s300_joint_2_right" position="244.894413" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-62.20114" />
+		<joint_state joint="j2s7s300_joint_4_right" position="117.898173" />
+		<joint_state joint="j2s7s300_joint_5_right" position="72.732329" />
+		<joint_state joint="j2s7s300_joint_6_right" position="278.534047" />
+		<joint_state joint="j2s7s300_joint_7_right" position="-71.274835" />
+	</model_state>
+
+	<model_state model="inspect_top_left" time_stamp="0">
+		<joint_state joint="j2s7s300_joint_1_left" position="76.573402" />
+		<joint_state joint="j2s7s300_joint_2_left" position="115.134075" />
+		<joint_state joint="j2s7s300_joint_3_left" position="62.161633" />
+		<joint_state joint="j2s7s300_joint_4_left" position="242.122426" />
+		<joint_state joint="j2s7s300_joint_5_left" position="-72.678551" />
+		<joint_state joint="j2s7s300_joint_6_left" position="81.52789" />
+		<joint_state joint="j2s7s300_joint_7_left" position="71.27123" />
+	</model_state>
+	
+</Group>
