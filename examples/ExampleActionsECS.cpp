@@ -334,6 +334,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
   entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
+  entity.subscribe("ClearTrajectory", &ExampleActionsECS::onClearTrajectory, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -786,6 +787,11 @@ bool ExampleActionsECS::initGraphics()
     RLOG(0, "Setting animation mode to %d", a);
   }, "Toggle animation mode: 0: none, 1: successful predictions, 2: all predictions");
 
+  viewer->setKeyCallback('S', [this](char k)
+  {
+    RLOG(0, "Interrupting action");
+    entity.publish("ClearTrajectory");
+  }, "Interrupt action");
 
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
@@ -1165,6 +1171,8 @@ void ExampleActionsECS::onTrajectoryMoving(bool isMoving)
   {
     return;
   }
+
+  RLOG_CPP(0, "TrajectoryMoving event got false");
 
   // If the trajectory has finshed, we can report success.
   std::vector<ActionResult> fbmsg(1);
@@ -1551,6 +1559,19 @@ void ExampleActionsECS::onProcess()
 void ExampleActionsECS::onSetTurboMode(bool enable)
 {
   ActionBase::setTurboMode(enable);
+}
+
+void ExampleActionsECS::onClearTrajectory()
+{
+  RLOG(0, "ExampleActionsECS::clearTrajectory()");
+
+  std::vector<ActionResult> explanation(1);
+  explanation[0].error = "Actions interrupted";
+  explanation[0].reason = "Somebody interrupted the actions";
+  explanation[0].suggestion = "Wait for the next actions";
+  explanation[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+  explanation[0].actionCommand = actionStack.empty() ? std::string() : actionStack[0];
+  entity.publish("ActionResult", false, 0.0, explanation);
 }
 
 bool ExampleActionsECS::isFinalPoseRunning() const

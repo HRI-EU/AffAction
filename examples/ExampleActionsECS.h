@@ -165,6 +165,7 @@ private:
   void onActionResult(bool success, double quality, std::vector<ActionResult> results);
   void onProcess();
   void onSetTurboMode(bool enable);
+  void onClearTrajectory();
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;

@@ -153,6 +153,10 @@ void TrajectoryComponent::onClearTrajectory()
 {
   RLOG(0, "TrajectoryComponent::clearTrajectory()");
   tc->clear(true);
+
+  // We set both to zero so that the TrajectoryMoving event will not trigger.
+  lastMotionEndTime = 0.0;
+  motionEndTime = 0.0;
 }
 
 const MatNd* TrajectoryComponent::getActivationPtr() const
