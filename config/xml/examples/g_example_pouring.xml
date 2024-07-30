@@ -29,7 +29,7 @@
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
        resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
-       name="JacoDefaultPoseArmsHigh"
+       name="default"
        usage="
 &#xA;  Configuration file to load the Affordance Action scenario. To change the
 &#xA;  robot configuration from low arm mount to shoulder arm mount, just
@@ -143,7 +143,7 @@
     </Group>
 	-->
 
-    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="">
+    <model_state model="default" time_stamp="0">
         <joint_state joint="j2s7s300_joint_1_right" position="20"/>
         <joint_state joint="j2s7s300_joint_2_right" position="280"/>
         <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
@@ -167,13 +167,7 @@
         <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
     </model_state>
 
-    <BroadPhase DistanceThreshold="0.001">
-        <Tree root="upperarm_left" />
-        <Tree root="upperarm_right" />
-        <Body name="center_post_link" />
-        <Body name="screen_link" />
-        <Body name="head_kinect_link" />
-        <Body name="base_link" />
-    </BroadPhase>
+	<xi:include href="g_modelstates.xml"/>
+	<xi:include href="g_collisionmodel.xml"/>
 
 </Graph>

@@ -91,19 +91,7 @@
 	<joint_state joint="j2s7s300_joint_7_left" position="0"/>
   </model_state>
 
-  <Group>
-	<xi:include href="g_modelstates.xml"/>
-  </Group>
-
-  <!-- The collision model. -->
-  <BroadPhase DistanceThreshold="0.001">
-    <Tree root="upperarm_left"/>
-    <Tree root="upperarm_right"/>
-    <Body name="center_post_link"/>
-    <Body name="screen_link"/>
-    <Body name="head_kinect_link"/>
-    <Body name="adapter_shoulder_left_3"/>
-    <Body name="adapter_shoulder_right_3"/> 
-  </BroadPhase>
+  <xi:include href="g_modelstates.xml"/>
+  <xi:include href="g_collisionmodel.xml"/>
 	
 </Graph>
