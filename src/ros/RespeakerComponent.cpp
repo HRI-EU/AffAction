@@ -135,7 +135,7 @@ void RespeakerComponent::onStart()
     RLOG_CPP(1, "Advertising topic /robot_should_listen");
     this->robot_should_listen_pub = nh->advertise<audio_msgs::TalkFlag>("/robot_should_listen", 1);
     this->dialogue_pub = nh->advertise<std_msgs::String>("/event_speech", 10);
-    this->reset_llm_pub = nh->advertise<std_msgs::String>("/scene/events", 0);
+    this->reset_llm_pub = nh->advertise<std_msgs::String>("/event_external", 0);
     RLOG_CPP(1, "Done RespeakerComponent::onStart()");
   }
 
