@@ -421,9 +421,6 @@ void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appea
   {
     std_msgs::String resetLLMString;
 
-
-    nlohmann::json outerJson;
-
     nlohmann::json json;
     json["id"] = "person_changed";
 
@@ -435,12 +432,7 @@ void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appea
     json["present"] = true;
     json["publish"] = true;
 
-    nlohmann::json dataJson;
-    dataJson["data"] = json;
-
-    outerJson.push_back(dataJson);
-
-    resetLLMString.data = outerJson.dump();
+    resetLLMString.data = json.dump();
 
     RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
     reset_llm_pub.publish(resetLLMString);
