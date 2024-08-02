@@ -31,7 +31,6 @@
 *******************************************************************************/
 
 #include "TrajectoryPredictor.h"
-#include "ActionBase.h"
 
 #include <IkSolverConstraintRMR.h>
 #include <Rcs_typedef.h>
@@ -128,7 +127,7 @@ namespace aff
  ******************************************************************************/
 TrajectoryPredictor::PredictionResult::PredictionResult() :
   idx(-1), success(false), minDist(0.0), jlCost(0.0), collCost(0.0), actionCost(0.0),
-  elbowNS(0.0), wristNS(0.0), t_predict(0.0), graph(nullptr)
+  scaleJointSpeeds(1.0), elbowNS(0.0), wristNS(0.0), t_predict(0.0), graph(nullptr)
 {
 }
 

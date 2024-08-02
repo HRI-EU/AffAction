@@ -61,6 +61,13 @@ public:
 
 protected:
 
+  virtual void computeFingerTipPosition(const ActionScene& scene,
+                                        const RcsGraph* graph,
+                                        const RcsBody* objBdy,
+                                        const RcsJoint* shldrJnt,
+                                        double fingerTipPosition[3]) const;
+  virtual double getDefaultFingerDistance() const;
+
   std::vector<std::string> createTasksXML() const;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
   std::vector<std::string> getManipulators() const;
@@ -77,6 +84,7 @@ protected:
   bool keepTasksActiveAfterEnd;
   double pointDirection[3];
   double fingerTipPosition[3];
+  double fingerDistance;
   std::vector<double> pointingFingerAngles;
   std::vector<std::tuple<std::string, std::string,double>> manipulatorEntityMap;
 };

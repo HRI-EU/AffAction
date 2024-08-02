@@ -46,6 +46,8 @@
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
 #include <Rcs_utilsCPP.h>
+#include <Rcs_shape.h>
+#include <Rcs_geometry.h>
 
 #include <algorithm>
 
@@ -55,13 +57,24 @@ namespace aff
 {
 REGISTER_ACTION(ActionPoint, "point");
 
+#define POINT_DEFAULT_DISTANCE (0.1)
+
 ActionPoint::ActionPoint(const ActionScene& scene,
                          const RcsGraph* graph,
-                         std::vector<std::string> params) : keepTasksActiveAfterEnd(false)
+                         std::vector<std::string> params) :
+  keepTasksActiveAfterEnd(false), fingerDistance(POINT_DEFAULT_DISTANCE)
 {
   Vec3d_setZero(pointDirection);
   Vec3d_setZero(fingerTipPosition);
   parseParams(params);
+
+  auto it = std::find(params.begin(), params.end(), "distance");
+  if (it != params.end())
+  {
+    fingerDistance = std::stod(*(it + 1));
+    params.erase(it + 1);
+    params.erase(it);
+  }
 
   if (params.empty())
   {
@@ -166,9 +179,6 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   std::sort(manipulatorEntityMap.begin(), manipulatorEntityMap.end(),
             [&](std::tuple<std::string,std::string,double>& t1, std::tuple<std::string,std::string,double>& t2)
   {
-    // double d1 = pointDistance(scene, graph, std::get<0>(t1), std::get<1>(t1));
-    // double d2 = pointDistance(scene, graph, std::get<0>(t2), std::get<1>(t2));
-
     return std::get<2>(t1) < std::get<2>(t2);
   });
 
@@ -233,14 +243,10 @@ bool ActionPoint::initialize(const ActionScene& scene,
   const RcsJoint* shldrJnt = hand->getBaseJoint(graph);
   this->shoulderFrame = shldrJnt->name;
 
-  const RcsBody* objBdy = object->body(graph);
-  double xyzMin[3], xyzMax[3], centroid[3];
-  Vec3d_copy(xyzMin, objBdy->A_BI.org);
-  Vec3d_copy(xyzMax, objBdy->A_BI.org);
-  RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
+  double fingerTipPosition[3];
+  computeFingerTipPosition(scene, graph, object->body(graph), shldrJnt, fingerTipPosition);
 
-  Vec3d_set(centroid, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), 0.5*(xyzMin[2]+xyzMax[2]));
-  Vec3d_sub(this->pointDirection, centroid, shldrJnt->A_JI.org);  // Point direction is from shoulder to object
+  Vec3d_sub(this->pointDirection, fingerTipPosition, shldrJnt->A_JI.org);  // Point direction is from shoulder to object
   double len = Vec3d_normalizeSelf(pointDirection);
   if (len==0.0)
   {
@@ -249,13 +255,68 @@ bool ActionPoint::initialize(const ActionScene& scene,
                           "Normalization failed - shoulder and object centroid coincide");
   }
 
-  const double reach = std::min(0.9*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, centroid)-0.1);
+
+
+  const double reach = std::min(0.9*hand->reach, Vec3d_distance(shldrJnt->A_JI.org, fingerTipPosition) - fingerDistance);
   Vec3d_constMulAndAdd(this->fingerTipPosition, shldrJnt->A_JI.org, pointDirection, reach);
   this->taskOri = "Align-" + pointerFrame + "-" + pointBdyName;
   this->taskFingers = pointerFrame + "_fingers";
   this->taskFingerTip = pointerFrame + "_XYZ";
 
   return true;
+}
+
+void ActionPoint::computeFingerTipPosition(const ActionScene& scene,
+                                           const RcsGraph* graph,
+                                           const RcsBody* objBdy,
+                                           const RcsJoint* shldrJnt,
+                                           double fingerTipPos[3]) const
+{
+  // Compute object's AABB in world coordinates
+  double xyzMin[3], xyzMax[3];
+  Vec3d_copy(xyzMin, objBdy->A_BI.org);
+  Vec3d_copy(xyzMax, objBdy->A_BI.org);
+  RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
+
+  // Get centroid of frontal plane facing towards the robot. We do use the
+  // frontal face so that we avoid pointing on the top of the object.
+  HTr A_RI = scene.getAgents<RobotAgent>()[0]->getBodyTransform(graph);
+  double vertices[8][3];
+  Math_computeVerticesAABB(vertices, xyzMin, xyzMax);
+
+  // Transform the 8 AABB vertices into robot's base frame
+  std::vector<std::vector<double>> v(8, std::vector<double>(3, 0.0));
+  for (int i = 0; i < 8; ++i)
+  {
+    Vec3d_invTransform(v[i].data(), &A_RI, vertices[i]);
+  }
+
+  // Sort the vertices according to their proximity to the base frame
+  std::sort(v.begin(), v.end(),
+            [&](std::vector<double>& v1, std::vector<double>& v2)
+  {
+    return v1[0] < v2[0];
+  });
+
+  // Compute the mean of the closest face which we assume to be
+  // the first 4 vertices. There might be degenerate cases of
+  // the first 4 vertices not belonging to the same face. We
+  // ignore this here.
+  double zMin = DBL_MAX, zMax = -DBL_MAX;
+  Vec3d_setZero(fingerTipPos);
+  for (int i = 0; i < 4; ++i)
+  {
+    fingerTipPos[0] += v[i][0];
+    fingerTipPos[1] += v[i][1];
+    fingerTipPos[2] += v[i][2];
+    zMin = std::min(zMin, v[i][2]);
+    zMax = std::max(zMax, v[i][2]);
+  }
+  Vec3d_constMulSelf(fingerTipPos, 0.25);
+  fingerTipPos[2] += 0.25 * (zMax-zMin);
+
+  // Transform back to into world coordinates (that's the task description)
+  Vec3d_transformSelf(fingerTipPos, &A_RI);
 }
 
 void ActionPoint::print() const
@@ -385,6 +446,11 @@ std::string ActionPoint::getActionCommand() const
     str += " duration " + std::to_string(getDuration());
   }
 
+  if (fingerDistance != getDefaultFingerDistance())
+  {
+    str += " distance " + std::to_string(fingerDistance);
+  }
+
   return str;
 }
 
@@ -410,6 +476,10 @@ double ActionPoint::getDefaultDuration() const
   return 15.0;
 }
 
+double ActionPoint::getDefaultFingerDistance() const
+{
+  return POINT_DEFAULT_DISTANCE;
+}
 
 
 
@@ -422,6 +492,9 @@ double ActionPoint::getDefaultDuration() const
 /*******************************************************************************
  *
  ******************************************************************************/
+#define POKE_DEFAULT_DISTANCE (-0.05)
+#define POKE_RETRACT_DISTANCE (0.1)
+
 class ActionPoke : public ActionPoint
 {
 public:
@@ -430,6 +503,21 @@ public:
              const RcsGraph* graph,
              std::vector<std::string> params) : ActionPoint(scene, graph, params)
   {
+    // We pass params by value, therefore distance is still part of params
+    // when we parse it here again. We can therefore safely repeat the parent's
+    // class initialization at this point.
+    auto it = std::find(params.begin(), params.end(), "distance");
+    if (it != params.end())
+    {
+      fingerDistance = std::stod(*(it + 1));
+      params.erase(it + 1);
+      params.erase(it);
+    }
+    else
+    {
+      fingerDistance = POKE_DEFAULT_DISTANCE;
+    }
+
     keepTasksActiveAfterEnd = true;
     Vec3d_setZero(retractPosition);
   }
@@ -443,22 +531,9 @@ public:
                   size_t solutionRank)
   {
     bool success = ActionPoint::initialize(scene, graph, solutionRank);
-
-    auto objects = scene.getSceneEntities(pointBdyName);
-    RCHECK(objects.size() == 1);
-    auto object = objects[0];
-
-    const RcsBody* objBdy = object->body(graph);
-    double xyzMin[3], xyzMax[3], centroid[3];
-    Vec3d_copy(xyzMin, objBdy->A_BI.org);
-    Vec3d_copy(xyzMax, objBdy->A_BI.org);
-    RcsGraph_computeBodyAABB(graph, objBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, NULL);
-
-    Vec3d_set(centroid, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), xyzMin[2]+0.75*(xyzMax[2]-xyzMin[2]));
     pointDirection[2] *= 0.25;
     Vec3d_normalizeSelf(pointDirection);
-    Vec3d_copy(fingerTipPosition, centroid);
-    Vec3d_constMulAndAdd(retractPosition, centroid, pointDirection, -0.1);
+    Vec3d_constMulAndAdd(retractPosition, fingerTipPosition, pointDirection, -POKE_RETRACT_DISTANCE);
 
     return success;
   }
@@ -497,6 +572,11 @@ public:
     a1->addActivation(t_end + afterTime, false, 0.5, taskFingerTip);
 
     return a1;
+  }
+
+  virtual double getDefaultFingerDistance() const
+  {
+    return POKE_DEFAULT_DISTANCE;
   }
 
   double retractPosition[3];
