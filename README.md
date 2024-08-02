@@ -178,12 +178,31 @@ will be selected. This allows to give the pose command a bit more robistness.
 ```bash
 point(<object-or-agent-to-point-at> 
       <manipulator (optional)> 
+      <"distance" distance-to-object-front-face (optional, default is 0.1 m)>
 ```
 
 Points at an object or agent. Anything that is specified as a type is being considered.
 If the entity to point at is a HumanAgent, the pointing will be directed towards the
 agent's head. The hand that points will be selected automatically, except if a second
-argument is passed. This will be interpreted as the manipulator that is to point.
+argument is passed. This will be interpreted as the manipulator that is to point. The
+optional parameter "distance" allosw to specify how close the fingers get towards the 
+front face of the object-to-point-at's axis-aligned bounding box. Please note that when
+giving a negative distance, this wil lead to a penetration of the fingers into the
+object, likely leading to an invalid action due to a collision. For this, please use 
+the "poke" action.
+
+
+### The "poke" action
+
+```bash
+poke(<object-or-agent-to-point-at> 
+      <manipulator (optional)> 
+      <"distance" distance-to-object-front-face (optional, default is -0.05 m)>
+```
+
+Pokes at an object or agent. This action is very similar to the point action, except 
+that the fingers approach the object with a more flat angle, and after poking the hand 
+retracts from the object.
 
 
 ### The "shake" action
@@ -203,9 +222,6 @@ double_get (<object1, object2>)
 
 ### The "double_put" action
 double_put(<object1>, <object2>, (target1), (target2))
-
-### The "poke" action
-poke(<switch-object>)
 
 ### The "gaze" action
 gaze(<object to look at>)

@@ -533,7 +533,8 @@ public:
     bool success = ActionPoint::initialize(scene, graph, solutionRank);
     pointDirection[2] *= 0.25;
     Vec3d_normalizeSelf(pointDirection);
-    Vec3d_constMulAndAdd(retractPosition, fingerTipPosition, pointDirection, -POKE_RETRACT_DISTANCE);
+    Vec3d_constMulAndAdd(retractPosition, fingerTipPosition, pointDirection,
+                         -POKE_RETRACT_DISTANCE+fingerDistance);
 
     return success;
   }
