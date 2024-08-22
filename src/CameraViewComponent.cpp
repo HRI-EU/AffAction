@@ -114,8 +114,6 @@ void CameraViewComponent::handleViewChange(const HTr* A_camI)
   {
     HTr camTrf;
     HTr_copy(&camTrf, A_camI);
-    // Mat3d_rotateSelfAboutXYZAxis(camTrf.rot, 1, -M_PI_2);
-    // Mat3d_rotateSelfAboutXYZAxis(camTrf.rot, 0, M_PI_2);
     char trfStr[256];
     HTr_toString(trfStr, &camTrf);
     getEntity()->publish("RenderCommand", std::string("CameraTransform"),

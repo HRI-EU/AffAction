@@ -49,9 +49,7 @@ public:
 
   /*! \brief Constructor depends only on EntityBase.
    */
-  FaceGestureComponent(EntityBase* parent,
-                       const std::string& faceName,
-                       const RcsMeshData* mesh);
+  FaceGestureComponent(EntityBase* parent, const std::string& faceName);
 
   /*! \brief Virtual destructor to allow proper inheritance.
    */
@@ -94,7 +92,6 @@ protected:
   void estimateMouthOpen(const RcsMeshData* faceMesh, double faceHeight, std::string& debugMsg);
 
   std::string faceName;
-  const RcsMeshData* faceMesh;
   bool smiling;
   bool mouthOpen;
   bool rightEyeOpen;

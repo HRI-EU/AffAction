@@ -31,6 +31,7 @@
 
 *******************************************************************************/
 
+#if 0
 #ifndef LANDMARKZMQCOMPONENT_H
 #define LANDMARKZMQCOMPONENT_H
 
@@ -379,3 +380,4 @@ private:
 } // namespace
 
 #endif // LANDMARKZMQCOMPONENT_H
+#endif // 0

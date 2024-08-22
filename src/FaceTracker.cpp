@@ -7,15 +7,15 @@
   met:
 
   1. Redistributions of source code must retain the above copyright notice,
-   this list of conditions and the following disclaimer.
+     this list of conditions and the following disclaimer.
 
   2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
 
   3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
   IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -43,6 +43,7 @@
 #include <Rcs_resourcePath.h>
 #include <Rcs_utilsCPP.h>
 #include <Rcs_body.h>
+#include <Rcs_shape.h>
 
 #include <string>
 #include <iostream>
@@ -70,7 +71,8 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
 {
   std::string meshFile = Rcs::getAbsoluteFileName("FaceMesh-holes-468.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
-  RCHECK(this->mesh && mesh->nVertices>=468);
+  RCHECK(this->mesh);
+  RCHECK(mesh->nVertices >= 468);
   RLOG(5, "Face mesh has %d vertices and %d faces",
        mesh->nVertices, mesh->nFaces);
   this->landmarks = MatNd_create(468, 3);
@@ -102,9 +104,9 @@ std::string FaceTracker::getCameraName() const
 
 void FaceTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
 {
-  std::lock_guard<std::mutex> lock(mtx);
+  std::lock_guard<std::mutex> lock(landmarksMtx);
 
-  RLOG_CPP(2, "parse" << json.dump());
+  //RLOG_CPP(5, "parse" << json.dump());
   for (auto& entry : json.items())
   {
     const std::string& key = entry.key();
@@ -139,7 +141,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
 
 void FaceTracker::updateGraph(RcsGraph* graph)
 {
-  std::lock_guard<std::mutex> lock(mtx);
+  std::lock_guard<std::mutex> lock(landmarksMtx);
 
   // The landmarks array is in camera coordinates. We transform it into the
   // face frame to display this coherently
@@ -149,7 +151,7 @@ void FaceTracker::updateGraph(RcsGraph* graph)
   HTr A_FI;
   HTr_transform(&A_FI, &this->A_camI, A_FC);
 
-  // Amplify
+  // Amplify the face rotations
   double tmp6[6];
   HTr_to6DVector(tmp6, &A_FI);
   tmp6[5] = Math_fmodAngle(tmp6[5]+M_PI);
@@ -159,13 +161,15 @@ void FaceTracker::updateGraph(RcsGraph* graph)
   tmp6[5] += M_PI;
   HTr_from6DVector(&A_FI, tmp6);
 
-  // Shift
-  A_FI.org[0] += 1.75*DISTANCE_FACE_TO_CAM;
+  // Shift the face away from the camera. \todo: Improve this.
+  //A_FI.org[0] += 1.75 * DISTANCE_FACE_TO_CAM;
+  A_FI.org[0] += 0.95 * DISTANCE_FACE_TO_CAM;
 
   // Look down
   Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(10.0));
 
   double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, faceName.c_str()));
+  RCHECK_MSG(q6, "Body with name '%s' and six rigid body joints not found - please make sure it exists in the xml file.", faceName.c_str());
   lpFiltTrf(q6, &A_FI, 0.05);
   //RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
 
@@ -175,6 +179,36 @@ void FaceTracker::updateGraph(RcsGraph* graph)
     Vec3d_transform(dst, &this->A_camI, MatNd_getRowPtr(landmarks, i));
     dst[0] += DISTANCE_FACE_TO_CAM;
   }
+
+  RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
+  RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
+  for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
+  {
+    RcsShape* sh = &faceBdy->shapes[i];
+    if (sh->type == RCSSHAPE_MESH)
+    {
+      //RLOG(0, "Found mesh at index %d", i);
+      if ((sh->mesh->nVertices==mesh->nVertices) && (sh->mesh->nFaces==mesh->nFaces))
+      {
+        if (RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
+        {
+          //RLOG(0, "Copying mesh with %d vertices and %d faces", mesh->nVertices, mesh->nFaces);
+          for (unsigned int i = 0; i < mesh->nVertices; ++i)
+          {
+            double* dst = &sh->mesh->vertices[3 * i];
+            Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
+          }
+        }
+        else
+        {
+          RLOG(1, "Face mesh not resizeable - skipping vertices updating. Please fix in xml file!");
+        }
+
+
+      }
+    }
+  }
+
 
   // Update debug graphics
   if (sw.valid())
@@ -247,6 +281,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
 
   viewer->add(sw.get());
 
+  // We show the debug face in world coordinates
   this->faceMeshNode = new Rcs::MeshNode(this->mesh);
   faceMeshNode->clearMesh();
   viewer->add(faceMeshNode.get());

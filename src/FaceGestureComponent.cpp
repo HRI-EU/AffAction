@@ -87,15 +87,12 @@ namespace aff
 {
 
 FaceGestureComponent::FaceGestureComponent(EntityBase* parent,
-                                           const std::string& faceName_,
-                                           const RcsMeshData* mesh) :
-  ComponentBase(parent), faceName(faceName_), faceMesh(mesh), smiling(false), mouthOpen(false),
+                                           const std::string& faceName_) :
+  ComponentBase(parent), faceName(faceName_), smiling(false), mouthOpen(false),
   rightEyeOpen(false), leftEyeOpen(false), nodding(false), headShaking(false)
 {
   subscribe("PostUpdateGraph", &FaceGestureComponent::onPostUpdateGraph);
 
-  // Number of vertices: Face only: 468, face + iris: 478
-  RCHECK_MSG(faceMesh->nVertices==468 || faceMesh->nVertices == 478, "faceMesh->nVertices=%d", faceMesh->nVertices);
 }
 
 FaceGestureComponent::~FaceGestureComponent()
@@ -107,6 +104,27 @@ void FaceGestureComponent::onUpdateGraph(RcsGraph* graph)
 {
   RcsBody* face = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK(face);
+  RcsMeshData* faceMesh = nullptr;
+
+  for (unsigned int i = 0; i < face->nShapes; ++i)
+  {
+    const RcsShape* sh = &face->shapes[i];
+    if (sh->type != RCSSHAPE_MESH)
+    {
+      continue;
+    }
+
+    // Number of vertices: Face only: 468, face + iris: 478
+    RCHECK(sh->mesh);
+    if (sh->mesh->nVertices == 468 || sh->mesh->nVertices == 478)
+    {
+      faceMesh = sh->mesh;
+      break;
+    }
+
+  }
+
+  RCHECK(faceMesh);
 
   const double faceHeight = Vec3d_distance(&faceMesh->vertices[foreheadTop],
                                            &faceMesh->vertices[chinCenter]);

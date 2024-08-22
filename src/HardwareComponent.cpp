@@ -34,6 +34,10 @@
 #include "JacoShmComponent.h"
 #include "TTSComponent.h"
 #include "WebsocketActionComponent.h"
+#include "LandmarkZmqComponent.h"
+#include "CameraViewComponent.h"
+#include "FaceGestureComponent.h"
+#include "FaceTracker.h"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -45,12 +49,34 @@
 #include <Rcs_typedef.h>
 #include <Rcs_cmdLine.h>
 #include <Rcs_timer.h>
+#include <Rcs_utilsCPP.h>
 #include <Rcs_macros.h>
 
 #include <thread>
 
 
 #define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
+
+
+
+template<typename T>
+bool getValue(const std::vector<std::string>& params, const std::string& key, T& value)
+{
+  auto it = std::find(params.begin(), params.end(), key);
+  if (it != params.end())
+  {
+    std::stringstream stream(*(it + 1));
+    stream >> value;
+    return true;
+  }
+
+  return false;
+}
+
+bool hasKey(const std::vector<std::string>& params, const std::string& key)
+{
+  return std::find(params.begin(), params.end(), key) == params.end() ? false : true;
+}
 
 
 
@@ -146,6 +172,9 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
 
+  auto argvStrVec = argP.copyArgvToVector();
+  auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
   if (argP.hasArgument("-respeaker", "Start with Respeaker") && (!dryRun))
   {
     components.push_back(createComponent(entity, graph, scene, "-respeaker"));
@@ -191,6 +220,36 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-landmarks_ros"));
   }
 
+  // The debug graphics will be handled in initGraphics.
+  if (dryRun)
+  {
+    argP.addDescription("-landmarks_zmq", "Start with ZMQ landmarks component");
+    argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");
+    argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
+    argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
+  }
+  else if (argP.hasArgument("-landmarks_zmq"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-landmarks_zmq", argvString));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-camera_view", "Add camera view component");
+    argP.addDescription("-camera_view_body", "For '-camera_view': Body name to which the camera will be attached. Default: face");
+  }
+  else if (argP.hasArgument("-camera_view"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-camera_view", argvString));
+  }
+
+  if (argP.hasArgument("-face_gesture", "Add face gesture component") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-face_gesture", argvString));
+  }
+
+
+
   for (size_t i = 0; i < components.size(); ++i)
   {
     RCHECK_MSG(components[i], "Found NULL component at index %zu", i);
@@ -202,9 +261,9 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
 ComponentBase* createComponent(EntityBase& entity,
                                const RcsGraph* graph,
                                const ActionScene* scene,
-                               const std::string& componentName)
+                               const std::string& componentName,
+                               std::string extraArgs)
 {
-
   if (componentName == "-tts")
   {
     return new TTSComponent(&entity);
@@ -230,6 +289,49 @@ ComponentBase* createComponent(EntityBase& entity,
   else if (componentName == "-websocket")
   {
     return new WebsocketActionComponent(&entity);
+  }
+  else if (componentName == "-landmarks_zmq")
+  {
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string landmarksCamera = "camera_0";
+    getValue<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
+    RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
+    if (!cam)
+    {
+      RLOG_CPP(0, "Couldn't find camera body '" << landmarksCamera << "' for LandmarkZmqComponent");
+      return nullptr;
+    }
+
+    RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+    LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity);
+    lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
+
+    if (hasKey(argsVec, "-face_tracking"))
+    {
+      std::string faceBdyName = "face";
+      getValue<std::string>(argsVec, "-face_bodyName", faceBdyName);
+      auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
+    }
+
+    // Initialize all tracker camera transforms from the xml file
+    lmc->setCameraTransform(&cam->A_BI);
+
+    return lmc;
+  }
+  else if (componentName == "-camera_view")
+  {
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string camBdyName = "face";
+    getValue<std::string>(argsVec, "-camera_view_body", camBdyName);
+    RCHECK_MSG(RcsGraph_getBodyByName(graph, camBdyName.c_str()), "Camera attachment for parameter '-camera_view_body' %s not found", camBdyName.c_str());
+    return new CameraViewComponent(&entity, camBdyName, false);
+  }
+  else if (componentName == "-face_gesture")
+  {
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string faceBdyName = "face";
+    getValue<std::string>(argsVec, "-face_bodyName", faceBdyName);
+    return new aff::FaceGestureComponent(&entity, faceBdyName);
   }
 
 #if defined USE_ROS

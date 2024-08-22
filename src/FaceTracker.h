@@ -74,6 +74,10 @@ public:
   bool addGraphics(Rcs::Viewer* viewer, const RcsBody* cameraFrame);
   void setScene(aff::ActionScene* scene);
   void updateAgents(RcsGraph* graph);
+
+  // These methods are onl used for adding the debug graphics,
+  // where the face mesh is transformed into world coordinates.
+  // \todo: Make this more consistent.
   void setCameraName(const std::string& cameraFrame);
   std::string getCameraName() const;
   const RcsMeshData* getMesh() const;
@@ -99,7 +103,7 @@ private:
   Rcs::Viewer* viewer;
   HTr A_camI;
   HTr faceTrf;
-  std::mutex mtx;
+  std::mutex landmarksMtx;
   std::string cameraName;
   std::string faceName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;

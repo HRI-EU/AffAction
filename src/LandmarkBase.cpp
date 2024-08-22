@@ -332,7 +332,11 @@ void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer)
     if (ft)
     {
       const RcsBody* cam = RcsGraph_getBodyByName(getGraph(), ft->getCameraName().c_str());
-      ft->addGraphics(viewer, cam);
+      bool success = ft->addGraphics(viewer, cam);
+      if (!success)
+      {
+        RLOG_CPP(0, "Couldn't add debug graphics with camera '" << ft->getCameraName() <<"'");
+      }
     }
 
   }

@@ -86,6 +86,23 @@ public:
   void createDebugGraphics(Rcs::Viewer* viewer);
   void enableDebugGraphics(bool enable);
 
+  template<typename T>
+  std::vector<T*> getTrackers()
+  {
+    std::vector<T*> res;
+
+    for (size_t i = 0; i < trackers.size(); ++i)
+    {
+      T* ci = dynamic_cast<T*>(trackers[i].get());
+      if (ci)
+      {
+        res.push_back(ci);
+      }
+    }
+
+    return res;
+  }
+
 protected:
 
   std::vector<std::unique_ptr<TrackerBase>> trackers;

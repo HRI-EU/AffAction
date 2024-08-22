@@ -288,6 +288,7 @@ src/TextEditComponent.cpp
 src/ActionComponent.cpp
 src/HardwareComponent.cpp
 src/WebsocketActionComponent.cpp
+src/LandmarkZmqComponent.cpp
 )
 
 SET(EXAMPLE_SRCS

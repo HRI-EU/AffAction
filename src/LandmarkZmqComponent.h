@@ -31,49 +31,56 @@
 
 *******************************************************************************/
 
-#ifndef RCS_HARDWARECOMPONENT_H
-#define RCS_HARDWARECOMPONENT_H
+#ifndef AFF_LANDMARKZMQCOMPONENT_H
+#define AFF_LANDMARKZMQCOMPONENT_H
 
+#include "LandmarkBase.h"
 #include "ComponentBase.h"
-#include "ActionScene.h"
+
+#include <thread>
 
 
 namespace aff
 {
 
-std::vector<ComponentBase*> createComponents(EntityBase& entity,
-                                             const RcsGraph* graph,
-                                             const ActionScene* scene,
-                                             bool dryRun);
-
-std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
-                                                     const RcsGraph* graph,
-                                                     const ActionScene* scene,
-                                                     bool dryRun);
-
-ComponentBase* createComponent(EntityBase& entity,
-                               const RcsGraph* graph,
-                               const ActionScene* scene,
-                               const std::string& componentName,
-                               std::string extraArgs = std::string());
-
-template<typename T>
-std::vector<T*> getComponents(const std::vector<ComponentBase*>& components)
+class LandmarkZmqComponent : public ComponentBase, public LandmarkBase
 {
-  std::vector<T*> res;
+public:
 
-  for (size_t i = 0; i < components.size(); ++i)
-  {
-    T* ci = dynamic_cast<T*>(components[i]);
-    if (ci)
-    {
-      res.push_back(ci);
-    }
-  }
+  /*! \brief The argument connection can also be a filename. In that case,
+   *         the contents of the file will be parsed into a json string and
+   *         passed to the class methods, instead of running a zmq interface.
+   */
+  LandmarkZmqComponent(EntityBase* parent,
+                       std::string connection = "tcp://localhost:5555");
 
-  return res;
-}
+  virtual ~LandmarkZmqComponent();
 
-}   // namespace aff
+private:
 
-#endif   // RCS_HARDWARECOMPONENT_H
+  /*! \brief Same as in LandmarkBase with the addition of the time being handled
+   *         differently when data comes from a file.
+   */
+  void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
+
+  void onToggleJsonLogging();
+  void onEstimateCameraPose(int numFrames);
+  void fromFileThreadFunc(const std::string& fileName);
+  void zmqThreadFunc();
+  void startZmqThread();
+  void stopZmqThread();
+
+  std::string connectionStr;
+  bool threadRunning;
+  bool threadFunctionCompleted;
+  bool readDataFromFile;
+  bool logging;
+
+  int socketTimeoutInMsec;
+  double frameRate;
+  std::thread zmqThread;
+};
+
+} // namespace
+
+#endif // AFF_LANDMARKZMQCOMPONENT_H
