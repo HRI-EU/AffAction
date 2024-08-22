@@ -77,7 +77,6 @@ private:
   void guiCallback(std::string text);
   void onStart();
   void onStop();
-  mutable pthread_mutex_t mtx;
   Rcs::TextEditGui* gui;
   std::string windowTitle;
 

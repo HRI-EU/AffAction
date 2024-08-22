@@ -61,8 +61,6 @@ public:
 TextEditComponent::TextEditComponent(EntityBase* parent, const std::string& title) :
   ComponentBase(parent), gui(NULL), windowTitle(title)
 {
-  pthread_mutex_init(&this->mtx, NULL);
-
   subscribe("Start", &TextEditComponent::onStart);
   subscribe("Stop", &TextEditComponent::onStop);
 }
@@ -71,7 +69,6 @@ TextEditComponent::~TextEditComponent()
 {
   onStop();
   unsubscribe();
-  pthread_mutex_destroy(&this->mtx);
 }
 
 void TextEditComponent::onStart()
