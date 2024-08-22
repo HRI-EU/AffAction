@@ -43,9 +43,10 @@ namespace py = pybind11;
 #include <ActionFactory.h>
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
-#include <LandmarkZmqComponent.hpp>
+#include <LandmarkZmqComponent.h>
 #include <TTSComponent.h>
 #include <PredictionTree.h>
+#include <AzureSkeletonTracker.h>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>

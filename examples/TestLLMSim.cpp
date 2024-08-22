@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 #include <ExampleActionsECS.h>
-#include <LandmarkZmqComponent.hpp>
+#include <LandmarkZmqComponent.h>
 #include <CameraViewComponent.h>
 #include <FaceGestureComponent.h>
 #include <FaceTracker.h>
@@ -118,21 +118,26 @@ int main(int argc, char** argv)
   if (withTracking)
   {
     RLOG(0, "Adding LandmarkZmqComponent");
-    cam = RcsGraph_getBodyByName(ex.getGraph(), "camera_0");
-    cam = RcsGraph_getBodyByName(ex.getGraph(), "head_kinect_rgb_link");
-    RCHECK(cam);
-    std::string connection="tcp://localhost:5555";
+    std::string connection = "tcp://localhost:5555";
     argP.getArgument("-jsonFile", &connection,
                      "Json file instead of zmq connection (default: python_landmark_input.json)");
     lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.getEntity(), connection));
     lmc->setScenePtr(ex.getGraph(), ex.getScene());
   }
 
+  if (lmc)
+  {
+    // Create the LandmarkZmq camera here
+    cam = RcsGraph_getBodyByName(ex.getGraph(), "camera_0");
+    cam = RcsGraph_getBodyByName(ex.getGraph(), "head_kinect_rgb_link");
+    RCHECK(cam);
+  }
+
   if (withFace)
   {
     auto ft = lmc->addFaceTracker("face", cam->name);
     ex.addComponent(new aff::CameraViewComponent(&ex.getEntity(), "face", false));
-    ex.addComponent(new aff::FaceGestureComponent(&ex.getEntity(), "face", dynamic_cast<aff::FaceTracker*>(ft)->getMesh()));
+    ex.addComponent(new aff::FaceGestureComponent(&ex.getEntity(), "face"));
     RLOG(0, "%s adding face tracker", ft ? "SUCCESS" : "FAILURE");
   }
 

@@ -140,3 +140,24 @@ Returns a json in the form:
 ### Planning, predicting, executing
 
 ### Adding components
+
+
+
+# Mediapipe and Aruco tracking tools
+
+## Install
+
+### Windows
+
+```
+python.exe -m venv .venv 
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Mediapipe
+
+Run standalone test mode
+```
+python webcam_tracking.py --visualize --standalone  --mediapipe
+```

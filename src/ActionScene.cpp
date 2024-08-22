@@ -149,11 +149,8 @@ ActionScene::ActionScene(const std::string& xmlFile)
   std::string groupSuffix;
   if (node)
   {
-    RLOG(0, "Parsing entities");
     MyParseRecursive(node, this, groupSuffix, MyParseSceneEntity);
-    RLOG(0, "Parsing agents");
     MyParseRecursive(node, this, groupSuffix, MyParseAgents);
-    RLOG(0, "Done parsing");
   }
   else
   {

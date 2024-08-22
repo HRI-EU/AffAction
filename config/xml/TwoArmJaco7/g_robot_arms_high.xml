@@ -74,8 +74,9 @@
 	<xi:include href="g_hand_right.xml"/>
 
     <Body name="face" rigid_body_joints="true">
-        <Shape type="FRAME" scale="1"/>
-    </Body>
+		<Shape type="MESH" meshFile="FaceMesh-holes-468.obj" resizeable="true" />
+		<Shape type="FRAME" scale="1"/>
+	</Body>
 
 	</Group>
 

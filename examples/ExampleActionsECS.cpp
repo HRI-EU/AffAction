@@ -36,6 +36,7 @@
 #include "AnimationSequence.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
+#include "LandmarkZmqComponent.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -442,7 +443,7 @@ bool ExampleActionsECS::initAlgo()
       for (unsigned int i=0; i<ntt->nShapes; ++i)
       {
         RcsShape* sh = &ntt->shapes[i];
-        if (sh->type == RCSSHAPE_MESH)
+        if (sh->type == RCSSHAPE_MESH || sh->type == RCSSHAPE_REFFRAME)
         {
           continue;
         }
@@ -484,14 +485,33 @@ bool ExampleActionsECS::initAlgo()
     RCHECK_MSG(noCollCheck==false, "You are running the real system without collision detection");
   }
 
-  // Initialization sequence to initialize all graphs from the sensory state
+  // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
+  // "Start" event, starting all component threads.
   entity.initialize(graphC->getGraph());
 
   this->sceneQuery = std::make_unique<SceneQueryPool>(this, NUM_SCENEQUERIES);
 
   ActionBase::setTurboMode(turbo);
 
-  RLOG_CPP(0, help());
+  RLOG_CPP(1, help());
+
+  //{
+  //  const RcsGraph* graph = controller->getGraph();
+  //  for (unsigned int i = 0; i < graph->nBodies; ++i)
+  //  {
+  //    const RcsBody* bdy = &graph->bodies[i];
+
+  //    for (unsigned int j = 0; j < bdy->nShapes; ++j)
+  //    {
+  //      const RcsShape* sh = &bdy->shapes[j];
+  //      if (RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
+  //      {
+  //        RLOG(0, "Found resizeable shape %d in body %s (type: %s)",
+  //             j, bdy->name, RcsShape_name(sh->type));
+  //      }
+  //    }
+  //  }
+  //}
 
   return true;
 }
@@ -805,6 +825,16 @@ bool ExampleActionsECS::initGraphics()
 
   entity.process();
 
+  // If we have a LandmarkZmw component, we initialize its debug graphics
+  // here. We have to defer it to this point, since there's no GraphicsWindow
+  // before this.
+  auto lmZmqs = getComponents<LandmarkZmqComponent>(components);
+  for (auto& c : lmZmqs)
+  {
+    c->createDebugGraphics(viewer.get());
+  }
+
+
   return true;
 }
 
@@ -831,7 +861,9 @@ bool ExampleActionsECS::initGuis()
 
 void ExampleActionsECS::run()
 {
-  // Start all threads of components.
+  // Start all threads of components. This has already been published during
+  // the entitie's initialize() method in the initAlgo() method. This Start
+  // event takes carea about all components that have been added later.
   entity.publish("Start");
   entity.process();
 
@@ -839,7 +871,6 @@ void ExampleActionsECS::run()
   {
     step();
   }
-
 
   // The runLoop is ended with ExampleBase::stop(). We still need to call each
   // component's stop event.
@@ -1684,5 +1715,47 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleCocktailGen3, "Actions", "Cocktails Gen3");
+
+
+/*******************************************************************************
+ * bin\Release\TestLLMSim.exe
+ *   -dir ..\src\Smile\src\AffAction\config\xml\examples
+ *   -face_tracking -landmarks_zmq -landmarks_camera head_kinect_rgb_link
+ *   -camera_view -face_gesture
+ ******************************************************************************/
+class ExampleMediapipeFaceView : public ExampleActionsECS
+{
+public:
+
+  ExampleMediapipeFaceView(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RLOG_CPP(0, "Start python webcam program: python webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml");
+  }
+
+  virtual ~ExampleMediapipeFaceView()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_example_curiosity_cocktails.xml";
+    return true;
+  }
+
+  bool initAlgo()
+  {
+    bool success = ExampleActionsECS::initAlgo();
+
+    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-landmarks_zmq", "-landmarks_camera head_kinect_rgb_link -face_tracking -face_bodyName face"));
+    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-face_gesture", "-face_bodyName face"));
+    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-camera_view", "-camera_view_body face"));
+
+    return success;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleMediapipeFaceView, "Actions", "Mediapipe Face View");
 
 }   // namespace aff
