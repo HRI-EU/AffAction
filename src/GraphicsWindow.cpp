@@ -76,14 +76,12 @@ public:
     return false;
   }
 
-  void copyState(const RcsGraph* other, bool resizeable)
+  void copyState(const RcsGraph* other)
   {
     if (!realized())
     {
       return;
     }
-
-    std::lock_guard<std::mutex> lock(stateCopyingMtx);
 
     // \todo: This might have concurrency issues. We better copy into a class
     //        internal buffer, than directly into the internal graph.
@@ -95,10 +93,9 @@ public:
   }
 
   static void realizeNodeInThread(GraphicsWindow* window, std::string eventName,
-                                  const RcsGraph* other, bool resizeable, EntityBase* ntt)
+                                  const RcsGraph* other, EntityBase* ntt)
   {
-    std::thread t1(&MapItem::constructNode, window, eventName, other,
-                   resizeable, ntt);
+    std::thread t1(&MapItem::constructNode, window, eventName, other, ntt);
     t1.detach();
   }
 
@@ -254,7 +251,7 @@ private:
   }
 
   static void constructNode(GraphicsWindow* window, std::string graphId,
-                            const RcsGraph* other, bool resizeable, EntityBase* ntt)
+                            const RcsGraph* other, EntityBase* ntt)
   {
     RLOG(5, "Constructing node for graph with id \"%s\"", graphId.c_str());
 
@@ -263,24 +260,19 @@ private:
     RCHECK(mi.valid());
     mi->graph = RcsGraph_clone(other);
 
-    bool success = mi->init(mi->graph, resizeable, false);
+    bool success = mi->init(mi->graph, false);
 
     if (success==false)
     {
       RLOG(4, "Failed to initialize GraphNode for %s", graphId.c_str());
     }
 
-    if (resizeable)
-    {
-      mi->setDynamicMeshUpdate(true);
-    }
     window->add(mi);
 
 
     {
       std::lock_guard<std::mutex> lock(mapMtx);
 
-      //mapMtx.lock();
       for (size_t i = 0; i < deactivatedBodies.size(); ++i)
       {
         Rcs::BodyNode* bnd = mi->getBodyNode(deactivatedBodies[i].c_str());
@@ -291,7 +283,6 @@ private:
           bnd->setVisibility(false);
         }
       }
-      //mapMtx.unlock();
     }
 
     mi->realizeMtx.unlock();
@@ -303,8 +294,7 @@ private:
   MapItem& operator=(const MapItem&);
 
   mutable std::mutex realizeMtx;
-  mutable std::mutex stateCopyingMtx;
-  RcsGraph* graph;
+  RcsGraph* graph = nullptr;
 
   static std::map<std::string,osg::ref_ptr<MapItem>> eventMap;
   static std::vector<std::string> deactivatedBodies;
@@ -349,18 +339,10 @@ GraphicsWindow::GraphicsWindow(EntityBase* parent, bool startWithStartEvent,
                                bool synWithEventLoop_, bool simpleGraphics) :
   aff::ComponentBase(parent),
   Rcs::Viewer(!simpleGraphics, !simpleGraphics),
-  synWithEventLoop(synWithEventLoop_),
-  resizeable(false)
+  synWithEventLoop(synWithEventLoop_)
 {
   pthread_mutex_init(&frameMtx, NULL);
-
-#if defined(_MSC_VER)
-  setWindowSize(12, 36, 640, 480);
-#else
-  //setWindowSize(0, 0, 1280, 960);
   setWindowSize(0, 0, 640, 480);
-#endif
-
   setCameraTransform(4.105175, 3.439, 2.574,   0.233, -0.286, -2.28);
 
   this->keyCatcher = new Rcs::KeyCatcher();
@@ -368,7 +350,6 @@ GraphicsWindow::GraphicsWindow(EntityBase* parent, bool startWithStartEvent,
   this->hud = new Rcs::HUD();
   add(hud.get());
   this->vertexNode = new Rcs::VertexArrayNode();
-  //vertexNode->hide();
   add(vertexNode.get());
 
   subscribeAll(startWithStartEvent);
@@ -802,14 +783,13 @@ void GraphicsWindow::onRender(std::string graphId, const RcsGraph* other)
 
   if (exists == false)
   {
-    RLOG(5, "Creating %s GraphNode \"%s\"",
-         getResizeable() ? "resizeable" : "non-resizeable", graphId.c_str());
-    MapItem::realizeNodeInThread(this, graphId, other, getResizeable(), getEntity());
+    RLOG_CPP(5, "Creating GraphNode " << graphId);
+    MapItem::realizeNodeInThread(this, graphId, other, getEntity());
   }
 
   // Copies the joint and sensor values for all realized GraphNodes. This is
   // mutex-protected against the pasteState() method in the frame() function.
-  mi->copyState(other, getResizeable());
+  mi->copyState(other);
 }
 
 void GraphicsWindow::onReloadGraph(std::string graphId, const RcsGraph* other)
@@ -827,14 +807,13 @@ void GraphicsWindow::onReloadGraph(std::string graphId, const RcsGraph* other)
 
   if (!mi.valid())
   {
-    RLOG(5, "Creating %s GraphNode \"%s\"",
-         getResizeable() ? "resizeable" : "non-resizeable", graphId.c_str());
-    MapItem::realizeNodeInThread(this, graphId, other, getResizeable(), getEntity());
+    RLOG_CPP(5, "Creating GraphNode " << graphId);
+    MapItem::realizeNodeInThread(this, graphId, other, getEntity());
   }
 
   // Copies the joint and sensor values for all realized GraphNodes. This is
   // mutex-protected against the pasteState() method in the frame() function.
-  mi->copyState(other, getResizeable());
+  mi->copyState(other);
 }
 
 void GraphicsWindow::onRenderLines(const MatNd* array)
@@ -1251,16 +1230,6 @@ void GraphicsWindow::onSetNodeTransform(std::string nodeName, HTr transform)
   {
     nodes[i]->setTransformation(&transform);
   }
-}
-
-void GraphicsWindow::setResizeable(bool enable)
-{
-  this->resizeable = enable;
-}
-
-bool GraphicsWindow::getResizeable() const
-{
-  return this->resizeable;
 }
 
 }   // namespace aff

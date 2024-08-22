@@ -180,20 +180,6 @@ public:
    */
   Rcs::GraphNode* getGraphNodeById(std::string graphId, bool& notRealizedYet);
 
-  /*! \brief Enables / disables construction of new GraphNodes that are
-   *         dynamically resizeable. The default is false.
-   *
-   * \param[in] enable   True for resizeable nodes, false otherwise.
-   */
-  void setResizeable(bool enable);
-
-  /*! \brief Returns the information if new GraphNodes are constructed
-   *         resizeable or not.
-   *
-   *  \return enable   True if new GraphNodes are resizeable, false otherwise.
-   */
-  bool getResizeable() const;
-
   /*! \brief Launch the viewer window, in case it has not already been launched.
     */
   virtual void start();
@@ -237,7 +223,6 @@ protected:
   std::vector<std::string> hudText;
   mutable pthread_mutex_t frameMtx;
   bool synWithEventLoop;
-  bool resizeable;
 
 private:
 
