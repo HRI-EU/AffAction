@@ -88,10 +88,6 @@ public:
     RcsGraph_copy(graph, other);
   }
 
-  void pasteState()
-  {
-  }
-
   static void realizeNodeInThread(GraphicsWindow* window, std::string eventName,
                                   const RcsGraph* other, EntityBase* ntt)
   {
@@ -830,37 +826,6 @@ void GraphicsWindow::onRenderLines(const MatNd* array)
 
 void GraphicsWindow::frame()
 {
-  if (isInitialized() == false)
-  {
-    init();
-  }
-
-  // Mutex only around map copying so that we don't need to wait until
-  // forward kinematics is computed.
-  auto cpyOfMap = MapItem::getEventMap();
-
-  for (auto it = cpyOfMap.begin(); it != cpyOfMap.end(); it++)
-  {
-    auto& mi = it->second;
-    mi->pasteState();
-  }
-
-  lock();
-
-  // Mutex only around map copying so that we don't need to wait until
-  // forward kinematics is computed.
-  for (auto it = cpyOfMap.begin(); it != cpyOfMap.end(); it++)
-  {
-    auto mi = it->second;
-
-    if (mi->realized())
-    {
-      //RcsGraph_setState(mi->getGraph(), NULL, NULL);
-    }
-
-  }
-  unlock();
-
   Viewer::frame();
   handleKeys();
 }
