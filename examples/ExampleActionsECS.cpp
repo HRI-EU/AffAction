@@ -37,11 +37,14 @@
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
 #include "LandmarkZmqComponent.h"
+#include "PhysicsComponent.h"
+#include "VirtualCameraComponent.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
 #include <ActivationSet.h>
 
+#include <ForceDragger.h>
 #include <ExampleFactory.h>
 #include <Rcs_resourcePath.h>
 #include <Rcs_cmdLine.h>
@@ -62,6 +65,8 @@
 #include <AABBNode.h>
 #include <SphereNode.h>
 #include <BodyNode.h>
+#include <GraphNode.h>
+#include <PhysicsNode.h>
 
 #include <fstream>
 #include <iostream>
@@ -165,6 +170,35 @@ private:
   RcsGraph* graph;
 };
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class NamedBodyForceDragger : public Rcs::ForceDragger
+{
+public:
+
+  NamedBodyForceDragger(Rcs::PhysicsBase* sim) : Rcs::ForceDragger(sim)
+  {
+  }
+
+  virtual void update()
+  {
+    double f[3];
+    Vec3d_sub(f, _I_mouseTip, _I_anchor);
+    Vec3d_constMulSelf(f, getForceScaling() * (_leftControlPressed ? 10.0 : 1.0));
+
+    RcsBody* simBdy = NULL;
+    if (_draggedBody)
+    {
+      simBdy = RcsGraph_getBodyByName(physics->getGraph(), _draggedBody->name);
+      NLOG(0, "Graph addy: 0x%x", physics->getGraph());
+      NLOG(0, "Dragging %s to: [%f, %f, %f]", simBdy->name, f[0], f[1], f[2]);
+    }
+    physics->applyForce(simBdy, f, _k_anchor);
+
+  }
+};
+
 
 
 /*******************************************************************************
@@ -212,6 +246,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   unittest = false;
   withRobot = false;
   singleThreaded = false;
+  withPhysics = false;
   verbose = true;
   processingAction = false;
   turbo = true;
@@ -286,6 +321,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-verbose", &verbose, "Print debug information to console");
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
+  parser->getArgument("-physics", &withPhysics, "With PhysicsSimulation");
+  parser->getArgument("-virtualCam", &virtualCam, "Camera for virtual rendering");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
@@ -456,7 +493,11 @@ bool ExampleActionsECS::initAlgo()
 
   // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
-  graphC->setEnableRender(false);//\todo MG CHECK
+
+  //if (!withPhysics)
+  {
+    graphC->setEnableRender(false);  //\todo MG CHECK
+  }
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
 
@@ -477,6 +518,11 @@ bool ExampleActionsECS::initAlgo()
   // Initialize robot components from command line
   this->hwc = createHardwareComponents(entity, controller->getGraph(), getScene(), false);
   this->components = createComponents(entity, controller->getGraph(), getScene(), false);
+
+  if (withPhysics)
+  {
+    addComponent(new PhysicsComponent(&entity, controller->getGraph()));
+  }
 
   addComponent(new AnimationSequence(&entity, controller->getGraph()));
   if (!hwc.empty())
@@ -524,6 +570,21 @@ bool ExampleActionsECS::initGraphics()
     return false;
   }
 
+  if (!virtualCam.empty())
+  {
+    auto vcam = new VirtualCameraComponent(&entity);
+    double trf6[6];
+    VecNd_set6(trf6, -1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258);
+    HTr A_CI;
+    HTr_from6DVector(&A_CI, trf6);
+    //osg::Group* rootGrp = dynamic_cast<osg::Group*>(vcam->virtualRenderer->getSceneData());
+    //RCHECK(rootGrp);
+    //rootGrp->addChild(new Rcs::GraphNode(controller->getGraph()));
+    vcam->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
+    vcam->setCameraTransform(&A_CI);
+    addComponent(vcam);
+  }
+
   // Optional graphics window. We don't use a static instance since this will
   // not be cleaned up after exiting main.
   if (noViewer || valgrind)
@@ -533,8 +594,29 @@ bool ExampleActionsECS::initGraphics()
   }
 
   bool viewerStartsWithStartEvent = true;
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent);
-  viewer->add(new NamedMouseDragger(controller->getGraph()));
+  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent, true);
+
+  if (withPhysics)
+  {
+    Rcs::PhysicsBase* sim = nullptr;
+    for (auto& c : components)
+    {
+      PhysicsComponent* pc = dynamic_cast<PhysicsComponent*>(c);
+      if (pc)
+      {
+        sim = pc->getPhysics();
+        break;
+      }
+    }
+    RCHECK(sim);
+    //viewer->add(new NamedBodyForceDragger(sim));
+    viewer->add(new Rcs::PhysicsNode(sim));
+  }
+  else
+  {
+    viewer->add(new NamedMouseDragger(controller->getGraph()));
+  }
+
   viewer->setTitle("ExampleActionsECS");
 
   // Check if there is a body named 'initial_camera_view'.
@@ -791,6 +873,8 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Resetting LLM memory");
     entity.publish("ResetLLM");
+    auto v = viewer.release();
+    delete v;
 
   }, "Resetting LLM memory");
 
@@ -798,6 +882,7 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Replaying log");
     entity.publish("ReplayLog");
+    entity.publish("ResetRigidBodies");
 
   }, "Replaying log");
 
@@ -1757,5 +1842,41 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleMediapipeFaceView, "Actions", "Mediapipe Face View");
+
+
+/*******************************************************************************
+ * Virtual rendering:
+ * TestLLMSim.exe
+ *   -dir ..\src\Smile\src\AffAction\config\xml\examples\
+ *   -f g_example_curiosity_cocktails.xml
+ *   -physics
+ *   -virtualCam xxx
+ ******************************************************************************/
+class ExampleVirtualRendering : public ExampleActionsECS
+{
+public:
+
+  ExampleVirtualRendering(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleVirtualRendering()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    configDirectory = "config/xml/AffAction/xml/examples";
+    xmlFileName = "g_example_curiosity_cocktails.xml";
+    speedUp = 1;
+    withPhysics = true;
+    //virtualCam = "xxx";
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "Render");
 
 }   // namespace aff
