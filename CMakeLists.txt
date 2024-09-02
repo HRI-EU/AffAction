@@ -274,6 +274,8 @@ src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
 src/FaceGestureComponent.cpp
 src/CameraViewComponent.cpp
+src/PhysicsComponent.cpp
+src/VirtualCameraComponent.cpp
 )
 
 SET(ECS_SRCS
