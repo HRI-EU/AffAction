@@ -70,12 +70,14 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
   {
     this->depthData = new double[width * height];
     RCHECK(depthData);
+    memset(this->depthData, 0, width*height*sizeof(double));
   }
 
   if (renderRGB)
   {
     this->colData = new double[width * height * 3];
     RCHECK(colData);
+    memset(this->colData, 0, 3*width*height*sizeof(double));
   }
 
   togglePixelGui();

@@ -39,6 +39,8 @@
 #include <DepthRenderer.h>
 #include <AsyncWidget.h>
 
+#include <memory>
+
 
 namespace aff
 {
