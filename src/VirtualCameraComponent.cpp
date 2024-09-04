@@ -49,11 +49,9 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
   ComponentBase(parent), width(width_), height(height_),
   renderRGB(color), renderDepth(depth), colData(nullptr), depthData(nullptr)
 {
-  RLOG(0, "Adding virtal camera");
   subscribe("Render", &VirtualCameraComponent::render);
   subscribe("ToggleVirtualRenderGui", &VirtualCameraComponent::togglePixelGui);
 
-  RLOG(0, "Creating renderer");
   virtualRenderer = new Rcs::DepthRenderer(width, height);
 
   // These come from a Kinect v2 calbration
@@ -65,7 +63,6 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
   double far = 10.0;
   virtualRenderer->setProjectionFromFocalParams(fx, fy, cx, cy, near, far);
 
-  RLOG(0, "Creating arrays for storing pixel values");
   if (renderDepth)
   {
     this->depthData = new double[width * height];
@@ -81,7 +78,6 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
   }
 
   togglePixelGui();
-  RLOG(0, "Done constructor");
 }
 
 VirtualCameraComponent::~VirtualCameraComponent()
@@ -130,8 +126,6 @@ void VirtualCameraComponent::render()
 
   double t_render = Timer_getSystemTime();
   virtualRenderer->frame();
-  t_render = Timer_getSystemTime() - t_render;
-  RLOG(0, "Rendering took %.1f msec", 1000.0 * t_render);
 
   // Update the pixel widget
   double* cDataPtr = colData;
@@ -154,6 +148,8 @@ void VirtualCameraComponent::render()
     }
 
   }
+  t_render = Timer_getSystemTime() - t_render;
+  RLOG(1, "Rendering took %.1f msec", 1000.0 * t_render);
 
 
 }
