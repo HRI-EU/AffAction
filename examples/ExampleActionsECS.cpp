@@ -271,6 +271,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
   // We destroy the viwer window fist so that it doesn't access any deleted memory
   viewer.reset();
+  textGui.reset();
 
   for (size_t i = 0; i < hwc.size(); ++i)
   {
@@ -493,11 +494,7 @@ bool ExampleActionsECS::initAlgo()
 
   // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
-
-  //if (!withPhysics)
-  {
-    graphC->setEnableRender(false);  //\todo MG CHECK
-  }
+  graphC->setEnableRender(false);
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
 
@@ -1871,7 +1868,7 @@ public:
     xmlFileName = "g_example_curiosity_cocktails.xml";
     speedUp = 1;
     withPhysics = true;
-    //virtualCam = "xxx";
+    virtualCam = "xxx";
     return true;
   }
 

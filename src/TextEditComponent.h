@@ -36,7 +36,7 @@
 
 #include "ComponentBase.h"
 
-#include <TextEditGui.h>
+#include <AsyncWidget.h>
 
 
 namespace aff
@@ -76,8 +76,7 @@ private:
 
   void guiCallback(std::string text);
   void onStart();
-  void onStop();
-  Rcs::TextEditGui* gui;
+  Rcs::AsyncWidget* gui;
   std::string windowTitle;
 
   TextEditComponent(const TextEditComponent&);

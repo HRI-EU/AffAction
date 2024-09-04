@@ -10,8 +10,8 @@
      this list of conditions and the following disclaimer.
 
   2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
 
   3. Neither the name of the copyright holder nor the names of its
      contributors may be used to endorse or promote products derived from
@@ -33,12 +33,12 @@
 
 #include "TextEditComponent.h"
 
+#include <TextEditGui.h>
 #include <Rcs_typedef.h>
 #include <Rcs_macros.h>
-#include <Rcs_guiFactory.h>
 
 
-
+// We don't delete the gui on the stop event due to some blocking issues in the AsynGuiFactory
 namespace aff
 {
 
@@ -59,24 +59,23 @@ public:
 
 
 TextEditComponent::TextEditComponent(EntityBase* parent, const std::string& title) :
-  ComponentBase(parent), gui(NULL), windowTitle(title)
+  ComponentBase(parent), gui(nullptr), windowTitle(title)
 {
   subscribe("Start", &TextEditComponent::onStart);
-  subscribe("Stop", &TextEditComponent::onStop);
 }
 
 TextEditComponent::~TextEditComponent()
 {
-  onStop();
-  unsubscribe();
+  delete gui;
 }
 
 void TextEditComponent::onStart()
 {
   if (!gui)
   {
-    gui = new Rcs::TextEditGui(QString::fromStdString(windowTitle));
-    gui->registerCallback(new TextUpdateCallback(this));
+    Rcs::TextEditGui* textGui = new Rcs::TextEditGui(QString::fromStdString(windowTitle));
+    textGui->registerCallback(new TextUpdateCallback(this));
+    gui = textGui;
   }
   else
   {
@@ -84,25 +83,9 @@ void TextEditComponent::onStart()
   }
 }
 
-void TextEditComponent::onStop()
-{
-  if (gui)
-  {
-    RLOG(1, "Deleting gui");
-    delete gui;
-    RLOG(1, "Done deleting gui");
-    gui = NULL;
-  }
-  else
-  {
-    RLOG(1, "TextEditGui already deleted");
-  }
-}
-
 void TextEditComponent::guiCallback(std::string text)
 {
   getEntity()->publish("PlanDFSEE", text);
-  //getEntity()->publish("ActionSequence", text);
 }
 
 }   // namespace aff
