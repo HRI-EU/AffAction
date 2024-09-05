@@ -591,7 +591,7 @@ bool ExampleActionsECS::initGraphics()
   }
 
   bool viewerStartsWithStartEvent = true;
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent, true);
+  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent);
 
   if (withPhysics)
   {
