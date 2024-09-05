@@ -1811,11 +1811,20 @@ public:
 
   ExampleMediapipeFaceView(int argc, char** argv) : ExampleActionsECS(argc, argv)
   {
-    RLOG_CPP(0, "Start python webcam program: python webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml");
   }
 
   virtual ~ExampleMediapipeFaceView()
   {
+  }
+
+  std::string help()
+  {
+    std::stringstream s;
+
+    s << ExampleActionsECS::help() << std::endl;
+    s << "Start python webcam program: " << std::endl;
+    s << "python webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml";
+    return s.str();
   }
 
   bool initParameters()
@@ -1829,7 +1838,7 @@ public:
   {
     bool success = ExampleActionsECS::initAlgo();
 
-    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-landmarks_zmq", "-landmarks_camera head_kinect_rgb_link -face_tracking -face_bodyName face"));
+    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-landmarks_zmq", "-landmarks_camera head_kinect_lens -face_tracking -face_bodyName face"));
     addComponent(createComponent(getEntity(), getGraph(), getScene(), "-face_gesture", "-face_bodyName face"));
     addComponent(createComponent(getEntity(), getGraph(), getScene(), "-camera_view", "-camera_view_body face"));
 

@@ -71,6 +71,11 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
 {
   std::string meshFile = Rcs::getAbsoluteFileName("FaceMesh-holes-468.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
+  if (!this->mesh)
+  {
+    Rcs_printResourcePath();
+  }
+
   RCHECK(this->mesh);
   RCHECK(mesh->nVertices >= 468);
   RLOG(5, "Face mesh has %d vertices and %d faces",
