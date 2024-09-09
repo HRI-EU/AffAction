@@ -85,6 +85,7 @@ void AffActionExampleInfo()
 namespace aff
 {
 
+
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -246,7 +247,6 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   unittest = false;
   withRobot = false;
   singleThreaded = false;
-  withPhysics = false;
   verbose = true;
   processingAction = false;
   turbo = true;
@@ -322,7 +322,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-verbose", &verbose, "Print debug information to console");
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
-  parser->getArgument("-physics", &withPhysics, "With PhysicsSimulation");
+  parser->getArgument("-physics", &physicsEngine, "Physics engine (default: none)");
   parser->getArgument("-virtualCam", &virtualCam, "Camera for virtual rendering");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
@@ -332,8 +332,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
-  createHardwareComponents(entity, NULL, NULL, dryRun);
-  createComponents(entity, NULL, NULL, dryRun);
+  createHardwareComponents(entity, NULL, NULL, dryRun, componentArgs);
+  createComponents(entity, NULL, NULL, dryRun, componentArgs);
 
   if (parser->hasArgument("-h"))
   {
@@ -512,14 +512,14 @@ bool ExampleActionsECS::initAlgo()
   // Remember the state for re-initialization
   graphToInitializeWith = RcsGraph_clone(controller->getGraph());
 
-  // Initialize robot components from command line
-  this->hwc = createHardwareComponents(entity, controller->getGraph(), getScene(), false);
-  this->components = createComponents(entity, controller->getGraph(), getScene(), false);
-
-  if (withPhysics)
+  if (!physicsEngine.empty())
   {
-    addComponent(new PhysicsComponent(&entity, controller->getGraph()));
+    componentArgs += " -physics " + physicsEngine;
   }
+
+  // Initialize robot components from command line
+  this->hwc = createHardwareComponents(entity, controller->getGraph(), getScene(), false, componentArgs);
+  this->components = createComponents(entity, controller->getGraph(), getScene(), false, componentArgs);
 
   addComponent(new AnimationSequence(&entity, controller->getGraph()));
   if (!hwc.empty())
@@ -593,21 +593,12 @@ bool ExampleActionsECS::initGraphics()
   bool viewerStartsWithStartEvent = true;
   viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent);
 
-  if (withPhysics)
+  // Add a physics node if physics is enabled
+  auto sims = getComponents<PhysicsComponent>(components);
+  if (!sims.empty())
   {
-    Rcs::PhysicsBase* sim = nullptr;
-    for (auto& c : components)
-    {
-      PhysicsComponent* pc = dynamic_cast<PhysicsComponent*>(c);
-      if (pc)
-      {
-        sim = pc->getPhysics();
-        break;
-      }
-    }
-    RCHECK(sim);
-    //viewer->add(new NamedBodyForceDragger(sim));
-    viewer->add(new Rcs::PhysicsNode(sim));
+    RCHECK(sims.size()==1);
+    viewer->add(new Rcs::PhysicsNode(sims[0]->getPhysics()));
   }
   else
   {
@@ -670,6 +661,12 @@ bool ExampleActionsECS::initGraphics()
 
     viewer->add(bpNode.get());
   }
+
+  viewer->setKeyCallback('q', [this](char k)
+  {
+    RLOG(0, "Quitting");
+    getEntity().publish("Quit");
+  }, "Quit");
 
   viewer->setKeyCallback('t', [this](char k)
   {
@@ -894,6 +891,48 @@ bool ExampleActionsECS::initGraphics()
     RLOG(0, "Interrupting action");
     entity.publish("ClearTrajectory");
   }, "Interrupt action");
+
+  viewer->setKeyCallback('x', [this](char k)
+  {
+    static int viewMode = 0;
+    viewMode++;
+    if (viewMode>2)
+    {
+      viewMode = 0;
+    }
+
+    switch (viewMode)
+    {
+      case 0:
+        RLOG(0, "Showing both (Real is solid)");
+        getEntity().publish("RenderCommand", std::string("Physics"),
+                            std::string("show"));
+        getEntity().publish("RenderCommand", std::string("IK"),
+                            std::string("show"));
+        getEntity().publish("RenderCommand", std::string("IK"),
+                            std::string("setGhostMode"));
+        break;
+
+      case 1:
+        RLOG(0, "Showing IK");
+        getEntity().publish("RenderCommand", std::string("Physics"),
+                            std::string("hide"));
+        getEntity().publish("RenderCommand", std::string("IK"),
+                            std::string("show"));
+        getEntity().publish("RenderCommand", std::string("IK"),
+                            std::string("unsetGhostMode"));
+        break;
+
+      case 2:
+        RLOG(0, "Showing Real");
+        getEntity().publish("RenderCommand", std::string("Physics"),
+                            std::string("show"));
+        getEntity().publish("RenderCommand", std::string("IK"),
+                            std::string("hide"));
+        break;
+    }
+
+  }, "Toggle GraphicsWindow display");
 
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
@@ -1876,8 +1915,8 @@ public:
     configDirectory = "config/xml/AffAction/xml/examples";
     xmlFileName = "g_example_curiosity_cocktails.xml";
     speedUp = 1;
-    withPhysics = true;
     virtualCam = "xxx";
+    physicsEngine = "Bullet";
     return true;
   }
 

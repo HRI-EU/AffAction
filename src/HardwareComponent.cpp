@@ -33,6 +33,7 @@
 #include "HardwareComponent.h"
 #include "JacoShmComponent.h"
 #include "TTSComponent.h"
+#include "PhysicsComponent.h"
 #include "WebsocketActionComponent.h"
 #include "LandmarkZmqComponent.h"
 #include "CameraViewComponent.h"
@@ -136,7 +137,8 @@ static void initROS(double rosDt)
 std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
                                                      const RcsGraph* graph,
                                                      const ActionScene* scene,
-                                                     bool dryRun)
+                                                     bool dryRun,
+                                                     std::string extraArgs)
 {
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
@@ -167,13 +169,17 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
 std::vector<ComponentBase*> createComponents(EntityBase& entity,
                                              const RcsGraph* graph,
                                              const ActionScene* scene,
-                                             bool dryRun)
+                                             bool dryRun,
+                                             std::string extraArgs)
 {
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
 
   auto argvStrVec = argP.copyArgvToVector();
+  auto extraArgsVec = Rcs::String_split(extraArgs, " ");
+  argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
 
   if (argP.hasArgument("-respeaker", "Start with Respeaker") && (!dryRun))
   {
@@ -223,6 +229,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   // The debug graphics will be handled in initGraphics.
   if (dryRun)
   {
+    argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:5555");
     argP.addDescription("-landmarks_zmq", "Start with ZMQ landmarks component");
     argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
@@ -241,6 +248,15 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   else if (argP.hasArgument("-camera_view"))
   {
     components.push_back(createComponent(entity, graph, scene, "-camera_view", argvString));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-physics", "Start with physics simulation component");
+  }
+  else if (hasKey(argvStrVec, "-physics"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-physics", argvString));
   }
 
   if (argP.hasArgument("-face_gesture", "Add face gesture component") && (!dryRun))
@@ -293,8 +309,10 @@ ComponentBase* createComponent(EntityBase& entity,
   else if (componentName == "-landmarks_zmq")
   {
     auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string connection = "tcp://localhost:5555";
     std::string landmarksCamera = "camera_0";
     getValue<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
+    getValue<std::string>(argsVec, "-landmarks_connection", connection);
     RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
     if (!cam)
     {
@@ -303,7 +321,7 @@ ComponentBase* createComponent(EntityBase& entity,
     }
 
     RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-    LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity);
+    LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity, connection);
     lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
 
     if (hasKey(argsVec, "-face_tracking"))
@@ -332,6 +350,17 @@ ComponentBase* createComponent(EntityBase& entity,
     std::string faceBdyName = "face";
     getValue<std::string>(argsVec, "-face_bodyName", faceBdyName);
     return new aff::FaceGestureComponent(&entity, faceBdyName);
+  }
+  else if (componentName == "-physics")
+  {
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string physicsConfig;
+    std::string physicsEngine = "Bullet";
+    getValue<std::string>(argsVec, "-physics", physicsEngine);
+    getValue<std::string>(argsVec, "-physics_config", physicsConfig);
+    RLOG_CPP(0, "Creating physics with engine " << physicsEngine << " and config file " << physicsConfig);
+    RCHECK(graph);
+    return new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig);
   }
 
 #if defined USE_ROS

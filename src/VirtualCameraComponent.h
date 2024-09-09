@@ -55,6 +55,7 @@ public:
   virtual ~VirtualCameraComponent();
   void render();
   void setCameraTransform(const HTr* A_camI);
+  void setCameraTransform(const double xyzabc[6]);
   void setSceneData(osg::Node* node);
   void togglePixelGui();
 

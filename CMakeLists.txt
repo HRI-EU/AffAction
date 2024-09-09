@@ -295,6 +295,7 @@ src/LandmarkZmqComponent.cpp
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
+examples/ExampleFlowMatching.cpp
 src/JacoShmComponent.cpp
 src/TTSComponent.cpp
 )

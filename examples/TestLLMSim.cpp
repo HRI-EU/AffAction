@@ -10,8 +10,8 @@
      this list of conditions and the following disclaimer.
 
   2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
 
   3. Neither the name of the copyright holder nor the names of its
      contributors may be used to endorse or promote products derived from
@@ -33,9 +33,7 @@
 
 #include <ExampleActionsECS.h>
 #include <LandmarkZmqComponent.h>
-#include <CameraViewComponent.h>
-#include <FaceGestureComponent.h>
-#include <FaceTracker.h>
+#include <HardwareComponent.h>
 #include <Rcs_macros.h>
 #include <Rcs_resourcePath.h>
 #include <Rcs_cmdLine.h>
@@ -111,46 +109,42 @@ int main(int argc, char** argv)
     withTracking = true;
   }
 
-  std::unique_ptr<aff::LandmarkZmqComponent> lmc;
-  const RcsBody* cam = nullptr;
+  aff::LandmarkZmqComponent* lmc;
+  std::string lmArgs;
 
-
+  // Assemble string containing all args
   if (withTracking)
   {
-    RLOG(0, "Adding LandmarkZmqComponent");
     std::string connection = "tcp://localhost:5555";
-    argP.getArgument("-jsonFile", &connection,
-                     "Json file instead of zmq connection (default: python_landmark_input.json)");
-    lmc = std::unique_ptr<aff::LandmarkZmqComponent>(new aff::LandmarkZmqComponent(&ex.getEntity(), connection));
-    lmc->setScenePtr(ex.getGraph(), ex.getScene());
+    argP.getArgument("-jsonFile", &connection, "Json file instead of zmq connection (default: python_landmark_input.json)");
+    lmArgs += "-landmarks_connection " + connection + " -landmarks_camera head_kinect_lens ";
+    if (withFace)
+    {
+      lmArgs += "-face_tracking -face_bodyName face ";
+    }
+
+    // Create components
+    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-landmarks_zmq", lmArgs);
+    ex.addComponent(c);
+    lmc = static_cast<aff::LandmarkZmqComponent*>(c);
+    if (withFace)
+    {
+      ex.addComponent(createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-face_gesture", lmArgs));
+      ex.addComponent(createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-camera_view", lmArgs));
+    }
   }
 
-  if (lmc)
-  {
-    // Create the LandmarkZmq camera here
-    cam = RcsGraph_getBodyByName(ex.getGraph(), "camera_0");
-    cam = RcsGraph_getBodyByName(ex.getGraph(), "head_kinect_rgb_link");
-    RCHECK(cam);
-  }
 
-  if (withFace)
-  {
-    auto ft = lmc->addFaceTracker("face", cam->name);
-    ex.addComponent(new aff::CameraViewComponent(&ex.getEntity(), "face", false));
-    ex.addComponent(new aff::FaceGestureComponent(&ex.getEntity(), "face"));
-    RLOG(0, "%s adding face tracker", ft ? "SUCCESS" : "FAILURE");
-  }
 
   if (withAruco)
   {
-    RCHECK(cam);
-    lmc->addArucoTracker(cam->name, "aruco_base");
+    lmc->addArucoTracker("camera_0", "aruco_base");
     RLOG(0, "Done adding aruco tracker");
   }
 
   if (withAzure)
   {
-    RCHECK(cam);
+    //    RCHECK(cam);
     size_t numSkeletons = 3;
     double r_agent = DBL_MAX;
     argP.getArgument("-numSkeletons", &numSkeletons,
@@ -173,19 +167,11 @@ int main(int argc, char** argv)
     RLOG(0, "Done adding skeleton tracker");
   }
 
-  // Enable debug graphics
+  // Because initGraphics() has already been called
   if (lmc)
   {
-    // Initialize all tracker camera transforms from the xml file
-    RCHECK(cam);
-    lmc->setCameraTransform(&cam->A_BI);
-
-    if (ex.getViewer())
-    {
-      lmc->createDebugGraphics(ex.getViewer());
-    }
+    lmc->createDebugGraphics(ex.viewer.get());
   }
-
 
   if (success)
   {

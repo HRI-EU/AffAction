@@ -132,11 +132,13 @@ protected:
   double trajTime;
   std::string sequenceCommand;
   std::string virtualCam;
+  std::string componentArgs;
+  std::string physicsEngine;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt, dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
   bool plot, valgrind, withRobot, pause, withEventGui;
-  bool zigzag, singleThreaded, withPhysics;
+  bool zigzag, singleThreaded;
   unsigned int loopCount;
   std::atomic<bool> processingAction;
 

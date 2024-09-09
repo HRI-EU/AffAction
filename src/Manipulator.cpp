@@ -123,15 +123,12 @@ Manipulator::Manipulator(const xmlNodePtr node, const std::string& groupSuffix) 
 Manipulator::Manipulator(const Manipulator& other) : SceneEntity(other),
   baseJointName(other.baseJointName), fingerJoints(other.fingerJoints), reach(other.reach)
 {
-  RLOG_CPP(1, "Copying manipulator " << name);
-
   for (size_t i=0; i<other.capabilities.size(); ++i)
   {
     Capability* ci = other.capabilities[i]->clone();
     capabilities.push_back(ci);
   }
 
-  RLOG_CPP(1, "Done copying manipulator " << name);
 }
 
 Manipulator& Manipulator::operator= (const Manipulator& copyFromMe)

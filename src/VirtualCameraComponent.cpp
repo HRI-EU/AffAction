@@ -114,6 +114,13 @@ void VirtualCameraComponent::setCameraTransform(const HTr* A_camI)
   virtualRenderer->setCameraTransform(A_camI);
 }
 
+void VirtualCameraComponent::setCameraTransform(const double xyzabc[6])
+{
+  HTr A_CI;
+  HTr_from6DVector(&A_CI, xyzabc);
+  virtualRenderer->setCameraTransform(&A_CI);
+}
+
 void VirtualCameraComponent::setSceneData(osg::Node* node)
 {
   virtualRenderer->setSceneData(node);

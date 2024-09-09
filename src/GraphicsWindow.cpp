@@ -837,52 +837,6 @@ void GraphicsWindow::handleKeys()
     return;
   }
 
-  if (keyCatcher->getAndResetKey('q'))
-  {
-    getEntity()->publish<>("Quit");
-  }
-  else if (keyCatcher->getAndResetKey('x'))
-  {
-    static int viewMode = 0;
-    viewMode++;
-    if (viewMode>2)
-    {
-      viewMode = 0;
-    }
-
-    switch (viewMode)
-    {
-      case 0:
-        RLOG(0, "Showing both (Real is solid)");
-        getEntity()->publish("RenderCommand", std::string("Physics"),
-                             std::string("show"));
-        getEntity()->publish("RenderCommand", std::string("IK"),
-                             std::string("show"));
-        getEntity()->publish("RenderCommand", std::string("IK"),
-                             std::string("setGhostMode"));
-        break;
-
-      case 1:
-        RLOG(0, "Showing IK");
-        getEntity()->publish("RenderCommand", std::string("Physics"),
-                             std::string("hide"));
-        getEntity()->publish("RenderCommand", std::string("IK"),
-                             std::string("show"));
-        getEntity()->publish("RenderCommand", std::string("IK"),
-                             std::string("unsetGhostMode"));
-        break;
-
-
-      case 2:
-        RLOG(0, "Showing Real");
-        getEntity()->publish("RenderCommand", std::string("Physics"),
-                             std::string("show"));
-        getEntity()->publish("RenderCommand", std::string("IK"),
-                             std::string("hide"));
-        break;
-    }
-  }
-
   for (auto const& entry : keyCallbacks)
   {
     if (keyCatcher->getAndResetKey(entry.first))

@@ -44,12 +44,14 @@ namespace aff
 std::vector<ComponentBase*> createComponents(EntityBase& entity,
                                              const RcsGraph* graph,
                                              const ActionScene* scene,
-                                             bool dryRun);
+                                             bool dryRun,
+                                             std::string extraArgs=std::string());
 
 std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
                                                      const RcsGraph* graph,
                                                      const ActionScene* scene,
-                                                     bool dryRun);
+                                                     bool dryRun,
+                                                     std::string extraArgs=std::string());
 
 ComponentBase* createComponent(EntityBase& entity,
                                const RcsGraph* graph,
