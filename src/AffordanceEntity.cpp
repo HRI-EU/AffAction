@@ -100,14 +100,20 @@ SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
     types.push_back(bdyName);
   }
 
-  if (std::find(types.begin(), types.end(), name) == types.end())
+  if (!name.empty())
   {
-    types.push_back(name);
+    if (std::find(types.begin(), types.end(), name) == types.end())
+    {
+      types.push_back(name);
+    }
   }
 
-  if (std::find(types.begin(), types.end(), instanceId) == types.end())
+  if (!instanceId.empty())
   {
-    types.push_back(instanceId);
+    if (std::find(types.begin(), types.end(), instanceId) == types.end())
+    {
+      types.push_back(instanceId);
+    }
   }
 
   RLOG(5, "Adding SceneEntity with name=%s bdyName=%s instanceId=%s types=%s",

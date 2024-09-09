@@ -97,8 +97,6 @@ RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* sc
   soundDirectionROS[2] = 0.0;
   soundDirectionFilt = soundDirectionROS;
   RCHECK(scene);
-  subscribe("ResetLLM", &RespeakerComponent::onResetLLM);
-  subscribe("ReplayLog", &RespeakerComponent::onReplayLog);
   subscribe("Start", &RespeakerComponent::onStart);
   subscribe("Stop", &RespeakerComponent::onStop);
   subscribe("PostUpdateGraph", &RespeakerComponent::onPostUpdateGraph);
@@ -134,8 +132,7 @@ void RespeakerComponent::onStart()
 
     RLOG_CPP(1, "Advertising topic /robot_should_listen");
     this->robot_should_listen_pub = nh->advertise<audio_msgs::TalkFlag>("/robot_should_listen", 1);
-    this->dialogue_pub = nh->advertise<std_msgs::String>("/event_speech", 10);
-    this->reset_llm_pub = nh->advertise<std_msgs::String>("/event_external", 0);
+    this->event_pub = nh->advertise<std_msgs::String>("/event_simulation", 10);
     RLOG_CPP(1, "Done RespeakerComponent::onStart()");
   }
 
@@ -343,70 +340,29 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
 
     if (speaker)
     {
-      nlohmann::json speakerJson;
-      speakerJson["name"] = speaker->name;
-      speakerJson["instance_id"] = speaker->instanceId;
-      outJson["sender"] = speakerJson;
+      // nlohmann::json speakerJson;
+      // speakerJson["name"] = speaker->name;
+      // speakerJson["instance_id"] = speaker->instanceId;
+      outJson["sender"] = speaker->name;//speakerJson;
     }
 
     if (listener)
     {
-      nlohmann::json listenerJson;
-      listenerJson["name"] = listener->name;
-      listenerJson["instance_id"] = listener->instanceId;
-      outJson["receiver"] = listenerJson;
+      // nlohmann::json listenerJson;
+      // listenerJson["name"] = listener->name;
+      // listenerJson["instance_id"] = listener->instanceId;
+      outJson["receiver"] = listener->name;//listenerJson;
     }
 
 #if defined (USE_ROS)
     std_msgs::String dialogueResult;
     dialogueResult.data = outJson.dump();
-    dialogue_pub.publish(dialogueResult);
+    event_pub.publish(dialogueResult);
 #endif
 
     RLOG_CPP(0, outJson.dump());
   }
 
-}
-
-void RespeakerComponent::onReplayLog()
-{
-#if defined (USE_ROS)
-
-  RLOG(0, "RespeakerComponent::onReplayLog()");
-  if (nh)
-  {
-    std_msgs::String resetLLMString;
-
-
-    nlohmann::json outerJson;
-
-    nlohmann::json json;
-    json["id"] = "speaking";
-
-    nlohmann::json assignment;
-    assignment["text"] = "replay_log";
-    assignment["sender"] = nullptr;
-    assignment["receiver"] = nullptr;
-
-    json["assignment"] = assignment;
-    json["present"] = true;
-    json["publish"] = true;
-    json["speech_template"] = "{sender} said to {receiver}: {text}";
-    json["speech"] = "None said to None: clear_history";
-    json["speech_template_past"] = "{sender} said to {receiver}: {text}";
-
-    nlohmann::json dataJson;
-    dataJson["data"] = json;
-
-    outerJson.push_back(dataJson);
-
-    resetLLMString.data = outerJson.dump();
-
-    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
-    reset_llm_pub.publish(resetLLMString);
-  }
-
-#endif
 }
 
 void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appear)
@@ -435,49 +391,7 @@ void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appea
     resetLLMString.data = json.dump();
 
     RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
-    reset_llm_pub.publish(resetLLMString);
-  }
-
-#endif
-}
-
-void RespeakerComponent::onResetLLM()
-{
-#if defined (USE_ROS)
-
-  RLOG(0, "RespeakerComponent::onResetLLM()");
-  if (nh)
-  {
-    // {'id': 'speaking', 'assignment': {'text': 'clear_history', 'sender': None, 'receiver': None}, 'present': True, 'publish': True, 'speech_template': '{sender} said to {receiver}: {text}', 'speech': 'None said to None: clear_history', 'speech_template_past': '{sender} said to {receiver}: {text}'}
-    std_msgs::String resetLLMString;
-
-
-    nlohmann::json outerJson;
-
-    nlohmann::json json;
-    json["id"] = "speaking";
-
-    nlohmann::json assignment;
-    assignment["text"] = "clear_history";
-    assignment["sender"] = nullptr;
-    assignment["receiver"] = nullptr;
-
-    json["assignment"] = assignment;
-    json["present"] = true;
-    json["publish"] = true;
-    json["speech_template"] = "{sender} said to {receiver}: {text}";
-    json["speech"] = "None said to None: clear_history";
-    json["speech_template_past"] = "{sender} said to {receiver}: {text}";
-
-    nlohmann::json dataJson;
-    dataJson["data"] = json;
-
-    outerJson.push_back(dataJson);
-
-    resetLLMString.data = outerJson.dump();
-
-    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
-    reset_llm_pub.publish(resetLLMString);
+    event_pub.publish(resetLLMString);
   }
 
 #endif

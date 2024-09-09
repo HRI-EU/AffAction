@@ -78,8 +78,6 @@ private:
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
   void onStart();
   void onStop();
-  void onResetLLM();
-  void onReplayLog();
   void onAgentChanged(const std::string& agentName, bool appear);
   void enableASR(bool enable);
   void enableSoundDirectionEstimation(bool enable);
@@ -106,9 +104,8 @@ private:
   ros::Subscriber soundLocalizationSubscriber;
   ros::Subscriber isSpeakingSubscriber;
   ros::Subscriber robotShouldListenSubscriber;
-  ros::Publisher reset_llm_pub;
   ros::Publisher robot_should_listen_pub;
-  ros::Publisher dialogue_pub;
+  ros::Publisher event_pub;
   std::unique_ptr<ros::NodeHandle> nh;
 
 #endif
