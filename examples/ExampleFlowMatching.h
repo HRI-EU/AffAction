@@ -60,8 +60,9 @@ public:
   virtual bool parseArgs(Rcs::CmdLineParser* parser);
   virtual bool initAlgo();
   virtual bool initGraphics();
-  virtual void run();
   virtual void step();
+  virtual void stop();
+  virtual void randomize(RcsGraph* graph) const;
 
 protected:
 
@@ -70,6 +71,8 @@ protected:
   std::string xmlFileName;
   std::string configDirectory;
   std::unique_ptr<GraphicsWindow> viewer;
+  RcsGraph* initGraph;
+  RcsGraph* rndGraph;
   double dt, dt_max;
   size_t loopCount;
 
@@ -77,13 +80,8 @@ protected:
   std::unique_ptr<PhysicsComponent> physicsC;
   std::unique_ptr<VirtualCameraComponent> vcamC;
 
-
   // Subscribed callbacks
   void onQuit();
-
-  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
-  ES::SubscriberCollectionDecay<>* setRenderCommand;
 };
 
 }   // namespace aff

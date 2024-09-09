@@ -44,6 +44,7 @@
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>
 #include <Rcs_utilsCPP.h>
+#include <Rcs_body.h>
 #include <ForceDragger.h>
 
 #include <CmdLineWidget.h>
@@ -116,18 +117,18 @@ ExampleFlowMatching::ExampleFlowMatching() : ExampleFlowMatching(0, NULL)
 
 ExampleFlowMatching::ExampleFlowMatching(int argc, char** argv) : ExampleBase(argc, argv)
 {
+  initGraph = NULL;
+  rndGraph = NULL;
   dt = 0.001;
   dt_max = 0.0;
   loopCount = 0;
-
-  updateGraph = NULL;
-  computeKinematics = NULL;
-  setRenderCommand = NULL;
 }
 
 ExampleFlowMatching::~ExampleFlowMatching()
 {
   stop();
+  RcsGraph_destroy(initGraph);
+  RcsGraph_destroy(rndGraph);
   Rcs_removeResourcePath(configDirectory.c_str());
 }
 
@@ -164,27 +165,22 @@ bool ExampleFlowMatching::initAlgo()
 
   entity.subscribe("SetLogLevel", &onSetLogLevel);
   entity.subscribe("Quit", &ExampleFlowMatching::onQuit, this);
-
   entity.setDt(dt);
-  updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
-  computeKinematics = entity.registerEvent<RcsGraph*>("ComputeKinematics");
-  setRenderCommand = entity.registerEvent<>("Render");
 
-  RcsGraph* graph = RcsGraph_create(xmlFileName.c_str());
-  RCHECK(RcsGraph_check(graph, NULL, NULL));
+  this->initGraph = RcsGraph_create(xmlFileName.c_str());
+  RCHECK(RcsGraph_check(initGraph, NULL, NULL));
+  this->rndGraph = RcsGraph_clone(initGraph);
 
   // Graph component contains "sensed" graph
-  graphC = std::make_unique<aff::GraphComponent>(&entity, graph);
+  graphC = std::make_unique<aff::GraphComponent>(&entity, initGraph);
   graphC->setEnableRender(false);
-  physicsC = std::make_unique<aff::PhysicsComponent>(&entity, graph, "Bullet", "physics.xml");
+  physicsC = std::make_unique<aff::PhysicsComponent>(&entity, initGraph, "Bullet", "physics.xml");
 
   // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
   // "Start" event, starting all component threads.
   entity.initialize(graphC->getGraph());
 
   RLOG_CPP(1, help());
-
-  RcsGraph_destroy(graph);
 
   return true;
 }
@@ -195,7 +191,10 @@ bool ExampleFlowMatching::initGraphics()
   osg::ref_ptr<Rcs::PhysicsNode> pn = new Rcs::PhysicsNode();
   pn->setSimulation(physicsC->getPhysics());
   pn->init(false);   // without force dragger, we use our own
-  pn->addChild(new NamedBodyForceDragger(physicsC->getPhysics()));
+  pn->getPhysicsGraphNode()->displayCollisionModel(true);   // shows the goal in wireframe
+  osg::ref_ptr<NamedBodyForceDragger> dragger = new NamedBodyForceDragger(physicsC->getPhysics());
+  dragger->setEnableDragLine(false);
+  pn->addChild(dragger.get());
   viewer->add(pn.get());
   viewer->setTitle("ExampleFlowMatching");
 
@@ -223,24 +222,28 @@ bool ExampleFlowMatching::initGraphics()
     new aff::EventGui(&entity);
   }, "Launch event gui");
 
+  viewer->setKeyCallback('p', [this](char k)
+  {
+    entity.call<const RcsGraph*>("InitFromState", initGraph);
+  }, "Reset physics");
+
+  viewer->setKeyCallback('n', [this](char k)
+  {
+    randomize(rndGraph);
+    entity.call<const RcsGraph*>("InitFromState", rndGraph);
+  }, "New configuration, reject previous episode");
+
+  viewer->setKeyCallback('y', [this](char k)
+  {
+    randomize(rndGraph);
+    entity.call<const RcsGraph*>("InitFromState", rndGraph);
+  }, "New configuration, save previous episode");
+
   viewer->setKeyCallback(' ', [this](char k)
   {
     entity.call("TogglePause");
 
   }, "Toggle pause modus");
-
-  viewer->setKeyCallback('X', [this](char k)
-  {
-    RcsGraph_writeDotFile(graphC->getGraph(), "RcsGraph.dot");
-    std::string dottyCommand = "dotty " + std::string("RcsGraph.dot") + "&";
-    int err = system(dottyCommand.c_str());
-    if (err == -1)
-    {
-      RLOG(1, "Couldn't start dotty tool");
-    }
-
-  }, "Show dot file");
-
 
   vcamC = std::make_unique<VirtualCameraComponent>(&entity);
   vcamC->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
@@ -249,18 +252,9 @@ bool ExampleFlowMatching::initGraphics()
   return true;
 }
 
-void ExampleFlowMatching::run()
+void ExampleFlowMatching::stop()
 {
-  // Start all threads of components. This has already been published during
-  // the entitie's initialize() method in the initAlgo() method. This Start
-  // event takes carea about all components that have been added later.
-  entity.publish("Start");
-  entity.process();
-
-  while (runLoop)
-  {
-    step();
-  }
+  ExampleBase::stop();
 
   // The runLoop is ended with ExampleBase::stop(). We still need to call each
   // component's stop event.
@@ -272,21 +266,22 @@ void ExampleFlowMatching::step()
 {
   double dtProcess = Timer_getSystemTime();
 
-  entity.call<RcsGraph*>("UpdateGraph", graphC->getGraph());
-  entity.call<RcsGraph*>("ComputeKinematics", graphC->getGraph());
-  // updateGraph->call(graphC->getGraph());
-  // computeKinematics->call(graphC->getGraph());
-  //setRenderCommand->call();
+  // 1kHz
+  entity.publish("UpdateGraph", graphC->getGraph());
+  entity.publish("ComputeKinematics", graphC->getGraph());
 
+  // 100Hz
   if (loopCount%10==0)
   {
-    entity.call("Render");
+    entity.publish("Render");
   }
 
+  // 30Hz
   if (loopCount%30==0)
   {
-    entity.call("Capture");
+    entity.publish("Capture");
   }
+
   entity.process();
   entity.stepTime();
 
@@ -308,13 +303,49 @@ void ExampleFlowMatching::step()
   Timer_waitDT(entity.getDt() - dtProcess);
 
   loopCount++;
-  RLOG_CPP(6, "Loop end: queue size is " << entity.queueSize());
 }
 
 void ExampleFlowMatching::onQuit()
 {
   entity.publish("Stop");
   runLoop = false;
+}
+
+void ExampleFlowMatching::randomize(RcsGraph* graph) const
+{
+  // Extents
+  const RcsBody* table = RcsGraph_getBodyByName(graph, "table");
+  RCHECK(table && table->nShapes > 0);
+  const double* e = table->shapes[0].extents;
+  double bounds = 0.25;
+
+  const RcsBody* tbar = RcsGraph_getBodyByName(graph, "tbar");
+  RCHECK(tbar && tbar->rigid_body_joints);
+  double* q_rbj = RcsBody_getStatePtr(graph, tbar);
+  q_rbj[0] = Math_getRandomNumber(-0.5 * e[0] + bounds, 0.5 * e[0] - bounds);
+  q_rbj[1] = Math_getRandomNumber(-0.5 * e[1] + bounds, 0.5 * e[1] - bounds);
+  q_rbj[5] = Math_getRandomNumber(-M_PI, M_PI);
+
+  const RcsBody* pusher = RcsGraph_getBodyByName(graph, "block");
+  RCHECK(pusher && pusher->rigid_body_joints);
+  bounds = 0.05;
+
+  size_t iter = 0;
+  do
+  {
+    q_rbj = RcsBody_getStatePtr(graph, pusher);
+    q_rbj[0] = Math_getRandomNumber(-0.5 * e[0] + bounds, 0.5 * e[0] - bounds);
+    q_rbj[1] = Math_getRandomNumber(-0.5 * e[1] + bounds, 0.5 * e[1] - bounds);
+
+    RcsGraph_setState(graph, NULL, NULL);
+    if (iter>5)
+    {
+      RLOG_CPP(0, "Sampling pusher " << iter << " times");
+    }
+    iter++;
+  }
+  while (RcsBody_distance(tbar, pusher, NULL, NULL, NULL) < 0.1);
+
 }
 
 }   // namespace aff

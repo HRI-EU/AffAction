@@ -27,48 +27,38 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
 
-  <Body name="default_camera_view" transform="0 0 3.0 0 90 0" >
-  </Body>
-
-  <!-- The Aruco markers are 1cm away from the borders of the table. -->
-  <Body name="aruco_base" rigid_body_joints="true" color="PEWTER" >
-    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
-    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
-            graphics="true" physics="true" distance="false"/>
-    <Shape scale="0.5" type="FRAME"/>
-  </Body>
-
-  <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
-    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
-    <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
-    <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
-    <Shape graphics="true" scale="0.2" type="FRAME"/>
-  </Body>
+  <Body name="default_camera_view" transform="0 0 3.0 0 90 0" />
   
   <!-- The model for the dining table. -->
-  <Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
+  <Body name="table" physics="kinematic" transform="-0.22 0 0.7 0 0 0" >
     <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
 	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg" material="wood" />
     <Shape scale="0.2" type="FRAME"/>
   </Body>
-  
-  <!-- The model of the T-bar. -->
-  <Body name="tbar" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="0 0 0.02 0 0 0" rigid_body_joints12="0 0 0.02 0 0 0 1 1 0 0 0 1" >
-    <Shape type="BOX" extents="0.04 0.2 0.04" graphics="true" physics="true" color="RED" material="wood" />
-    <Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0 0 0 0" graphics="true" physics="true" color="GREEN" material="wood" />
+
+	<!-- The goal for the T-bar. -->
+	<Body name="goal" prev="table" >
+		<Shape type="BOX" extents="0.04 0.2 0.04" transform="0 0 0.02 0 0 0" graphics="false" physics="true" wireframe="true" />
+		<Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0.02 0 0 0" graphics="false" physics="true" wireframe="true" />
+		<Shape scale="0.2" type="FRAME"/>
+	</Body>
+
+	<!-- The model of the T-bar. -->
+  <Body name="tbar" prev="table" physics="dynamic" mass="0.1" rigid_body_joints6="0 0 0 0 0 0" rigid_body_joints="0 0 0 0 0 0 1 1 1 0 0 1" >
+    <Shape type="BOX" extents="0.04 0.2 0.04" transform="0 0 0.02 0 0 0" graphics="true" physics="true" distance="true" color="RED" material="object" />
+    <Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0.02 0 0 0" graphics="true" physics="true" distance="true" color="GREEN" material="object" />
     <Shape scale="0.2" type="FRAME"/>
   </Body>
   
   <!-- The model of the pusher -->
-  <Body name="sphere" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="-0.2 0 0 0 0 0" rigid_body_joints12="-0.2 0 0.02 0 0 0 1 1 0 0 0 0" >
-    <Shape type="BOX" extents="0.03 0.03 0.04" graphics="true" physics="true" color="YELLOW" material="wood" transform="0 0 0.02 0 0 0" />
+  <Body name="block" prev="table" physics="dynamic" mass="0.1" rigid_body_joints6="-0.2 0 0 0 0 0" rigid_body_joints="-0.2 0 0 0 0 0 1 1 1 0 0 1" >
+    <Shape type="BOX" extents="0.03 0.03 0.04" graphics="true" physics="true" distance="true" color="YELLOW" material="object" transform="0 0 0.02 0 0 0" />
   </Body>
 
-  <Body name="sphere2" prev="sphere" physics="fixed" mass="0.1" >
-    <Shape type="CYLINDER" radius="0.025" length="0.02" graphics="true" physics="true" color="YELLOW" material="wood" transform="0 0 0.02 0 0 0" />
+  <Body name="cylinder" prev="block" physics="fixed" mass="0.1" >
+    <Shape type="CYLINDER" radius="0.03" length="0.02" graphics="true" physics="true" color="YELLOW" material="object" transform="0 0 0.02 0 0 0" />
   </Body>
 
 	
