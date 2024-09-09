@@ -71,6 +71,7 @@ protected:
   std::string configDirectory;
   std::unique_ptr<GraphicsWindow> viewer;
   double dt, dt_max;
+  size_t loopCount;
 
   std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<PhysicsComponent> physicsC;

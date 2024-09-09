@@ -49,7 +49,7 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
   ComponentBase(parent), width(width_), height(height_),
   renderRGB(color), renderDepth(depth), colData(nullptr), depthData(nullptr)
 {
-  subscribe("Render", &VirtualCameraComponent::render);
+  subscribe("Capture", &VirtualCameraComponent::render);
   subscribe("ToggleVirtualRenderGui", &VirtualCameraComponent::togglePixelGui);
 
   virtualRenderer = new Rcs::DepthRenderer(width, height);

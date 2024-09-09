@@ -29,7 +29,7 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
-  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
+  <Body name="default_camera_view" transform="0 0 3.0 0 90 0" >
   </Body>
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
@@ -48,19 +48,28 @@
     <Shape graphics="true" scale="0.2" type="FRAME"/>
   </Body>
   
-	<!-- The model for the dining table. -->
-	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
-	  <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
-		 transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
-		<Shape scale="0.2" type="FRAME"/>
-	</Body>
+  <!-- The model for the dining table. -->
+  <Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
+    <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
+	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg" material="wood" />
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
   
-	<!-- The model of the T-bar. -->
-	<Body name="tbar" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="0 0 0.02 0 0 0" >
-	  <Shape type="BOX" extents="0.04 0.2 0.04" graphics="true" physics="true" color="RED"/>
-	  <Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0 0 0 0" graphics="true" physics="true" color="GREEN" />
-      <Shape scale="0.2" type="FRAME"/>
-	</Body>
+  <!-- The model of the T-bar. -->
+  <Body name="tbar" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="0 0 0.02 0 0 0" rigid_body_joints12="0 0 0.02 0 0 0 1 1 0 0 0 1" >
+    <Shape type="BOX" extents="0.04 0.2 0.04" graphics="true" physics="true" color="RED" material="wood" />
+    <Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0 0 0 0" graphics="true" physics="true" color="GREEN" material="wood" />
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
+  
+  <!-- The model of the pusher -->
+  <Body name="sphere" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="-0.2 0 0 0 0 0" rigid_body_joints12="-0.2 0 0.02 0 0 0 1 1 0 0 0 0" >
+    <Shape type="BOX" extents="0.03 0.03 0.04" graphics="true" physics="true" color="YELLOW" material="wood" transform="0 0 0.02 0 0 0" />
+  </Body>
+
+  <Body name="sphere2" prev="sphere" physics="fixed" mass="0.1" >
+    <Shape type="CYLINDER" radius="0.025" length="0.02" graphics="true" physics="true" color="YELLOW" material="wood" transform="0 0 0.02 0 0 0" />
+  </Body>
 
 	
 	

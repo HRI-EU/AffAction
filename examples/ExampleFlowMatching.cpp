@@ -44,6 +44,7 @@
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>
 #include <Rcs_utilsCPP.h>
+#include <ForceDragger.h>
 
 #include <CmdLineWidget.h>
 
@@ -70,6 +71,43 @@ static void onSetLogLevel(int dl)
 /*******************************************************************************
  *
  ******************************************************************************/
+class NamedBodyForceDragger : public Rcs::MouseDragger
+{
+public:
+
+  NamedBodyForceDragger(Rcs::PhysicsBase* sim_) : Rcs::MouseDragger(), sim(sim_)
+  {
+  }
+
+  virtual void update()
+  {
+
+    double I_mouseTip[3], I_bodyAnchor[3], k_bodyAnchor[3];
+    bool leftMouseButtonPressed, rightMouseButtonPressed, leftShiftPressed, leftCtrlPressed;
+
+    const RcsBody* bdy = Rcs::MouseDragger::getDragData(I_mouseTip, I_bodyAnchor, k_bodyAnchor,
+                                                        &leftMouseButtonPressed,
+                                                        &rightMouseButtonPressed,
+                                                        &leftShiftPressed,
+                                                        &leftCtrlPressed,
+                                                        false);
+
+    if (bdy)
+    {
+      HTr A_BI = bdy->A_BI;
+      A_BI.org[0] = I_mouseTip[0];
+      A_BI.org[1] = I_mouseTip[1];
+      sim->applyTransform(bdy, &A_BI);
+    }
+
+  }
+
+  Rcs::PhysicsBase* sim;
+};
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 RCS_REGISTER_EXAMPLE(ExampleFlowMatching, "Actions", "FlowMatching");
 
 ExampleFlowMatching::ExampleFlowMatching() : ExampleFlowMatching(0, NULL)
@@ -78,8 +116,9 @@ ExampleFlowMatching::ExampleFlowMatching() : ExampleFlowMatching(0, NULL)
 
 ExampleFlowMatching::ExampleFlowMatching(int argc, char** argv) : ExampleBase(argc, argv)
 {
-  dt = 0.01;
+  dt = 0.001;
   dt_max = 0.0;
+  loopCount = 0;
 
   updateGraph = NULL;
   computeKinematics = NULL;
@@ -137,7 +176,7 @@ bool ExampleFlowMatching::initAlgo()
   // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, graph);
   graphC->setEnableRender(false);
-  physicsC = std::make_unique<aff::PhysicsComponent>(&entity, graph);
+  physicsC = std::make_unique<aff::PhysicsComponent>(&entity, graph, "Bullet", "physics.xml");
 
   // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
   // "Start" event, starting all component threads.
@@ -153,7 +192,11 @@ bool ExampleFlowMatching::initAlgo()
 bool ExampleFlowMatching::initGraphics()
 {
   viewer = std::make_unique<aff::GraphicsWindow>(&entity, true, true);
-  viewer->add(new Rcs::PhysicsNode(physicsC->getPhysics()));
+  osg::ref_ptr<Rcs::PhysicsNode> pn = new Rcs::PhysicsNode();
+  pn->setSimulation(physicsC->getPhysics());
+  pn->init(false);   // without force dragger, we use our own
+  pn->addChild(new NamedBodyForceDragger(physicsC->getPhysics()));
+  viewer->add(pn.get());
   viewer->setTitle("ExampleFlowMatching");
 
   // Check if there is a body named 'initial_camera_view'.
@@ -229,9 +272,21 @@ void ExampleFlowMatching::step()
 {
   double dtProcess = Timer_getSystemTime();
 
-  updateGraph->call(graphC->getGraph());
-  computeKinematics->call(graphC->getGraph());
-  setRenderCommand->call();
+  entity.call<RcsGraph*>("UpdateGraph", graphC->getGraph());
+  entity.call<RcsGraph*>("ComputeKinematics", graphC->getGraph());
+  // updateGraph->call(graphC->getGraph());
+  // computeKinematics->call(graphC->getGraph());
+  //setRenderCommand->call();
+
+  if (loopCount%10==0)
+  {
+    entity.call("Render");
+  }
+
+  if (loopCount%30==0)
+  {
+    entity.call("Capture");
+  }
   entity.process();
   entity.stepTime();
 
@@ -252,6 +307,7 @@ void ExampleFlowMatching::step()
 
   Timer_waitDT(entity.getDt() - dtProcess);
 
+  loopCount++;
   RLOG_CPP(6, "Loop end: queue size is " << entity.queueSize());
 }
 

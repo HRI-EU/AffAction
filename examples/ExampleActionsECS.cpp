@@ -57,6 +57,7 @@
 #include <Rcs_utilsCPP.h>
 #include <Rcs_distanceWM5.h>
 #include <Rcs_broadphase.h>
+#include <Rcs_graphicsUtils.h>
 
 #include <CmdLineWidget.h>
 
@@ -598,7 +599,10 @@ bool ExampleActionsECS::initGraphics()
   if (!sims.empty())
   {
     RCHECK(sims.size()==1);
-    viewer->add(new Rcs::PhysicsNode(sims[0]->getPhysics()));
+    osg::ref_ptr<Rcs::PhysicsNode> pn = new Rcs::PhysicsNode();
+    pn->setSimulation(sims[0]->getPhysics());
+    pn->init(true);   // with force dragger
+    viewer->add(pn);
   }
   else
   {
