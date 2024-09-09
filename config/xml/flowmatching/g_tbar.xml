@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+
+  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
+  </Body>
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body name="aruco_base" rigid_body_joints="true" color="PEWTER" >
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
+            graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <!-- The model for a simple camera. -->
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
+    <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
+    <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+  
+	<!-- The model for the dining table. -->
+	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
+	  <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
+		 transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
+		<Shape scale="0.2" type="FRAME"/>
+	</Body>
+  
+	<!-- The model of the T-bar. -->
+	<Body name="tbar" prev="table" physics="dynamic" mass="0.1" rigid_body_joints="0 0 0.02 0 0 0" >
+	  <Shape type="BOX" extents="0.04 0.2 0.04" graphics="true" physics="true" color="RED"/>
+	  <Shape type="BOX" extents="0.2 0.04 0.04" transform="0 0.12 0 0 0 0" graphics="true" physics="true" color="GREEN" />
+      <Shape scale="0.2" type="FRAME"/>
+	</Body>
+
+	
+	
+</Graph>
