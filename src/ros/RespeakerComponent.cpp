@@ -335,34 +335,41 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   if ((publishDialogueWithRaisedHandOnly && isAnyHandRaised) ||
       (!publishDialogueWithRaisedHandOnly))
   {
-    nlohmann::json outJson = {};
-    outJson["text"] = text;
-
+    nlohmann::json assignmentJson;
+    assignmentJson["text"] = text;
     if (speaker)
     {
-      // nlohmann::json speakerJson;
-      // speakerJson["name"] = speaker->name;
-      // speakerJson["instance_id"] = speaker->instanceId;
-      outJson["sender"] = speaker->name;//speakerJson;
+      assignmentJson["sender"] = speaker->name;
     }
-
+    else
+    {
+      assignmentJson["sender"] = nlohmann::json();
+    }
     if (listener)
     {
-      // nlohmann::json listenerJson;
-      // listenerJson["name"] = listener->name;
-      // listenerJson["instance_id"] = listener->instanceId;
-      outJson["receiver"] = listener->name;//listenerJson;
+      assignmentJson["receiver"] = listener->name;
+    }
+    else
+    {
+      assignmentJson["receiver"] = nlohmann::json();
     }
 
+    nlohmann::json eventJson;
+    eventJson["id"] = "speaking";
+    eventJson["assignment"] = assignmentJson;
+    eventJson["present"] = true;
+    eventJson["publish"] = true;
+    eventJson["speech_template_past"] = "{sender} said to {receiver}: {text}";
+
+    std::string eventString = eventJson.dump();
+    RLOG_CPP(0, "Event JSON: '" << eventString << "'");
+
 #if defined (USE_ROS)
-    std_msgs::String dialogueResult;
-    dialogueResult.data = outJson.dump();
-    event_pub.publish(dialogueResult);
+    std_msgs::String eventMsg;
+    eventMsg.data = eventString;
+    event_pub.publish(eventMsg);
 #endif
-
-    RLOG_CPP(0, outJson.dump());
   }
-
 }
 
 void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appear)
@@ -370,28 +377,28 @@ void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appea
   std::string appearStr = appear ? " appeared" : " disappeared";
   RLOG_CPP(0, "Agent " << agentName << appearStr);
 
-#if defined (USE_ROS)
-
   RLOG(0, "RespeakerComponent::onAgentChanged()");
+
+  nlohmann::json assignmentJson;
+  assignmentJson["person"] = agentName;
+  assignmentJson["present"] = appear;
+
+  nlohmann::json eventJson;
+  eventJson["id"] = "person_changed";
+  eventJson["assignment"] = assignmentJson;
+  eventJson["present"] = true;
+  eventJson["publish"] = true;
+  eventJson["speech_template_past"] = "{person}" + appearStr + ".";
+
+  std::string eventString = eventJson.dump();
+  RLOG_CPP(0, "Event JSON: '" << eventString << "'");
+
+#if defined (USE_ROS)
   if (nh)
   {
-    std_msgs::String resetLLMString;
-
-    nlohmann::json json;
-    json["id"] = "person_changed";
-
-    nlohmann::json assignment;
-    assignment["person"] = agentName;
-    assignment["present"] = appear;
-
-    json["assignment"] = assignment;
-    json["present"] = true;
-    json["publish"] = true;
-
-    resetLLMString.data = json.dump();
-
-    RLOG_CPP(0, "JSON: '" << resetLLMString.data << "'");
-    event_pub.publish(resetLLMString);
+    std_msgs::String eventMsg;
+    eventMsg.data = eventString;
+    event_pub.publish(eventMsg);
   }
 
 #endif
