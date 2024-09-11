@@ -119,7 +119,7 @@ ExampleFlowMatching::ExampleFlowMatching(int argc, char** argv) : ExampleBase(ar
 {
   initGraph = NULL;
   rndGraph = NULL;
-  dt = 0.001;
+  dt = 0.01;
   dt_max = 0.0;
   loopCount = 0;
 }
@@ -249,6 +249,8 @@ bool ExampleFlowMatching::initGraphics()
   vcamC->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
   vcamC->setCameraTransform(q_cam);
 
+  Timer_setZero();
+
   return true;
 }
 
@@ -267,17 +269,20 @@ void ExampleFlowMatching::step()
   double dtProcess = Timer_getSystemTime();
 
   // 1kHz
-  entity.publish("UpdateGraph", graphC->getGraph());
+  for (size_t i=0; i<10; ++i)
+  {
+    entity.publish("UpdateGraph", graphC->getGraph());
+  }
   entity.publish("ComputeKinematics", graphC->getGraph());
 
   // 100Hz
-  if (loopCount%10==0)
+  if (loopCount%3==0)
   {
     entity.publish("Render");
   }
 
   // 30Hz
-  if (loopCount%30==0)
+  if (loopCount%3==0)
   {
     entity.publish("Capture");
   }
@@ -294,13 +299,13 @@ void ExampleFlowMatching::step()
 
 
   char timeStr[256];
-  snprintf(timeStr, 256, "Time: %.3f   dt: %.1f dt_max: %.1f msec\n"
+  snprintf(timeStr, 256, "Time: %.3f %.3f  dt: %.1f dt_max: %.1f msec\n"
            "queue: %zu (max: %zu)",
-           entity.getTime(), dtProcess * 1.0e3, dt_max * 1.0e3,
+           entity.getTime(), Timer_getTime(), dtProcess * 1.0e3, dt_max * 1.0e3,
            entity.queueSize(), entity.getMaxQueueSize());
   entity.publish("SetTextLine", std::string(timeStr), 0);
 
-  Timer_waitDT(entity.getDt() - dtProcess);
+  Timer_waitDT(entity.getDt() - dtProcess - 0.01);
 
   loopCount++;
 }

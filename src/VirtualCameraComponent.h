@@ -58,6 +58,12 @@ public:
   void setCameraTransform(const double xyzabc[6]);
   void setSceneData(osg::Node* node);
   void togglePixelGui();
+  void startRecording();
+  void stopRecording();
+  void toggleRecording();
+  bool isRecording();
+  void clearRecordings();
+  void save();
 
 private:
 
@@ -66,9 +72,12 @@ private:
   int height;
   bool renderRGB;
   bool renderDepth;
+  bool recordImages;
   double* colData;     // 3 * width * height
   double* depthData;   // width * height
   osg::ref_ptr<Rcs::DepthRenderer> virtualRenderer;
+  std::vector<osg::ref_ptr<osg::Image>> recordings;
+
   VirtualCameraComponent(const VirtualCameraComponent&) = delete;
   VirtualCameraComponent& operator=(const VirtualCameraComponent&) = delete;
 };

@@ -39,18 +39,70 @@
 #include <Rcs_timer.h>
 #include <Rcs_math.h>
 
+#include <osgDB/WriteFile>
+
+#include <thread>
+#include <iomanip>
+#include <sstream>
 
 
 namespace aff
 {
 
+static
+osg::ref_ptr<osg::Image> vectorToOsgImage(const std::vector<std::vector<std::vector<float>>>& imageData)
+{
+  // Get the dimensions of the input image
+  int height = imageData.size();
+  if (height == 0)
+  {
+    std::cerr << "Input data is empty." << std::endl;
+    return nullptr;
+  }
+
+  int width = imageData[0].size();
+  if (width == 0 || imageData[0][0].size() != 3)
+  {
+    std::cerr << "Input data is not correctly formatted." << std::endl;
+    return nullptr;
+  }
+
+  // Allocate a buffer for the pixel data (using new to allow OSG to manage it)
+  unsigned char* pixelData = new unsigned char[width * height * 3]; // 3 channels for RGB
+
+  // Flatten the vector of vectors into a single array of unsigned char
+  for (int i = 0; i < height; ++i)
+  {
+    for (int j = 0; j < width; ++j)
+    {
+      pixelData[(i * width + j) * 3 + 0] = static_cast<unsigned char>(imageData[i][j][0] * 255.0f); // Red
+      pixelData[(i * width + j) * 3 + 1] = static_cast<unsigned char>(imageData[i][j][1] * 255.0f); // Green
+      pixelData[(i * width + j) * 3 + 2] = static_cast<unsigned char>(imageData[i][j][2] * 255.0f); // Blue
+    }
+  }
+
+  // Create an osg::Image and assign the pixel data to it
+  osg::ref_ptr<osg::Image> osgImage = new osg::Image();
+  osgImage->setImage(width, height, 1,  // width, height, depth
+                     GL_RGB,            // Internal format (RGB)
+                     GL_RGB,            // Pixel format
+                     GL_UNSIGNED_BYTE,  // Data type
+                     pixelData,         // Pointer to the pixel data
+                     osg::Image::USE_NEW_DELETE); // Use USE_NEW_DELETE so OSG manages memory
+
+  return osgImage;
+}
+
 VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, int height_,
                                                bool color, bool depth) :
   ComponentBase(parent), width(width_), height(height_),
-  renderRGB(color), renderDepth(depth), colData(nullptr), depthData(nullptr)
+  renderRGB(color), renderDepth(depth), recordImages(false),
+  colData(nullptr), depthData(nullptr)
 {
   subscribe("Capture", &VirtualCameraComponent::render);
-  subscribe("ToggleVirtualRenderGui", &VirtualCameraComponent::togglePixelGui);
+  subscribe("TogglePixelGui", &VirtualCameraComponent::togglePixelGui);
+  subscribe("ToggleRecording", &VirtualCameraComponent::toggleRecording);
+  subscribe("Save", &VirtualCameraComponent::save);
 
   virtualRenderer = new Rcs::DepthRenderer(width, height);
 
@@ -77,7 +129,7 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent, int width_, i
     memset(this->colData, 0, 3*width*height*sizeof(double));
   }
 
-  togglePixelGui();
+  //togglePixelGui();
 }
 
 VirtualCameraComponent::~VirtualCameraComponent()
@@ -134,31 +186,102 @@ void VirtualCameraComponent::render()
   double t_render = Timer_getSystemTime();
   virtualRenderer->frame();
 
-  // Update the pixel widget
-  double* cDataPtr = colData;
-  for (size_t i = 0; i < height; ++i)
+  if (pixelGui)
   {
-    for (size_t j = 0; j < width; ++j)
+    // Update the pixel widget
+    double* cDataPtr = colData;
+    for (size_t i = 0; i < height; ++i)
     {
-      if (depthData)
+      for (size_t j = 0; j < width; ++j)
       {
-        depthData[i * width + j] = zImage[i][j];
+        if (depthData)
+        {
+          depthData[i * width + j] = zImage[i][j];
+        }
+
+        if (colData)
+        {
+          cDataPtr[0] = rgbImage[i][j][0];
+          cDataPtr[1] = rgbImage[i][j][1];
+          cDataPtr[2] = rgbImage[i][j][2];
+          cDataPtr += 3;
+        }
       }
 
-      if (colData)
-      {
-        cDataPtr[0] = rgbImage[i][j][0];
-        cDataPtr[1] = rgbImage[i][j][1];
-        cDataPtr[2] = rgbImage[i][j][2];
-        cDataPtr += 3;
-      }
     }
 
+  }   // if (pixelGui)
+
+  if (recordImages)
+  {
+    osg::ref_ptr<osg::Image> img = vectorToOsgImage(rgbImage);
+    recordings.push_back(img);
+    RLOG_CPP(0, "Currenlty storing " << recordings.size() << " images.");
   }
+
   t_render = Timer_getSystemTime() - t_render;
   RLOG(1, "Rendering took %.1f msec", 1000.0 * t_render);
+}
 
+void VirtualCameraComponent::startRecording()
+{
+  recordImages = true;
+}
 
+void VirtualCameraComponent::stopRecording()
+{
+  recordImages = false;
+}
+
+void VirtualCameraComponent::clearRecordings()
+{
+  recordings.clear();
+}
+
+void VirtualCameraComponent::toggleRecording()
+{
+  if (recordImages)
+  {
+    stopRecording();
+  }
+  else
+  {
+    startRecording();
+  }
+}
+
+bool VirtualCameraComponent::isRecording()
+{
+  return recordImages;
+}
+
+static void saveThread(std::vector<osg::ref_ptr<osg::Image>> images)
+{
+  static size_t runningIdx = 0;
+  RLOG_CPP(0, "Saving " << images.size() << " images");
+
+  for (size_t i = 0; i < images.size(); ++i)
+  {
+    // Create a stringstream to build the filename with padding
+    std::ostringstream ss;
+    ss << "rgb_" << std::setw(5) << std::setfill('0') << runningIdx++ << ".png";
+    std::string filename = ss.str();
+
+    RLOG_CPP(0, "Saving " << filename);
+    bool success = osgDB::writeImageFile(*images[i].get(), filename);
+    RCHECK(success);
+  }
+
+}
+
+void VirtualCameraComponent::save()
+{
+  stopRecording();
+  auto tmp = recordings;
+  //saveThread(tmp);
+  std::thread t(saveThread, std::move(tmp));
+  t.detach();
+  clearRecordings();
 }
 
 }   // namespace aff
