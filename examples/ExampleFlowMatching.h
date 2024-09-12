@@ -64,8 +64,6 @@ public:
   virtual void stop();
   virtual void randomize(RcsGraph* graph) const;
 
-protected:
-
   EntityBase entity;
 
   std::string xmlFileName;

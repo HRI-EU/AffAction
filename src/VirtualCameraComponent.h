@@ -51,9 +51,10 @@ public:
 
   VirtualCameraComponent(EntityBase* parent,
                          int width=640, int height=480,
-                         bool color=true, bool depth=false);
+                         bool color=true, bool depth=false,
+                         bool subscribeAll=false);
   virtual ~VirtualCameraComponent();
-  void render();
+  virtual void capture();
   void setCameraTransform(const HTr* A_camI);
   void setCameraTransform(const double xyzabc[6]);
   void setSceneData(osg::Node* node);
@@ -62,10 +63,9 @@ public:
   void stopRecording();
   void toggleRecording();
   bool isRecording();
-  void clearRecordings();
   void save();
 
-private:
+protected:
 
   std::unique_ptr<Rcs::AsyncWidget> pixelGui;
   int width;
@@ -76,7 +76,8 @@ private:
   double* colData;     // 3 * width * height
   double* depthData;   // width * height
   osg::ref_ptr<Rcs::DepthRenderer> virtualRenderer;
-  std::vector<osg::ref_ptr<osg::Image>> recordings;
+
+private:
 
   VirtualCameraComponent(const VirtualCameraComponent&) = delete;
   VirtualCameraComponent& operator=(const VirtualCameraComponent&) = delete;
