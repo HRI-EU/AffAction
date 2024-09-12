@@ -156,8 +156,6 @@ public:
       : time(t), position(pos), imageFileName(imgFile), image(img)
     {
     }
-
-
   };
 
 
@@ -221,7 +219,13 @@ public:
   static void saveThread(const std::vector<Sample>& samples, std::string saveDir)
   {
     bool success = createDirectory(saveDir);
-    RCHECK_MSG(success, "Could not create directory \"%s\"", saveDir.c_str());
+
+    if (!success)
+    {
+      RLOG(0, "Could not create directory \"%s\" - skipping %zu samples",
+           saveDir.c_str(), samples.size());
+      return;
+    }
 
     RLOG_CPP(0, "Saving " << samples.size() << " samples");
     std::string dataFileName = saveDir + "/" + "data.txt";
@@ -260,9 +264,16 @@ public:
   {
     stopRecording();
     auto tmp = samples;
-    //saveThread(tmp);
-    std::thread t(saveThread, std::move(tmp), getCurrentTimeString());
-    t.detach();
+    if (!tmp.empty())
+    {
+      //saveThread(tmp);
+      std::thread t(saveThread, std::move(tmp), getCurrentTimeString());
+      t.detach();
+    }
+    else
+    {
+      RLOG(0, "No samples found - nothing to save");
+    }
     samples.clear();
   }
 
@@ -271,8 +282,6 @@ public:
     stopRecording();
     samples.clear();
   }
-
-  //std::string saveDir;
 
   std::vector<Sample> samples;
 };
