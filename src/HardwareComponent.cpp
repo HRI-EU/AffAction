@@ -358,7 +358,7 @@ ComponentBase* createComponent(EntityBase& entity,
     std::string physicsEngine = "Bullet";
     getValue<std::string>(argsVec, "-physics", physicsEngine);
     getValue<std::string>(argsVec, "-physics_config", physicsConfig);
-    RLOG_CPP(0, "Creating physics with engine " << physicsEngine << " and config file " << physicsConfig);
+    RLOG_CPP(5, "Creating physics with engine " << physicsEngine << " and config file '" << physicsConfig << "'");
     RCHECK(graph);
     return new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig);
   }

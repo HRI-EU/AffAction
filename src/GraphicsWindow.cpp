@@ -39,6 +39,7 @@
 #include <Rcs_utils.h>
 #include <Rcs_Vec3d.h>
 #include <Rcs_graphicsUtils.h>
+#include <Rcs_timer.h>
 
 #include <thread>
 #include <iostream>
@@ -56,7 +57,8 @@ public:
 
   virtual ~MapItem()
   {
-    RcsGraph_destroy(this->graph);
+    RcsGraph_destroy(this->osgGraph);
+    RcsGraph_destroy(this->bufGraph);
 
     // Clean up mutex.
     if (realizeMtx.try_lock())
@@ -85,7 +87,21 @@ public:
 
     // \todo: This might have concurrency issues. We better copy into a class
     //        internal buffer, than directly into the internal graph.
-    RcsGraph_copy(graph, other);
+    std::lock_guard<std::mutex> lock(graphCopyMtx);
+    double dt = Timer_getSystemTime();
+    RcsGraph_copy(bufGraph, other);
+    RLOG(6, "Graph copy took %.2f msec", (Timer_getSystemTime()-dt)*1000.0);
+  }
+
+  void updateState()
+  {
+    if (!isVisible())
+    {
+      return;
+    }
+
+    std::lock_guard<std::mutex> lock(graphCopyMtx);
+    RcsGraph_copy(osgGraph, bufGraph);
   }
 
   static void realizeNodeInThread(GraphicsWindow* window, std::string eventName,
@@ -234,14 +250,9 @@ public:
 
   }
 
-  RcsGraph* getGraph() const
-  {
-    return this->graph;
-  }
-
 private:
 
-  MapItem() : Rcs::GraphNode(), graph(NULL)
+  MapItem() : Rcs::GraphNode(), osgGraph(nullptr), bufGraph(nullptr)
   {
     this->realizeMtx.lock();
   }
@@ -254,9 +265,10 @@ private:
     // The entry has been created before, therefore getEntry() always returns a valid entry.
     osg::ref_ptr<MapItem> mi = getEntry(graphId);
     RCHECK(mi.valid());
-    mi->graph = RcsGraph_clone(other);
+    mi->osgGraph = RcsGraph_clone(other);
+    mi->bufGraph = RcsGraph_clone(other);
 
-    bool success = mi->init(mi->graph, false);
+    bool success = mi->init(mi->osgGraph, false);
 
     if (success==false)
     {
@@ -290,7 +302,9 @@ private:
   MapItem& operator=(const MapItem&);
 
   mutable std::mutex realizeMtx;
-  RcsGraph* graph = nullptr;
+  mutable std::mutex graphCopyMtx;
+  RcsGraph* osgGraph = nullptr;
+  RcsGraph* bufGraph = nullptr;
 
   static std::map<std::string,osg::ref_ptr<MapItem>> eventMap;
   static std::vector<std::string> deactivatedBodies;
@@ -826,6 +840,18 @@ void GraphicsWindow::onRenderLines(const MatNd* array)
 
 void GraphicsWindow::frame()
 {
+  double dt = Timer_getSystemTime();
+  std::map<std::string,osg::ref_ptr<MapItem>> cpyOfMap = MapItem::getEventMap();
+  for (auto it = cpyOfMap.begin(); it != cpyOfMap.end(); ++it)
+  {
+    std::string graphId = it->first;
+    osg::ref_ptr<MapItem> mi = it->second;
+    mi->updateState();
+  }
+
+  RLOG(6, "Pasting %zu graphs took %.2f msec",
+       cpyOfMap.size(), (Timer_getSystemTime()-dt)*1000.0);
+
   Viewer::frame();
   handleKeys();
 }
