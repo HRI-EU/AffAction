@@ -50,6 +50,7 @@
 #include <Rcs_geometry.h>
 
 #include <algorithm>
+#include <cfloat>
 
 #define OVERRIDE_3D
 
