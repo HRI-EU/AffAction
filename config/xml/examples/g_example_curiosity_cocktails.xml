@@ -63,8 +63,13 @@
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
 
-  <!--  Pizza scenario -->
-  <Group prev="aruco_base" >
+  <!--  Table with grid -->
+  <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.7 0 0 0" >
+    <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
+  </Group>
+
+  <!--  Cocktails scenario -->
+  <Group prev="table" >
     <xi:include href="../cocktails/g_spezi_with_agent.xml"/>
   </Group>
 

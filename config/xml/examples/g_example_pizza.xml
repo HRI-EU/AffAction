@@ -62,15 +62,18 @@
     <Supportable frame="camera_0"/>
   </AffordanceModel>
 
-
-  
   <!-- The model of the robot. -->
   <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
 
+  <!--  Table with grid -->
+  <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.7 0 0 0" >
+    <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
+  </Group>
+
   <!--  Pizza scenario -->
-  <Group prev="aruco_base" >
+  <Group prev="table" >
     <xi:include href="../pizza/g_pizza.xml"/>
   </Group>
 

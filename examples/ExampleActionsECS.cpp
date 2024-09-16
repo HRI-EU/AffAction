@@ -832,26 +832,26 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('m', [this](char k)
   {
-    Rcs::BodyNode* bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
     if (!bn)
     {
       return;
     }
 
-    const ActionScene* scene = getScene();
-    std::vector<const Manipulator*> om = scene->getOccupiedManipulators(controller->getGraph());
+    auto scene = getScene();
+    auto om = scene->getOccupiedManipulators(controller->getGraph());
     RLOG_CPP(0, "Found " << om.size() << " occupied manipulators");
 
     if (om.empty())
     {
-      std::string textCmd = "get " + std::string(bn->body()->name);
+      auto textCmd = "get " + std::string(bn->body()->name);
       entity.publish("PlanDFSEE", textCmd);
     }
     else
     {
-      std::vector<const AffordanceEntity*> ge = om[0]->getGraspedEntities(*scene, controller->getGraph());
+      auto ge = om[0]->getGraspedEntities(*scene, controller->getGraph());
       RCHECK_MSG(!ge.empty(), "For manipulator: '%s'", om[0]->name.c_str());
-      std::string textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
+      auto textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
       entity.publish("PlanDFSEE", textCmd);
     }
 
@@ -864,22 +864,12 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Toggle talk flag");
 
-  viewer->setKeyCallback('l', [this](char k)
-  {
-    RLOG(0, "Resetting LLM memory");
-    entity.publish("ResetLLM");
-    auto v = viewer.release();
-    delete v;
-
-  }, "Resetting LLM memory");
-
   viewer->setKeyCallback('p', [this](char k)
   {
-    RLOG(0, "Replaying log");
-    entity.publish("ReplayLog");
+    RLOG(0, "Resetting physics rigid bodies");
     entity.publish("ResetRigidBodies");
 
-  }, "Replaying log");
+  }, "Resetting physics rigid bodies");
 
   viewer->setKeyCallback('A', [this](char k)
   {

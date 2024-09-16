@@ -48,7 +48,7 @@
 
     <AffordanceModel body="bowl_" types="bowl">
         <Stackable frame="bowl_"/>
-        <Supportable frame="inside_bowl_"/>
+        <noSupportable frame="inside_bowl_"/>
         <Containable frame="tip_bowl_" max_volume="0.5" open="true" />
         <PowerGraspable frame="grip_bowl_"/>
     </AffordanceModel>
