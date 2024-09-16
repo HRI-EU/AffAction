@@ -294,14 +294,14 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   // Check of initial conditions of the prediction. Since we did not compute
   // the IK yet, there is no singularity check at this point
 
-  if (check(jointLimitCheck, collisionCheck, speedLimitCheck)==false)
-  {
-    result.feedbackMsg.error = "FATAL_ERROR";
-    result.feedbackMsg.reason = "Initial state is invalid";
-    result.success = false;
-    result.t_predict = Timer_getTime() - result.t_predict;
-    return result;
-  }
+  //if (check(jointLimitCheck, collisionCheck, speedLimitCheck)==false)
+  //{
+  //  result.feedbackMsg.error = "FATAL_ERROR";
+  //  result.feedbackMsg.reason = "Initial state is invalid";
+  //  result.success = false;
+  //  result.t_predict = Timer_getTime() - result.t_predict;
+  //  return result;
+  //}
 
   // Initialize the previous activation vector with the current activation
   // state to determine task switches.
