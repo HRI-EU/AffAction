@@ -493,7 +493,8 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           RLOG(0, "errIdx = %d", errIdx);
 
           result.feedbackMsg.error = "Reachability problem";
-          result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
+          // result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
+          result.feedbackMsg.suggestion = "Try again, but move more slowly";
           result.feedbackMsg.developer = "Tracking error at t=" + std::to_string(t) + " is " + std::to_string(err);
           result.feedbackMsg.developer += " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__);
           std::string unreachableObject = "object", reachingEffector = "hand";
@@ -546,7 +547,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           }
           else
           {
-            result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " with the " + reachingEffector + " - it is too far away";
+            result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " with the " + reachingEffector + " - it might be too far away, or you need to move more slowly";
           }
 
           for (unsigned int i=0; i<controller->getGraph()->dof; ++i)
