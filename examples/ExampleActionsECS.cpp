@@ -570,14 +570,11 @@ bool ExampleActionsECS::initGraphics()
 
   if (!virtualCam.empty())
   {
-    auto vcam = new VirtualCameraComponent(&entity);
+    auto vcam = new VirtualCameraComponent(&entity, 640, 480, true, false, true);
     double trf6[6];
     VecNd_set6(trf6, -1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258);
     HTr A_CI;
     HTr_from6DVector(&A_CI, trf6);
-    //osg::Group* rootGrp = dynamic_cast<osg::Group*>(vcam->virtualRenderer->getSceneData());
-    //RCHECK(rootGrp);
-    //rootGrp->addChild(new Rcs::GraphNode(controller->getGraph()));
     vcam->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
     vcam->setCameraTransform(&A_CI);
     addComponent(vcam);

@@ -54,7 +54,7 @@ VirtualCameraComponent::VirtualCameraComponent(EntityBase* parent,
 {
   if (subscribeAll)
   {
-    subscribe("Capture", &VirtualCameraComponent::capture);
+    subscribe("Render", &VirtualCameraComponent::capture);
     subscribe("TogglePixelGui", &VirtualCameraComponent::togglePixelGui);
   }
 
