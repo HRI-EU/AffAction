@@ -547,6 +547,24 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
   }
   RLOG_CPP(1, "Done erase Supportables nearer than. Remaining: " << aMap.size());
 
+  // Erase the Supportables that are already occupied wit something. We only do it if the
+  // object to put is collideable.
+  if (object->isCollideable(graph))
+  {
+    auto it = aMap.begin();
+    while (it != aMap.end())
+    {
+      const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
+      auto childrenOfAff = domain.getDirectChildren(graph, s);
+      const bool eraseMe = !childrenOfAff.empty();
+      RLOG(0, "%s Supportable %s because something is already on it: %s etc.",
+           eraseMe ? "Erasing" : "Keeping", s->frame.c_str(),
+           childrenOfAff[0]->bdyName.c_str());
+      it = eraseMe ? aMap.erase(it) : it+1;
+    }
+  }
+
+
   // If the map is empty after removing all non-frame Supportables, we give up.
   if (aMap.empty())
   {

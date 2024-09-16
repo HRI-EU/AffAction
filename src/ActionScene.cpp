@@ -489,6 +489,32 @@ std::vector<const AffordanceEntity*> ActionScene::getDirectChildren(const RcsGra
   return foundOnes;
 }
 
+std::vector<const AffordanceEntity*> ActionScene::getDirectChildren(const RcsGraph* graph,
+                                                                    const Affordance* affordance) const
+{
+  std::vector<const AffordanceEntity*> foundOnes;
+
+  if (!affordance)
+  {
+    return foundOnes;
+  }
+
+  const RcsBody* parentAffFrame = affordance->getFrame(graph);
+
+  // Inner one loops through all entities
+  for (const auto& childCandidate : entities)
+  {
+    const RcsBody* childCandidateBdy = childCandidate.body(graph);
+
+    if (childCandidateBdy->parentId == parentAffFrame->id)
+    {
+      foundOnes.push_back(&childCandidate);
+    }
+  }
+
+  return foundOnes;
+}
+
 //const AffordanceEntity* ActionScene::getParentAffordanceEntity(const RcsGraph* graph,
 //                                                               const AffordanceEntity* child) const
 //{

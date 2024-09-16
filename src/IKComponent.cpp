@@ -45,7 +45,7 @@ namespace aff
 IKComponent::IKComponent(EntityBase* parent,
                          Rcs::ControllerBase* controller_, IkSolverType ik) :
   ComponentBase(parent), controller(controller_), ikSolver(NULL), a_prev(NULL),
-  eStop(false), alphaMax(0.05), alpha(0.0), lambda(1.0e-6), blending(1.0), phase(0.0),
+  eStop(false), alphaMax(0.05), alpha(0.0), lambda(1.0e-4), blending(1.0), phase(0.0),
   qFilt(0.0), renderSolid(false), speedLimitCheck(true), jointLimitCheck(true),
   collisionCheck(true), applySpeedAndAccLimits(true)
 {

@@ -220,7 +220,7 @@ private:
   bool eStop;
   double alphaMax;
   double alpha;
-  double lambda;          ///< Default is 1.0e-6
+  double lambda;
   double blending;
   double phase;
   double qFilt;

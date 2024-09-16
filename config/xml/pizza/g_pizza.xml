@@ -28,51 +28,9 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
 
-  <!-- The model for the dining table.
-	<Group rigid_body_joints="-0.22 0 0.7 0 0 0" >
-		<xi:include href="../scene/g_table_with_grid_140x80.xml"/>
-	</Group>
- -->
-
-  <!-- table (x was 0.65)
-    <Body name="table" rigid_body_joints="-0.27 0 0.7 0 0 0" physics="kinematic" color="GRAY" >
-        <Shape type="FRAME" scale="0.3" graphics="false"/>
-        <Shape type="BOX" extents="0.8 1.4 0.02" transform="0.05 0 -0.01 0 0 0" graphics="true" physics="true"
-               distance="true" textureFile="textures/table.png"/>
-    </Body>
-    <Body name="table_left" prev="table" transform="-0.25 0.3 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_left_2" prev="table" transform="-0.25 0.2 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_3" prev="table" transform="-0.25 0.1 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-
-    <Body name="table_right" prev="table" transform="-0.25 -0.3 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_right_2" prev="table" transform="-0.25 -0.2 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-    <Body name="table_4" prev="table" transform="-0.25 -0.1 0 0 0 0" >
-        <Shape type="BOX" extents="0.1 0.1  0.001" graphics="true" wireframe="true" color="YELLOW" />
-    </Body>
-
-    <AffordanceModel body="table" types="furniture">
-        <Supportable frame="table" />
-        <Supportable frame="table_left" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_right" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_left_2" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_right_2" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_3" extentsX="0.1" extentsY=".1" />
-        <Supportable frame="table_4" extentsX="0.1" extentsY=".1" />
-    </AffordanceModel>
-  -->
   
     <!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.25 0 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+    <Body name="shelf" prev="table" rigid_body_joints="0.2 0 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
         <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.png"/>
@@ -193,139 +151,186 @@
       </Containable>
       <Openable open="true"/>
     </AffordanceModel>
-  
+    
 
 
-	<Group name="anchovies" prev="table_grid_0_6" color="RUBY" rigid_body_joints="true" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="anchovies" prev="table_grid_0_6" color="RUBY" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="artichoke_hearts" prev="table_grid_0_4" color="EMERALD" rigid_body_joints="true" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="artichoke_hearts" prev="table_grid_0_4" color="EMERALD" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="bacon" prev="tray_position_3" color="RUBY" rigid_body_joints="true" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="bacon" prev="tray_position_3" color="RUBY" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="black_olives" prev="table_grid_0_7" rigid_body_joints="true" color="BLACK_RUBBER" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="black_olives" prev="table_grid_0_7" rigid_body_joints="true" color="BLACK_RUBBER" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="feta_cheese" prev="table_grid_2_3" rigid_body_joints="true" color="WHITE" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="feta_cheese" prev="table_grid_2_3" rigid_body_joints="true" color="WHITE" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="fresh_basil_leaves" prev="table_grid_2_7" rigid_body_joints="true" color="EMERALD" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="fresh_basil_leaves" prev="table_grid_2_7" rigid_body_joints="true" color="EMERALD" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="fresh_tomatoes" prev="table_grid_2_6" rigid_body_joints="true" color="RED" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="fresh_tomatoes" prev="table_grid_2_6" rigid_body_joints="true" color="RED" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="garlic" prev="shelf_position_1" rigid_body_joints="true" color="LIGHT_GRAY" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="garlic" prev="shelf_position_1" rigid_body_joints="true" color="LIGHT_GRAY" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="goat_cheese" prev="table_grid_0_8" rigid_body_joints="true" color="RUBY">
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="goat_cheese" prev="table_grid_0_8" rigid_body_joints="true" color="RUBY">
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="grilled_chicken" prev="shelf_position_6" rigid_body_joints="true" color="RUBY">
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="grilled_chicken" prev="shelf_position_6" rigid_body_joints="true" color="RUBY">
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="italian_seasoning" prev="table_grid_0_2" rigid_body_joints="true" color="EMERALD">
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="italian_seasoning" prev="table_grid_0_2" rigid_body_joints="true" color="EMERALD">
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="ham" prev="table_grid_2_2" rigid_body_joints="true" color="LIGHTGRAY">
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="ham" prev="table_grid_2_2" rigid_body_joints="true" color="LIGHTGRAY">
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="mozzarella_cheese" prev="tray_position_4" rigid_body_joints="true" color="WHITE">
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="mozzarella_cheese" prev="tray_position_4" rigid_body_joints="true" color="WHITE">
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="mushrooms" prev="table_grid_1_2" rigid_body_joints="true" color="GRAY" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="mushrooms" prev="table_grid_1_2" rigid_body_joints="true" color="GRAY" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="parmesan_cheese" prev="table_grid_1_3" rigid_body_joints="true" color="YELLOW" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="parmesan_cheese" prev="table_grid_1_3" rigid_body_joints="true" color="YELLOW" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="pepperoni_slices" prev="table_grid_2_1" rigid_body_joints="true" color="DARKRED" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="pepperoni_slices" prev="table_grid_2_1" rigid_body_joints="true" color="DARKRED" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="pineapple_chunk" prev="table_grid_0_5" rigid_body_joints="true" color="YELLOW" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="pineapple_chunk" prev="table_grid_0_5" rigid_body_joints="true" color="YELLOW" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="red_onions" prev="tray_position_5" rigid_body_joints="true" color="BRICKRED" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="red_onions" prev="tray_position_5" rigid_body_joints="true" color="BRICKRED" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="ricotta_cheese" prev="table_grid_0_3" rigid_body_joints="true" color="WHITE" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="ricotta_cheese" prev="table_grid_0_3" rigid_body_joints="true" color="WHITE" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="provolone_cheese" prev="table_grid_1_6" rigid_body_joints="true" color="DARKGREEN" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="provolone_cheese" prev="table_grid_1_6" rigid_body_joints="true" color="DARKGREEN" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="saussages" prev="tray_position_1" rigid_body_joints="true" color="ORANGE" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="saussages" prev="tray_position_1" rigid_body_joints="true" color="ORANGE" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="spinach_leaves" prev="shelf_position_3" rigid_body_joints="true" color="GREEN" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
+    <Group name="spinach_leaves" prev="shelf_position_3" rigid_body_joints="true" color="GREEN" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
-	<Group name="sun_dried_tomatoes" prev="tray_position_6" rigid_body_joints="true" color="DARKRED" >
-		<xi:include href="g_bowl_with_items.xml"/>
-	</Group>
-
-
-
+    <Group name="sun_dried_tomatoes" prev="tray_position_6" rigid_body_joints="true" color="DARKRED" >
+      <xi:include href="../scene/g_bowl_with_items.xml"/>
+    </Group>
 
 
 
     <!-- olive_oil_bottle -->
-    <Body name="olive_oil_bottle" prev="table_grid_1_8" rigid_body_joints="true" color="EMERALD" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1" />
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.png" transform="0.035 0 0.12 0 90 0"/>
+    <Group prev="table_grid_1_8" name="_olive_oil" color="EMERALD" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bottle_cocktail.xml"/>
+    </Group>
+    
+    <!-- peppers_bottle -->
+    <Group prev="shelf_position_7" name="_peppers" color="RUBY" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bottle_cocktail.xml"/>
+    </Group>
+
+    <!-- pesto_sauce_bottle -->
+    <Group prev="tray_position_2" name="_pesto_sauce" color="GREEN" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bottle_cocktail.xml"/>
+    </Group>
+
+    <!-- salt_bottle -->
+    <Group prev="shelf_position_5" name="_salt" color="WHITE" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bottle_cocktail.xml"/>
+    </Group>
+
+    <!-- tomato_sauce_bottle -->
+    <Group prev="shelf_position_4" name="_tomato_sauce" color="RED" rigid_body_joints="true" >
+      <xi:include href="../scene/g_bottle_cocktail.xml"/>
+    </Group>
+
+
+
+    
+    <!-- big_plate -->
+    <Body name="big_plate" prev="table" rigid_body_joints="-0.03 0.06 0.015 0 0 0" color="COPPER" physics="dynamic" mass="0.5" >
+        <Shape type="CYLINDER" radius="0.15" length="0.03" graphics="true" distance="true" />
+        <Shape type="FRAME" scale="0.1" transform="0 0 -0.015 0 0 0" graphics="false"/>
     </Body>
 
-    <Body name="olive_oil_bottle_tip" prev="olive_oil_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
+    <Body name="big_plate_inside" prev="big_plate" transform="0 0 0.015 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <Body name="olive_oil_bottle_grip" prev="olive_oil_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
+    <Body name="big_plate_grip_1" prev="big_plate" transform="-0.15 0 0.015 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
     </Body>
 
-    <AffordanceModel body="olive_oil_bottle" types="bottle">
-      <Stackable frame="olive_oil_bottle"/>
-      <Pourable frame="olive_oil_bottle_tip"/>
-      <Twistable frame="olive_oil_bottle_tip"/>
-      <PowerGraspable frame="olive_oil_bottle_grip" />
-      <PointPokable frame="olive_oil_bottle_tip"/>
-      <Containable frame="olive_oil_bottle" max_volume="1.0" >
-        <Ingredient name="olive_oil" volume="1.0" />
-      </Containable>
-      <Openable open="true"/>
+    <Body name="big_plate_pour" prev="big_plate" transform="0 0 0.25 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <AffordanceModel body="big_plate" types="plate">
+        <Stackable frame="big_plate"/>
+        <Supportable frame="big_plate_inside"/>
+        <PowerGraspable frame="big_plate_grip_1"/>
+        <Containable frame="big_plate_pour" max_volume="0.8" />
+    </AffordanceModel>
+
+    <!-- pizza_dough-->
+    <Body name="pizza_dough" prev="big_plate_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.5" >
+        <Shape type="CYLINDER" radius="0.14" length="0.01" graphics="true" distance="false"
+               transform="0 0 0.005 0 0 0"/>
+        <Shape type="FRAME" scale="0.1" graphics="true" />
+    </Body>
+
+    <Body name="pizza_dough_top" prev="pizza_dough" transform="0 0 0.05 0 0 0" >
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="pizza_dough_pour" prev="pizza_dough" transform="0 0 0.25 0 0 0">
+        <Shape type="FRAME" scale="0.1" graphics="true"/>
+    </Body>
+
+    <Body name="pizza_dough_grip_1" prev="pizza_dough" >
+        <Shape type="FRAME" scale="0.1" graphics="false" transform="-0.16 0 0.015 0 0 0"/>
+    </Body>
+
+    <AffordanceModel body="pizza_dough" types="pizza_dough">
+        <Stackable frame="pizza_dough"/>
+        <Supportable frame="pizza_dough_top" extentsX="0.05" extentsY="0.05" />
+        <PowerGraspable frame="pizza_dough_grip_1"/>
+      <Containable frame="pizza_dough_pour" max_volume="0.8" />
     </AffordanceModel>
 
 
+
     <!-- Grapes in the olive oil bottle, test for pouring -->
-    <Body name="grape_1" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
+    <Body name="grape_1" prev="bottle_of_olive_oil" rigid_body_joints="true" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" color="BRICKRED" transform="0 -0.02 0 0 0 0" />
     </Body>
 
@@ -335,7 +340,7 @@
     </AffordanceModel>
 
     <!-- Grapes in the olive oil bottle, test for pouring -->
-    <Body name="grape_2" prev="olive_oil_bottle" rigid_body_joints="true" physics="dynamic" mass="0.1" >
+    <Body name="grape_2" prev="bottle_of_olive_oil" rigid_body_joints="true" physics="dynamic" mass="0.1" >
         <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" color="BRICKRED" transform="0 0.02 0 0 0 0" />
     </Body>
 
@@ -382,182 +387,5 @@
         <PointPushable frame="oven_switch" />
     </AffordanceModel>
     -->
-    
-    <!-- peppers_bottle -->
-    <Body name="peppers_bottle" prev="shelf_position_7" rigid_body_joints="true" color="RUBY" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.png" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="peppers_bottle_tip" prev="peppers_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="peppers_bottle_grip" prev="peppers_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="peppers_bottle" types="bottle">
-      <Stackable frame="peppers_bottle"/>
-      <Pourable frame="peppers_bottle_tip"/>
-      <Twistable frame="peppers_bottle_tip"/>
-      <PowerGraspable frame="peppers_bottle_grip" />
-      <PointPokable frame="peppers_bottle_tip"/>
-      <Containable frame="peppers_bottle" max_volume="0.5" >
-        <Ingredient name="peppers" volume="0.5" />
-      </Containable>
-      <Openable open="true"/>
-    </AffordanceModel>
-
-    <!-- pesto_sauce_bottle -->
-    <Body name="pesto_sauce_bottle" prev="tray_position_2" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.png" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="pesto_sauce_bottle_tip" prev="pesto_sauce_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="pesto_sauce_bottle_grip" prev="pesto_sauce_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="pesto_sauce_bottle" types="bottle">
-      <Stackable frame="pesto_sauce_bottle"/>
-      <Pourable frame="pesto_sauce_bottle_tip"/>
-      <Twistable frame="pesto_sauce_bottle_tip"/>
-      <PowerGraspable frame="pesto_sauce_bottle_grip" />
-      <PointPokable frame="pesto_sauce_bottle_tip"/>
-      <Containable frame="pesto_sauce_bottle" max_volume="0.5" >
-        <Ingredient name="pesto_sauce" volume="0.5" />
-      </Containable>
-      <Openable open="true"/>
-    </AffordanceModel>
-
-    <!-- big_plate -->
-    <Body name="big_plate" prev="table" rigid_body_joints="-0.03 0.06 0.015 0 0 0" color="COPPER" physics="dynamic" mass="0.5" >
-        <Shape type="CYLINDER" radius="0.15" length="0.03" graphics="true" distance="true" />
-        <Shape type="FRAME" scale="0.1" transform="0 0 -0.015 0 0 0" graphics="false"/>
-    </Body>
-
-    <Body name="big_plate_inside" prev="big_plate" transform="0 0 0.015 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="big_plate_grip_1" prev="big_plate" transform="-0.15 0 0.015 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="big_plate_pour" prev="big_plate" transform="0 0 0.25 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <AffordanceModel body="big_plate" types="plate">
-        <Stackable frame="big_plate"/>
-        <Supportable frame="big_plate_inside"/>
-        <PowerGraspable frame="big_plate_grip_1"/>
-        <Containable frame="big_plate_pour" max_volume="0.8" />
-    </AffordanceModel>
-
-    <!-- pizza_dough-->
-    <Body name="pizza_dough" prev="big_plate_inside" rigid_body_joints="true" color="YELLOW" physics="dynamic" mass="0.5" >
-        <Shape type="CYLINDER" xxextents="0.16 0.16 0.01" radius="0.14" length="0.01" graphics="true" distance="false"
-               transform="0 0 0.005 0 0 0"/>
-        <Shape type="FRAME" scale="0.1" graphics="true"
-               transform="0 0 0 0 0 0"/>
-    </Body>
-
-    <Body name="pizza_dough_top" prev="pizza_dough" transform="0 0 0.05 0 0 0" was_transform="0 0 0.01 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="pizza_dough_pour" prev="pizza_dough" transform="0 0 0.25 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="true"/>
-    </Body>
-
-    <Body name="pizza_dough_grip_1" prev="pizza_dough" transform="0 0 0 0 0 0">
-        <Shape type="FRAME" scale="0.1" graphics="false" transform="-0.16 0 0.015 0 0 0"/>
-    </Body>
-
-    <AffordanceModel body="pizza_dough" types="pizza_dough">
-        <Stackable frame="pizza_dough"/>
-        <Supportable frame="pizza_dough_top" extentsX="0.05" extentsY="0.05" />
-        <PowerGraspable frame="pizza_dough_grip_1"/>
-      <Containable frame="pizza_dough_pour" max_volume="0.8" />
-    </AffordanceModel>
-
-
-    <!-- salt_bottle -->
-    <Body name="salt_bottle" prev="shelf_position_5" xxxprev="table_right_2" rigid_body_joints="true" color="WHITE" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.png" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="salt_bottle_tip" prev="salt_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="salt_bottle_grip" prev="salt_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="salt_bottle" types="bottle">
-      <Stackable frame="salt_bottle"/>
-      <Pourable frame="salt_bottle_tip"/>
-      <Twistable frame="salt_bottle_tip"/>
-      <PowerGraspable frame="salt_bottle_grip" />
-      <PointPokable frame="salt_bottle_tip"/>
-      <Containable frame="salt_bottle" max_volume="0.5" >
-        <Ingredient name="salt" volume="0.5" />
-      </Containable>
-    </AffordanceModel>
-
-
-    <!-- tomato_sauce_bottle -->
-    <Body name="tomato_sauce_bottle" prev="shelf_position_4" rigid_body_joints="true" color="RED" physics="dynamic" mass="1" >
-        <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="true" transform="0 0 0.04 0 0 0"/>
-        <Shape type="CYLINDER" length="0.04" radius="0.035" distance="false" graphics="true" transform="0 0 0.02 0 0 0"/>
-        <Shape type="CYLINDER" length="0.01" radius="0.0175" distance="false" graphics="true" transform="0 0 0.215 0 0 0" color="BLACK_RUBBER" />
-        <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
-        <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.png" transform="0.035 0 0.12 0 90 0"/>
-    </Body>
-
-    <Body name="tomato_sauce_bottle_tip" prev="tomato_sauce_bottle" transform="0 0 0.23 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <Body name="tomato_sauce_bottle_grip" prev="tomato_sauce_bottle" transform="0 0 0.12 0 0 0">
-        <Shape type="FRAME" scale="0.1"/>
-    </Body>
-
-    <AffordanceModel body="tomato_sauce_bottle" types="bottle">
-      <Stackable frame="tomato_sauce_bottle"/>
-      <Pourable frame="tomato_sauce_bottle_tip"/>
-      <Twistable frame="tomato_sauce_bottle_tip"/>
-      <PowerGraspable frame="tomato_sauce_bottle_grip" />
-      <PointPokable frame="tomato_sauce_bottle_tip"/>
-      <Containable frame="tomato_sauce_bottle" max_volume="0.5" >
-        <Ingredient name="tomato_sauce" volume="0.5" />
-      </Containable>
-      <Openable open="true"/>
-    </AffordanceModel>
 
 </Graph>

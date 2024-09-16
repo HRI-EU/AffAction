@@ -227,7 +227,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   dt_max = 0.0;
   dt_max2 = 0.0;
   alpha = 0.05;
-  lambda = 1.0e-6;
+  lambda = 1.0e-4;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;

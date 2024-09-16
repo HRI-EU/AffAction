@@ -311,7 +311,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   MatNd* x_des = MatNd_create(tc->getController()->getTaskDim(), 1);
 
   const double alpha = 0.05;      // \todo (MG): Check if consistent with IK
-  const double lambda = 1.0e-6;   // \todo (MG): Check if consistent with IK
+  const double lambda = 1.0e-4;   // \todo (MG): Check if consistent with IK
   const double qFiltDecay = 0.1;  // \todo (MG): Check if consistent with IK
   const bool verbose = false;
   //double scaleJointSpeeds = 1.0;
@@ -377,10 +377,12 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     //scaleJointSpeeds = std::min(RcsGraph_checkJointSpeeds(graph, graph->q_dot, 1.0, RcsStateFull), scaleJointSpeeds);
 
     // Determine joint speed scaling factor to exactly be at the speed limit
+    double newJointScaling = 0.0;   // 0 for no speeds, 1 for max speeds
     RCSGRAPH_FOREACH_JOINT(graph)
     {
       const double q_dot = fabs(graph->q_dot->ele[JNT->jointIndex]);
       const double newScaling = q_dot / JNT->speedLimit;
+      newJointScaling = std::max(newJointScaling, newScaling);
 
       if (newScaling > jointSpeedScaler)
       {
@@ -422,7 +424,6 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 #if 0
       // Difference between desired trajectory and IK state
       // New implementation considering different task metrics
-      if (true==true)
       {
         unsigned int nRowsActive = 0, nRowsAll = 0;
         MatNd* dx_err = MatNd_createLike(x_des);   // It's a bit oo large, but this doesn't matter
@@ -439,22 +440,20 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
             double* dx_i = &dx_err->ele[nRowsActive];
             task->computeDX(dx_i, x_des_i);
             double errEps = MAX_TRACKING_ERROR;
-            double err_i;
+            double err_i = VecNd_maxAbsEle(dx_i, dimTask);
 
-            if (task->getClassName() == "Joint" || task->getClassName() == "Joints")
+            if (task->getClassName() == "Joint" ||
+                task->getClassName() == "Joints" ||
+                task->getClassName() == "POLAR" ||
+                task->getClassName() == "ABC")
             {
               errEps = RCS_DEG2RAD(5.0);
-              err_i = VecNd_maxAbsEle(dx_i, dimTask);
-            }
-            else
-            {
-              err_i = VecNd_maxAbsEle(dx_i, dimTask);
             }
 
             if (err_i > errEps)
             {
               trackingErrorFound = true;
-              RLOG(0, "Found tracking error in task %s: %f", task->getName().c_str(), err_i);
+              RLOG(0, "Found tracking error in task %s: %f > %f", task->getName().c_str(), err_i, errEps);
             }
 
             err = std::max(err, err_i);
@@ -468,8 +467,8 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
         if (trackingErrorFound)
         {
-          result.message = "Tracking error at t=" + std::to_string(t) + " is " +
-                           std::to_string(err);
+          result.feedbackMsg.reason = "Tracking error at t=" + std::to_string(t) + " is " +
+                                      std::to_string(err);
           result.success = false;
         }
 
@@ -487,10 +486,11 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
 
         err = std::max(err, MatNd_maxAbsEle(dx_err));
 
-        if (err > MAX_TRACKING_ERROR)
+        if (err > MAX_TRACKING_ERROR*(1.0+newJointScaling))
         {
           controller->decompressFromActiveSelf(dx_err, a_des);
           unsigned int errIdx = MatNd_maxAbsEleIndex(dx_err);
+          RLOG(0, "errIdx = %d", errIdx);
 
           result.feedbackMsg.error = "Reachability problem";
           result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
@@ -547,6 +547,19 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
           else
           {
             result.feedbackMsg.reason = "Can't reach the " + unreachableObject + " with the " + reachingEffector + " - it is too far away";
+          }
+
+          for (unsigned int i=0; i<controller->getGraph()->dof; ++i)
+          {
+            const RcsJoint* jnt = &controller->getGraph()->joints[i];
+            if (jnt->constrained || jnt->speedLimit==DBL_MAX)
+            {
+              continue;
+            }
+
+            result.feedbackMsg.developer += "Joint " + std::string(jnt->name) + ": q_dot = " +
+                                            std::to_string(controller->getGraph()->q_dot->ele[i]) +
+                                            " q_dot_max = " + std::to_string(jnt->speedLimit) + "\n";
           }
 
           result.success = false;
@@ -916,6 +929,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
   // dofs (e.g. when keeping an object upright that is parenting a static
   // object, to cover bi-manual actions). That's why we typically add a
   // small lambda regularization.
+  RCHECK(lambda==1.0e-4);
   double det = solver->solveRightInverse(dq_des, dx_des, dH, a, lambda);
 
   // We treat a singular configuration as an error. Typically, lambda is

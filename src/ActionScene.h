@@ -79,6 +79,8 @@ public:
   // passed entitie's affordance frames.
   std::vector<const AffordanceEntity*> getDirectChildren(const RcsGraph* graph,
                                                          const AffordanceEntity* entity) const;
+  std::vector<const AffordanceEntity*> getDirectChildren(const RcsGraph* graph,
+                                                         const Affordance* affordance) const;
 
   const AffordanceEntity* getParentAffordanceEntity(const RcsGraph* graph,
                                                     const AffordanceEntity* child) const;

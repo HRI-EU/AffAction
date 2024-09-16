@@ -361,72 +361,72 @@ Cocktail:
     
     <!-- bitters_bottle -->
 	<Group prev="tray_pos10" name="_bitters" color="LIGHTGRAY" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- brandy_bottle -->
 	<Group prev="shelf_pos2" name="_brandy" color="COPPER" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- coca_cola_bottle -->
 	<Group prev="shelf_pos3" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- gin_bottle -->
 	<Group prev="shelf_pos4" name="_gin" color="TURQUOISE" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- ginger_beer_bottle -->
 	<Group prev="shelf_pos5" name="_ginger_beer" color="BRONZE" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- grenadine_bottle -->
 	<Group prev="shelf_pos6" name="_grenadine" color="RUBY" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- salt_bottle -->
 	<Group prev="tray_pos8" name="_salt" color="PEARL_S" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- tomato_juice_bottle -->
 	<Group prev="tray_pos6" name="_tomato_juice" color="RED" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- soda_water_bottle -->
 	<Group prev="tray_pos3" name="_soda_water" color="LIGHTGRAY_TRANS" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- tequila_bottle -->
 	<Group prev="tray_pos1" name="_tequila" color="YELLOW_TRANS" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- tonic_water_bottle -->
 	<Group prev="tray_pos2" name="_tonic_water" color="JADE_S" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- vermouth_bottle -->
 	<Group prev="table_grid_0_0" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- vodka_bottle -->
 	<Group prev="table_grid_1_4" name="_vodka" color="BLUE" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- whiskey_bottle -->
 	<Group prev="shelf_pos1" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- TODO (CP) find suitable position-->
@@ -936,15 +936,15 @@ Cocktail:
     </AffordanceModel>
 
 	<Group prev="table_grid_1_6" name="_blue" color="BLUE" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 	<Group prev="table_grid_0_7" name="_red" color="RED" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 	<Group prev="table_grid_1_2" name="_green" color="GREEN" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 </Graph>

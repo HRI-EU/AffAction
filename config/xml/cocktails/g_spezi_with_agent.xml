@@ -48,24 +48,24 @@
     
     <!-- fanta_bottle -->
 	<Group prev="table_grid_0_0" name="_fanta" color="YELLOW" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
     <!-- coca_cola_bottle -->
 	<Group prev="table_grid_2_6" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
-		<xi:include href="../examples/g_bottle_cocktail.xml"/>
+		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
 	<Group prev="table_grid_1_6" name="_blue" color="BLUE" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 	<Group prev="table_grid_0_7" name="_red" color="RED" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 	<Group prev="table_grid_1_2" name="_green" color="GREEN" rigid_body_joints="true" >
-		<xi:include href="../examples/g_glass_quadratic.xml"/>
+		<xi:include href="../scene/g_glass_quadratic.xml"/>
 	</Group>
 
 
