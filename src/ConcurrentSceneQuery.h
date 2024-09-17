@@ -89,6 +89,11 @@ public:
    */
   nlohmann::json getSceneState();
 
+  /*! \brief Returns the scene in a form of a URDF. Used for inspecting 
+   *         the scene in more detail from Python.
+   */
+  std::string getURDF();
+
   /*! \brief Returns empty json if no occluded objects exist, or an array of occluded objects
    *         for the agent, for example:
    *         {"occluded": [{"name": "entity name 1", "instance_id": "entity id 1"},

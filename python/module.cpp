@@ -32,6 +32,7 @@
 *******************************************************************************/
 
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include "pybind11_json.hpp"
 #include "pybind_dict_utils.h"
 #include "type_casters.h"
@@ -63,6 +64,8 @@ namespace py = pybind11;
 #endif
 
 #include <chrono>
+#include <vector>
+#include <tuple>
 
 RCS_INSTALL_ERRORHANDLERS
 
@@ -404,6 +407,23 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getSceneState().dump();
   })
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns the entire scene in a URDF format
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_state_urdf", [](aff::ExampleActionsECS& ex) -> std::string
+  {
+    return ex.getQuery()->getURDF();
+  })
+
+  .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z, 
+                          double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
+  {
+    aff::VirtualCamera& virtualCamera = ex.getVirtualCamera();
+    py::array_t<double> colorImage({virtualCamera.height, virtualCamera.width, 3}), depthImage({virtualCamera.height, virtualCamera.width});
+    virtualCamera.render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
+    return std::make_tuple(std::move(colorImage), std::move(depthImage));
+  }, "Renders the current state of the scene. The input is the camera origin and yrp rotation around that origin. Outputs the color and depth image.")
+
   .def("get_parent_entity", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
   {
     return ex.getQuery()->getParentEntity(child);
@@ -597,6 +617,91 @@ PYBIND11_MODULE(pyAffaction, m)
     RLOG_CPP(0, fbmsgAsString);
 
     return fbmsgAsString;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Fill in the parameters of the action sequence,
+  // providing rich information about the reason for failure
+  //
+  // return value: [(failure step, failure reason)] (empty if successful)
+  //////////////////////////////////////////////////////////////////////////////
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>
+  {
+    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
+    RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
+    std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
+
+    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
+                                               0, true, ex.earlyExitAction);
+    
+    // Handling a fatal error in the syntax for the first action
+    RCHECK(tree);
+    std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
+    if(slnPath.empty() || !tree->root->feedbackMsg.error.empty()) {
+      if(tree->root->fatalError)
+      {
+        RLOG_CPP(0, "Fatal Error in Solution 0"); 
+      }
+      return {std::make_tuple(std::vector<std::string>(), tree->root->feedbackMsg.reason, tree->root->feedbackMsg.suggestion)};
+    }
+
+    // Checking for whether the search was successful
+    if (slnPath.back()->success && slnPath.size() == seq.size())
+    {
+      RLOG_CPP(0, "Solution 0 is SUCCESSFUL");
+
+      std::vector<std::string> predictedSeq;
+      predictedSeq.reserve(slnPath.size());
+      for (auto node : slnPath)
+      {
+        predictedSeq.push_back(node->actionCommand());
+      }
+
+      std::string detailedActionCommand = Rcs::String_concatenate(predictedSeq, ";");
+      RLOG_CPP(0, "Final action sequence: " + detailedActionCommand);
+
+      PollBlockerComponent blocker(&ex);
+      ex.getEntity().publish("ActionSequence", detailedActionCommand);
+      blocker.wait();
+
+      return std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>();
+    }
+
+    // Checking the longest failure
+    std::vector<aff::PredictionTreeNode*> leafs;
+    tree->getLeafNodes(leafs, False);
+
+    int deepest_level = 0;
+    for (auto leaf : leafs)
+    {
+      deepest_level = std::max(deepest_level, leaf->level);
+    }
+
+    // Reporting only the nodes with the longest failure
+    std::vector<aff::ActionResult> actionResults;
+    std::vector<std::tuple<std::vector<std::string>, std::string, std::string>> searchResults;
+    for (size_t slnIdx = 0; !slnPath.empty(); ++slnIdx, slnPath = tree->findSolutionPath(slnIdx, false))
+    {
+      RLOG_CPP(0, "Solution " << slnIdx << " is NOT SUCCESSFUL");
+      if (slnPath.back()->level < deepest_level)
+      {
+        RLOG_CPP(0, "Solution " << slnIdx << " skipped");
+        continue;
+      }
+
+      std::vector<std::string> predictedSeq;
+      predictedSeq.reserve(slnPath.size());
+      for (auto node : slnPath)
+      {
+        predictedSeq.push_back(node->actionCommand());
+      }
+
+      const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
+      actionResults.push_back(errMsg);
+      searchResults.emplace_back(std::move(predictedSeq), errMsg.reason, errMsg.suggestion);
+    }
+    ex.getEntity().publish("ActionResult", false, 0.0, actionResults);
+    return searchResults;
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -892,6 +997,8 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("noTrajCheck", &aff::ExampleActionsECS::noTrajCheck)
   .def_readwrite("verbose", &aff::ExampleActionsECS::verbose)
   .def_readwrite("noViewer", &aff::ExampleActionsECS::noViewer)
+  .def_readwrite("virtualCameraWidth", &aff::ExampleActionsECS::virtualCameraWidth)
+  .def_readwrite("virtualCameraHeight", &aff::ExampleActionsECS::virtualCameraHeight)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
   ;

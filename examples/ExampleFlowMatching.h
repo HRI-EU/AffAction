@@ -38,7 +38,8 @@
 #include "GraphComponent.h"
 #include "GraphicsWindow.h"
 #include "PhysicsComponent.h"
-#include "VirtualCameraComponent.h"
+#include "VirtualCameraWindow.h"
+#include "VirtualCamera.h"
 
 #include <ExampleBase.h>
 
@@ -76,7 +77,8 @@ public:
 
   std::unique_ptr<GraphComponent> graphC;
   std::unique_ptr<PhysicsComponent> physicsC;
-  std::unique_ptr<VirtualCameraComponent> vcamC;
+  std::unique_ptr<VirtualCameraWindow> vcamC;
+  std::unique_ptr<VirtualCamera> virtualCamera;
 
   // Subscribed callbacks
   void onQuit();
