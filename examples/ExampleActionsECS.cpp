@@ -38,7 +38,7 @@
 #include "SceneJsonHelpers.h"
 #include "LandmarkZmqComponent.h"
 #include "PhysicsComponent.h"
-#include "VirtualCameraComponent.h"
+#include "VirtualCameraWindow.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -228,6 +228,8 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   dt_max2 = 0.0;
   alpha = 0.05;
   lambda = 1.0e-4;
+  virtualCameraWidth = 640;
+  virtualCameraHeight = 480;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;
@@ -324,7 +326,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-physics", &physicsEngine, "Physics engine (default: none)");
-  parser->getArgument("-virtualCam", &virtualCam, "Camera for virtual rendering");
+  parser->getArgument("-enableVirtualCamWindow", &virtualCameraWindowEnabled, "Window of the camera for virtual rendering");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
@@ -537,6 +539,12 @@ bool ExampleActionsECS::initAlgo()
 
   ActionBase::setTurboMode(turbo);
 
+  // Initialization of the virtual camera to be able to render the scene from python
+  virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graphC->getGraph()), 
+                                                  virtualCameraWidth, virtualCameraHeight);
+
+  
+  // Printing the help prompt
   RLOG_CPP(1, help());
 
   //{
@@ -568,16 +576,12 @@ bool ExampleActionsECS::initGraphics()
     return false;
   }
 
-  if (!virtualCam.empty())
+  if (virtualCameraWindowEnabled)
   {
-    auto vcam = new VirtualCameraComponent(&entity, 640, 480, true, false, true);
-    double trf6[6];
-    VecNd_set6(trf6, -1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258);
+    double trf6[6] = {-1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258};
     HTr A_CI;
     HTr_from6DVector(&A_CI, trf6);
-    vcam->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
-    vcam->setCameraTransform(&A_CI);
-    addComponent(vcam);
+    addComponent(new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI));
   }
 
   // Optional graphics window. We don't use a static instance since this will
@@ -1646,6 +1650,11 @@ EntityBase& ExampleActionsECS::getEntity()
   return entity;
 }
 
+VirtualCamera& ExampleActionsECS::getVirtualCamera() const
+{
+  return *virtualCamera;
+}
+
 void ExampleActionsECS::startThreaded()
 {
   std::thread t1([&]
@@ -1906,8 +1915,8 @@ public:
     configDirectory = "config/xml/AffAction/xml/examples";
     xmlFileName = "g_example_curiosity_cocktails.xml";
     speedUp = 1;
-    virtualCam = "xxx";
     physicsEngine = "Bullet";
+    virtualCameraWindowEnabled = true;
     return true;
   }
 

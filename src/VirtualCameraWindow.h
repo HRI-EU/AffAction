@@ -31,58 +31,57 @@
 
 *******************************************************************************/
 
-#ifndef AFF_VIRTUALCAMERACOMPONENT_H
-#define AFF_VIRTUALCAMERACOMPONENT_H
+#ifndef AFF_VIRTUALCAMERAWINDOW_H
+#define AFF_VIRTUALCAMERAWINDOW_H
 
 #include "ComponentBase.h"
+#include "VirtualCamera.h"
 
 #include <DepthRenderer.h>
 #include <AsyncWidget.h>
 
+#include <mutex>
 #include <memory>
-
 
 namespace aff
 {
 
-class VirtualCameraComponent : public ComponentBase
+class VirtualCameraWindow : public ComponentBase
 {
 public:
 
-  VirtualCameraComponent(EntityBase* parent,
-                         int width=640, int height=480,
-                         bool color=true, bool depth=false,
-                         bool subscribeAll=false);
-  virtual ~VirtualCameraComponent();
-  virtual void capture();
+  VirtualCameraWindow(EntityBase* base,
+                      VirtualCamera* virtualCamera,
+                      bool color = true,
+                      bool depth = false,
+                      const HTr* A_camI = nullptr);
+  virtual ~VirtualCameraWindow();
+  
+  void setCameraTransform(double x, double y, double z, double thx, double thy, double thz);
   void setCameraTransform(const HTr* A_camI);
-  void setCameraTransform(const double xyzabc[6]);
-  void setSceneData(osg::Node* node);
-  void togglePixelGui();
-  void startRecording();
-  void stopRecording();
-  void toggleRecording();
-  bool isRecording();
-  void save();
+  
+  virtual void update();
+  void setEnabled(bool);
+  bool isEnabled();
 
 protected:
+  void enable();
+  void disable();
+  void toggle();
 
   std::unique_ptr<Rcs::AsyncWidget> pixelGui;
-  int width;
-  int height;
-  bool renderRGB;
-  bool renderDepth;
-  bool recordImages;
-  double* colData;     // 3 * width * height
-  double* depthData;   // width * height
-  osg::ref_ptr<Rcs::DepthRenderer> virtualRenderer;
 
+  std::vector<double> colorBuffer;
+  std::vector<double> depthBuffer;
+
+  VirtualCamera* const virtualCamera;
+  HTr cameraTransform;
+  
 private:
-
-  VirtualCameraComponent(const VirtualCameraComponent&) = delete;
-  VirtualCameraComponent& operator=(const VirtualCameraComponent&) = delete;
+  VirtualCameraWindow(const VirtualCameraWindow&) = delete;
+  VirtualCameraWindow& operator=(const VirtualCameraWindow&) = delete;
 };
 
-}
+} // aff
 
-#endif
+#endif // AFF_VIRTUALCAMERA_H

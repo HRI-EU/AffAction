@@ -37,6 +37,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_timer.h>
+#include <URDFGenerator.h>
 
 #include <unordered_set>
 
@@ -154,6 +155,13 @@ nlohmann::json ConcurrentSceneQuery::getSceneState()
   nlohmann::json json;
   aff::getSceneState(json, &scene, graph);
   return json;
+}
+
+std::string ConcurrentSceneQuery::getURDF()
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  return Rcs::URDFGenerator(graph).toString();
 }
 
 nlohmann::json ConcurrentSceneQuery::getOccludedObjectsForAgent(const std::string& agentName)

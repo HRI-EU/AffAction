@@ -43,6 +43,7 @@
 #include <ActionComponent.h>
 #include <TrajectoryComponent.h>
 #include <IKComponent.h>
+#include <VirtualCamera.h>
 
 #include <ExampleBase.h>
 #include <IkSolverRMR.h>
@@ -101,6 +102,7 @@ public:
   GraphicsWindow* getViewer();
   const EntityBase& getEntity() const;
   EntityBase& getEntity();
+  VirtualCamera& getVirtualCamera() const;
 
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
@@ -118,6 +120,7 @@ public:
   std::string xmlFileName;
   std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
+  unsigned int virtualCameraWidth, virtualCameraHeight;
   unsigned int speedUp;
   int maxNumThreads;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
@@ -130,6 +133,7 @@ protected:
 
   EntityBase entity;
   double trajTime;
+  bool virtualCameraWindowEnabled;
   std::string sequenceCommand;
   std::string virtualCam;
   std::string componentArgs;
@@ -149,6 +153,7 @@ protected:
   std::unique_ptr<TextEditComponent> textGui;
   std::unique_ptr<TrajectoryComponent> trajC;
   std::unique_ptr<IKComponent> ikc;
+  std::unique_ptr<VirtualCamera> virtualCamera;
 
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;

@@ -275,7 +275,8 @@ src/FaceTracker.cpp
 src/FaceGestureComponent.cpp
 src/CameraViewComponent.cpp
 src/PhysicsComponent.cpp
-src/VirtualCameraComponent.cpp
+src/VirtualCamera.cpp
+src/VirtualCameraWindow.cpp
 )
 
 SET(ECS_SRCS

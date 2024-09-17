@@ -309,8 +309,6 @@ public:
 
   static double getDefaultTurboDurationScaler();
 
-private:
-
   /**
    * @brief Returns a vector of all leaf nodes.
    */
@@ -318,6 +316,7 @@ private:
                     bool onlySuccessfulOnes=false,
                     PredictionTreeNode* node = nullptr) const;
 
+private:
   /**
    * @brief Recursively finds the smallest cost path in the prediction tree.
    *

@@ -96,35 +96,28 @@ static bool createDirectory(const std::string& dirName)
 #endif
 }
 
-static osg::ref_ptr<osg::Image> vectorToOsgImage(const std::vector<std::vector<std::vector<float>>>& imageData)
+static osg::ref_ptr<osg::Image> vectorToOsgImage(const std::vector<double>& imageBuffer, const int width, const int height)
 {
   // Get the dimensions of the input image
-  int height = imageData.size();
-  if (height == 0)
+  if (imageBuffer.empty())
   {
     std::cerr << "Input data is empty." << std::endl;
     return nullptr;
   }
 
-  int width = imageData[0].size();
-  if (width == 0 || imageData[0][0].size() != 3)
+  if (height * width * 3 != imageBuffer.size())
   {
-    std::cerr << "Input data is not correctly formatted." << std::endl;
+    std::cerr << "Input buffer is not correctly formatted." << std::endl;
     return nullptr;
   }
 
   // Allocate a buffer for the pixel data (using new to allow OSG to manage it)
-  unsigned char* pixelData = new unsigned char[width * height * 3]; // 3 channels for RGB
+  unsigned char* quantizedData = new unsigned char[width * height * 3]; // 3 channels for RGB
 
-  // Flatten the vector of vectors into a single array of unsigned char
-  for (int i = 0; i < height; ++i)
+  // Convert the vector into a single array of unsigned char
+  for (int i = 0; i < width * height * 3; i++)
   {
-    for (int j = 0; j < width; ++j)
-    {
-      pixelData[(i * width + j) * 3 + 0] = static_cast<unsigned char>(imageData[i][j][0] * 255.0f); // Red
-      pixelData[(i * width + j) * 3 + 1] = static_cast<unsigned char>(imageData[i][j][1] * 255.0f); // Green
-      pixelData[(i * width + j) * 3 + 2] = static_cast<unsigned char>(imageData[i][j][2] * 255.0f); // Blue
-    }
+    quantizedData[i] = static_cast<unsigned char>(imageBuffer[i] * 255.0f);
   }
 
   // Create an osg::Image and assign the pixel data to it
@@ -133,14 +126,17 @@ static osg::ref_ptr<osg::Image> vectorToOsgImage(const std::vector<std::vector<s
                      GL_RGB,            // Internal format (RGB)
                      GL_RGB,            // Pixel format
                      GL_UNSIGNED_BYTE,  // Data type
-                     pixelData,         // Pointer to the pixel data
+                     quantizedData,     // Pointer to the pixel data
                      osg::Image::USE_NEW_DELETE); // Use USE_NEW_DELETE so OSG manages memory
 
   return osgImage;
 }
 
-class SampleRecorder : public VirtualCameraComponent
+class SampleRecorder : public VirtualCameraWindow
 {
+private:
+  bool recordImages = false;
+
 public:
 
   // Data structure for one sample
@@ -159,26 +155,22 @@ public:
   };
 
 
-  SampleRecorder(EntityBase* parent, int width_=640, int height_=480,
-                 bool color=true, bool depth=false) :
-    VirtualCameraComponent(parent, width_, height_, color, depth)
+  SampleRecorder(EntityBase* parent, VirtualCamera* _virtualCamera, bool color=true, bool depth=false) :
+    VirtualCameraWindow(parent, _virtualCamera, color, depth)
   {
     subscribe("ToggleRecording", &SampleRecorder::toggleRecording);
     subscribe("Save", &SampleRecorder::save);
-    subscribe("TogglePixelGui", &VirtualCameraComponent::togglePixelGui);
+    subscribe("TogglePixelGui", &SampleRecorder::toggle);
   }
 
-  void capture(const std::vector<double>& controls)
+  void update(const std::vector<double>& controls)
   {
-    VirtualCameraComponent::capture();
-
-    const std::vector<std::vector<float>>& zImage = virtualRenderer->getDepthImageRef();
-    const std::vector<std::vector<std::vector<float>>>& rgbImage = virtualRenderer->getRGBImageRef();
+    VirtualCameraWindow::update();
 
     if (recordImages)
     {
       static size_t runningIdx = 0;
-      osg::ref_ptr<osg::Image> img = vectorToOsgImage(rgbImage);
+      osg::ref_ptr<osg::Image> img = vectorToOsgImage(colorBuffer, virtualCamera->width, virtualCamera->height);
 
       // Create a stringstream to build the filename with padding
       std::ostringstream ss;
@@ -427,8 +419,8 @@ bool ExampleFlowMatching::initAlgo()
 bool ExampleFlowMatching::initGraphics()
 {
   // Determine camera transform
-  double q_cam[6];
-  VecNd_set6(q_cam, -2.726404, -2.515165, 3.447799,   -0.390124, 0.543041, 0.795294);
+  double q_cam[] = {-2.726404, -2.515165, 3.447799, -0.390124, 0.543041, 0.795294};
+
 
   // Check if there is a body named 'initial_camera_view'.
   const RcsBody* camera_body = RcsGraph_getBodyByName(graphC->getGraph(), "default_camera_view");
@@ -449,10 +441,10 @@ bool ExampleFlowMatching::initGraphics()
   pn->init(false);   // without force dragger, we use our own
   pn->getPhysicsGraphNode()->displayCollisionModel(true);   // shows the goal in wireframe
 
-  // Add camera renderer
-  vcamC = std::make_unique<SampleRecorder>(&entity);
-  vcamC->setSceneData(new Rcs::GraphNode(graphC->getGraph()));
-  vcamC->setCameraTransform(q_cam);
+  // Add camera and renderer
+  virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graphC->getGraph()));
+  vcamC = std::make_unique<SampleRecorder>(&entity, virtualCamera.get());
+  vcamC->setCameraTransform(q_cam[0], q_cam[1], q_cam[2], q_cam[3], q_cam[4], q_cam[5]);
 
   // Mouse dragger without lines etc.
   osg::ref_ptr<NamedBodyForceDragger> dragger = new NamedBodyForceDragger(physicsC->getPhysics(), static_cast<SampleRecorder*>(vcamC.get()));
@@ -533,7 +525,7 @@ void ExampleFlowMatching::step()
     double q_block[6];
     HTr_to6DVector(q_block, &block->A_BI);
     std::vector<double> controls(q_block, q_block+6);
-    static_cast<SampleRecorder*>(vcamC.get())->capture(controls);
+    static_cast<SampleRecorder*>(vcamC.get())->update(controls);
   }
 
   entity.process();
