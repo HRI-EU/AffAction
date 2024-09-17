@@ -64,6 +64,7 @@ public:
   double actionCost(const ActionScene& domain,
                     const RcsGraph* graph) const;
   std::string getActionCommand() const;
+  virtual double getDefaultDuration() const;
 
 protected:
 
@@ -105,8 +106,8 @@ protected:
   std::string taskObjSurfacePosZ;
   std::string taskObjSurfaceOri;
   std::string taskHandObjPolar;
-  std::string taskHandPolar;    // Hand Polar angles in world coordinates (for freezing orienttion when retracting upwards)
-  std::string taskSurfaceOri;   // In case the object to put on is in the robot's hand
+  std::string taskHandInclination;  // Hand inclination in world coordinates (for freezing orienttion when retracting upwards)
+  std::string taskSurfaceOri;       // In case the object to put on is in the robot's hand
   std::string taskFingers;
 
   std::string whereOn;   // Optional keyword specifying the name of the Supportable to put the object on.

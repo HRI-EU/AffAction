@@ -555,12 +555,19 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
     while (it != aMap.end())
     {
       const Supportable* s = dynamic_cast<const Supportable*>(std::get<0>(*it));
-      auto childrenOfAff = domain.getDirectChildren(graph, s);
-      const bool eraseMe = !childrenOfAff.empty();
-      RLOG(0, "%s Supportable %s because something is already on it: %s etc.",
-           eraseMe ? "Erasing" : "Keeping", s->frame.c_str(),
-           childrenOfAff[0]->bdyName.c_str());
-      it = eraseMe ? aMap.erase(it) : it+1;
+
+      if (s)
+      {
+        auto childrenOfAff = domain.getDirectChildren(graph, s);
+        const bool eraseMe = !childrenOfAff.empty();
+        RLOG(0, "%s Supportable %s because something is already on it",
+             eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
+        it = eraseMe ? aMap.erase(it) : it + 1;
+      }
+      else
+      {
+        it++;
+      }
     }
   }
 
@@ -732,7 +739,7 @@ bool ActionPut::initialize(const ActionScene& domain,
   this->taskObjSurfacePosY = objBottomName + "-" + surfaceFrameName + "-Y";
   this->taskObjSurfacePosZ = objBottomName + "-" + surfaceFrameName + "-Z";
   this->taskObjSurfaceOri = objBottomName + "-" + surfaceFrameName + "-ORI";
-  this->taskHandPolar = graspFrame + "-POLAR";
+  this->taskHandInclination = graspFrame + "-Inclination";
   this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
   this->taskSurfaceOri = surfaceFrameName + "-POLAR";
   this->taskFingers = graspFrame + "_fingers";
@@ -841,8 +848,6 @@ std::vector<std::string> ActionPut::createTasksXML() const
             "controlVariable=\"" + taskDir + "\" " + "effector=\"" +
             objBottomName + "\" refBdy=\"" + surfaceFrameName + "\" ";
 
-  RLOG_CPP(0, "****************************** TASK_DIR=" << taskDir);
-
   if (putPolar)
   {
     if (polarAxisIdx==0)
@@ -860,8 +865,8 @@ std::vector<std::string> ActionPut::createTasksXML() const
 
   tasks.push_back(xmlTask);
 
-  // taskHandPolar
-  xmlTask = "<Task name=\"" + taskHandPolar + "\" " +
+  // taskHandInclination
+  xmlTask = "<Task name=\"" + taskHandInclination + "\" " +
             "controlVariable=\"Inclination\" " + "effector=\"" + graspFrame + "\" axisDirection=\"X\" />";
   tasks.push_back(xmlTask);
 
@@ -958,8 +963,8 @@ ActionPut::createTrajectory(double t_start,
     a1->addActivation(t_put, true, 0.5, taskHandSurfacePos);
     a1->addActivation(t_release + afterTime, false, 0.5, taskHandSurfacePos);
     a1->add(t_release, releaseUp, 0.0, 0.0, 7, taskHandSurfacePos + " 2");
-    a1->addActivation(t_put, true, 0.5, taskHandPolar);
-    a1->addActivation(t_put + 0.5*(t_release-t_put), false, 0.5, taskHandPolar);
+    a1->addActivation(t_put, true, 0.5, taskHandInclination);
+    a1->addActivation(t_put + 0.5*(t_release-t_put), false, 0.5, taskHandInclination);
   }
   else
   {
@@ -976,16 +981,41 @@ ActionPut::createTrajectory(double t_start,
   // orientation to avoid conflicting constraints. If we want the hand to
   // remain upright a bit longer, we would need to activate an orientation
   // task that is absolute with respect to the hand, for instance taskHandObjPolar.
-  a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
-  a1->addActivation(t_put, false, 0.5, taskObjSurfaceOri);
-  if (putPolar)
+  if (!isPincerGrasped)
   {
-    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+    a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
+    a1->addActivation(t_put, false, 0.5, taskObjSurfaceOri);
+    if (putPolar)
+    {
+      a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+    }
+    else
+    {
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
+    }
   }
   else
   {
-    a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
+    // Here we only keep the polar orientation for a short portion of the movement, and then
+    // change towards an inclination constraint. This gives more dof and makes the approach
+    // to the put place more robust.
+    double t_mid = t_start + 0.25 * (t_put-t_start);
+    a1->addActivation(t_start, true, 0.5, taskObjSurfaceOri);
+    a1->addActivation(t_mid, false, 0.5, taskObjSurfaceOri);
+    a1->addActivation(t_mid, true, 0.5, taskHandInclination);
+    a1->addActivation(t_put, false, 0.5, taskHandInclination);
+    if (putPolar)
+    {
+      a1->add(std::make_shared<tropic::PolarConstraint>(t_put, 0.0, 0.0, taskObjSurfaceOri));
+    }
+    else
+    {
+      a1->add(std::make_shared<tropic::EulerConstraint>(t_put, putOri3d, taskObjSurfaceOri));
+    }
+
   }
+
+
 
   if (!isPincerGrasped)
   {
@@ -1048,7 +1078,7 @@ void ActionPut::print() const
   std::cout << "taskObjSurfacePosZ: " << taskObjSurfacePosZ << std::endl;
   std::cout << "taskObjSurfaceOri: " << taskObjSurfaceOri << std::endl;
   std::cout << "taskHandObjPolar: " << taskHandObjPolar << std::endl;
-  std::cout << "taskHandPolar: " << taskHandPolar << std::endl;
+  std::cout << "taskHandInclination: " << taskHandInclination << std::endl;
   std::cout << "taskSurfaceOri: " << taskSurfaceOri << std::endl;
   std::cout << "taskFingers: " << taskFingers << std::endl;
 
@@ -1135,6 +1165,11 @@ std::string ActionPut::getActionCommand() const
   }
 
   return str;
+}
+
+double ActionPut::getDefaultDuration() const
+{
+  return 15.0;
 }
 
 
@@ -1359,7 +1394,7 @@ public:
     this->taskObjHandPos = objGraspFrame + "-" + graspFrame + "-XYZ";
     this->taskHandSurfacePos = graspFrame + "-" + surfaceFrameName + "-XYZ";
     this->taskObjSurfaceOri = objBottomName + "-" + surfaceFrameName + "-ORI";
-    this->taskHandPolar = graspFrame + "-POLAR";
+    this->taskHandInclination = graspFrame + "-Inclination";
     this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
     this->taskFingers = graspFrame + "_fingers";
 
@@ -1383,8 +1418,8 @@ public:
       a1->addActivation(t_start, true, 0.5, taskHandSurfacePos);
       a1->addActivation(t_end + afterTime, false, 0.5, taskHandSurfacePos);
       a1->add(t_end, releaseUp, 0.0, 0.0, 7, taskHandSurfacePos + " 2");
-      a1->addActivation(t_start, true, 0.5, taskHandPolar);
-      a1->addActivation(t_start + 0.5 * (t_end - t_start), false, 0.5, taskHandPolar);
+      a1->addActivation(t_start, true, 0.5, taskHandInclination);
+      a1->addActivation(t_start + 0.5 * (t_end - t_start), false, 0.5, taskHandInclination);
     }
     else
     {

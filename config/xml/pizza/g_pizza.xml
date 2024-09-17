@@ -218,6 +218,7 @@
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
 
+	<!--
     <Group name="pineapple_chunk" prev="table_grid_0_5" rigid_body_joints="true" color="YELLOW" >
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
@@ -245,7 +246,7 @@
     <Group name="sun_dried_tomatoes" prev="tray_position_6" rigid_body_joints="true" color="DARKRED" >
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
-
+-->
 
 
     <!-- olive_oil_bottle -->

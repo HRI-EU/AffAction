@@ -32,9 +32,9 @@
 
 
   <!-- The model for the dining table. -->
-  <Body name="table" physics="kinematic"  xxxrigid_body_joints="-0.22 0 0.7 0 0 0" mass="10" >
+  <Body name="table" physics="kinematic" mass="10" >
     <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
-	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
+	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.png"/>
     <Shape scale="0.2" type="FRAME"/>
   </Body>
   <Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />

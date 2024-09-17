@@ -1051,8 +1051,17 @@ static void expand(ActionScene& scene,
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
     newDuration -= std::fmod(newDuration, dt);
     RLOG(0, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
-    RLOG(0, "newDuration is %f", newDuration);
-    action->setDuration(newDuration);
+
+    if (newDuration<duration)
+    {
+      action->setDuration(newDuration);
+      RLOG(0, "newDuration is %f", newDuration);
+    }
+    else
+    {
+      RLOG(0, "newDuration unchanged: %f", duration);
+    }
+
   }
 
   // Now the node->graph is correctly initialized for the next tree child
