@@ -80,17 +80,18 @@ public:
 
   void copyState(const RcsGraph* other)
   {
-    if (!realized())
+    if ((!realized()) || (!dirty))
     {
       return;
     }
 
     // \todo: This might have concurrency issues. We better copy into a class
     //        internal buffer, than directly into the internal graph.
-    std::lock_guard<std::mutex> lock(graphCopyMtx);
     double dt = Timer_getSystemTime();
+    std::lock_guard<std::mutex> lock(graphCopyMtx);
     RcsGraph_copy(bufGraph, other);
     RLOG(6, "Graph copy took %.2f msec", (Timer_getSystemTime()-dt)*1000.0);
+    dirty = false;
   }
 
   void updateState()
@@ -102,6 +103,7 @@ public:
 
     std::lock_guard<std::mutex> lock(graphCopyMtx);
     RcsGraph_copy(osgGraph, bufGraph);
+    dirty = true;
   }
 
   static void realizeNodeInThread(GraphicsWindow* window, std::string eventName,
@@ -252,7 +254,7 @@ public:
 
 private:
 
-  MapItem() : Rcs::GraphNode(), osgGraph(nullptr), bufGraph(nullptr)
+  MapItem() : Rcs::GraphNode(), osgGraph(nullptr), bufGraph(nullptr), dirty(false)
   {
     this->realizeMtx.lock();
   }
@@ -305,6 +307,7 @@ private:
   mutable std::mutex graphCopyMtx;
   RcsGraph* osgGraph = nullptr;
   RcsGraph* bufGraph = nullptr;
+  bool dirty;
 
   static std::map<std::string,osg::ref_ptr<MapItem>> eventMap;
   static std::vector<std::string> deactivatedBodies;

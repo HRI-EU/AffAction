@@ -1040,7 +1040,7 @@ static void expand(ActionScene& scene,
     duration = std::max(duration, action->getDefaultDuration());
   }
 
-  RLOG(0, "duration is %f", duration);
+  RLOG(1, "duration is %f", duration);
   auto res = action->predict(scene, node->graph, broadphase, duration, dt, earlyExitAction);
   res.idx = solutionIndex;
 
@@ -1050,7 +1050,7 @@ static void expand(ActionScene& scene,
   {
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
     newDuration -= std::fmod(newDuration, dt);
-    RLOG(0, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
+    RLOG(1, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
 
     if (newDuration<duration)
     {
@@ -1070,7 +1070,7 @@ static void expand(ActionScene& scene,
   child->threadNumber = globalThreadNumber;
   node->children.push_back(child);
 
-  REXEC(0)
+  REXEC(1)
   {
     child->print();
   }

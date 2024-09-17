@@ -190,7 +190,7 @@ void ActionComponent::actionThread(std::string text)
   RLOG_CPP(1, "Sorting " << predictions.size() << " predictions");
   std::sort(predictions.begin(), predictions.end(), TrajectoryPredictor::PredictionResult::lesser);
 
-  REXEC(0)
+  REXEC(1)
   {
     RLOG_CPP(0, "Printing predictions");
     for (const auto& r : predictions)
