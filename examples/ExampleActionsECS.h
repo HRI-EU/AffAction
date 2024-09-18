@@ -102,7 +102,8 @@ public:
   GraphicsWindow* getViewer();
   const EntityBase& getEntity() const;
   EntityBase& getEntity();
-  VirtualCamera& getVirtualCamera() const;
+  const VirtualCamera* getVirtualCamera() const;
+  VirtualCamera* getVirtualCamera();
 
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
@@ -121,6 +122,8 @@ public:
   std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
   unsigned int virtualCameraWidth, virtualCameraHeight;
+  bool virtualCameraEnabled, virtualCameraWindowEnabled;
+  std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
@@ -133,9 +136,7 @@ protected:
 
   EntityBase entity;
   double trajTime;
-  bool virtualCameraWindowEnabled;
   std::string sequenceCommand;
-  std::string virtualCam;
   std::string componentArgs;
   std::string physicsEngine;
   std::vector<std::string> actionStack;

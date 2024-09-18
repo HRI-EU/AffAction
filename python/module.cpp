@@ -415,12 +415,13 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getURDF();
   })
 
-  .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z, 
+  .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
                           double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
   {
-    aff::VirtualCamera& virtualCamera = ex.getVirtualCamera();
-    py::array_t<double> colorImage({virtualCamera.height, virtualCamera.width, 3}), depthImage({virtualCamera.height, virtualCamera.width});
-    virtualCamera.render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
+    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
+    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
+    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3}), depthImage({virtualCamera->height, virtualCamera->width});
+    virtualCamera->render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
     return std::make_tuple(std::move(colorImage), std::move(depthImage));
   }, "Renders the current state of the scene. The input is the camera origin and yrp rotation around that origin. Outputs the color and depth image.")
 
@@ -632,15 +633,16 @@ PYBIND11_MODULE(pyAffaction, m)
     std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
-                                               0, true, ex.earlyExitAction);
-    
+                                              0, true, ex.earlyExitAction);
+
     // Handling a fatal error in the syntax for the first action
     RCHECK(tree);
     std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
-    if(slnPath.empty() || !tree->root->feedbackMsg.error.empty()) {
-      if(tree->root->fatalError)
+    if (slnPath.empty() || !tree->root->feedbackMsg.error.empty())
+    {
+      if (tree->root->fatalError)
       {
-        RLOG_CPP(0, "Fatal Error in Solution 0"); 
+        RLOG_CPP(0, "Fatal Error in Solution 0");
       }
       return {std::make_tuple(std::vector<std::string>(), tree->root->feedbackMsg.reason, tree->root->feedbackMsg.suggestion)};
     }
@@ -669,7 +671,7 @@ PYBIND11_MODULE(pyAffaction, m)
 
     // Checking the longest failure
     std::vector<aff::PredictionTreeNode*> leafs;
-    tree->getLeafNodes(leafs, False);
+    tree->getLeafNodes(leafs, false);
 
     int deepest_level = 0;
     for (auto leaf : leafs)
@@ -999,6 +1001,8 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("noViewer", &aff::ExampleActionsECS::noViewer)
   .def_readwrite("virtualCameraWidth", &aff::ExampleActionsECS::virtualCameraWidth)
   .def_readwrite("virtualCameraHeight", &aff::ExampleActionsECS::virtualCameraHeight)
+  .def_readwrite("virtualCameraEnabled", &aff::ExampleActionsECS::virtualCameraEnabled)
+  .def_readwrite("virtualCameraWindowEnabled", &aff::ExampleActionsECS::virtualCameraWindowEnabled)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
   ;

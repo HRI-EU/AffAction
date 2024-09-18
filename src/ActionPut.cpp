@@ -560,7 +560,7 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
       {
         auto childrenOfAff = domain.getDirectChildren(graph, s);
         const bool eraseMe = !childrenOfAff.empty();
-        RLOG(0, "%s Supportable %s because something is already on it",
+        RLOG(1, "Occupancy check: %s Supportable %s",
              eraseMe ? "Erasing" : "Keeping", s->frame.c_str());
         it = eraseMe ? aMap.erase(it) : it + 1;
       }

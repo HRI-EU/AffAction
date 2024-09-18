@@ -230,6 +230,8 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   lambda = 1.0e-4;
   virtualCameraWidth = 640;
   virtualCameraHeight = 480;
+  virtualCameraEnabled = false;
+  virtualCameraWindowEnabled = false;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;
@@ -326,7 +328,9 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-physics", &physicsEngine, "Physics engine (default: none)");
+  parser->getArgument("-enableVirtualCamera", &virtualCameraEnabled, "Enable camera for virtual rendering");
   parser->getArgument("-enableVirtualCamWindow", &virtualCameraWindowEnabled, "Window of the camera for virtual rendering");
+  parser->getArgument("-virtualCameraBodyName", &virtualCameraBodyName, "Name of body in graph to which camera is attached");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
@@ -540,10 +544,17 @@ bool ExampleActionsECS::initAlgo()
   ActionBase::setTurboMode(turbo);
 
   // Initialization of the virtual camera to be able to render the scene from python
-  virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graphC->getGraph()), 
-                                                  virtualCameraWidth, virtualCameraHeight);
+  if (virtualCameraWindowEnabled)
+  {
+    virtualCameraEnabled = true;
+  }
 
-  
+  if (virtualCameraEnabled)
+  {
+    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graphC->getGraph()),
+                                                    virtualCameraWidth, virtualCameraHeight);
+  }
+
   // Printing the help prompt
   RLOG_CPP(1, help());
 
@@ -576,11 +587,18 @@ bool ExampleActionsECS::initGraphics()
     return false;
   }
 
-  if (virtualCameraWindowEnabled)
+  if (virtualCameraWindowEnabled && virtualCamera)
   {
     double trf6[6] = {-1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258};
     HTr A_CI;
     HTr_from6DVector(&A_CI, trf6);
+
+    if (!virtualCameraBodyName.empty())
+    {
+      const RcsBody* camBdy = RcsGraph_getBodyByName(graphC->getGraph(), virtualCameraBodyName.c_str());
+      RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
+      HTr_copy(&A_CI, &camBdy->A_BI);
+    }
     addComponent(new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI));
   }
 
@@ -1650,9 +1668,14 @@ EntityBase& ExampleActionsECS::getEntity()
   return entity;
 }
 
-VirtualCamera& ExampleActionsECS::getVirtualCamera() const
+const VirtualCamera* ExampleActionsECS::getVirtualCamera() const
 {
-  return *virtualCamera;
+  return virtualCamera.get();
+}
+
+VirtualCamera* ExampleActionsECS::getVirtualCamera()
+{
+  return virtualCamera.get();
 }
 
 void ExampleActionsECS::startThreaded()

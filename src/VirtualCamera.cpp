@@ -54,14 +54,14 @@ VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
   double cy = height / 2 - 0.5;
   double near = 0.3;
   double far = 10.0;
-  
+
   virtualRenderer.setProjectionFromFocalParams(fx, fy, cx, cy, near, far);
   virtualRenderer.setSceneData(node);
 }
 
 VirtualCamera::~VirtualCamera() {}
 
-void VirtualCamera::render(double x, double y, double z, 
+void VirtualCamera::render(double x, double y, double z,
                            double thx, double thy, double thz,
                            double* colorBuffer, double* depthBuffer)
 {
@@ -83,7 +83,7 @@ void VirtualCamera::render(const HTr* A_camI, double* colorBuffer, double* depth
 
   const std::lock_guard<std::mutex> lockGuard(virtualRendererLock);
 
-  double t_render = Timer_getSystemTime();  
+  double t_render = Timer_getSystemTime();
   virtualRenderer.setCameraTransform(A_camI);
   virtualRenderer.frame();
 

@@ -107,6 +107,7 @@ std::string FaceTracker::getCameraName() const
   return this->cameraName;
 }
 
+// Does not depend on this->mesh
 void FaceTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
@@ -124,7 +125,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
       //size_t faceId = atoi(keyStrings[1].c_str());
       size_t landmarkIdx = atoi(keyStrings[2].c_str());
 
-      if (landmarkIdx<mesh->nVertices)
+      if (landmarkIdx<landmarks->m)
       {
         double* rowPtr = MatNd_getRowPtr(this->landmarks, landmarkIdx);
         const std::vector<double>& dataPoint = entry.value();
@@ -178,13 +179,6 @@ void FaceTracker::updateGraph(RcsGraph* graph)
   lpFiltTrf(q6, &A_FI, 0.05);
   //RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
 
-  for (unsigned int i=0; i<mesh->nVertices; ++i)
-  {
-    double* dst = &mesh->vertices[3*i];
-    Vec3d_transform(dst, &this->A_camI, MatNd_getRowPtr(landmarks, i));
-    dst[0] += DISTANCE_FACE_TO_CAM;
-  }
-
   RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
   for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
@@ -193,12 +187,12 @@ void FaceTracker::updateGraph(RcsGraph* graph)
     if (sh->type == RCSSHAPE_MESH)
     {
       //RLOG(0, "Found mesh at index %d", i);
-      if ((sh->mesh->nVertices==mesh->nVertices) && (sh->mesh->nFaces==mesh->nFaces))
+      if (sh->mesh->nVertices== landmarks->m)
       {
         if (RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
         {
           //RLOG(0, "Copying mesh with %d vertices and %d faces", mesh->nVertices, mesh->nFaces);
-          for (unsigned int i = 0; i < mesh->nVertices; ++i)
+          for (unsigned int i = 0; i < landmarks->m; ++i)
           {
             double* dst = &sh->mesh->vertices[3 * i];
             Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
@@ -209,9 +203,15 @@ void FaceTracker::updateGraph(RcsGraph* graph)
           RLOG(1, "Face mesh not resizeable - skipping vertices updating. Please fix in xml file!");
         }
 
-
       }
     }
+  }
+
+  for (unsigned int i = 0; i < mesh->nVertices; ++i)
+  {
+    double* dst = &mesh->vertices[3 * i];
+    Vec3d_transform(dst, &this->A_camI, MatNd_getRowPtr(landmarks, i));
+    dst[0] += DISTANCE_FACE_TO_CAM;
   }
 
 
