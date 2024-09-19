@@ -129,6 +129,7 @@ public:
   bool noLimits, noViewer, noTextGui, earlyExitAction;
   bool unittest, verbose, turbo;
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
+  bool hasBeenStopped;
 
   std::unique_ptr<GraphicsWindow> viewer;
 

@@ -241,6 +241,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   noJointCheck = false;
   noCollCheck = false;
   noTrajCheck = false;
+  hasBeenStopped = false;
 
   noLimits = false;
   zigzag = false;
@@ -1739,6 +1740,7 @@ void ExampleActionsECS::onSetTurboMode(bool enable)
 void ExampleActionsECS::onClearTrajectory()
 {
   RLOG(0, "ExampleActionsECS::clearTrajectory()");
+  hasBeenStopped = true;
 
   std::vector<ActionResult> explanation(1);
   explanation[0].error = "Actions interrupted";
