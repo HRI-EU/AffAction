@@ -39,6 +39,7 @@
 
 #include <RcsViewer.h>
 #include <MeshNode.h>
+#include <ArrowNode.h>
 #include <VertexArrayNode.h>
 #include <COSNode.h>
 
@@ -96,6 +97,8 @@ private:
   // x points forward, z points upward, y points from right eye to left eye.
   // The frame center lies between the eyes.
   static HTr estimateFaceTransform(const MatNd* faceLandMarks);
+  static bool estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A_FC,
+                                    HTr* leftIris, HTr* rightIris);
 
   ActionScene* scene;
   RcsMeshData* mesh;
@@ -108,6 +111,7 @@ private:
   std::string faceName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;
   osg::ref_ptr<Rcs::MeshNode> faceMeshNode;
+  osg::ref_ptr<Rcs::ArrowNode> leftIrisNode, rightIrisNode;
   osg::ref_ptr<Rcs::VertexArrayNode> landmarksNode;
   osg::ref_ptr<Rcs::NodeBase> sw;
 };
