@@ -43,6 +43,7 @@
 #include <Rcs_kinematics.h>
 
 #include <algorithm>
+#include <cfloat>
 
 
 // Permissible limit of each task component to lag behind desired reference.
