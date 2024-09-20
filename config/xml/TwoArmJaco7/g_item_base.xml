@@ -27,7 +27,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data/hri_scitos_description" >
+<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
 
     <Body name="Johnnie" >
     </Body>
@@ -53,7 +53,7 @@
 
     <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
       <Shape type="FRAME" scale="0.2"/>
-      <Shape type="MESH" meshFile="Respeaker_mounting_simplified.stl" scale="0.001"
+      <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
 	     color="BLACK_RUBBER" />
     </Body>
 
@@ -112,24 +112,24 @@
 
     <!-- That's the new head -->
     <Body name="head_shell" prev="ptu_tool_link" transform="0 0 0 0 0 -90" physics="none">
-      <Shape type="MESH" meshFile="head_shell.obj" distance="false" physics="false" graphics="true"
+      <Shape type="MESH" meshFile="hri_scitos_description/head_shell.obj" distance="false" physics="false" graphics="true"
 	     transform="0 0 0.015 90 -90 0" color="PUREWHITE" />
     </Body>
 
     <Body name="head_front_glass" prev="head_shell" physics="none">
-      <Shape type="MESH" meshFile="head_front_glass.obj" distance="false" physics="false" graphics="true"
+      <Shape type="MESH" meshFile="hri_scitos_description/head_front_glass.obj" distance="false" physics="false" graphics="true"
 	     transform="0.055 0 0.015 90 90 0" color="BLUE" />
     </Body>
 
     <Body name="ear_right" prev="head_shell" physics="none">
       <Joint name="ear_right_joint" range="-90 0 90" type="RotY" constraint="false" weightJL="0" transform="-0.005 -0.12 0.07 0 0 0" />
-      <Shape type="MESH" meshFile="right_ear.obj" distance="false" physics="false" graphics="true"
+      <Shape type="MESH" meshFile="hri_scitos_description/right_ear.obj" distance="false" physics="false" graphics="true"
 	     transform="0.007 0.1170 -0.0550 90 -90 0" color="BLACK_RUBBER" />
     </Body>
 
     <Body name="ear_left" prev="head_shell" physics="none">
       <Joint name="ear_left_joint" range="-90 0 90" type="RotY" constraint="false" weightJL="0" transform="-0.005 0.12 0.07 0 0 0" />
-      <Shape type="MESH" meshFile="right_ear.obj" distance="false" physics="false" graphics="true"
+      <Shape type="MESH" meshFile="hri_scitos_description/right_ear.obj" distance="false" physics="false" graphics="true"
 	     transform="-0.007 -0.1170 -0.0550 90 90 0" color="BLACK_RUBBER" />
     </Body>
 
