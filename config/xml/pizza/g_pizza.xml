@@ -157,6 +157,10 @@
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
 
+    <Group name="_softdrink" prev="table_grid_0_6" rigid_body_joints="0.3 -0.9 0 0 0 0" >
+      <xi:include href="../scene/g_softdrink_bottle.xml"/>
+    </Group>
+
     <Group name="artichoke_hearts" prev="table_grid_0_4" color="EMERALD" rigid_body_joints="true" >
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
