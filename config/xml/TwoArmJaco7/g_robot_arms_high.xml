@@ -40,17 +40,14 @@
         <xi:include href="g_item_base.xml"/>
 
         <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
-            <Shape type="FRAME" scale="0.3"/>
             <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
         </Body>
 
         <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
-            <noShape type="FRAME" scale="0.1"/>
         </Body>
 
         <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
 			<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-            <noShape type="FRAME" scale="0.2"/>
         </Body>
 
         <Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
@@ -58,12 +55,10 @@
         </Group>
 
         <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
-            <noShape type="FRAME" scale="0.1"/>
         </Body>
 
         <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
 			<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-			<xxShape type="FRAME" scale="0.2"/>
         </Body>
 
         <Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >

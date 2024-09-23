@@ -27,14 +27,10 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data/hri_scitos_description" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data/hri_scitos_description" >
 
-    <Body name="Johnnie" >
-    </Body>
-
-    <Body name="base_footprint" prev="Johnnie" >
-        <Shape type="FRAME" scale="0.5"/>
-    </Body>
+    <Body name="Johnnie" />
+    <Body name="base_footprint" prev="Johnnie" />
 
     <Body name="base_link" prev="base_footprint" transform="0 0 0.0498 0 0 0" physics="none" mass="30"
           inertia="1 0 0 0 1 0 0 0 1">
@@ -45,10 +41,10 @@
 
     <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.534 0 0 0" physics="none">
       <Shape type="BOX" extents="0.08 0.107 0.004" distance="false" physics="false" graphics="true"
-	     transform="0 0 0.633 0 0 0"/>
+	     transform="0 0 0.633 0 0 0" color="GRAY" />
         <Shape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true"
-               transform="0 0 0.131 0 0 0"/>
-        <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false" />
+               transform="0 0 0.131 0 0 0" color="GRAY" />
+        <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false" color="RED" />
     </Body>
 
     <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
@@ -65,32 +61,31 @@
             <Shape type="FRAME" scale="0.5"/>
     </Body>
 
-    <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0">
-    </Body>
+    <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0" />
 
     <Body name="screen_link" prev="screen_mount_3_link" transform="0.042 0 0 0 0 0" physics="none">
       <Shape type="BOX" extents="0.03 0.2 0.28" distance="true" physics="true" graphics="true"
-	     transform="0.02 0 0 90 0 0" />
+	     transform="0.02 0 0 90 0 0" color="BLACK_RUBBER"/>
     </Body>
 
     <Body name="ptu_link" prev="center_post_link" transform="0 0 0.633 0 0 90" physics="none" mass="0.01"
-          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
       <Shape type="CYLINDER" radius="0.035" length="0.04" distance="false" physics="false" graphics="true"
 	     transform="0 0 0.022 0 0 0" />
     </Body>
 
     <Body name="ptu_pan_link" prev="ptu_link" physics="none" mass="0.01"
-          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
         <Joint name="ptu_pan_joint" range="-90 0 90" type="RotZ" transform="0 0 0.095 0 0 0" torqueLimit="200"
-               speedLimit="360" constraint="false" weightJL="0"/>
+               speedLimit="360" constraint="false" weightJL="0" weightMetric="0.3" />
         <Shape type="BOX" extents="0.09 0.07 0.111" distance="false" physics="false" graphics="true"
 	       transform="0 0 0 -180 0 0" />
     </Body>
 
     <Body name="ptu_tilt_link" prev="ptu_pan_link" physics="none" mass="0.01"
-          inertia="0.001 0 0 0 0.001 0 0 0 0.001" >
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
       <Joint name="ptu_tilt_joint" range="-85 0 85" was_range="-45 30 45" type="RotX" torqueLimit="12"
-	     speedLimit="234.912696" constraint="false" weightJL="0"/>
+	     speedLimit="234.912696" constraint="false" weightJL="0" weightMetric="0.3" />
        <Shape type="BOX" extents="0.107 0.07 0.008" distance="false" physics="false" graphics="true"
 	       transform="0 0 0.066 0 0 0" />
        <Shape type="BOX" extents="0.007 0.07 0.07" distance="false" physics="false" graphics="true"
@@ -106,64 +101,8 @@
    </Body>
 
     <Body name="ptu_tool_link" prev="ptu_tilt_link" transform="0 0 0.07 0 0 0" mass="0.01"
-          inertia="0.001 0 0 0 0.001 0 0 0 0.001">
-    </Body>
+          inertia="0.001 0 0 0 0.001 0 0 0 0.001" />
 
 
-    <!-- That's the new head -->
-    <Body name="head_shell" prev="ptu_tool_link" transform="0 0 0 0 0 -90" physics="none">
-      <Shape type="MESH" meshFile="head_shell.obj" distance="false" physics="false" graphics="true"
-	     transform="0 0 0.015 90 -90 0" color="PUREWHITE" />
-    </Body>
-
-    <Body name="head_front_glass" prev="head_shell" physics="none">
-      <Shape type="MESH" meshFile="head_front_glass.obj" distance="false" physics="false" graphics="true"
-	     transform="0.055 0 0.015 90 90 0" color="BLUE" />
-    </Body>
-
-    <Body name="ear_right" prev="head_shell" physics="none">
-      <Joint name="ear_right_joint" range="-90 0 90" type="RotY" constraint="false" weightJL="0" transform="-0.005 -0.12 0.07 0 0 0" />
-      <Shape type="MESH" meshFile="right_ear.obj" distance="false" physics="false" graphics="true"
-	     transform="0.007 0.1170 -0.0550 90 -90 0" color="BLACK_RUBBER" />
-    </Body>
-
-    <Body name="ear_left" prev="head_shell" physics="none">
-      <Joint name="ear_left_joint" range="-90 0 90" type="RotY" constraint="false" weightJL="0" transform="-0.005 0.12 0.07 0 0 0" />
-      <Shape type="MESH" meshFile="right_ear.obj" distance="false" physics="false" graphics="true"
-	     transform="-0.007 -0.1170 -0.0550 90 90 0" color="BLACK_RUBBER" />
-    </Body>
-
-    <Body name="head_kinect_link" prev="head_shell" physics="none">
-    </Body>
-
-    <Body name="head_kinect_lens" prev="head_kinect_link" physics="none" transform="0 0 0.06 0 90 -90" >
-        <Shape type="FRAME" scale="0.2"/>
-    </Body>
-
-    
-    <!-- That's the old Kinect2 head
-    <Body name="ptu_top_plate_link" prev="ptu_tool_link" transform="0 0 0 0 0 -90" physics="none">
-	<Shape type="BOX" extents="0.1 0.25 0.004" distance="true" physics="true" graphics="true"
-               transform="-0.015 0 0.002 0 0 0"/>
-    </Body>
-
-    <Body name="head_kinect_link" prev="ptu_top_plate_link" transform="0 0 0.004 -180 90 90" physics="none">
-        <Shape type="BOX" extents="0.25 0.04 0.07" distance="true" physics="true" graphics="true"
-               transform="0 -0.04 0 0 0 0"/>
-        <Shape type="FRAME" scale="0.2"/>
-    </Body>
-
-    <Body name="head_kinect_lens" prev="head_kinect_link"  physics="none">
-    </Body>
-
-    <Body name="head_kinect_rgb_link" prev="head_kinect_link" transform="0.1 -0.035 0.035 0 0 0" physics="none">
-        <Shape type="FRAME" scale="0.2"/>
-    </Body>
-
-    <Body name="head_kinect_rgb_gazebo_optical_frame" prev="head_kinect_rgb_link" transform="0 0 0 90 0 90">
-    </Body>
--->
-
-    
 
 </Graph>

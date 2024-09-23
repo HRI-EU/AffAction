@@ -27,9 +27,68 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
 
+	<!--
   <xi:include href="g_robot_arms_high.xml" />
+  -->
+
+	<!-- Aluminum structure including PTU. -->
+	<xi:include href="g_item_base.xml"/>
+
+	<!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+	<Group  prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+		<xi:include href="g_head_v2.xml" />
+	</Group>
+
+	<!-- Shoulder adaptors and arms with hands. -->
+	<Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
+		<Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+	</Body>
+
+	<Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+	</Body>
+
+	<Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
+		<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+	</Body>
+
+	<Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
+		<xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+	</Group>
+
+	<Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+	</Body>
+
+	<Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
+		<Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+	</Body>
+
+	<Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >
+		<xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+	</Group>
+
+	<xi:include href="g_hand_left.xml"/>
+	<xi:include href="g_hand_right.xml"/>
+
+	
+	
+	<!-- Face mesh (testing). -->
+	<Body name="face" rigid_body_joints="true">
+		<Shape type="MESH" meshFile="hri_scitos_description/FaceMesh-holes-478.obj" resizeable="true" graphics="false" distance="false" physics="false"/>
+		<Shape type="FRAME" scale="1"/>
+	</Body>
+
+	<!-- The gaze model of the robot (testing).
+	<Group prev="head_shell" transform="0 0 0 0 0 0">
+		<xi:include href="g_gazemodel.xml" />
+	</Group>
+
+	<Body name="GazePoint" rigid_body_joints="1.05 0.0 0.35 0 0 0" >
+		<Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+	</Body>
+ -->
+
 
   <Manipulator body="head_kinect_link" types="head">
     <GazeCapability frame="head_kinect_lens" />
@@ -41,4 +100,35 @@
      <Component manipulator="head" />
   </Agent>
 
+	<!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
+	<model_state model="default" time_stamp="0">
+		<joint_state joint="ptu_pan_joint" position="0" />
+		<joint_state joint="ptu_tilt_joint" position="15.568343" />
+		<joint_state joint="LeftEyeThY" position="-1.625565" />
+		<joint_state joint="LeftEyeThZ" position="0.606686" />
+		<joint_state joint="LeftPupilX" position="0.04" />
+		<joint_state joint="LeftPupilThX" position="-0.000893" />
+		<joint_state joint="LeftPupilThY" position="1.625665" />
+		<joint_state joint="LeftPupilThZ" position="-0.606415" />
+		<joint_state joint="GazeXL" position="1.134706" />
+		<joint_state joint="RightEyeThY" position="-1.625568" />
+		<joint_state joint="RightEyeThZ" position="-0.608276" />
+		<joint_state joint="RightPupilX" position="0.04" />
+		<joint_state joint="RightPupilThX" position="1.478627" />
+		<joint_state joint="RightPupilThY" position="0.147032" />
+		<joint_state joint="RightPupilThZ" position="0.608032" />
+		<joint_state joint="GazeXR" position="1.134704" />
+		<joint_state joint="j2s7s300_joint_1_right" position="20" />
+		<joint_state joint="j2s7s300_joint_2_right" position="280" />
+		<joint_state joint="j2s7s300_joint_3_right" position="-90" />
+		<joint_state joint="j2s7s300_joint_4_right" position="70" />
+		<joint_state joint="j2s7s300_joint_6_right" position="200" />
+		<joint_state joint="j2s7s300_joint_1_left" position="-20" />
+		<joint_state joint="j2s7s300_joint_2_left" position="80" />
+		<joint_state joint="j2s7s300_joint_3_left" position="90" />
+		<joint_state joint="j2s7s300_joint_4_left" position="290" />
+		<joint_state joint="j2s7s300_joint_6_left" position="160" />
+		<joint_state joint="GazePoint_rigidBodyJnt2" position="1.166729" />
+	</model_state>
+	
 </Graph>
