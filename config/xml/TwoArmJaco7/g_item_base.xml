@@ -48,7 +48,6 @@
     </Body>
 
     <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
-      <Shape type="FRAME" scale="0.2"/>
       <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
 	     color="BLACK_RUBBER" />
     </Body>
@@ -58,7 +57,6 @@
         <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false" 
 	           color="BLUE_TRANS" transform="0 0 0.01 0 0 0" />
         <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false" physics="false" transform="0.4 0 0 0 -90 0" />
-            <Shape type="FRAME" scale="0.5"/>
     </Body>
 
     <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0" />
