@@ -29,56 +29,56 @@
 
 <Graph>
 
-	<Body name="LeftEyeBase" transform="-0.01 0.06 0.06 0 0 0" wastransform="-0.01 0.06 0.06 0 0 -3.64" />
+  <Body name="LeftEyeBase" transform="-0.01 0.06 0.06 0 0 0" />
 
-	<Body name="LeftEyeBall" prev="LeftEyeBase" color="WHITE" >
-		<Joint name="LeftEyeThY" type="RotY" range="-90 0 90" />
-		<Joint name="LeftEyeThZ" type="RotZ" range="-90 0 90" />
-		<Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
-	</Body>
+  <Body name="LeftEyeBall" prev="LeftEyeBase" color="WHITE" >
+    <Joint name="LeftEyeThY" type="RotY" range="-90 0 90" />
+    <Joint name="LeftEyeThZ" type="RotZ" range="-90 0 90" />
+    <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
+  </Body>
 
-	<Body name="LeftEye" prev="LeftEyeBall" color="WHITE" >
-		<Joint name="LeftPupilX" type="TransX" range="-1 0.04 1" />
-		<Shape type="FRAME" scale="0.25" />
-	</Body>
+  <Body name="LeftEye" prev="LeftEyeBall" color="WHITE" >
+    <Joint name="LeftPupilX" type="TransX" range="-1 0.04 1" />
+    <Shape type="FRAME" scale="0.25" />
+  </Body>
 
-	<Body name="LeftPupil" prev="LeftEye" color="YELLOW" >
-		<Joint name="LeftPupilThX" type="RotX" range="-90 0 90" weightMetric="5" weightJL="0.1" />
-		<Joint name="LeftPupilThY" type="RotY" range="-90 0 90" weightMetric="5" weightJL="1" />
-		<Joint name="LeftPupilThZ" type="RotZ" range="-90 0 90" weightMetric="5" weightJL="1" />
-		<xxShape type="BOX" extents="0.001 0.03 0.03" graphics="true" xxtransform="0 0 0 0 0 3.64" />
-		<Shape type="CYLINDER" radius="0.02" length="0.001" graphics="true" distance="false" transform="0 0 0 90 90 0" wastransform="0 0 0 90 93.64 0" />
-	</Body>
+  <Body name="LeftPupil" prev="LeftEye" color="YELLOW" >
+    <Joint name="LeftPupilThX" type="RotX" range="-90 0 90" weightMetric="5" weightJL="0.1" />
+    <Joint name="LeftPupilThY" type="RotY" range="-90 0 90" weightMetric="5" weightJL="1" />
+    <Joint name="LeftPupilThZ" type="RotZ" range="-90 0 90" weightMetric="5" weightJL="1" />
+    <Shape type="BOX" extents="0.002 0.03 0.03" transform="0.001 0 0 0 0 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.0175" length="0.002" graphics="true" distance="false" transform="0.001 0 0 90 90 0" />
+  </Body>
 
-	<Body name="GazePointL" prev="LeftEyeBall" >
-		<Joint name="GazeXL" type="TransX" range="0 1 2" />
-		<Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
-	</Body>
+  <Body name="GazePointL" prev="LeftEyeBall" >
+    <Joint name="GazeXL" type="TransX" range="0 1 2" />
+    <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+  </Body>
 
-	<Body name="RightEyeBase" transform="-0.01 -0.06 0.06 0 0 0" wastransform="-0.01 -0.06 0.06 0 0 3.64" />
+  <Body name="RightEyeBase" transform="-0.01 -0.06 0.06 0 0 0" />
 
-	<Body name="RightEyeBall" prev="RightEyeBase" color="WHITE" >
-		<Joint name="RightEyeThY" type="RotY" range="-90 0 90" />
-		<Joint name="RightEyeThZ" type="RotZ" range="-90 0 90" />
-		<Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
-	</Body>
+  <Body name="RightEyeBall" prev="RightEyeBase" color="WHITE" >
+    <Joint name="RightEyeThY" type="RotY" range="-90 0 90" />
+    <Joint name="RightEyeThZ" type="RotZ" range="-90 0 90" />
+    <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
+  </Body>
 
-	<Body name="RightEye" prev="RightEyeBall" color="WHITE" >
-		<Joint name="RightPupilX"   type="TransX" range="-1 0.04 1" />
-		<Shape type="FRAME" scale="0.25" />
-	</Body>
+  <Body name="RightEye" prev="RightEyeBall" color="WHITE" >
+    <Joint name="RightPupilX"   type="TransX" range="-1 0.04 1" />
+    <Shape type="FRAME" scale="0.25" />
+  </Body>
 
-	<Body name="RightPupil" prev="RightEye" color="YELLOW" >
-		<Joint name="RightPupilThX" type="RotY" range="-90 0 90" weightMetric="5" weightJL="0.1" />
-		<Joint name="RightPupilThY" type="RotY" range="-90 0 90" weightMetric="5" weightJL="1" />
-		<Joint name="RightPupilThZ" type="RotZ" range="-90 0 90" weightMetric="5" weightJL="1" />
-		<xxShape type="BOX" extents="0.001 0.03 0.03" graphics="true" xxtransform="0 0 0 0 0 -3.64" />
-		<Shape type="CYLINDER" radius="0.02" length="0.001" graphics="true" distance="false" transform="0 0 0 90 90 0" xxxtransform="0 0 0 90 86.36 0" />
-	</Body>
+  <Body name="RightPupil" prev="RightEye" color="YELLOW" >
+    <Joint name="RightPupilThX" type="RotY" range="-90 0 90" weightMetric="5" weightJL="0.1" />
+    <Joint name="RightPupilThY" type="RotY" range="-90 0 90" weightMetric="5" weightJL="1" />
+    <Joint name="RightPupilThZ" type="RotZ" range="-90 0 90" weightMetric="5" weightJL="1" />
+    <Shape type="BOX" extents="0.002 0.03 0.03" transform="0.001 0 0 0 0 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.0175" length="0.002" graphics="true" distance="false" transform="0.001 0 0 90 90 0" />
+  </Body>
 
-	<Body name="GazePointR" prev="RightEyeBall" >
-		<Joint name="GazeXR" type="TransX" range="0 1 2" />
-		<Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
-	</Body>
+  <Body name="GazePointR" prev="RightEyeBall" >
+    <Joint name="GazeXR" type="TransX" range="0 1 2" />
+    <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+  </Body>
 
 </Graph>

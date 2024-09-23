@@ -30,8 +30,7 @@
 
   
     <!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.2 0 0.27 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
-        <Shape type="FRAME" scale="0.2"/>
+    <Body name="shelf" rigid_body_joints="0.2 0 0.27 0 0 0" physics="kinematic" >
         <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.png"/>
     </Body>
@@ -182,7 +181,7 @@
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
 
-    <Group name="garlic" prev="shelf_position_1" rigid_body_joints="true" color="LIGHT_GRAY" >
+    <Group name="garlic" prev="shelf_position_1" rigid_body_joints="true" color="LIGHTGRAY" >
       <xi:include href="../scene/g_bowl_with_items.xml"/>
     </Group>
 

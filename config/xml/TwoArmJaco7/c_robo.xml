@@ -1,49 +1,77 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
 <Controller>
 
   <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
 
     <!-- Complete robot. -->
-	<xi:include href="g_robo.xml"/>
+    <xi:include href="g_robo.xml"/>
 
-	<!-- The gaze model of the robot (testing). -->
+    <!-- The gaze model of the robot (testing). -->
     <Group prev="head_shell" transform="0 0 0 0 0 0">
       <xi:include href="g_gazemodel.xml" />
-	</Group>
+    </Group>
 
-	<Body name="GazePoint" rigid_body_joints="1.05 0.0 0.35 0 0 0" >
+    <Body name="GazePoint" rigid_body_joints="1.05 0.0 0.35 0 0 0" >
       <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
-	</Body>
+    </Body>
 
-	<!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
-	<model_state model="default" time_stamp="0">
-		<joint_state joint="ptu_pan_joint" position="0.001129" />
-		<joint_state joint="ptu_tilt_joint" position="15.534984" />
-		<joint_state joint="LeftEyeThY" position="-1.594602" />
-		<joint_state joint="LeftEyeThZ" position="-3.031969" />
-		<joint_state joint="LeftPupilX" position="0.040053" />
-		<joint_state joint="LeftPupilThX" position="1.006251" />
-		<joint_state joint="LeftPupilThY" position="1.649844" />
-		<joint_state joint="LeftPupilThZ" position="3.002287" />
-		<joint_state joint="GazeXL" position="1.134782" />
-		<joint_state joint="RightEyeThY" position="-1.594602" />
-		<joint_state joint="RightEyeThZ" position="3.029733" />
-		<joint_state joint="RightPupilX" position="0.040072" />
-		<joint_state joint="RightPupilThX" position="1.45243" />
-		<joint_state joint="RightPupilThY" position="0.144402" />
-		<joint_state joint="RightPupilThZ" position="-3.028558" />
-		<joint_state joint="GazeXR" position="1.134779" />
-		<joint_state joint="j2s7s300_joint_1_right" position="20" />
-		<joint_state joint="j2s7s300_joint_2_right" position="280" />
-		<joint_state joint="j2s7s300_joint_3_right" position="-90" />
-		<joint_state joint="j2s7s300_joint_4_right" position="70" />
-		<joint_state joint="j2s7s300_joint_6_right" position="200" />
-		<joint_state joint="j2s7s300_joint_1_left" position="-20" />
-		<joint_state joint="j2s7s300_joint_2_left" position="80" />
-		<joint_state joint="j2s7s300_joint_3_left" position="90" />
-		<joint_state joint="j2s7s300_joint_4_left" position="290" />
-		<joint_state joint="j2s7s300_joint_6_left" position="160" />
-		<joint_state joint="GazePoint_rigidBodyJnt2" position="1.166729" />
-	</model_state>
+    <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
+    <model_state model="default" time_stamp="0">
+      <joint_state joint="ptu_tilt_joint" position="15" />
+      <joint_state joint="LeftEyeThY" position="-1.062914" />
+      <joint_state joint="LeftEyeThZ" position="-3.027609" />
+      <joint_state joint="LeftPupilX" position="0.039061" />
+      <joint_state joint="LeftPupilThX" position="1.278019" />
+      <joint_state joint="LeftPupilThY" position="1.131701" />
+      <joint_state joint="LeftPupilThZ" position="3.002595" />
+      <joint_state joint="GazeXL" position="1.135995" />
+      <joint_state joint="RightEyeThY" position="-1.062914" />
+      <joint_state joint="RightEyeThZ" position="3.027609" />
+      <joint_state joint="RightPupilX" position="0.039061" />
+      <joint_state joint="RightPupilThX" position="0.9684" />
+      <joint_state joint="RightPupilThY" position="0.095999" />
+      <joint_state joint="RightPupilThZ" position="-3.027088" />
+      <joint_state joint="GazeXR" position="1.135995" />
+      <joint_state joint="j2s7s300_joint_1_right" position="20" />
+      <joint_state joint="j2s7s300_joint_2_right" position="280" />
+      <joint_state joint="j2s7s300_joint_3_right" position="-90" />
+      <joint_state joint="j2s7s300_joint_4_right" position="70" />
+      <joint_state joint="j2s7s300_joint_6_right" position="200" />
+      <joint_state joint="j2s7s300_joint_1_left" position="-20" />
+      <joint_state joint="j2s7s300_joint_2_left" position="80" />
+      <joint_state joint="j2s7s300_joint_3_left" position="90" />
+      <joint_state joint="j2s7s300_joint_4_left" position="290" />
+      <joint_state joint="j2s7s300_joint_6_left" position="160" />
+      <joint_state joint="GazePoint_rigidBodyJnt2" position="1.166729" />
+    </model_state>
 
   </Graph>
 
@@ -55,15 +83,14 @@
 
   <Task name="Left fingers"   controlVariable="Joints"   jnts="j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left" />
   <Task name="Right fingers"   controlVariable="Joints"   jnts="j2s7s300_joint_finger_1_right j2s7s300_joint_finger_2_right j2s7s300_joint_finger_3_right" />
+  <Task name="pantilt"   controlVariable="Joints"   jnts="ptu_pan_joint ptu_tilt_joint" />
 
-
-  <Task name="Eye C1" effector="LeftPupil" refBdy="head_shell" controlVariable="X" active="true" />
-  <Task name="Eye C2" effector="LeftPupil" refBdy="head_shell" controlVariable="POLAR" axisDirection="X" active="true" />
+  <Task name="Eye C1" effector="LeftPupil" refBdy="head_front_glass" controlVariable="Z" active="true" />
+  <Task name="Eye C2" effector="LeftPupil" refBdy="head_front_glass" controlVariable="POLAR" axisDirection="X" active="true" />
   <Task name="GazeL"  effector="GazePoint" refBdy="GazePointL" controlVariable="XYZ" active="true" />
 
-  <Task name="Eye C1" effector="RightPupil" refBdy="head_shell" controlVariable="X" active="true" />
-  <Task name="Eye C2" effector="RightPupil" refBdy="head_shell" controlVariable="POLAR" axisDirection="X" active="true" />
+  <Task name="Eye C1" effector="RightPupil" refBdy="head_front_glass" controlVariable="Z" active="true" />
+  <Task name="Eye C2" effector="RightPupil" refBdy="head_front_glass" controlVariable="POLAR" axisDirection="X" active="true" />
   <Task name="GazeR"  effector="GazePoint"  refBdy="GazePointR" controlVariable="XYZ" active="true" />
-
 
 </Controller>
