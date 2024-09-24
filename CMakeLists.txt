@@ -277,6 +277,7 @@ src/CameraViewComponent.cpp
 src/PhysicsComponent.cpp
 src/VirtualCamera.cpp
 src/VirtualCameraWindow.cpp
+src/StringParserTools.cpp
 )
 
 SET(ECS_SRCS
