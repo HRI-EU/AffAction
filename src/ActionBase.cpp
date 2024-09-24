@@ -31,11 +31,13 @@
 *******************************************************************************/
 
 #include "ActionBase.h"
+#include "StringParserTools.hpp"
 
 #include <TaskFactory.h>
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_utils.h>
+#include <Rcs_utilsCPP.h>
 #include <Rcs_basicMath.h>
 #include <Rcs_body.h>
 #include <Rcs_timer.h>
@@ -92,20 +94,16 @@ void ActionBase::parseParams(std::vector<std::string>& params)
 {
   duration = getDefaultDuration();
 
-  auto it = std::find(params.begin(), params.end(), "duration");
-  if (it != params.end())
+  int res = getAndEraseKeyValuePair(params, "duration", duration);
+  RCHECK_MSG(res>=-1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if (res==0)
   {
-    duration = std::stod(*(it + 1));
     turbo = false;
-    params.erase(it + 1);
-    params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "fast");
-  if (it != params.end())
+  if (getAndEraseKey(params, "fast"))
   {
     turbo = true;
-    params.erase(it);
   }
 
 }

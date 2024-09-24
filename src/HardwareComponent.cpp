@@ -39,6 +39,7 @@
 #include "CameraViewComponent.h"
 #include "FaceGestureComponent.h"
 #include "FaceTracker.h"
+#include "StringParserTools.hpp"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -60,24 +61,24 @@
 
 
 
-template<typename T>
-bool getValue(const std::vector<std::string>& params, const std::string& key, T& value)
-{
-  auto it = std::find(params.begin(), params.end(), key);
-  if (it != params.end())
-  {
-    std::stringstream stream(*(it + 1));
-    stream >> value;
-    return true;
-  }
-
-  return false;
-}
-
-bool hasKey(const std::vector<std::string>& params, const std::string& key)
-{
-  return std::find(params.begin(), params.end(), key) == params.end() ? false : true;
-}
+//template<typename T>
+//bool getValue(const std::vector<std::string>& params, const std::string& key, T& value)
+//{
+//  auto it = std::find(params.begin(), params.end(), key);
+//  if (it != params.end())
+//  {
+//    std::stringstream stream(*(it + 1));
+//    stream >> value;
+//    return true;
+//  }
+//
+//  return false;
+//}
+//
+//bool hasKey(const std::vector<std::string>& params, const std::string& key)
+//{
+//  return std::find(params.begin(), params.end(), key) == params.end() ? false : true;
+//}
 
 
 
@@ -254,7 +255,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   {
     argP.addDescription("-physics", "Start with physics simulation component");
   }
-  else if (hasKey(argvStrVec, "-physics"))
+  else if (getKey(argvStrVec, "-physics"))
   {
     components.push_back(createComponent(entity, graph, scene, "-physics", argvString));
   }
@@ -311,8 +312,8 @@ ComponentBase* createComponent(EntityBase& entity,
     auto argsVec = Rcs::String_split(extraArgs, " ");
     std::string connection = "tcp://localhost:5555";
     std::string landmarksCamera = "camera_0";
-    getValue<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
-    getValue<std::string>(argsVec, "-landmarks_connection", connection);
+    getKeyValuePair<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
+    getKeyValuePair<std::string>(argsVec, "-landmarks_connection", connection);
     RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
     if (!cam)
     {
@@ -324,10 +325,10 @@ ComponentBase* createComponent(EntityBase& entity,
     LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity, connection);
     lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
 
-    if (hasKey(argsVec, "-face_tracking"))
+    if (getKey(argsVec, "-face_tracking"))
     {
       std::string faceBdyName = "face";
-      getValue<std::string>(argsVec, "-face_bodyName", faceBdyName);
+      getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
       auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
     }
 
@@ -340,7 +341,7 @@ ComponentBase* createComponent(EntityBase& entity,
   {
     auto argsVec = Rcs::String_split(extraArgs, " ");
     std::string camBdyName = "face";
-    getValue<std::string>(argsVec, "-camera_view_body", camBdyName);
+    getKeyValuePair<std::string>(argsVec, "-camera_view_body", camBdyName);
     RCHECK_MSG(RcsGraph_getBodyByName(graph, camBdyName.c_str()), "Camera attachment for parameter '-camera_view_body' %s not found", camBdyName.c_str());
     return new CameraViewComponent(&entity, camBdyName, false);
   }
@@ -348,7 +349,7 @@ ComponentBase* createComponent(EntityBase& entity,
   {
     auto argsVec = Rcs::String_split(extraArgs, " ");
     std::string faceBdyName = "face";
-    getValue<std::string>(argsVec, "-face_bodyName", faceBdyName);
+    getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
     return new aff::FaceGestureComponent(&entity, faceBdyName);
   }
   else if (componentName == "-physics")
@@ -356,8 +357,8 @@ ComponentBase* createComponent(EntityBase& entity,
     auto argsVec = Rcs::String_split(extraArgs, " ");
     std::string physicsConfig;
     std::string physicsEngine = "Bullet";
-    getValue<std::string>(argsVec, "-physics", physicsEngine);
-    getValue<std::string>(argsVec, "-physics_config", physicsConfig);
+    getKeyValuePair<std::string>(argsVec, "-physics", physicsEngine);
+    getKeyValuePair<std::string>(argsVec, "-physics_config", physicsConfig);
     RLOG_CPP(5, "Creating physics with engine " << physicsEngine << " and config file '" << physicsConfig << "'");
     RCHECK(graph);
     return new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig);

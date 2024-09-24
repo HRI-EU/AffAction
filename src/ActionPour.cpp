@@ -32,17 +32,20 @@
 
 #include "ActionPour.h"
 #include "ActionFactory.h"
-#include "ActivationSet.h"
-#include "PositionConstraint.h"
-#include "PolarConstraint.h"
-#include "ConnectBodyConstraint.h"
-#include "VectorConstraint.h"
+#include "StringParserTools.hpp"
+
+#include <ActivationSet.h>
+#include <PositionConstraint.h>
+#include <PolarConstraint.h>
+#include <ConnectBodyConstraint.h>
+#include <VectorConstraint.h>
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
 #include <Rcs_basicMath.h>
+#include <Rcs_utilsCPP.h>
 
 #include <algorithm>
 
@@ -59,14 +62,13 @@ ActionPour::ActionPour(const ActionScene& domain,
 {
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "tiltAngle");
-  if (it != params.end())
+  int res = getAndEraseKeyValuePair(params, "tiltAngle", tiltAngle);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if (res == 0)
   {
     numSolutions = 1;
-    tiltAngle = RCS_DEG2RAD(std::stod(*(it + 1)));
+    tiltAngle = RCS_DEG2RAD(tiltAngle);
     tiltAngleAbs = fabs(tiltAngle);
-    params.erase(it + 1);
-    params.erase(it);
   }
 
   if (params.size()<2)
@@ -545,12 +547,11 @@ public:
 
     parseParams(params);
 
-    auto it = std::find(params.begin(), params.end(), "angle");
-    if (it != params.end())
+    int res = getAndEraseKeyValuePair(params, "angle", tiltAngle);
+    RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+    if (res == 0)
     {
-      tiltAngle = RCS_DEG2RAD(std::stod(*(it + 1)));
-      params.erase(it + 1);
-      params.erase(it);
+      tiltAngle = RCS_DEG2RAD(tiltAngle);
     }
 
     objectToTilt = params[0];
@@ -676,13 +677,8 @@ public:
     objectToFix = params[0];
     frame = objectToFix;
 
-    auto it = std::find(params.begin(), params.end(), "frame");
-    if (it != params.end())
-    {
-      frame = *(it + 1);
-      params.erase(it + 1);
-      params.erase(it);
-    }
+    int res = getAndEraseKeyValuePair(params, "frame", frame);
+    RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
     const AffordanceEntity* fixNtt = domain.getAffordanceEntity(objectToFix);
 

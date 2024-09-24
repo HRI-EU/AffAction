@@ -34,6 +34,7 @@
 #include "ActionFactory.h"
 #include "TrajectoryPredictor.h"
 #include "CollisionModelConstraint.h"
+#include "StringParserTools.hpp"
 
 #include <ActivationSet.h>
 #include <PositionConstraint.h>
@@ -81,21 +82,11 @@ ActionGet::ActionGet(const ActionScene& domain,
 {
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "from");
-  if (it != params.end())
-  {
-    whereFrom = *(it+1);
-    params.erase(it+1);
-    params.erase(it);
-  }
+  int res = getAndEraseKeyValuePair(params, "from", whereFrom);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
-  it = std::find(params.begin(), params.end(), "liftHeight");
-  if (it != params.end())
-  {
-    liftHeight = std::stod(*(it+1));
-    params.erase(it+1);
-    params.erase(it);
-  }
+  res = getAndEraseKeyValuePair(params, "liftHeight", liftHeight);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
   std::string objectToGet = params[0];
   std::string manipulator = params.size()>1?params[1]:std::string();

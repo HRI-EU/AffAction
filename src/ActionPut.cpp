@@ -33,6 +33,7 @@
 #include "ActionPut.h"
 #include "ActionFactory.h"
 #include "CollisionModelConstraint.h"
+#include "StringParserTools.hpp"
 
 #include <ActivationSet.h>
 #include <PositionConstraint.h>
@@ -222,6 +223,7 @@ ActionPut::ActionPut(const ActionScene& domain,
                      const RcsGraph* graph,
                      std::vector<std::string> params) : ActionPut()
 {
+  RLOG_CPP(0, "Calling ActionPut with params: " << Rcs::String_concatenate(params, " "));
   parseArgs(domain, graph, params);
 
   std::string objectToPut = params[0];
@@ -250,92 +252,57 @@ void ActionPut::parseArgs(const ActionScene& domain,
 {
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "frame");
-  if (it != params.end())
+  int res = getAndEraseKeyValuePair(params, "frame", whereOn);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+
+  res = getAndEraseKeyValuePair(params, "distance", distance);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+
+  double alignAngleInRad = 0.0;
+  res = getAndEraseKeyValuePair(params, "alignAngleZ", alignAngleInRad);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if (res == 0)
   {
-    whereOn = *(it + 1);
-    params.erase(it + 1);
-    params.erase(it);
+    putOri3d[2] = RCS_DEG2RAD(alignAngleInRad);
   }
 
-  it = std::find(params.begin(), params.end(), "distance");
-  if (it != params.end())
-  {
-    distance = std::stod(*(it + 1));
-    params.erase(it + 1);
-    params.erase(it);
-  }
+  res = getAndEraseKeyValuePair(params, "height", heightAboveGoal);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
-  it = std::find(params.begin(), params.end(), "above");
-  if (it != params.end())
+  if (getAndEraseKey(params, "above"))
   {
     above = true;
     heightAboveGoal = DEFAULT_ABOVE_DIST;
-    params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "putDown");
-  if (it != params.end())
+  if (getAndEraseKey(params, "putDown"))
   {
     putDown = true;
-    params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "putAligned");
-  if (it != params.end())
+  if (getAndEraseKey(params, "putAligned"))
   {
     putPolar = false;
-    params.erase(it);
   }
 
-  it = std::find(params.begin(), params.end(), "alignAngleZ");
-  if (it != params.end())
+  res = getAndEraseKeyValuePair(params, "near", nearTo);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if ((res == 0) && (!nearTo.empty()) && domain.getSceneEntities(nearTo).empty())
   {
-    putOri3d[2] = RCS_DEG2RAD(std::stod(*(it + 1)));
-    params.erase(it + 1);
-    params.erase(it);
+    throw ActionException(ActionException::UnrecoverableError,
+                          "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
+                          "Put it near another object in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  it = std::find(params.begin(), params.end(), "height");
-  if (it != params.end())
+  res = getAndEraseKeyValuePair(params, "far", farFrom);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if ((res==0) && (!farFrom.empty()) && domain.getSceneEntities(farFrom).empty())
   {
-    heightAboveGoal = std::stod(*(it + 1));
-    params.erase(it + 1);
-    params.erase(it);
-  }
-
-  it = std::find(params.begin(), params.end(), "near");
-  if (it != params.end())
-  {
-    nearTo = *(it + 1);
-
-    if (!nearTo.empty() && domain.getSceneEntities(nearTo).empty())
-    {
-      throw ActionException(ActionException::UnrecoverableError,
-                            "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
-                            "Put it near another object in the environment",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
-
-    params.erase(it + 1);
-    params.erase(it);
-  }
-
-  it = std::find(params.begin(), params.end(), "far");
-  if (it != params.end())
-  {
-    farFrom = *(it + 1);
-
-    if (!farFrom.empty() && domain.getSceneEntities(farFrom).empty())
-    {
-      throw ActionException(ActionException::UnrecoverableError,
-                            "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
-                            "Put it far away of another object in the environment",
-                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
-    }
-
-    params.erase(it + 1);
-    params.erase(it);
+    throw ActionException(ActionException::UnrecoverableError,
+                          "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
+                          "Put it far away of another object in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
 }

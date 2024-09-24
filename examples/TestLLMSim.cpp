@@ -34,6 +34,7 @@
 #include <ExampleActionsECS.h>
 #include <LandmarkZmqComponent.h>
 #include <HardwareComponent.h>
+#include <StringParserTools.hpp>
 #include <Rcs_macros.h>
 #include <Rcs_resourcePath.h>
 #include <Rcs_cmdLine.h>
@@ -47,6 +48,7 @@
 
 #include <csignal>
 #include <fstream>
+#include <iostream>
 
 RCS_INSTALL_ERRORHANDLERS
 
@@ -70,13 +72,14 @@ void quit(int /*sig*/)
 // Run with tracking skeletons from file:
 //   bin/TestLLMSim -dir config/xml/Affaction/examples/ -f g_aruco.xml -tracking -jsonFile config/xml/Affaction/data/skeleton.json
 //   bin/TestLLMSim -dir config/xml/Affaction/unittest/ -f g_scenario_unittest_multiple_agents.xml
-int main(int argc, char** argv)
+static int testLLMSim(int argc, char** argv)
 {
 #if !defined(_MSC_VER)
   // Avoid crashes when running remotely.
   XInitThreads();
 #endif
 
+  RLOG(0, "testLLMSim()");
   // Ctrl-C callback handler
   signal(SIGINT, quit);
 
@@ -93,6 +96,7 @@ int main(int argc, char** argv)
 
   if (testSceneQuery)
   {
+    RLOG(0, "testSceneQuery");
     bool success = aff::SceneQueryPool::test(&ex);
     RPAUSE_MSG("aff::SceneQueryPool::test() %s", success ? "succeeded" : "failed");
   }
@@ -109,12 +113,13 @@ int main(int argc, char** argv)
     withTracking = true;
   }
 
-  aff::LandmarkZmqComponent* lmc;
+  aff::LandmarkZmqComponent* lmc = nullptr;
   std::string lmArgs;
 
   // Assemble string containing all args
   if (withTracking)
   {
+    RLOG(0, "Enabling tracking");
     std::string connection = "tcp://localhost:5555";
     argP.getArgument("-jsonFile", &connection, "Json file instead of zmq connection (default: python_landmark_input.json)");
     lmArgs += "-landmarks_connection " + connection + " -landmarks_camera head_kinect_lens ";
@@ -138,12 +143,14 @@ int main(int argc, char** argv)
 
   if (withAruco)
   {
+    RLOG(0, "Enabling aruco traker");
     lmc->addArucoTracker("camera_0", "aruco_base");
     RLOG(0, "Done adding aruco tracker");
   }
 
   if (withAzure)
   {
+    RLOG(0, "Enabling Azure skeleton tracker");
     //    RCHECK(cam);
     size_t numSkeletons = 3;
     double r_agent = DBL_MAX;
@@ -170,6 +177,7 @@ int main(int argc, char** argv)
   // Because initGraphics() has already been called
   if (lmc)
   {
+    RLOG(0, "Enabling lmc debug graphics");
     lmc->createDebugGraphics(ex.viewer.get());
   }
 
@@ -186,4 +194,70 @@ int main(int argc, char** argv)
   xmlCleanupParser();
 
   return ex.getNumFailedActions();
+}
+
+static int testStringParsing()
+{
+  std::vector<std::string> params = { "key1", "True", "key2", "false", "key3", "42", "key4", "99.99", "key5", "99.99", "key6", "-5" };
+
+  bool val1, val2;
+  int val3, val5;
+  double val4;
+  size_t val6;
+
+  if (aff::getKeyValuePair(params, "key1", val1) == 0)
+  {
+    std::cout << "key1: " << std::boolalpha << val1 << "\n";  // Should print "key1: true"
+  }
+
+  if (aff::getKeyValuePair(params, "key2", val2) == 0)
+  {
+    std::cout << "key2: " << std::boolalpha << val2 << "\n";  // Should print "key2: false"
+  }
+
+  if (aff::getKeyValuePair(params, "key3", val3) == 0)
+  {
+    std::cout << "key3: " << val3 << "\n";  // Should print "key3: 42"
+  }
+
+  if (aff::getKeyValuePair(params, "key4", val4) == 0)
+  {
+    std::cout << "key4: " << val4 << "\n";  // Should print "key4: 99.99"
+  }
+
+  if (aff::getKeyValuePair(params, "key5", val5) == 0)
+  {
+    std::cout << "key5: " << val5 << "\n";  // Should not print anythong
+  }
+
+  if (aff::getKeyValuePair(params, "key6", val6) == 0)
+  {
+    std::cout << "key6: " << val6 << "\n";  // Should not print anythong
+  }
+
+  return 0;
+}
+
+int main(int argc, char** argv)
+{
+  Rcs::CmdLineParser argP(argc, argv);
+  int mode = 0, res = 0;
+
+  argP.getArgument("-m", &mode, "Test mode (default: %d)", mode);
+
+  switch (mode)
+  {
+    case 0:
+      res = testLLMSim(argc, argv);
+      break;
+
+    case 1:
+      res = testStringParsing();
+      break;
+
+    default:
+      RMSG("No such mode: %d", mode);
+  }
+
+  return res;
 }

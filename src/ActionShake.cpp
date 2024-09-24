@@ -35,12 +35,14 @@
 #include "Agent.h"
 #include "ActivationSet.h"
 #include "PositionConstraint.h"
+#include "StringParserTools.hpp"
 
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_joint.h>
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
+#include <Rcs_utilsCPP.h>
 
 #include <algorithm>
 #include <sstream>
@@ -63,33 +65,21 @@ ActionShake::ActionShake(const ActionScene& scene,
 {
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "number_of_shakes");
-  if (it != params.end())
+  int res = getAndEraseKeyValuePair(params, "number_of_shakes", numUpAndDowns);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+
+  res = getAndEraseKeyValuePair(params, "up_down_amplitude", up_down_amplitude);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if (res==0)
   {
-    std::stringstream stream(*(it + 1));
-    stream >> numUpAndDowns;
-    params.erase(it + 1);
-    params.erase(it);
+    up_down_amplitude *= M_PI / 180.0;  // input in deg
   }
 
-  it = std::find(params.begin(), params.end(), "up_down_amplitude");
-  if (it != params.end())
+  res = getAndEraseKeyValuePair(params, "tilt_amplitude", tilt_amplitude);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if (res == 0)
   {
-    std::stringstream stream(*(it + 1));
-    stream >> up_down_amplitude;
-    up_down_amplitude *= M_PI / 180.0;   // input in deg
-    params.erase(it + 1);
-    params.erase(it);
-  }
-
-  it = std::find(params.begin(), params.end(), "tilt_amplitude");
-  if (it != params.end())
-  {
-    std::stringstream stream(*(it + 1));
-    stream >> tilt_amplitude;
-    tilt_amplitude *= M_PI / 180.0;   // input in deg
-    params.erase(it + 1);
-    params.erase(it);
+    tilt_amplitude *= M_PI / 180.0;  // input in deg
   }
 
   if (params.empty())

@@ -33,6 +33,7 @@
 #include "ActionPoint.h"
 #include "ActionFactory.h"
 #include "Agent.h"
+#include "StringParserTools.hpp"
 
 #include <ActivationSet.h>
 #include <VectorConstraint.h>
@@ -69,13 +70,8 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   Vec3d_setZero(fingerTipPosition);
   parseParams(params);
 
-  auto it = std::find(params.begin(), params.end(), "distance");
-  if (it != params.end())
-  {
-    fingerDistance = std::stod(*(it + 1));
-    params.erase(it + 1);
-    params.erase(it);
-  }
+  int res = getAndEraseKeyValuePair(params, "distance", fingerDistance);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
   if (params.empty())
   {
