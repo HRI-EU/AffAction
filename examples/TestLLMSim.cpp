@@ -39,6 +39,7 @@
 #include <Rcs_resourcePath.h>
 #include <Rcs_cmdLine.h>
 #include <Rcs_typedef.h>
+#include <Rcs_timer.h>
 
 #include <SegFaultHandler.h>
 
@@ -52,13 +53,16 @@
 
 RCS_INSTALL_ERRORHANDLERS
 
-aff::ExampleActionsECS* examplePtr = NULL;
+aff::ExampleActionsECS* examplePtr = nullptr;
 
 
 void quit(int /*sig*/)
 {
   static int kHit = 0;
-  examplePtr->stop();
+  if (examplePtr)
+  {
+    examplePtr->stop();
+  }
   fprintf(stderr, "Trying to exit gracefully - %dst attempt\n", kHit + 1);
   kHit++;
 
@@ -80,9 +84,6 @@ static int testLLMSim(int argc, char** argv)
 #endif
 
   RLOG(0, "testLLMSim()");
-  // Ctrl-C callback handler
-  signal(SIGINT, quit);
-
   Rcs_addResourcePath(RCS_CONFIG_DIR);
 
   aff::ExampleActionsECS ex(argc, argv);
@@ -90,19 +91,6 @@ static int testLLMSim(int argc, char** argv)
   bool success = ex.init(argc, argv);
 
   Rcs::CmdLineParser argP;
-
-  bool testSceneQuery = false;
-  argP.getArgument("-testSceneQuery", &testSceneQuery, "Test ConcurrentSceneQuery pool");
-
-  if (testSceneQuery)
-  {
-    RLOG(0, "testSceneQuery");
-    bool success = aff::SceneQueryPool::test(&ex);
-    RPAUSE_MSG("aff::SceneQueryPool::test() %s", success ? "succeeded" : "failed");
-  }
-
-
-
   bool withAruco = argP.hasArgument("-aruco", "Use aruco tracker");
   bool withAzure = argP.hasArgument("-azure", "Use azure people tracker");
   bool withFace = argP.hasArgument("-face", "Use Mediapipe face tracker");
@@ -196,6 +184,56 @@ static int testLLMSim(int argc, char** argv)
   return ex.getNumFailedActions();
 }
 
+static int testSceneQuery(int argc, char** argv)
+{
+  RLOG(0, "testSceneQuery()");
+  aff::ExampleActionsECS ex(argc, argv);
+  bool success = aff::SceneQueryPool::test(&ex);
+  RLOG(0, "aff::SceneQueryPool::test() %s", success ? "succeeded" : "failed");
+
+  return 0;
+}
+
+static int testPTU(int argc, char** argv)
+{
+  RLOG(0, "testPTU()");
+
+  Rcs_addResourcePath(RCS_CONFIG_DIR);
+
+  aff::ExampleActionsECS ex(argc, argv);
+  examplePtr = &ex;
+  bool success = ex.init(argc, argv);
+
+  int count = 0;
+  double t0 = Timer_getSystemTime();
+  ex.getEntity().subscribe("SetJointCommand", [&count, &t0](const MatNd* q_des)
+  {
+    ++count;
+    if (count%10==0)
+    {
+      double t = Timer_getSystemTime()-t0;
+      double pan = RCS_DEG2RAD(30.0)*sin(t);
+      RLOG(0, "Pan %f: t = %.4f", pan, t);
+      examplePtr->getEntity().publish("PtuPanTiltCommand", pan, 0.0);
+    }
+
+  });
+
+  if (success)
+  {
+    RLOG(0, "Starting loop");
+    ex.start();  // This will block until "Stop" is published
+  }
+
+  std::string starLine(80, '*');
+  RMSG_CPP("\n\n" + starLine + "\n* TestLLMSim exits with "
+           << ex.getNumFailedActions() << " failed actions\n" + starLine);
+
+  xmlCleanupParser();
+
+  return ex.getNumFailedActions();
+}
+
 static int testStringParsing()
 {
   std::vector<std::string> params = { "key1", "True", "key2", "false", "key3", "42", "key4", "99.99", "key5", "99.99", "key6", "-5" };
@@ -240,6 +278,9 @@ static int testStringParsing()
 
 int main(int argc, char** argv)
 {
+  // Ctrl-C callback handler
+  signal(SIGINT, quit);
+
   Rcs::CmdLineParser argP(argc, argv);
   int mode = 0, res = 0;
 
@@ -253,6 +294,14 @@ int main(int argc, char** argv)
 
     case 1:
       res = testStringParsing();
+      break;
+
+    case 2:
+      res = testSceneQuery(argc, argv);
+      break;
+
+    case 3:
+      res = testPTU(argc, argv);
       break;
 
     default:

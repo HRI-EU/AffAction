@@ -31,6 +31,24 @@
 *******************************************************************************/
 
 /*
+## Pan Tilt Unit (PTU)
+
+### Start PTU with ROS
+
+cd /hri/localdisk/mgienger/care_ros_ws
+source ros.env
+roslaunch hri_scitos_schunk_ptu hri_scitos_schunk_ptu.launch
+
+### Initialize PTU (required after E-Stop or power down)
+
+rosservice call /ptu/initialize_pan
+rosservice call /ptu/initialize_tilt
+
+### PTU bumped into limit
+
+rosservice call /ptu/reset_stop
+then initialize it as above
+
 PARAMETERS
  * /ptu/controller/pan_max_degrees: 30
  * /ptu/controller/pan_min_degrees: -30

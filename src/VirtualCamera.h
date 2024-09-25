@@ -48,18 +48,18 @@ public:
 
   VirtualCamera(osg::Node* node, int width=640, int height=480);
   virtual ~VirtualCamera();
-  
+
   void render(double x, double y, double z, double thx, double thy, double thz,
               double* colorBuffer=nullptr, double* depthBuffer=nullptr);
   void render(const HTr* A_camI, double* colorBuffer=nullptr, double* depthBuffer=nullptr);
-  
+
   const int width;
   const int height;
 
 private:
   VirtualCamera(const VirtualCamera&) = delete;
   VirtualCamera& operator=(const VirtualCamera&) = delete;
-  
+
   Rcs::DepthRenderer virtualRenderer;
   std::mutex virtualRendererLock;
 };

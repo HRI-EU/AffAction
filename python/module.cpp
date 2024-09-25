@@ -415,6 +415,9 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getURDF();
   })
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns a rendered image from the given coordinates
+  //////////////////////////////////////////////////////////////////////////////
   .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
                           double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
   {
@@ -425,6 +428,24 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::make_tuple(std::move(colorImage), std::move(depthImage));
   }, "Renders the current state of the scene. The input is the camera origin and yrp rotation around that origin. Outputs the color and depth image.")
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns a rendered image from the given coordinates
+  //////////////////////////////////////////////////////////////////////////////
+  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<double>
+  {
+    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
+    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
+    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3});
+    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
+    RCHECK(cam);
+
+    virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
+    return std::move(colorImage);
+  }, "Renders the current state of the scene. The input is the camera body name. Outputs the color image.")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns the entity of which child is a child of, or an empty string
+  //////////////////////////////////////////////////////////////////////////////
   .def("get_parent_entity", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
   {
     return ex.getQuery()->getParentEntity(child);

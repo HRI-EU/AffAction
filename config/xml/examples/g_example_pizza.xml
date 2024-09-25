@@ -52,7 +52,7 @@
   </Body>
 
   <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 -180 40 90" was_rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
     <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
@@ -61,6 +61,11 @@
   <AffordanceModel body="camera_0" name="camera" types="camera.n.01">
     <Supportable frame="camera_0"/>
   </AffordanceModel>
+
+   <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" >
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
+ 
 
   <!-- The model of the robot. -->
   <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
@@ -77,25 +82,26 @@
     <xi:include href="../pizza/g_pizza.xml"/>
   </Group>
 
-	<!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
-	<model_state model="default" time_stamp="0">
-		<joint_state joint="j2s7s300_joint_1_right" position="20"/>
-		<joint_state joint="j2s7s300_joint_2_right" position="280"/>
-		<joint_state joint="j2s7s300_joint_3_right" position="-90"/>
-		<joint_state joint="j2s7s300_joint_4_right" position="70"/>
-		<joint_state joint="j2s7s300_joint_5_right" position="0"/>
-		<joint_state joint="j2s7s300_joint_6_right" position="200"/>
-		<joint_state joint="j2s7s300_joint_7_right" position="0"/>
-		<joint_state joint="j2s7s300_joint_1_left" position="-20"/>
-		<joint_state joint="j2s7s300_joint_2_left" position="80"/>
-		<joint_state joint="j2s7s300_joint_3_left" position="90"/>
-		<joint_state joint="j2s7s300_joint_4_left" position="290"/>
-		<joint_state joint="j2s7s300_joint_5_left" position="0"/>
-		<joint_state joint="j2s7s300_joint_6_left" position="160"/>
-		<joint_state joint="j2s7s300_joint_7_left" position="0"/>
-	</model_state>
+  <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="ptu_tilt_joint" position="30" />
+    <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+    <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+  </model_state>
 
-	<xi:include href="g_modelstates.xml"/>
-	<xi:include href="g_collisionmodel.xml"/>
+  <xi:include href="g_modelstates.xml"/>
+  <xi:include href="g_collisionmodel.xml"/>
 
 </Graph>

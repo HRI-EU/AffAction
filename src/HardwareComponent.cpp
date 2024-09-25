@@ -61,27 +61,6 @@
 
 
 
-//template<typename T>
-//bool getValue(const std::vector<std::string>& params, const std::string& key, T& value)
-//{
-//  auto it = std::find(params.begin(), params.end(), key);
-//  if (it != params.end())
-//  {
-//    std::stringstream stream(*(it + 1));
-//    stream >> value;
-//    return true;
-//  }
-//
-//  return false;
-//}
-//
-//bool hasKey(const std::vector<std::string>& params, const std::string& key)
-//{
-//  return std::find(params.begin(), params.end(), key) == params.end() ? false : true;
-//}
-
-
-
 namespace aff
 {
 
