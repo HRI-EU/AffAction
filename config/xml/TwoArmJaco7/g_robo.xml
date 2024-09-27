@@ -75,15 +75,18 @@
     <Shape type="FRAME" scale="1"/>
   </Body>
 
-  <!-- The gaze model of the robot (testing).
+  <!-- The gaze model of the robot (testing).-->
   <Group prev="head_shell" transform="0 0 0 0 0 0">
     <xi:include href="g_gazemodel.xml" />
   </Group>
 
-  <Body name="GazePoint" rigid_body_joints="1.05 0.0 0.35 0 0 0" >
-    <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+  <Body name="GazePoint" >
+    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
   </Body>
-  -->
+  
 
 
   <Manipulator body="head_kinect_link" types="head">

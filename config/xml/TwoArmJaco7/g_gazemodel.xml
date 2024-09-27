@@ -32,8 +32,8 @@
   <Body name="LeftEyeBase" transform="-0.01 0.06 0.06 0 0 0" />
 
   <Body name="LeftEyeBall" prev="LeftEyeBase" color="WHITE" >
-    <Joint name="LeftEyeThY" type="RotY" range="-90 0 90" />
-    <Joint name="LeftEyeThZ" type="RotZ" range="-90 0 90" />
+    <Joint name="LeftEyeThY" type="RotY" range="-90 0 90" weightMetric="5" />
+    <Joint name="LeftEyeThZ" type="RotZ" range="-90 0 90" weightMetric="5" />
     <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
   </Body>
 
@@ -51,15 +51,15 @@
   </Body>
 
   <Body name="GazePointL" prev="LeftEyeBall" >
-    <Joint name="GazeXL" type="TransX" range="0 1 2" />
-    <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+    <Joint name="GazeXL" type="TransX" range="0 1 3" weightJL="0" />
+    <Shape type="SPHERE" radius="0.02" graphics="true" color="RED" />
   </Body>
 
   <Body name="RightEyeBase" transform="-0.01 -0.06 0.06 0 0 0" />
 
   <Body name="RightEyeBall" prev="RightEyeBase" color="WHITE" >
-    <Joint name="RightEyeThY" type="RotY" range="-90 0 90" />
-    <Joint name="RightEyeThZ" type="RotZ" range="-90 0 90" />
+    <Joint name="RightEyeThY" type="RotY" range="-90 0 90" weightMetric="5" />
+    <Joint name="RightEyeThZ" type="RotZ" range="-90 0 90" weightMetric="5" />
     <Shape type="SPHERE" radius="0.03" graphics="true" distance="false" />
   </Body>
 
@@ -77,8 +77,8 @@
   </Body>
 
   <Body name="GazePointR" prev="RightEyeBall" >
-    <Joint name="GazeXR" type="TransX" range="0 1 2" />
-    <Shape type="SPHERE" radius="0.05" graphics="true" color="RED" />
+    <Joint name="GazeXR" type="TransX" range="0 1 3" weightJL="0" />
+    <Shape type="SPHERE" radius="0.02" graphics="true" color="RED" />
   </Body>
 
 </Graph>

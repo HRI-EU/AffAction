@@ -39,9 +39,7 @@
   <ActionSequence name="8" text="get_and_hold salt_bottle; move salt_bottle above pizza_dough height 0.1" />
   <ActionSequence name="9" text="get salt_bottle; put salt_bottle above pizza_dough" />
 
-
-  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
-  </Body>
+  <Body name="default_camera_view" transform="2.2 0 1.5 0 -12 180" was_transform="-1.8 -2.5 3.0 -34 21 66" />
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
@@ -84,7 +82,6 @@
 
   <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
   <model_state model="default" time_stamp="0">
-    <joint_state joint="ptu_tilt_joint" position="30" />
     <joint_state joint="j2s7s300_joint_1_right" position="20"/>
     <joint_state joint="j2s7s300_joint_2_right" position="280"/>
     <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
@@ -99,6 +96,23 @@
     <joint_state joint="j2s7s300_joint_5_left" position="0"/>
     <joint_state joint="j2s7s300_joint_6_left" position="160"/>
     <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+	
+	<joint_state joint="ptu_tilt_joint" position="27.76684" />
+    <joint_state joint="LeftEyeThY" position="0.036163" />
+    <joint_state joint="LeftEyeThZ" position="-3.477837" />
+    <joint_state joint="LeftPupilX" position="0.039072" />
+    <joint_state joint="LeftPupilThY" position="-0.036227" />
+    <joint_state joint="LeftPupilThZ" position="3.477834" />
+    <joint_state joint="GazeXL" position="0.989079" />
+    <joint_state joint="RightEyeThY" position="0.036163" />
+    <joint_state joint="RightEyeThZ" position="3.477838" />
+    <joint_state joint="RightPupilX" position="0.039072" />
+    <joint_state joint="RightPupilThX" position="-0.03293" />
+    <joint_state joint="RightPupilThY" position="-0.003299" />
+    <joint_state joint="RightPupilThZ" position="-3.477835" />
+    <joint_state joint="GazeXR" position="0.989079" />
+    <joint_state joint="gpx" position="-0.02" />
+    <joint_state joint="gpz" position="0.971" />
   </model_state>
 
   <xi:include href="g_modelstates.xml"/>
