@@ -163,6 +163,7 @@ void PW70Component::onUpdateGraph(RcsGraph* graph)
     return;
   }
 
+  std::lock_guard<std::mutex> lock(panTiltUpdateMtx);
   MatNd_set(graph->q, panJointIdx, 0, current_pan_position);
   MatNd_set(graph->q, tiltJointIdx, 0, current_tilt_position);
 }

@@ -1055,8 +1055,11 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
     {
       if (verbose)
       {
-        RLOG(1, "%d joint limit violations", aor);
-        RcsGraph_printState(graph, graph->q);
+        REXEC(2)
+        {
+          RLOG(1, "%d joint limit violations", aor);
+          RcsGraph_printState(graph, graph->q);
+        }
       }
 
       resMsg.error = "ERROR";
