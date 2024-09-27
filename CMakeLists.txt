@@ -244,6 +244,7 @@ src/ActionPut.cpp
 src/ActionPour.cpp
 src/ActionPose.cpp
 src/ActionGaze.cpp
+src/ActionEyeGaze.cpp
 src/ActionPanTilt.cpp
 src/ActionDoor.cpp
 src/ActionDrop.cpp
@@ -278,6 +279,7 @@ src/PhysicsComponent.cpp
 src/VirtualCamera.cpp
 src/VirtualCameraWindow.cpp
 src/StringParserTools.cpp
+src/PW70Component.cpp
 )
 
 SET(ECS_SRCS
@@ -324,14 +326,21 @@ TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<BUILD_INTERFACE:$ENV{SIT}/External/asio-1.12.1/include>
     $<INSTALL_INTERFACE:include/AffAction>)
 
-TARGET_LINK_LIBRARIES(AffAction Tropic RcsGraphics RcsGui RcsPhysics)
+TARGET_LINK_LIBRARIES(AffAction PUBLIC Tropic RcsGraphics RcsGui RcsPhysics)
+
+IF (WIN32)
+find_package(PCAN-Basic REQUIRED)
+if(TARGET PCAN-Basic::PCAN-Basic)
+    target_link_libraries(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
+endif()
+ENDIF()
 
 # zmq library is used to communicate with python from MediaPipeComponent
 IF (WIN32)
   FIND_PACKAGE(cppzmq REQUIRED)
-  TARGET_LINK_LIBRARIES(AffAction cppzmq)
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE cppzmq)
 ELSE()
-  TARGET_LINK_LIBRARIES(AffAction zmq)
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE zmq)
 ENDIF()
 
 # We add this option to force the linker to export the symbols. This
@@ -346,7 +355,7 @@ IF(AFFACTION_WITH_OPTIM)
     MESSAGE(STATUS "Building AffAction with optimization support")
     #LIST(APPEND ActionBase src/OptimizationSet.cpp)
     TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DSMILEACTIONS_WITH_OPTIM)
-    TARGET_LINK_LIBRARIES(AffAction RcsOptim)
+    TARGET_LINK_LIBRARIES(AffAction PRIVATE RcsOptim)
   ELSE()
     MESSAGE(STATUS "Building AffAction without optimization support")
   ENDIF()
@@ -355,12 +364,12 @@ ENDIF()
 
 # PTUComponent currently uses ROS
 IF (USE_AFFACTION_ROS)
-  TARGET_LINK_LIBRARIES(AffAction ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES})
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES})
   TARGET_INCLUDE_DIRECTORIES(AffAction SYSTEM PUBLIC ${roscpp_INCLUDE_DIRS})
   TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DUSE_ROS)  
   TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC ${SMILE_WS_PATH}/devel/include)
   TARGET_LINK_DIRECTORIES(AffAction PUBLIC /opt/ros/noetic/lib)
-  TARGET_LINK_LIBRARIES(AffAction actionlib)
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE actionlib)
 ENDIF(USE_AFFACTION_ROS)
 
 ################################################################################
