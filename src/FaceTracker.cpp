@@ -71,7 +71,7 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
   scene(nullptr), mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
 {
-  std::string meshFile = Rcs::getAbsoluteFileName("FaceMesh-holes-478.obj");
+  std::string meshFile = Rcs::getAbsoluteFileName("hri_scitos_description/FaceMesh-holes-478.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
   if (!this->mesh)
   {
@@ -286,7 +286,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
 
   // Hide graphics from the beginning
   this->sw = new Rcs::NodeBase();
-  //sw->hide();
+  sw->hide();
   HTr A_cam = cameraFrame->A_BI;
   A_cam.org[0] += DISTANCE_FACE_TO_CAM;
   sw->setTransformation(&A_cam);

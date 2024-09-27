@@ -38,6 +38,7 @@
 #include "LandmarkZmqComponent.h"
 #include "CameraViewComponent.h"
 #include "FaceGestureComponent.h"
+#include "PW70Component.h"
 #include "FaceTracker.h"
 #include "StringParserTools.hpp"
 
@@ -123,6 +124,11 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   Rcs::CmdLineParser argP;
   std::vector<ComponentBase*> components;
 
+  auto argvStrVec = argP.copyArgvToVector();
+  auto extraArgsVec = Rcs::String_split(extraArgs, " ");
+  argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
+  auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
   if (argP.hasArgument("-jacoShm7r", "Start with Jaco7 Shm right") && (!dryRun))
   {
     components.push_back(createComponent(entity, graph, scene, "-jacoShm7r"));
@@ -136,6 +142,27 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
   {
     components.push_back(createComponent(entity, graph, scene, "-ptu"));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-pw70_pos", "Start with Scitos PTU in position mode");
+    argP.addDescription("-pw70_pan_joint_name", "Name of PW70 pan joint (default: empty string)");
+    argP.addDescription("-pw70_tilt_joint_name", "Name of PW70 pan joint (default: empty string)");
+    argP.addDescription("-pw70_control_frequency", "PW70 PTU control frequency (Must be 1, 10, 25, 50 or 100. Default: 50)");
+  }
+  else if (getKey(argvStrVec, "-pw70_pos"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-pw70_pos", argvString));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-pw70_vel", "Start with Scitos PTU in velocity mode");
+  }
+  else if (getKey(argvStrVec, "-pw70_vel"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-pw70_vel", argvString));
   }
 
   for (size_t i=0; i< components.size(); ++i)
@@ -341,6 +368,43 @@ ComponentBase* createComponent(EntityBase& entity,
     RLOG_CPP(5, "Creating physics with engine " << physicsEngine << " and config file '" << physicsConfig << "'");
     RCHECK(graph);
     return new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig);
+  }
+  else if (componentName.substr(0, 6) == "-pw70_")
+  {
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string panJointName, tiltJointName;
+    int controlFreq = 50;
+    getKeyValuePair(argsVec, "-pw70_pan_joint_name", panJointName);
+    getKeyValuePair(argsVec, "-pw70_tilt_joint_name", tiltJointName);
+    getKeyValuePair(argsVec, "-pw70_control_frequency", controlFreq);
+    const RcsJoint* panJnt = RcsGraph_getJointByName(graph, panJointName.c_str());
+    const RcsJoint* tiltJnt = RcsGraph_getJointByName(graph, tiltJointName.c_str());
+    const int panIdx = panJnt ? panJnt->jointIndex : -1;
+    const int tiltIdx = tiltJnt ? tiltJnt->jointIndex : -1;
+    RLOG_CPP(0, "Pan joint: " << panJointName << " index=" << panIdx);
+
+    if (componentName == "-pw70_pos")
+    {
+      auto c = new PW70Component(&entity, panIdx, tiltIdx);
+      bool success = c->init(controlFreq);
+      if (!success)
+      {
+        delete c;
+        c = nullptr;
+      }
+      return c;
+    }
+    else if (componentName == "-pw70_vel")
+    {
+      auto c = new PW70VelocityComponent(&entity, panIdx, tiltIdx);
+      bool success = c->init(controlFreq);
+      if (!success)
+      {
+        delete c;
+        c = nullptr;
+      }
+      return c;
+    }
   }
 
 #if defined USE_ROS

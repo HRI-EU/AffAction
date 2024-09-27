@@ -281,16 +281,19 @@ ExampleActionsECS::~ExampleActionsECS()
 
   for (size_t i = 0; i < hwc.size(); ++i)
   {
+    RLOG_CPP(0, "Deleting hardware component " << i);
     delete hwc[i];
   }
 
   for (size_t i = 0; i < components.size(); ++i)
   {
+    RLOG_CPP(0, "Deleting component " << i);
     delete components[i];
   }
 
   Rcs_removeResourcePath(configDirectory.c_str());
   RcsGraph_destroy(graphToInitializeWith);
+  RLOG_CPP(0, "Done deleting ExampleActionsECS");
 }
 
 bool ExampleActionsECS::initParameters()
@@ -502,7 +505,7 @@ bool ExampleActionsECS::initAlgo()
 
   // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
-  graphC->setEnableRender(false);
+  graphC->setEnableRender(!false);
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
 
@@ -877,6 +880,19 @@ bool ExampleActionsECS::initGraphics()
       auto textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
       entity.publish("PlanDFSEE", textCmd);
     }
+
+  }, "Get body under mouse");
+
+  viewer->setKeyCallback('l', [this](char k)
+  {
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (!bn)
+    {
+      return;
+    }
+
+    auto textCmd = "eye_gaze " + std::string(bn->body()->name);
+    entity.publish("PlanDFSEE", textCmd);
 
   }, "Get body under mouse");
 
@@ -1948,5 +1964,67 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "Render");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExamplePW70 : public ExampleActionsECS
+{
+public:
+
+  ExamplePW70(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExamplePW70()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    configDirectory = "config/xml/AffAction/xml/examples";
+    xmlFileName = "g_example_pizza.xml";
+    speedUp = 1;
+    componentArgs += "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExamplePW70, "Actions", "PTU velocity control");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExamplePW70_pos : public ExampleActionsECS
+{
+public:
+
+  ExamplePW70_pos(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExamplePW70_pos()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    configDirectory = "config/xml/AffAction/xml/examples";
+    xmlFileName = "g_example_pizza.xml";
+    speedUp = 1;
+    withEventGui = true;
+    noTextGui = true;
+    componentArgs += "-pw70_pos -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExamplePW70_pos, "Actions", "PTU position control");
 
 }   // namespace aff
