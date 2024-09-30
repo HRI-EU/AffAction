@@ -505,7 +505,7 @@ bool ExampleActionsECS::initAlgo()
 
   // Graph component contains "sensed" graph
   graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
-  graphC->setEnableRender(!false);
+  graphC->setEnableRender(false);
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
 
@@ -1987,8 +1987,23 @@ public:
     configDirectory = "config/xml/AffAction/xml/examples";
     xmlFileName = "g_example_pizza.xml";
     speedUp = 1;
-    componentArgs += "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+    componentArgs = "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
+  }
+
+  virtual bool initGraphics()
+  {
+    bool success = ExampleActionsECS::initGraphics();
+    graphC->setEnableRender(true);
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", graphC->getGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+    entity.process();
+    Timer_waitDT(0.5);
+    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+    entity.process();
+
+    return success;
   }
 
 };
@@ -1999,11 +2014,11 @@ RCS_REGISTER_EXAMPLE(ExamplePW70, "Actions", "PTU velocity control");
 /*******************************************************************************
  *
  ******************************************************************************/
-class ExamplePW70_pos : public ExampleActionsECS
+class ExamplePW70_pos : public ExamplePW70
 {
 public:
 
-  ExamplePW70_pos(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  ExamplePW70_pos(int argc, char** argv) : ExamplePW70(argc, argv)
   {
   }
 
@@ -2013,13 +2028,8 @@ public:
 
   bool initParameters()
   {
-    ExampleActionsECS::initParameters();
-    configDirectory = "config/xml/AffAction/xml/examples";
-    xmlFileName = "g_example_pizza.xml";
-    speedUp = 1;
-    withEventGui = true;
-    noTextGui = true;
-    componentArgs += "-pw70_pos -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+    ExamplePW70::initParameters();
+    componentArgs = "-pw70_pos -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }
 

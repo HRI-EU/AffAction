@@ -591,12 +591,15 @@ void GraphicsWindow::onRenderCommand(std::string graphId, std::string command)
 {
   if (!isRealized())
   {
-    RLOG(5, "Couldn't accept render command before graphics window is launched"
+    RLOG(0, "Couldn't accept render command before graphics window is launched"
          " (graph id \"%s\", command \"%s\"", graphId.c_str(), command.c_str());
     getEntity()->publish<std::string,std::string>("RenderCommand",
                                                   graphId, command);
     return;
   }
+
+  RLOG(5, "Applying Render command:"
+       " (graph id \"%s\", command \"%s\"", graphId.c_str(), command.c_str());
 
   if (STRCASEEQ("ShowLines", graphId.c_str()))
   {
