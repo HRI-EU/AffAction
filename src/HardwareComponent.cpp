@@ -47,6 +47,7 @@
 #include "ros/RespeakerComponent.h"
 #include "ros/NuanceTTSComponent.h"
 #include "ros/LandmarkROSComponent.hpp"
+#include "ros/HololensConnection.hpp"
 #endif
 
 #include <Rcs_typedef.h>
@@ -271,6 +272,11 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-face_gesture", argvString));
   }
 
+  if (argP.hasArgument("-holo", "Add HoloLens component") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-holo", argvString));
+  }
+
 
 
   for (size_t i = 0; i < components.size(); ++i)
@@ -386,9 +392,10 @@ ComponentBase* createComponent(EntityBase& entity,
     if (componentName == "-pw70_pos")
     {
       auto c = new PW70Component(&entity, panIdx, tiltIdx);
-      bool success = c->init(controlFreq);
+      bool success = c->setControlFrequency(controlFreq);
       if (!success)
       {
+        RLOG(0, "Couldn't create PW70Component - wrong controlFrequency: %d", controlFreq);
         delete c;
         c = nullptr;
       }
@@ -397,9 +404,10 @@ ComponentBase* createComponent(EntityBase& entity,
     else if (componentName == "-pw70_vel")
     {
       auto c = new PW70VelocityComponent(&entity, panIdx, tiltIdx);
-      bool success = c->init(controlFreq);
+      bool success = c->setControlFrequency(controlFreq);
       if (!success)
       {
+        RLOG(0, "Couldn't create PW70VelocityComponent - wrong controlFrequency: %d", controlFreq);
         delete c;
         c = nullptr;
       }
@@ -443,6 +451,11 @@ ComponentBase* createComponent(EntityBase& entity,
     lmc->setCameraTransform(&cam->A_BI);
 
     return lmc;
+  }
+  else if (componentName == "-holo")
+  {
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    return new HololensConnection(&entity, true);
   }
 #endif   // USE_ROS
 

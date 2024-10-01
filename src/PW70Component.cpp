@@ -116,6 +116,7 @@ PW70Component::PW70Component(EntityBase* parent, int panDofIdx, int tiltDofIdx) 
   current_pan_velocity(0.0),
   current_tilt_velocity(0.0),
   current_time_stamp(0.0),
+  controlFrequency(50),
   panJointIdx(panDofIdx),
   tiltJointIdx(tiltDofIdx),
   enableCommands(false)
@@ -126,11 +127,33 @@ PW70Component::PW70Component(EntityBase* parent, int panDofIdx, int tiltDofIdx) 
   subscribe("PW70_ResetStop", &PW70Component::onResetStop);
   subscribe("PW70_MovePositionInDegrees", &PW70Component::onMovePosition);
   subscribe("EnableCommands", &PW70Component::onEnableCommands);
+  subscribe("Start", &PW70Component::onStart);
   subscribe("Stop", &PW70Component::onStop);
   subscribe("UpdateGraph", &PW70Component::onUpdateGraph);
 }
 
-bool PW70Component::init(int controlFrequency)
+void PW70Component::onStart()
+{
+  if (this->pw70)
+  {
+    RLOG(1, "PW70 already running - skipping start");
+    return;
+  }
+
+  // Create an instance of PW70CANInterface with the callbacks
+  this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdate, this, controlFrequency);
+  this->pw70->reset_stop();
+
+  // Wait a moment to allow the interface to initialize
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+}
+
+PW70Component::~PW70Component()
+{
+  //onStop();
+}
+
+bool PW70Component::setControlFrequency(int freq)
 {
   if ((controlFrequency != 1) &&
       (controlFrequency != 10) &&
@@ -142,18 +165,8 @@ bool PW70Component::init(int controlFrequency)
     return false;
   }
 
-  // Create an instance of PW70CANInterface with the callbacks
-  this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdate, this, controlFrequency);
-
-  // Wait a moment to allow the interface to initialize
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-
+  this->controlFrequency = freq;
   return true;
-}
-
-PW70Component::~PW70Component()
-{
-  //onStop();
 }
 
 void PW70Component::onUpdateGraph(RcsGraph* graph)
@@ -261,7 +274,7 @@ void PW70Component::onMovePosition(double pan_in_degrees, double tilt_in_degrees
     return;
   }
 
-  double maxVel = RCS_DEG2RAD(10.0);
+  double maxVel = RCS_DEG2RAD(30.0);
   bool success = pw70->move_position(RCS_DEG2RAD(pan_in_degrees), RCS_DEG2RAD(tilt_in_degrees), maxVel, maxVel);
   RLOG(1, "%s sending target positions[deg]: %.3f %.3f",
        success ? "SUCCESS" : "FAILURE", pan_in_degrees, tilt_in_degrees);

@@ -198,7 +198,7 @@ bool PW70CANInterface::send(const std::vector<struct can_frame>& frames)
 // Receive messages method
 void PW70CANInterface::receive_messages()
 {
-  struct can_frame frame;
+  struct can_frame frame = {};
   bool pan_updated = false;
   bool tilt_updated = false;
 
@@ -211,6 +211,7 @@ void PW70CANInterface::receive_messages()
     {
       // Lock the socket mutex for thread-safe access
       std::lock_guard<std::mutex> lock(socket_mutex);
+      frame = {};
       nbytes = read(s, &frame, sizeof(struct can_frame));
     }
 
@@ -283,6 +284,8 @@ void PW70CANInterface::receive_messages()
         break;
       }
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   std::cout << "Quitting CAN receiver thread" << std::endl;
@@ -315,12 +318,12 @@ bool PW70CANInterface::enable_frequent_position_update(int frequency)
 
   const auto& can_state_cmd = it->second;
 
-  struct can_frame msg1;
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = can_state_cmd.size();
   std::copy(can_state_cmd.begin(), can_state_cmd.end(), msg1.data);
 
-  struct can_frame msg2;
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = can_state_cmd.size();
   std::copy(can_state_cmd.begin(), can_state_cmd.end(), msg2.data);
@@ -331,13 +334,13 @@ bool PW70CANInterface::enable_frequent_position_update(int frequency)
 // Disable frequent position update method
 bool PW70CANInterface::disable_frequent_position_update()
 {
-  struct can_frame msg1;
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 2;
   msg1.data[0] = 0x01;
   msg1.data[1] = 0x95;
 
-  struct can_frame msg2;
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 2;
   msg2.data[0] = 0x01;
@@ -349,13 +352,13 @@ bool PW70CANInterface::disable_frequent_position_update()
 // Stop method
 bool PW70CANInterface::stop()
 {
-  struct can_frame msg1;
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 2;
   msg1.data[0] = 0x01;
   msg1.data[1] = 0x91;
 
-  struct can_frame msg2;
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 2;
   msg2.data[0] = 0x01;
@@ -367,13 +370,13 @@ bool PW70CANInterface::stop()
 // Fast stop method
 bool PW70CANInterface::fast_stop()
 {
-  struct can_frame msg1;
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 2;
   msg1.data[0] = 0x01;
   msg1.data[1] = 0x90;
 
-  struct can_frame msg2;
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 2;
   msg2.data[0] = 0x01;
@@ -385,7 +388,7 @@ bool PW70CANInterface::fast_stop()
 // Reference pan method
 bool PW70CANInterface::reference_pan()
 {
-  struct can_frame msg;
+  struct can_frame msg = {};
   msg.can_id = 0x50E;
   msg.can_dlc = 2;
   msg.data[0] = 0x01;
@@ -397,7 +400,7 @@ bool PW70CANInterface::reference_pan()
 // Reference tilt method
 bool PW70CANInterface::reference_tilt()
 {
-  struct can_frame msg;
+  struct can_frame msg = {};
   msg.can_id = 0x50D;
   msg.can_dlc = 2;
   msg.data[0] = 0x01;
@@ -409,13 +412,13 @@ bool PW70CANInterface::reference_tilt()
 // Reset stop method
 bool PW70CANInterface::reset_stop()
 {
-  struct can_frame msg1;
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 2;
   msg1.data[0] = 0x01;
   msg1.data[1] = 0x8B;
 
-  struct can_frame msg2;
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 2;
   msg2.data[0] = 0x01;
@@ -427,8 +430,7 @@ bool PW70CANInterface::reset_stop()
 // Set target velocity method
 bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
-  struct can_frame msg1, msg2;
-
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 6;
   msg1.data[0] = 0x05;
@@ -437,6 +439,7 @@ bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double t
   uint32_t tilt_velocity_le = htole32(*reinterpret_cast<uint32_t*>(&tilt_velocity_degrees));
   std::memcpy(&msg1.data[2], &tilt_velocity_le, sizeof(uint32_t));
 
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 6;
   msg2.data[0] = 0x05;
@@ -451,8 +454,7 @@ bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double t
 // Set target position method
 bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radians)
 {
-  struct can_frame msg1, msg2;
-
+  struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
   msg1.can_dlc = 6;
   msg1.data[0] = 0x05;
@@ -461,6 +463,7 @@ bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radia
   uint32_t tilt_pos_le = htole32(*reinterpret_cast<uint32_t*>(&tilt_pos_degrees));
   std::memcpy(&msg1.data[2], &tilt_pos_le, sizeof(uint32_t));
 
+  struct can_frame msg2 = {};
   msg2.can_id = 0x50E;
   msg2.can_dlc = 6;
   msg2.data[0] = 0x05;
@@ -485,7 +488,7 @@ bool PW70CANInterface::move_position(double pan_radians, double tilt_radians, do
 // Move velocity method
 bool PW70CANInterface::move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
-  struct can_frame msg1, msg2;
+  struct can_frame msg1 = {}, msg2 = {};
 
   msg1.can_id = 0x50D;
   msg1.can_dlc = 6;

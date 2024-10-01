@@ -49,7 +49,6 @@ class PW70Component : public ComponentBase
 public:
   PW70Component(EntityBase* parent, int panDofIdx=-1, int tiltDofIdx=-1);
   virtual ~PW70Component();
-  virtual bool init(int controlFrequency);
 
   static void limitCheck(double pan, double tilt, void* param);
   static void positionUpdate(double pan, double tilt, double timestamp, void* param);
@@ -58,8 +57,10 @@ public:
   void onInitTilt();
   void onResetStop();
   void onStop();
+  void onStart();
   void onMovePosition(double pan_in_radians, double tilt_in_radians);
   void onUpdateGraph(RcsGraph* graph);
+  bool setControlFrequency(int freq);
 
   // Disallow copying and assigning
   PW70Component(const PW70Component&) = delete;
@@ -72,6 +73,7 @@ protected:
   double current_pan_position, current_tilt_position;
   double current_pan_velocity, current_tilt_velocity;
   double current_time_stamp;
+  int controlFrequency;
   int panJointIdx, tiltJointIdx;
   bool enableCommands;
 };
