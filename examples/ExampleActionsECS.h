@@ -176,6 +176,7 @@ protected:
   void onProcess();
   void onSetTurboMode(bool enable);
   void onClearTrajectory();
+  void onSetPupilSpeedWeight(double weight);
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;

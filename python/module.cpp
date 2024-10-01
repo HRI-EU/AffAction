@@ -48,6 +48,7 @@ namespace py = pybind11;
 #include <TTSComponent.h>
 #include <PredictionTree.h>
 #include <AzureSkeletonTracker.h>
+#include "ActionEyeGaze.h"
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -1005,6 +1006,33 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("getDurationScaling", [](aff::ExampleActionsECS& ex) -> double
   {
     return aff::PredictionTree::getTurboDurationScaler();
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Gaze model methods: 0: Neck only, 1: pupils only.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setPupilSpeedWeight", [](aff::ExampleActionsECS& ex, double value)
+  {
+    ex.getEntity().publish("SetPupilSpeedWeight", value);
+  })
+  //////////////////////////////////////////////////////////////////////////////
+  // Pupil point in screen coordinates: z points outwards, x points left, y
+  // points down. Origin is screen center. TODO: Make threadsafe
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getPupilCoordinates", [](aff::ExampleActionsECS& ex) -> std::pair<std::vector<double>, std::vector<double>>
+  {
+    double pr[3], pl[3];
+    std::vector<double> xy_right, xy_left;
+
+    bool success = aff::ActionEyeGaze::computePupilCoordinates(ex.getGraph(), pr, pl);
+
+    if (success)
+    {
+      xy_right= std::vector<double>(pr, pr+3);
+      xy_left = std::vector<double>(pl, pl+3);
+    }
+
+    return std::make_pair(xy_right, xy_left);
   })
 
   //////////////////////////////////////////////////////////////////////////////

@@ -39,6 +39,7 @@
 #include "LandmarkZmqComponent.h"
 #include "PhysicsComponent.h"
 #include "VirtualCameraWindow.h"
+#include "ActionEyeGaze.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -385,6 +386,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
   entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
   entity.subscribe("ClearTrajectory", &ExampleActionsECS::onClearTrajectory, this);
+  entity.subscribe("SetPupilSpeedWeight", &ExampleActionsECS::onSetPupilSpeedWeight, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -410,13 +412,13 @@ bool ExampleActionsECS::initAlgo()
   // Extract the collision model
   {
     xmlDocPtr doc = NULL;
-    xmlNodePtr node = parseXMLFile(controller->getGraph()->cfgFile, NULL, &doc);
+    xmlNodePtr node = parseXMLFile(getGraph()->cfgFile, NULL, &doc);
     if (node)
     {
       xmlNodePtr child = getXMLChildByName(node, "CollisionModel");
       if (child)
       {
-        RcsCollisionMdl* cMdl = RcsCollisionModel_createFromXML(controller->getGraph(), child);
+        RcsCollisionMdl* cMdl = RcsCollisionModel_createFromXML(getGraph(), child);
         controller->setCollisionMdl(cMdl);
       }
 
@@ -427,18 +429,18 @@ bool ExampleActionsECS::initAlgo()
         RcsBroadPhase* bp = NULL;
         if (noCollCheck)
         {
-          bp = RcsBroadPhase_create(controller->getGraph(), 0.0);
+          bp = RcsBroadPhase_create(getGraph(), 0.0);
         }
         else
         {
-          bp = RcsBroadPhase_createFromXML(controller->getGraph(), child);
+          bp = RcsBroadPhase_createFromXML(getGraph(), child);
         }
         RcsBroadPhase_updateBoundingVolumes(bp);
         controller->setBroadPhase(bp);
 
         if (!controller->getCollisionMdl())
         {
-          RcsCollisionMdl* cMdl = RcsCollisionModel_create(controller->getGraph());
+          RcsCollisionMdl* cMdl = RcsCollisionModel_create(getGraph());
           controller->setCollisionMdl(cMdl);
         }
       }
@@ -462,7 +464,7 @@ bool ExampleActionsECS::initAlgo()
   //RcsGraph_getModelStateFromXML(graph->q, graph, "JacoDefaultPose", 0);
   //RcsGraph_setState(graph, NULL, NULL);
 
-  actionC = std::make_unique<aff::ActionComponent>(&entity, controller->getGraph(), controller->getBroadPhase());
+  actionC = std::make_unique<aff::ActionComponent>(&entity, getGraph(), controller->getBroadPhase());
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
   actionC->setEarlyExitPrediction(true);
@@ -471,7 +473,7 @@ bool ExampleActionsECS::initAlgo()
   // Misuse contacts shape flag for Collision trajectory constraint
   for (size_t i=0; i< getScene()->entities.size(); ++i)
   {
-    RcsBody* ntt = getScene()->entities[i].body(controller->getGraph());
+    RcsBody* ntt = getScene()->entities[i].body(getGraph());
 
     // If we find one or more shapes that have the distance flag active, we
     // set this flag to true, and set all shapes to be resizeable (except for
@@ -504,7 +506,7 @@ bool ExampleActionsECS::initAlgo()
 #endif
 
   // Graph component contains "sensed" graph
-  graphC = std::make_unique<aff::GraphComponent>(&entity, controller->getGraph());
+  graphC = std::make_unique<aff::GraphComponent>(&entity, getGraph());
   graphC->setEnableRender(false);
   trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
                                                      !noTrajCheck);
@@ -521,7 +523,7 @@ bool ExampleActionsECS::initAlgo()
   RCHECK(controller.get() == trajC->getTrajectoryController()->getController());
 
   // Remember the state for re-initialization
-  graphToInitializeWith = RcsGraph_clone(controller->getGraph());
+  graphToInitializeWith = RcsGraph_clone(getGraph());
 
   if (!physicsEngine.empty())
   {
@@ -529,10 +531,10 @@ bool ExampleActionsECS::initAlgo()
   }
 
   // Initialize robot components from command line
-  this->hwc = createHardwareComponents(entity, controller->getGraph(), getScene(), false, componentArgs);
-  this->components = createComponents(entity, controller->getGraph(), getScene(), false, componentArgs);
+  this->hwc = createHardwareComponents(entity, getGraph(), getScene(), false, componentArgs);
+  this->components = createComponents(entity, getGraph(), getScene(), false, componentArgs);
 
-  addComponent(new AnimationSequence(&entity, controller->getGraph()));
+  addComponent(new AnimationSequence(&entity, getGraph()));
   if (!hwc.empty())
   {
     setEnableRobot(true);
@@ -541,7 +543,7 @@ bool ExampleActionsECS::initAlgo()
 
   // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
   // "Start" event, starting all component threads.
-  entity.initialize(graphC->getGraph());
+  entity.initialize(getCurrentGraph());
 
   this->sceneQuery = std::make_unique<SceneQueryPool>(this, NUM_SCENEQUERIES);
 
@@ -555,7 +557,7 @@ bool ExampleActionsECS::initAlgo()
 
   if (virtualCameraEnabled)
   {
-    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graphC->getGraph()),
+    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getCurrentGraph()),
                                                     virtualCameraWidth, virtualCameraHeight);
   }
 
@@ -563,7 +565,7 @@ bool ExampleActionsECS::initAlgo()
   RLOG_CPP(1, help());
 
   //{
-  //  const RcsGraph* graph = controller->getGraph();
+  //  const RcsGraph* graph = getGraph();
   //  for (unsigned int i = 0; i < graph->nBodies; ++i)
   //  {
   //    const RcsBody* bdy = &graph->bodies[i];
@@ -599,7 +601,7 @@ bool ExampleActionsECS::initGraphics()
 
     if (!virtualCameraBodyName.empty())
     {
-      const RcsBody* camBdy = RcsGraph_getBodyByName(graphC->getGraph(), virtualCameraBodyName.c_str());
+      const RcsBody* camBdy = RcsGraph_getBodyByName(getCurrentGraph(), virtualCameraBodyName.c_str());
       RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
       HTr_copy(&A_CI, &camBdy->A_BI);
     }
@@ -629,16 +631,16 @@ bool ExampleActionsECS::initGraphics()
   }
   else
   {
-    viewer->add(new NamedMouseDragger(controller->getGraph()));
+    viewer->add(new NamedMouseDragger(getGraph()));
   }
 
   viewer->setTitle("ExampleActionsECS");
 
-  // Check if there is a body named 'initial_camera_view'.
+  // Apply default camera view, or the transform of a body named 'initial_camera_view'.
   double q_cam[6];
-  VecNd_set6(q_cam, -2.726404, -2.515165, 3.447799,   -0.390124, 0.543041, 0.795294);
+  VecNd_set6(q_cam, -2.7, -2.5, 3.4, -0.4, 0.5, 0.8);
 
-  const RcsBody* camera_body = RcsGraph_getBodyByName(graphC->getGraph(), "default_camera_view");
+  const RcsBody* camera_body = RcsGraph_getBodyByName(getCurrentGraph(), "default_camera_view");
   if (camera_body)
   {
     RLOG(1, "Setting initial view based on body 'initial_camera_view'.");
@@ -732,10 +734,10 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Test occlusions");
     nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
-                                                     controller->getGraph());
+                                                     getGraph());
     RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
 
-    json = getOccludedObjectsForAgent("Daniel", getScene(), controller->getGraph());
+    json = getOccludedObjectsForAgent("Daniel", getScene(), getGraph());
     RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
 
   }, "Test occlusions");
@@ -818,7 +820,7 @@ bool ExampleActionsECS::initGraphics()
     RMSG("Writing controller to \"cOut.xml\" and graph to \"RcsGraph.dot\"");
     controller->toXML("cOut.xml");
 
-    RcsGraph_writeDotFile(controller->getGraph(), "RcsGraph.dot");
+    RcsGraph_writeDotFile(getGraph(), "RcsGraph.dot");
     std::string dottyCommand = "dotty " + std::string("RcsGraph.dot") + "&";
     int err = system(dottyCommand.c_str());
     if (err == -1)
@@ -865,7 +867,7 @@ bool ExampleActionsECS::initGraphics()
     }
 
     auto scene = getScene();
-    auto om = scene->getOccupiedManipulators(controller->getGraph());
+    auto om = scene->getOccupiedManipulators(getGraph());
     RLOG_CPP(0, "Found " << om.size() << " occupied manipulators");
 
     if (om.empty())
@@ -875,7 +877,7 @@ bool ExampleActionsECS::initGraphics()
     }
     else
     {
-      auto ge = om[0]->getGraspedEntities(*scene, controller->getGraph());
+      auto ge = om[0]->getGraspedEntities(*scene, getGraph());
       RCHECK_MSG(!ge.empty(), "For manipulator: '%s'", om[0]->name.c_str());
       auto textCmd = "put " + ge[0]->name + " " + std::string(bn->body()->name);
       entity.publish("PlanDFSEE", textCmd);
@@ -1034,9 +1036,9 @@ void ExampleActionsECS::step()
   dtProcess = Timer_getSystemTime();
 
   stepMtx.lock();
-  updateGraph->call(graphC->getGraph());
-  computeKinematics->call(graphC->getGraph());
-  postUpdateGraph->call(ikc->getGraph(), graphC->getGraph());
+  updateGraph->call(getCurrentGraph());
+  computeKinematics->call(getCurrentGraph());
+  postUpdateGraph->call(ikc->getGraph(), getCurrentGraph());
   computeTrajectory->call(ikc->getGraph());
   setTaskCommand->call(trajC->getActivationPtr(), trajC->getTaskCommandPtr());
   setJointCommand->call(ikc->getJointCommandPtr());
@@ -1092,7 +1094,7 @@ std::string ExampleActionsECS::help()
   s << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
   if (controller)
   {
-    s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(controller->getGraph()) << std::endl;
+    s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(getGraph()) << std::endl;
   }
   s << "Current working directory: " << Rcs::File_getCurrentWorkingDir() << std::endl;
   s << AffordanceEntity::printAffordanceCapabilityMatches();
@@ -1486,9 +1488,9 @@ void ExampleActionsECS::onTextCommand(std::string text)
 
     // The ActionScene is reloaded, since otherwise fill levels etc. remain as
     // they are.
-    RLOG(0, "Reloading scene from %s", controller->getGraph()->cfgFile);
-    getScene()->reload(controller->getGraph()->cfgFile);
-    getScene()->initializeKinematics(controller->getGraph());   // Reach and shoulder joints
+    RLOG(0, "Reloading scene from %s", getGraph()->cfgFile);
+    getScene()->reload(getGraph()->cfgFile);
+    getScene()->initializeKinematics(getGraph());   // Reach and shoulder joints
 
     if (actionStack.size()>1)
     {
@@ -1767,6 +1769,11 @@ void ExampleActionsECS::onClearTrajectory()
   entity.publish("ActionResult", false, 0.0, explanation);
 }
 
+void ExampleActionsECS::onSetPupilSpeedWeight(double weight)
+{
+  ActionEyeGaze::setPupilSpeedWeight(getGraph(), weight);
+}
+
 bool ExampleActionsECS::isFinalPoseRunning() const
 {
   RCHECK(actionC);
@@ -1995,7 +2002,7 @@ public:
   {
     bool success = ExampleActionsECS::initGraphics();
     graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", graphC->getGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
     entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
     entity.process();
     Timer_waitDT(0.5);
@@ -2003,6 +2010,13 @@ public:
     entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
     entity.process();
 
+    return success;
+  }
+
+  bool initAlgo()
+  {
+    bool success = ExampleActionsECS::initAlgo();
+    graphC->setEnableRender(true);
     return success;
   }
 
@@ -2029,6 +2043,7 @@ public:
   bool initParameters()
   {
     ExamplePW70::initParameters();
+    withEventGui = true;
     componentArgs = "-pw70_pos -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }

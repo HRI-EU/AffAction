@@ -49,6 +49,16 @@ namespace aff
 {
 REGISTER_ACTION(ActionEyeGaze, "eye_gaze");
 
+// These bodies constitute to the gaze model
+static const std::string screenSurface  = "head_front_glass";
+static const std::string rightPupil     = "RightPupil";
+static const std::string leftPupil      = "LeftPupil";
+static const std::string leftGazePoint  = "GazePointL";
+static const std::string rightGazePoint = "GazePointR";
+static const std::string gazePoint      = "GazePoint";
+
+
+
 ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                              const RcsGraph* graph,
                              std::vector<std::string> params) :
@@ -214,25 +224,25 @@ std::vector<std::string> ActionEyeGaze::createTasksXML() const
   std::vector<std::string> tasks;
   std::string xmlTask;
 
-  xmlTask = "<Task name=\"EyeL C1\" effector=\"LeftPupil\" refBdy=\"head_front_glass\" controlVariable=\"Z\" />";
+  xmlTask = "<Task name=\"EyeL C1\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"EyeL C2\" effector=\"LeftPupil\" refBdy=\"head_front_glass\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
+  xmlTask = "<Task name=\"EyeL C2\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"GazeL\"  effector=\"GazePoint\" refBdy=\"GazePointL\" controlVariable=\"XYZ\" />";
+  xmlTask = "<Task name=\"GazeL\"  effector=\"" + gazePoint + "\" refBdy=\"" + leftGazePoint + "\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"EyeR C1\" effector=\"RightPupil\" refBdy=\"head_front_glass\" controlVariable=\"Z\" />";
+  xmlTask = "<Task name=\"EyeR C1\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"EyeR C2\" effector=\"RightPupil\" refBdy=\"head_front_glass\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
+  xmlTask = "<Task name=\"EyeR C2\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"GazeR\" effector=\"GazePoint\" refBdy=\"GazePointR\" controlVariable=\"XYZ\" />";
+  xmlTask = "<Task name=\"GazeR\" effector=\"" + gazePoint + "\" refBdy=\"" + rightGazePoint + "\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"GazePoint\" effector=\"GazePoint\" refBdy=\"" + gazeTargetInstance + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
+  xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetInstance + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
 
   return tasks;
@@ -306,5 +316,68 @@ std::string ActionEyeGaze::getActionCommand() const
 
   return actionCommand;
 }
+
+// 0: Neck only, 1: pupils only
+bool ActionEyeGaze::setPupilSpeedWeight(RcsGraph* graph, double weight)
+{
+  if ((weight<0.0) || (weight>1.0))
+  {
+    RLOG(1, "Weight is %f but must be [0...1]", weight);
+    return false;
+  }
+
+  RcsJoint* pan = RcsGraph_getJointByName(graph, "ptu_pan_joint");
+  RcsJoint* tilt = RcsGraph_getJointByName(graph, "ptu_tilt_joint");
+
+  if (!pan)
+  {
+    RLOG_CPP(1, "Joint with name \"ptu_pan_joint\" not found - skipping setting weight");
+    return false;
+  }
+
+  if (!tilt)
+  {
+    RLOG_CPP(1, "Joint with name \"ptu_tilt_joint\" not found - skipping setting weight");
+    return false;
+  }
+
+  pan->weightMetric = 1.0-weight;
+  tilt->weightMetric = 1.0-weight;
+
+  return true;
+}
+
+bool ActionEyeGaze::computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3])
+{
+  const RcsBody* leftPupilBdy = RcsGraph_getBodyByName(graph, leftPupil.c_str());
+  const RcsBody* rightPupilBdy = RcsGraph_getBodyByName(graph, rightPupil.c_str());
+
+  // z points outwards, x points left, y points down. Origin is screen center
+  const RcsBody* screenSurfaceBdy = RcsGraph_getBodyByName(graph, screenSurface.c_str());
+
+  if (!leftPupilBdy)
+  {
+    RLOG_CPP(1, "Body with name \"" << leftPupil << "\" not found - skipping pupil cordinates calculation");
+    return false;
+  }
+
+  if (!rightPupilBdy)
+  {
+    RLOG_CPP(1, "Body with name \"" << rightPupil << "\" not found - skipping pupil cordinates calculation");
+    return false;
+  }
+
+  if (!screenSurfaceBdy)
+  {
+    RLOG_CPP(1, "Body with name \"" << screenSurface << "\" not found - skipping pupil cordinates calculation");
+    return false;
+  }
+
+  Vec3d_invTransform(p_left, &screenSurfaceBdy->A_BI, leftPupilBdy->A_BI.org);
+  Vec3d_invTransform(p_right, &screenSurfaceBdy->A_BI, rightPupilBdy->A_BI.org);
+
+  return true;
+}
+
 
 }   // namespace aff

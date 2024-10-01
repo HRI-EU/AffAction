@@ -53,6 +53,8 @@ public:
   std::unique_ptr<ActionBase> clone() const override;
 
   std::string getGazeTarget() const;
+  static bool computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3]);
+  static bool setPupilSpeedWeight(RcsGraph* graph, double weight);
 
   //protected:
 
