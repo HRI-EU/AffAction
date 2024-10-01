@@ -35,22 +35,21 @@
 #include <Rcs_joint.h>
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
+#include <Rcs_Vec3d.h>
 
 
 namespace aff
 {
 
 GraphComponent::GraphComponent(EntityBase* parent, const std::string& cfgFile) :
-  ComponentBase(parent), graph(RcsGraph_create(cfgFile.c_str())),
-  renderingInitialized(false), enableRender(true)
+  ComponentBase(parent), graph(RcsGraph_create(cfgFile.c_str())), enableRender(true)
 {
   RCHECK(graph);
   subscribeAll();
 }
 
 GraphComponent::GraphComponent(EntityBase* parent, const RcsGraph* graph_) :
-  ComponentBase(parent), graph(RcsGraph_clone(graph_)),
-  renderingInitialized(false), enableRender(true)
+  ComponentBase(parent), graph(RcsGraph_clone(graph_)), enableRender(true)
 {
   RCHECK(graph);
   subscribeAll();
@@ -68,6 +67,8 @@ void GraphComponent::subscribeAll()
   subscribe("TriggerInitFromState", &GraphComponent::onTriggerInitFromState);
   subscribe("Render", &GraphComponent::onRender);
   subscribe("Print", &GraphComponent::onPrint);
+  subscribe("ChangeShapeHeight", &GraphComponent::onChangeShapeHeight);
+  subscribe("ChangeShapeDiameter", &GraphComponent::onChangeShapeDiameter);
 }
 
 std::string GraphComponent::getName() const
@@ -90,23 +91,60 @@ void GraphComponent::onTriggerInitFromState()
   getEntity()->publish<const RcsGraph*>("InitFromState", graph);
 }
 
-void GraphComponent::onRender()
+void GraphComponent::onChangeShapeHeight(std::string bodyName, double height)
 {
-  if (!this->enableRender)
+  RcsShape* sh = getShape(bodyName, 0);
+
+  if (sh)
   {
-    return;
+    sh->extents[2] = height;
+  }
+}
+
+void GraphComponent::onChangeShapeDiameter(std::string bodyName, double diameter)
+{
+  RcsShape* sh = getShape(bodyName, 0);
+
+  if (sh)
+  {
+    sh->extents[0] = diameter;
+  }
+}
+
+void GraphComponent::onChangeShapeParameters(std::string bodyName, size_t shapeIndex, double extents[3])
+{
+  RcsShape* sh = getShape(bodyName, shapeIndex);
+
+  if (sh)
+  {
+    Vec3d_copy(sh->extents, extents);
+  }
+}
+
+RcsShape* GraphComponent::getShape(std::string bodyName, size_t shapeIndex)
+{
+  const RcsBody* bdy = RcsGraph_getBodyByName(graph, bodyName.c_str());
+
+  if (!bdy)
+  {
+    RLOG_CPP(1, "Couldn't find body \"" << bodyName << "\" in graph");
+    return nullptr;
   }
 
-  getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "Physics",
-                                                    graph);
-
-  if (this->renderingInitialized == false)
+  if (shapeIndex >= bdy->nShapes)
   {
-    //getEntity()->publish<std::string,std::string>("RenderCommand", "Physics",
-    //                                              "toggleGraphicsModel");
-    //getEntity()->publish<std::string,std::string>("RenderCommand", "Physics",
-    //                                              "togglePhysicsModel");
-    this->renderingInitialized = true;
+    RLOG_CPP(1, "Shape index " << shapeIndex << " out of range, only " << bdy->nShapes << " shapes in body");
+    return nullptr;
+  }
+
+  return &bdy->shapes[shapeIndex];
+}
+
+void GraphComponent::onRender()
+{
+  if (this->enableRender)
+  {
+    getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "Physics", graph);
   }
 
 }

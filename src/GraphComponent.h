@@ -30,8 +30,8 @@
 
 *******************************************************************************/
 
-#ifndef RCS_GRAPHCOMPONENT_H
-#define RCS_GRAPHCOMPONENT_H
+#ifndef AFF_GRAPHCOMPONENT_H
+#define AFF_GRAPHCOMPONENT_H
 
 
 #include "ComponentBase.h"
@@ -114,9 +114,12 @@ private:
   void onPrint() const;
   void onForwardKinematics(RcsGraph* graph);
   void onTriggerInitFromState();
+  RcsShape* getShape(std::string bodyName, size_t shapeIndex);
+  void onChangeShapeHeight(std::string bodyName, double height);
+  void onChangeShapeDiameter(std::string bodyName, double diameter);
+  void onChangeShapeParameters(std::string bodyName, size_t shapeIndex, double extents[3]);
 
   RcsGraph* graph;
-  bool renderingInitialized;
   bool enableRender;
 
 
@@ -126,4 +129,4 @@ private:
 
 }
 
-#endif   // RCS_GRAPHCOMPONENT_H
+#endif   // AFF_GRAPHCOMPONENT_H
