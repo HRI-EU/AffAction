@@ -34,8 +34,8 @@
 
 *******************************************************************************/
 
-#ifndef RCS_COMPONENTBASE_H
-#define RCS_COMPONENTBASE_H
+#ifndef AFF_COMPONENTBASE_H
+#define AFF_COMPONENTBASE_H
 
 #include "EntityBase.h"
 
@@ -57,46 +57,33 @@ public:
 
   /*! \brief Constructor just stores a reference to the event system.
    */
-  ComponentBase(EntityBase* parent) : entity(parent)
-  {
-  }
+  ComponentBase(EntityBase* parent);
+
+  std::string getName() const;
 
   /*! \brief Returns the pointer to the event system.
    */
-  EntityBase* getEntity()
-  {
-    return this->entity;
-  }
+  EntityBase* getEntity();
 
   /*! \brief Returns the pointer to the event system.
    */
-  const EntityBase* getEntity() const
-  {
-    return this->entity;
-  }
+  const EntityBase* getEntity() const;
 
   /*! \brief Polymorphic destructor. Empties the subscriptions vector.
    */
-  virtual ~ComponentBase()
-  {
-    unsubscribe();
-  }
+  virtual ~ComponentBase();
 
   /*! \brief Derieved classes can overwrte this to set flags through the base class.
    */
-  virtual bool setParameter(const std::string& parameterName, bool flag)
-  {
-    return false;
-  }
+  virtual bool setParameter(const std::string& parameterName, bool flag);
 
   /*! \brief Derieved classes can overwrte this to set pointer through the base class.
    */
-  virtual bool setParameter(const std::string& parameterName, void* ptr)
-  {
-    return false;
-  }
+  virtual bool setParameter(const std::string& parameterName, void* ptr);
 
 protected:
+
+  virtual void unsubscribe();
 
   /*! \brief Simplified member function subsciption. It also keeps track of all
    *         subscribed functions internally, which simplifies the common use
@@ -155,11 +142,6 @@ protected:
     auto sh = this->entity->subscribe(name, fp, thisCast, ES::ignore_result);
     subscriptions.emplace_back(sh);
     return sh;
-  }
-
-  virtual void unsubscribe()
-  {
-    subscriptions.clear();
   }
 
 private:

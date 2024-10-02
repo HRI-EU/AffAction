@@ -256,6 +256,7 @@ src/ActionComposite.cpp
 src/Affordance.cpp
 src/AnimationSequence.cpp
 src/Capability.cpp
+src/ComponentBase.cpp
 src/ActionSequence.cpp
 src/AffordanceEntity.cpp
 src/Manipulator.cpp
@@ -310,6 +311,7 @@ IF (USE_AFFACTION_ROS)
   src/ros/PtuActionComponent.cpp
   src/ros/RespeakerComponent.cpp
   src/ros/NuanceTTSComponent.cpp
+  src/ros/MirrorEyeComponent.cpp
 )
 ENDIF(USE_AFFACTION_ROS)
 
