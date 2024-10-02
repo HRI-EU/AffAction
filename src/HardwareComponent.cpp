@@ -232,6 +232,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
+    argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
+    argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
@@ -384,6 +386,38 @@ ComponentBase* createComponent(EntityBase& entity,
       std::string faceBdyName = "face";
       getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
       auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
+    }
+
+    if (getKey(argsVec, "-aruco_tracking"))
+    {
+      std::string arucoBaseBdyName = "aruco_base";
+      getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
+      lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
+    }
+
+    if (getKey(argsVec, "-skeleton_tracking"))
+    {
+      RLOG(0, "Enabling Azure skeleton tracker");
+      size_t numSkeletons = 3;
+      double r_agent = DBL_MAX;
+      // argP.getArgument("-numSkeletons", &numSkeletons,
+      //                  "Max. number of skeletons to be tracked (default: %zu)", numSkeletons);
+      // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
+
+      // Add skeleton tracker and ALL agents in the scene
+      int numAgents = lmc->addSkeletonTrackerForAgents(r_agent);
+      RLOG(0, "Added skeleton tracker with %d agents", numAgents);
+
+      // if (ex.getViewer())
+      // {
+      //   ex.getViewer()->setKeyCallback('W', [&ex](char k)
+      //   {
+      //     RLOG(0, "Calibrate camera");
+      //     ex.getEntity().publish("EstimateCameraPose", 20);
+      //   }, "Calibrate camera");
+      // }
+
+      RLOG(0, "Done adding skeleton tracker");
     }
 
     // Initialize all tracker camera transforms from the xml file

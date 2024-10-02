@@ -1827,6 +1827,15 @@ void ExampleActionsECS::setProcessingAction(bool isProcessing)
   processingAction = isProcessing;
 }
 
+void ExampleActionsECS::addComponentArgument(const std::string& arg)
+{
+  componentArgs += " " + arg;
+}
+
+std::string ExampleActionsECS::getComponentArguments() const
+{
+  return componentArgs;
+}
 
 
 /*******************************************************************************

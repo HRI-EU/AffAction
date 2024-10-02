@@ -86,10 +86,6 @@ static int testLLMSim(int argc, char** argv)
   RLOG(0, "testLLMSim()");
   Rcs_addResourcePath(RCS_CONFIG_DIR);
 
-  aff::ExampleActionsECS ex(argc, argv);
-  examplePtr = &ex;
-  bool success = ex.init(argc, argv);
-
   Rcs::CmdLineParser argP;
   bool withAruco = argP.hasArgument("-aruco", "Use aruco tracker");
   bool withAzure = argP.hasArgument("-azure", "Use azure people tracker");
@@ -101,6 +97,34 @@ static int testLLMSim(int argc, char** argv)
     withTracking = true;
   }
 
+  aff::ExampleActionsECS ex(argc, argv);
+  examplePtr = &ex;
+
+  if (withTracking)
+  {
+    ex.addComponentArgument("-landmarks_zmq -landmarks_connection tcp://localhost:5555 -landmarks_camera head_kinect_lens");
+  }
+
+  if (withFace)
+  {
+    ex.addComponentArgument("-face_tracking -face_bodyName face -face_gesture -camera_view");
+  }
+
+  if (withAruco)
+  {
+    ex.addComponentArgument("-aruco_tracking -aruco_base aruco_base");
+  }
+
+  if (withAzure)
+  {
+    ex.addComponentArgument("-skeleton_tracking");
+  }
+
+
+
+
+  bool success = ex.init(argc, argv);
+#if 0
   aff::LandmarkZmqComponent* lmc = nullptr;
   std::string lmArgs;
 
@@ -168,6 +192,7 @@ static int testLLMSim(int argc, char** argv)
     RLOG(0, "Enabling lmc debug graphics");
     lmc->createDebugGraphics(ex.viewer.get());
   }
+#endif
 
   if (success)
   {

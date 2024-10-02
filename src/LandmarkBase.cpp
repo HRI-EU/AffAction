@@ -149,6 +149,7 @@ void LandmarkBase::addArucoTracker(const std::string& camera, const std::string&
     setCameraTransform(A_CI);
   });
   addTracker(std::unique_ptr<ArucoTracker>(tracker));
+  RLOG(0, "Added ArucoTracker");
 }
 
 TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
@@ -186,6 +187,7 @@ int LandmarkBase::addSkeletonTrackerForAgents(double r)
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   tracker->addAgents();
   tracker->setSkeletonDefaultPositionRadius(r);
+  RLOG(0, "Added SkeletonTracker");
 
   return numHumanAgents;
 }

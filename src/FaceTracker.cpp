@@ -412,7 +412,7 @@ bool FaceTracker::estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A
   Vec3d_invTransform(F_right_iris_center, A_FC, right_iris_center);
 
 
-  RLOG(0, "%f", F_left_eye_center[1]-F_left_iris_center[1]);
+  //RLOG(0, "%f", F_left_eye_center[1]-F_left_iris_center[1]);
 
   HTr_setIdentity(C_leftIris);
   HTr_setIdentity(C_rightIris);

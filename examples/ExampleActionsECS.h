@@ -104,6 +104,8 @@ public:
   EntityBase& getEntity();
   const VirtualCamera* getVirtualCamera() const;
   VirtualCamera* getVirtualCamera();
+  void addComponentArgument(const std::string& arg);
+  std::string getComponentArguments() const;
 
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
