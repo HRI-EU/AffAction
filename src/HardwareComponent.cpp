@@ -48,6 +48,7 @@
 #include "ros/NuanceTTSComponent.h"
 #include "ros/LandmarkROSComponent.hpp"
 #include "ros/HololensConnection.hpp"
+#include "ros/MirrorEyeComponent.h"
 #endif
 
 #include <Rcs_typedef.h>
@@ -72,17 +73,15 @@ static void initROS(double rosDt)
   static std::mutex rosInitMtx;
   static bool rosInitialized = false;
 
-  rosInitMtx.lock();
+  std::lock_guard<std::mutex> lock(rosInitMtx);
 
   if (rosInitialized)
   {
     RLOG(1, "ROS already initialized - doing nothing");
-    rosInitMtx.unlock();
     return;
   }
 
   rosInitialized = true;
-  rosInitMtx.unlock();
 
   Rcs::CmdLineParser argP;
   int argc = 0;
@@ -140,11 +139,6 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-jacoShm7l"));
   }
 
-  if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-ptu"));
-  }
-
   if (dryRun)
   {
     argP.addDescription("-pw70_pos", "Start with Scitos PTU in position mode");
@@ -165,6 +159,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     components.push_back(createComponent(entity, graph, scene, "-pw70_vel", argvString));
   }
+
+#if defined USE_ROS
+  if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-ptu"));
+  }
+#endif
 
   for (size_t i=0; i< components.size(); ++i)
   {
@@ -188,11 +189,6 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
 
-
-  if (argP.hasArgument("-respeaker", "Start with Respeaker") && (!dryRun))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-respeaker"));
-  }
 
   if (argP.hasArgument("-tts", "Start with native text-to-speech") && (!dryRun))
   {
@@ -219,19 +215,13 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-piper_tts_kathleen"));
   }
 
-  if (argP.hasArgument("-websocket", "Start with websocket connection on port 35000") && (!dryRun))
+  if (dryRun)
+  {
+    argP.hasArgument("-websocket", "Start with websocket connection on port 35000");
+  }
+  else if (getKey(argvStrVec, "-websocket"))
   {
     components.push_back(createComponent(entity, graph, scene, "-websocket"));
-  }
-
-  if (argP.hasArgument("-nuance_tts", "Start with Nuance ROS text-to-speech") && (!dryRun))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-nuance_tts"));
-  }
-
-  if (argP.hasArgument("-landmarks_ros", "Start with ROS landmarks component") && (!dryRun))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-landmarks_ros"));
   }
 
   // The debug graphics will be handled in initGraphics.
@@ -243,7 +233,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
   }
-  else if (argP.hasArgument("-landmarks_zmq"))
+  else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
     components.push_back(createComponent(entity, graph, scene, "-landmarks_zmq", argvString));
   }
@@ -253,7 +243,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-camera_view", "Add camera view component");
     argP.addDescription("-camera_view_body", "For '-camera_view': Body name to which the camera will be attached. Default: face");
   }
-  else if (argP.hasArgument("-camera_view"))
+  else if (getKey(argvStrVec, "-camera_view"))
   {
     components.push_back(createComponent(entity, graph, scene, "-camera_view", argvString));
   }
@@ -272,10 +262,62 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     components.push_back(createComponent(entity, graph, scene, "-face_gesture", argvString));
   }
 
-  if (argP.hasArgument("-holo", "Add HoloLens component") && (!dryRun))
+#if defined USE_ROS
+
+  if (dryRun)
+  {
+    argP.hasArgument("-respeaker", "Start with Respeaker");
+  }
+  else if (getKey(argvStrVec, "-respeaker"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-respeaker"));
+  }
+
+  if (dryRun)
+  {
+    argP.hasArgument("-nuance_tts", "Start with Nuance ROS text-to-speech");
+  }
+  else if (getKey(argvStrVec, "-nuance_tts"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-nuance_tts"));
+  }
+
+  if (dryRun)
+  {
+    argP.hasArgument("-landmarks_ros", "Start with ROS landmarks component");
+  }
+  else if (getKey(argvStrVec, "-landmarks_ros"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-landmarks_ros"));
+  }
+
+  if (dryRun)
+  {
+    argP.hasArgument("-holo", "Add HoloLens component");
+  }
+  else if (getKey(argvStrVec, "-holo"))
   {
     components.push_back(createComponent(entity, graph, scene, "-holo", argvString));
   }
+
+  if (dryRun)
+  {
+    argP.addDescription("-mirror_eyes", "Start with Mirror Eyes component");
+    argP.addDescription("-mirror_eyes_gaze_target_topic",
+                        "Name of the ROS subscriber topic for the gaze target name (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC);
+    argP.addDescription("-mirror_eyes_camera_topic",
+                        "Name of the ROS subscriber topic for the camera name (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_CAMERA_TOPIC);
+    argP.addDescription("-mirror_eyes_pupil_coords_topic",
+                        "Name of the ROS publisher topic (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC);
+  }
+  else if (getKey(argvStrVec, "-mirror_eyes"))
+  {
+    components.push_back(createComponent(entity, graph, scene, "-mirror_eyes", argvString));
+  }
+#endif
 
 
 
@@ -456,6 +498,18 @@ ComponentBase* createComponent(EntityBase& entity,
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
     return new HololensConnection(&entity, true);
+  }
+  else if (componentName == "-mirror_eyes")
+  {
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    auto argsVec = Rcs::String_split(extraArgs, " ");
+    std::string pubTopic = MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC;
+    std::string gazeTopic = MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC;
+    std::string camTopic = MIRROR_EYES_DEFAULT_CAMERA_TOPIC;
+    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_gaze_target_topic", gazeTopic);
+    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_camera_topic", camTopic);
+    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_pupil_coords_topic", pubTopic);
+    return new MirrorEyeComponent(&entity, scene, gazeTopic, camTopic);
   }
 #endif   // USE_ROS
 

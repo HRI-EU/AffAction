@@ -207,13 +207,6 @@ PYBIND11_MODULE(pyAffaction, m)
       success = ex.initGraphics() && success;
       ex.getEntity().publish("Render");
       ex.getEntity().process();
-
-      // ex.getViewer()->setKeyCallback('l', [&ex](char k)
-      // {
-      //   RLOG(0, "Toggle talk flag");
-      //   ex.getEntity().publish("ToggleASR");
-
-      // }, "Toggle talk flag");
     }
 
     std::string starLine(80, '*');

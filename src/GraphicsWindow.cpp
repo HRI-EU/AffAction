@@ -591,7 +591,7 @@ void GraphicsWindow::onRenderCommand(std::string graphId, std::string command)
 {
   if (!isRealized())
   {
-    RLOG(0, "Couldn't accept render command before graphics window is launched"
+    RLOG(5, "Couldn't accept render command before graphics window is launched"
          " (graph id \"%s\", command \"%s\"", graphId.c_str(), command.c_str());
     getEntity()->publish<std::string,std::string>("RenderCommand",
                                                   graphId, command);

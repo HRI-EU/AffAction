@@ -54,6 +54,29 @@ nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
                                           const ActionScene* scene,
                                           const RcsGraph* graph);
 
+/*! \brief Returns empty json if entityName does not refer to one AffordanceEntity or
+ *         HumanAgent, or an array of positions and 8 AABB-vertices of the entity or agent,
+ *         projected into the frame of the given camera. The AABB is computed as
+ *
+ *         - the envelope around all distance shapes of an AffordanceEntitie's body
+ *         - the envelope around all markers of a HumanAgent
+ *
+ *         If no AABB can be found, the 'vertex' part of the json will be skipped. This
+ *         can be the case if there are no shapes with distance calculation flag in the
+ *         RcsBody that is associated with an AffordanceEntity, or if there are no
+ *         markers assigned to a HumanAgent referred to by entityName.
+ *
+ *         The returned json looks for example like this:
+ *
+ *         {'vertex': [[0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9],
+ *                    [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9], [0.2, 0.4, 0.9]],
+ *          'x': 0.2, 'y': 0.4, 'z': 0.9}
+ */
+nlohmann::json getObjectInCamera(const std::string& objectName,
+                                 const std::string& cameraName,
+                                 const ActionScene* scene,
+                                 const RcsGraph* graph);
+
 bool isAgentBusy(const std::string& agentName,
                  const ActionScene* scene,
                  const RcsGraph* graph,

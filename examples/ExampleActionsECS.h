@@ -148,14 +148,15 @@ protected:
   unsigned int loopCount;
   std::atomic<bool> processingAction;
 
-  std::unique_ptr<GraphComponent> graphC;
+  ActionComponent* actionC;
+  GraphComponent* graphC;
+  TrajectoryComponent* trajC;
+  IKComponent* ikc;
+  TextEditComponent* textGui;
+
+  std::unique_ptr<VirtualCamera> virtualCamera;
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<SceneQueryPool> sceneQuery;
-  std::unique_ptr<ActionComponent> actionC;
-  std::unique_ptr<TextEditComponent> textGui;
-  std::unique_ptr<TrajectoryComponent> trajC;
-  std::unique_ptr<IKComponent> ikc;
-  std::unique_ptr<VirtualCamera> virtualCamera;
 
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;

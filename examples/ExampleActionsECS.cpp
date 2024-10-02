@@ -270,25 +270,27 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   setTaskCommand = NULL;
   setJointCommand = NULL;
   setRenderCommand = NULL;
+
+  actionC = nullptr;
+  graphC = nullptr;
+  trajC = nullptr;
+  ikc = nullptr;
+  textGui = nullptr;
 }
 
 ExampleActionsECS::~ExampleActionsECS()
 {
   stop();
 
-  // We destroy the viwer window fist so that it doesn't access any deleted memory
-  viewer.reset();
-  textGui.reset();
-
   for (size_t i = 0; i < hwc.size(); ++i)
   {
-    RLOG_CPP(0, "Deleting hardware component " << i);
+    RLOG_CPP(5, "Deleting hardware component " << i);
     delete hwc[i];
   }
 
   for (size_t i = 0; i < components.size(); ++i)
   {
-    RLOG_CPP(0, "Deleting component " << i);
+    RLOG_CPP(5, "Deleting component " << i << ": " << components[i]->getName());
     delete components[i];
   }
 
@@ -299,7 +301,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
 bool ExampleActionsECS::initParameters()
 {
-  xmlFileName = "g_group_6.xml";
+  xmlFileName = "g_attentive_support.xml";
   configDirectory = "config/xml/AffAction/xml/examples";
   speedUp = 3;
 
@@ -464,10 +466,11 @@ bool ExampleActionsECS::initAlgo()
   //RcsGraph_getModelStateFromXML(graph->q, graph, "JacoDefaultPose", 0);
   //RcsGraph_setState(graph, NULL, NULL);
 
-  actionC = std::make_unique<aff::ActionComponent>(&entity, getGraph(), controller->getBroadPhase());
+  actionC = new aff::ActionComponent(&entity, getGraph(), controller->getBroadPhase());
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
   actionC->setEarlyExitPrediction(true);
+  addComponent(actionC);
 
 #if 1
   // Misuse contacts shape flag for Collision trajectory constraint
@@ -506,19 +509,23 @@ bool ExampleActionsECS::initAlgo()
 #endif
 
   // Graph component contains "sensed" graph
-  graphC = std::make_unique<aff::GraphComponent>(&entity, getGraph());
+  graphC = new aff::GraphComponent(&entity, getGraph());
   graphC->setEnableRender(false);
-  trajC = std::make_unique<aff::TrajectoryComponent>(&entity, controller.get(), !zigzag, 1.0,
-                                                     !noTrajCheck);
+  addComponent(graphC);
+
+  trajC = new aff::TrajectoryComponent(&entity, controller.get(), !zigzag, 1.0,
+                                       !noTrajCheck);
+  addComponent(trajC);
 
   // Inverse kinematics controller, no constraints, right inverse
-  ikc = std::make_unique<aff::IKComponent>(&entity, controller.get(), ikType);
+  ikc = new aff::IKComponent(&entity, controller.get(), ikType);
   ikc->setEnableSpeedAccelerationLimit(!noSpeedCheck);
   ikc->setSpeedLimitCheck(!noSpeedCheck);
   ikc->setJointLimitCheck(!noJointCheck);
   ikc->setCollisionCheck(!noCollCheck);
   ikc->setLambda(lambda);
   ikc->setAlpha(alpha);
+  addComponent(ikc);
 
   RCHECK(controller.get() == trajC->getTrajectoryController()->getController());
 
@@ -530,9 +537,11 @@ bool ExampleActionsECS::initAlgo()
     componentArgs += " -physics " + physicsEngine;
   }
 
-  // Initialize robot components from command line
-  this->hwc = createHardwareComponents(entity, getGraph(), getScene(), false, componentArgs);
-  this->components = createComponents(entity, getGraph(), getScene(), false, componentArgs);
+  // Initialize robot components from command line and componentArgs
+  auto cTmp = createHardwareComponents(entity, getGraph(), getScene(), false, componentArgs);
+  this->hwc.insert(hwc.end(), cTmp.begin(), cTmp.end());
+  cTmp = createComponents(entity, getGraph(), getScene(), false, componentArgs);
+  this->components.insert(components.end(), cTmp.begin(), cTmp.end());
 
   addComponent(new AnimationSequence(&entity, getGraph()));
   if (!hwc.empty())
@@ -1006,7 +1015,8 @@ bool ExampleActionsECS::initGuis()
 
   if (!noTextGui)
   {
-    textGui = std::make_unique<aff::TextEditComponent>(&entity);
+    textGui = new aff::TextEditComponent(&entity);
+    addComponent(textGui);
   }
 
   return true;
@@ -1098,6 +1108,18 @@ std::string ExampleActionsECS::help()
   }
   s << "Current working directory: " << Rcs::File_getCurrentWorkingDir() << std::endl;
   s << AffordanceEntity::printAffordanceCapabilityMatches();
+
+  s << std::endl << components.size() << " components:" << std::endl;
+  for (size_t i = 0; i < components.size(); ++i)
+  {
+    s << "Component " << i << ": '" << components[i]->getName() << "'" << std::endl;
+  }
+  s << std::endl << hwc.size() << " hardware components:" << std::endl;
+  for (size_t i = 0; i < hwc.size(); ++i)
+  {
+    s << "Hardware component " << i << ": '" << hwc[i]->getName() << "'" << std::endl;
+  }
+
   return s.str();
 }
 
@@ -1507,7 +1529,7 @@ void ExampleActionsECS::onTextCommand(std::string text)
   // reset and get_state are taken care of somewhere else
   else
   {
-    std::thread t1(&ActionComponent::actionThread, actionC.get(), text);
+    std::thread t1(&ActionComponent::actionThread, actionC, text);
     t1.detach();
   }
 }
@@ -1918,18 +1940,11 @@ public:
   {
     ExampleActionsECS::initParameters();
     xmlFileName = "g_example_curiosity_cocktails.xml";
+    componentArgs += " -landmarks_zmq -landmarks_camera head_kinect_lens -face_tracking -face_bodyName face";
+    componentArgs += " -face_gesture -face_bodyName face";
+    componentArgs += " -camera_view -camera_view_body face";
+
     return true;
-  }
-
-  bool initAlgo()
-  {
-    bool success = ExampleActionsECS::initAlgo();
-
-    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-landmarks_zmq", "-landmarks_camera head_kinect_lens -face_tracking -face_bodyName face"));
-    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-face_gesture", "-face_bodyName face"));
-    addComponent(createComponent(getEntity(), getGraph(), getScene(), "-camera_view", "-camera_view_body face"));
-
-    return success;
   }
 
 };

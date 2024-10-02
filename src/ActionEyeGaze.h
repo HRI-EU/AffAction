@@ -56,7 +56,14 @@ public:
   static bool computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3]);
   static bool setPupilSpeedWeight(RcsGraph* graph, double weight);
 
-  //protected:
+  static std::string getRightGazePointName();
+  static std::string getLeftGazePointName();
+  static std::string getGazePointName();
+  static std::string getScreenName();
+  static std::string getRightPupilName();
+  static std::string getLeftPupilName();
+
+protected:
 
   std::vector<std::string> createTasksXML() const;
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;

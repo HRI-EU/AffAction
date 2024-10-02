@@ -58,7 +58,6 @@ static const std::string rightGazePoint = "GazePointR";
 static const std::string gazePoint      = "GazePoint";
 
 
-
 ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                              const RcsGraph* graph,
                              std::vector<std::string> params) :
@@ -377,6 +376,36 @@ bool ActionEyeGaze::computePupilCoordinates(const RcsGraph* graph, double p_righ
   Vec3d_invTransform(p_right, &screenSurfaceBdy->A_BI, rightPupilBdy->A_BI.org);
 
   return true;
+}
+
+std::string ActionEyeGaze::getRightGazePointName()
+{
+  return rightGazePoint;
+}
+
+std::string ActionEyeGaze::getLeftGazePointName()
+{
+  return leftGazePoint;
+}
+
+std::string ActionEyeGaze::getGazePointName()
+{
+  return gazePoint;
+}
+
+std::string ActionEyeGaze::getScreenName()
+{
+  return screenSurface;
+}
+
+std::string ActionEyeGaze::getRightPupilName()
+{
+  return rightPupil;
+}
+
+std::string ActionEyeGaze::getLeftPupilName()
+{
+  return leftPupil;
 }
 
 
