@@ -96,7 +96,7 @@
   <Agent body="Johnnie" types="robot" name="Johnnie" >
     <Component manipulator="hand_left_robot" />
     <Component manipulator="hand_right_robot" />
-    <Component manipulator="head" />
+    <Component manipulator="head_kinect_link" />
   </Agent>
 
   <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
