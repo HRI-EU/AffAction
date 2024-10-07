@@ -576,7 +576,7 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
   {
     const double age = currTime - skeletons[i]->lastUpdate;
 
-    NLOG_CPP(5, "Skeleton[" << i << "]: lastupdate: " << skeletons[i]->lastUpdate
+    NLOG_CPP(4, "Skeleton[" << i << "]: lastupdate: " << skeletons[i]->lastUpdate
              << " current time: " << currTime << " age: " << age);
 
     bool updateSkeletonGraphics = newAzureUpdate;
@@ -597,7 +597,7 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
 
     if ((!skeletons[i]->wasVisible) && skeletons[i]->isVisible)
     {
-      RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " appeared");
+      NLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " appeared");
       for (const auto& cb : agentAppearDisappearCb)
       {
         cb(skeletons[i]->agentName, true);
@@ -607,7 +607,7 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
     }
     else if (skeletons[i]->wasVisible && (!skeletons[i]->isVisible))
     {
-      RLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " disappeared");
+      NLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " disappeared");
       for (const auto& cb : agentAppearDisappearCb)
       {
         cb(skeletons[i]->agentName, false);
@@ -639,7 +639,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
 
     const int skeletonId = atoi(entry.key().c_str());
     std::vector<HTr> markers(NUM_FRAMES);
-    //RLOG_CPP(1, "json: " << nlohmann::to_string(entry.value()));
+    RLOG_CPP(1, "json: " << nlohmann::to_string(entry.value()));
     //RLOG_CPP(1, "pelvis: " << nlohmann::to_string(entry.value()["pelvis"]));
 
     markers[PELVIS] = parsePose(entry.value()["pelvis"]);
@@ -688,7 +688,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     }
 
 
-    NLOG(0, "pelvis: %.3f %.3f %.3f", markers[PELVIS].org[0], markers[PELVIS].org[1], markers[PELVIS].org[2]);
+    NLOG(3, "pelvis: %.3f %.3f %.3f", markers[PELVIS].org[0], markers[PELVIS].org[1], markers[PELVIS].org[2]);
 
     markerMap[skeletonId] = markers;
 

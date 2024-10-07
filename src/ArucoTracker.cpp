@@ -443,7 +443,7 @@ bool ArucoCalibrator::isCalibrating() const
 void ArucoCalibrator::updateCameraTransform(RcsGraph* graph)
 {
   const RcsBody* cam = RcsGraph_getBodyByName(graph, cameraBodyName.c_str());
-  RCHECK(cam && cam->rigid_body_joints);
+  RCHECK_MSG(cam && cam->rigid_body_joints, "%s", cameraBodyName.c_str());
   const RcsJoint* camJnt = RCSJOINT_BY_ID(graph, cam->jntId);
   RCHECK(camJnt);
   double* q_cam = &graph->q->ele[camJnt->jointIndex];

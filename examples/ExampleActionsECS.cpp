@@ -975,6 +975,12 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Toggle GraphicsWindow display");
 
+  viewer->setKeyCallback('W', [this](char k)
+  {
+    RLOG(0, "Calibrate camera");
+    getEntity().publish("EstimateCameraPose", 20);
+  }, "Calibrate camera");
+
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));

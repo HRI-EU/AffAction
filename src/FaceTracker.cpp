@@ -114,7 +114,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
 
-  //RLOG_CPP(5, "parse" << json.dump());
+  NLOG_CPP(1, "FaceTracker::parse" << json.dump());
   size_t nFaceLandmarks = 0;
   for (auto& entry : json.items())
   {

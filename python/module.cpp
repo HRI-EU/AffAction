@@ -865,13 +865,6 @@ PYBIND11_MODULE(pyAffaction, m)
 
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
-
-    ex.getViewer()->setKeyCallback('W', [&ex](char k)
-    {
-      RLOG(0, "Calibrate camera");
-      ex.getEntity().publish("EstimateCameraPose", 20);
-    }, "Calibrate camera");
-
     RLOG(0, "Done adding trackers");
 
     return true;

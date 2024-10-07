@@ -59,7 +59,7 @@ public:
    */
   ComponentBase(EntityBase* parent);
 
-  std::string getName() const;
+  virtual std::string getName() const;
 
   /*! \brief Returns the pointer to the event system.
    */

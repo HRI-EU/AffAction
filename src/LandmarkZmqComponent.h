@@ -56,6 +56,8 @@ public:
 
   virtual ~LandmarkZmqComponent();
 
+  virtual std::string getName() const;
+
 private:
 
   /*! \brief Same as in LandmarkBase with the addition of the time being handled

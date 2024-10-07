@@ -40,14 +40,14 @@
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
-    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
-    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
-            graphics="true" physics="true" distance="false"/>
+    <Shape type="FRAME" extents="0.14 0.14 0"      marker="true"    markerName="aruco_1" scale="0.2" transform="0.16 0.61 0.70025 0 0 0" />
+    <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0.16 0.61 0.70025 0 0 0" textureFile="textures/4x4marker_1.jpg" />
+    <Shape type="BOX"   extents="3.0 4.0 0.04"     distance="false" physics="true"  graphics="true"  transform="0 0 -0.02 0 0 0"         color="PEWTER" no_textureFile="textures/floor.jpg" />
     <Shape scale="0.5" type="FRAME"/>
   </Body>
 
   <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.924 0.530 1.473  166.341 48.556 107.392" >
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
     <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>

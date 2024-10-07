@@ -132,6 +132,19 @@ LandmarkZmqComponent::~LandmarkZmqComponent()
   }
 }
 
+std::string LandmarkZmqComponent::getName() const
+{
+  std::string res = ComponentBase::getName() + ": ";
+
+  for (const auto& tracker : trackers)
+  {
+    res += tracker->getRequestKeyword();
+    res += " ";
+  }
+
+  return res;
+}
+
 void LandmarkZmqComponent::onToggleJsonLogging()
 {
   logging = !logging;
@@ -358,4 +371,3 @@ void LandmarkZmqComponent::stopZmqThread()
 
 
 } // namespace
-
