@@ -70,6 +70,7 @@ void GraphComponent::subscribeAll()
   subscribe("ChangeShapeHeight", &GraphComponent::onChangeShapeHeight);
   subscribe("ChangeShapeDiameter", &GraphComponent::onChangeShapeDiameter);
   subscribe("ChangeShapeOrigin", &GraphComponent::onChangeShapeOrigin);
+  subscribe("ChangeBodyOrigin", &GraphComponent::onChangeBodyOrigin);
 }
 
 std::string GraphComponent::getName() const
@@ -129,6 +130,19 @@ void GraphComponent::onChangeShapeOrigin(std::string bodyName, size_t shapeIndex
   if (sh)
   {
     Vec3d_copy(sh->A_CB.org, origin);
+  }
+}
+
+void GraphComponent::onChangeBodyOrigin(std::string bodyName, double origin[3])
+{
+  RcsBody* bdy = RcsGraph_getBodyByName(graph, bodyName.c_str());
+  if (bdy)
+  {
+    Vec3d_copy(bdy->A_BP.org, origin);
+  }
+  else
+  {
+    RLOG_CPP(1, "Body " << bodyName << " not found");
   }
 }
 

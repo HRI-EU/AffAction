@@ -119,6 +119,7 @@ private:
   void onChangeShapeDiameter(std::string bodyName, double diameter);
   void onChangeShapeParameters(std::string bodyName, size_t shapeIndex, double extents[3]);
   void onChangeShapeOrigin(std::string bodyName, size_t shapeIndex, double origin[3]);
+  void onChangeBodyOrigin(std::string bodyName, double origin[3]);
 
   RcsGraph* graph;
   bool enableRender;

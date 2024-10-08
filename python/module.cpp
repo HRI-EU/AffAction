@@ -355,6 +355,8 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   //////////////////////////////////////////////////////////////////////////////
   // -1: grow down, 0: symmetric, 1: grow up
+  // Returns number of changed shapes
+  // Fatal error if body
   //////////////////////////////////////////////////////////////////////////////
   .def("changeShapeHeight", [](aff::ExampleActionsECS& ex, std::string nttName, double height, int growMode) -> size_t
   {
@@ -380,6 +382,13 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("changeShapeDiameter", [](aff::ExampleActionsECS& ex, std::string nttName, double diameter)
   {
     ex.getEntity().publish("ChangeShapeDiameter", diameter);
+    ex.getEntity().process();
+  })
+  .def("changeBodyOrigin", [](aff::ExampleActionsECS& ex, std::string bodyName, double x, double y, double z)
+  {
+    double org[3];
+    Vec3d_set(org, x, y, z);
+    ex.getEntity().publish("ChangeBodyOrigin", bodyName, org);
     ex.getEntity().process();
   })
   .def("reset", [](aff::ExampleActionsECS& ex)
