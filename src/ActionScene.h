@@ -68,6 +68,7 @@ public:
   const AffordanceEntity* getAffordanceEntity(const std::string& name) const;
   std::vector<const AffordanceEntity*> getAffordanceEntities(const std::string& name) const;
 
+  std::vector<const SceneEntity*> getSceneEntities() const;
   std::vector<const SceneEntity*> getSceneEntities(const std::string& name) const;
 
   // Returns a vector of the child entities that have a parent link to the

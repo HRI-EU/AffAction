@@ -379,6 +379,29 @@ std::vector<const AffordanceEntity*> ActionScene::getAffordanceEntities(const st
   return foundOnes;
 }
 
+std::vector<const SceneEntity*> ActionScene::getSceneEntities() const
+{
+  std::vector<const SceneEntity*> res;
+
+  for (const auto& e : entities)
+  {
+    res.push_back(&e);
+  }
+
+  for (const auto& a : agents)
+  {
+    res.push_back(a);
+  }
+
+  // Add manipulators whose types contains the requested name.
+  for (const auto& m : manipulators)
+  {
+    res.push_back(&m);
+  }
+
+  return res;
+}
+
 std::vector<const SceneEntity*> ActionScene::getSceneEntities(const std::string& name) const
 {
   std::vector<const SceneEntity*> res;
