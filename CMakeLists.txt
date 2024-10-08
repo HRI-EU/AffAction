@@ -275,6 +275,7 @@ src/ConcurrentExecutor.cpp
 src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
 src/FaceGestureComponent.cpp
+src/GazeComponent.cpp
 src/CameraViewComponent.cpp
 src/PhysicsComponent.cpp
 src/VirtualCamera.cpp
