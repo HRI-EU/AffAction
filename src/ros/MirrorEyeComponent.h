@@ -78,7 +78,7 @@ namespace aff
 {
 constexpr auto MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC = "/mirror_eyes/pupil_coordinates";
 constexpr auto MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC         = "/mirror_eyes/gaze_target";
-constexpr auto MIRROR_EYES_DEFAULT_CAMERA_TOPIC            = "/mirror_eyes/gaze_target";
+constexpr auto MIRROR_EYES_DEFAULT_CAMERA_TOPIC            = "/mirror_eyes/camera";
 
 class MirrorEyeComponent : public ComponentBase
 {

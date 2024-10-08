@@ -2120,4 +2120,32 @@ public:
 
 RCS_REGISTER_EXAMPLE(ExampleAzure, "Actions", "AzureKinect test program");
 
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleMirrorEyes : public ExampleActionsECS
+{
+public:
+
+  ExampleMirrorEyes(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start ROS program to connect");
+  }
+
+  virtual ~ExampleMirrorEyes()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    componentArgs = "-mirror_eyes -mirror_eyes_gaze_target_topic /mirror_eyes/gaze_target -mirror_eyes_camera_topic /mirror_eyes/camera -mirror_eyes_pupil_coords_topic /mirror_eyes/pupil_coordinates";
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleMirrorEyes, "Actions", "MirrorEyes test program");
+
 }   // namespace aff
