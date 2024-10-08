@@ -353,6 +353,35 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.getEntity().publish(eventName);
     ex.getEntity().process();
   })
+  //////////////////////////////////////////////////////////////////////////////
+  // -1: grow down, 0: symmetric, 1: grow up
+  //////////////////////////////////////////////////////////////////////////////
+  .def("changeShapeHeight", [](aff::ExampleActionsECS& ex, std::string nttName, double height, int growMode) -> size_t
+  {
+    auto ntts = ex.getScene()->getAffordanceEntities(nttName);
+
+    for (const auto& ntt : ntts)
+    {
+      const RcsBody* bdy = ntt->body(ex.getGraph());
+      RCHECK_MSG(bdy->nShapes>0, "Body %s has no shapes attached", ntt->bdyName.c_str());
+      const RcsShape* sh = &bdy->shapes[0];
+      double newOrigin[3];
+      Vec3d_copy(newOrigin, sh->A_CB.org);
+      newOrigin[2] += 0.5*growMode* height;
+
+      ex.getEntity().publish("ChangeShapeHeight", ntt->bdyName, height);
+      ex.getEntity().publish("ChangeShapeOrigin", ntt->bdyName, newOrigin);
+    }
+
+    ex.getEntity().process();
+
+    return ntts.size();
+  })
+  .def("changeShapeDiameter", [](aff::ExampleActionsECS& ex, std::string nttName, double diameter)
+  {
+    ex.getEntity().publish("ChangeShapeDiameter", diameter);
+    ex.getEntity().process();
+  })
   .def("reset", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().publish("ActionSequence", std::string("reset"));

@@ -69,6 +69,7 @@ void GraphComponent::subscribeAll()
   subscribe("Print", &GraphComponent::onPrint);
   subscribe("ChangeShapeHeight", &GraphComponent::onChangeShapeHeight);
   subscribe("ChangeShapeDiameter", &GraphComponent::onChangeShapeDiameter);
+  subscribe("ChangeShapeOrigin", &GraphComponent::onChangeShapeOrigin);
 }
 
 std::string GraphComponent::getName() const
@@ -118,6 +119,16 @@ void GraphComponent::onChangeShapeParameters(std::string bodyName, size_t shapeI
   if (sh)
   {
     Vec3d_copy(sh->extents, extents);
+  }
+}
+
+void GraphComponent::onChangeShapeOrigin(std::string bodyName, size_t shapeIndex, double origin[3])
+{
+  RcsShape* sh = getShape(bodyName, shapeIndex);
+
+  if (sh)
+  {
+    Vec3d_copy(sh->A_CB.org, origin);
   }
 }
 
