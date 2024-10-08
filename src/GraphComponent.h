@@ -114,12 +114,14 @@ private:
   void onPrint() const;
   void onForwardKinematics(RcsGraph* graph);
   void onTriggerInitFromState();
-  RcsShape* getShape(std::string bodyName, size_t shapeIndex);
-  void onChangeShapeHeight(std::string bodyName, double height);
-  void onChangeShapeDiameter(std::string bodyName, double diameter);
-  void onChangeShapeParameters(std::string bodyName, size_t shapeIndex, double extents[3]);
-  void onChangeShapeOrigin(std::string bodyName, size_t shapeIndex, double origin[3]);
-  void onChangeBodyOrigin(std::string bodyName, double origin[3]);
+
+  // Shape modifications. There should go somewhere else, since they are not related to
+  // this component's graph.
+  RcsShape* getShape(RcsGraph* graph, std::string bodyName, size_t shapeIndex);
+  void onChangeShapeHeight(RcsGraph* graph, std::string bodyName, double height);
+  void onChangeShapeDiameter(RcsGraph* graph, std::string bodyName, double diameter);
+  void onChangeShapeOrigin(RcsGraph* graph, std::string bodyName, std::vector<double> origin);
+  void onChangeBodyOrigin(RcsGraph* graph, std::string bodyName, std::vector<double> origin);
 
   RcsGraph* graph;
   bool enableRender;

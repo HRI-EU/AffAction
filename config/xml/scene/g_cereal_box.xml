@@ -31,8 +31,8 @@
 
   <!-- The model for a box. The marker is assumed to be in the top center. -->
   <Body name="box_of" physics="dynamic" >
-    <Shape distance="true" extents="0.057 0.19 0.243" graphics="true" physics="true" transform="0 0 0.1215 0 0 0" type="BOX"/>
-    <Shape extents="0.04 0.04 0" marker="true" distance="false" markerName="aruco_42" scale="0.1" transform="0 0 0.243 0 0 0" type="FRAME"/>
+	<Shape type="BOX" distance="true" resizeable="true" extents="0.057 0.19 0.243" graphics="true" physics="true" transform="0 0 0.1215 0 0 0" />
+	<Shape type="FRAME" extents="0.04 0.04 0" marker="true" distance="false" markerName="aruco_42" scale="0.1" transform="0 0 0.243 0 0 0" />
   </Body>
   
   <Body name="top_box_of" prev="box_of" transform="0 0 0.243 0 0 0">

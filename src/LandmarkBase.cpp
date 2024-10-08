@@ -79,7 +79,6 @@ std::string LandmarkBase::getTrackerState() const
   }
 
   nlohmann::json json;
-  // getSceneState(json, scene, graph);
 
   // Add skeleton information
   for (const auto& tracker : trackers)
@@ -87,7 +86,6 @@ std::string LandmarkBase::getTrackerState() const
     AzureSkeletonTracker* st = dynamic_cast<AzureSkeletonTracker*>(tracker.get());
     if (st)
     {
-      //jsonFromSkeletons(json, st);
       st->jsonFromSkeletons(json);
     }
   }

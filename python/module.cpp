@@ -348,10 +348,13 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("run", &aff::ExampleActionsECS::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
 
+  //////////////////////////////////////////////////////////////////////////////
+  // Calls an event without arguments. We must not call process() here, since
+  // this method might run concurrently to the event queue thread.
+  //////////////////////////////////////////////////////////////////////////////
   .def("callEvent", [](aff::ExampleActionsECS& ex, std::string eventName)
   {
     ex.getEntity().publish(eventName);
-    ex.getEntity().process();
   })
   //////////////////////////////////////////////////////////////////////////////
   // -1: grow down, 0: symmetric, 1: grow up
@@ -361,45 +364,55 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("changeShapeHeight", [](aff::ExampleActionsECS& ex, std::string nttName, double height, int growMode) -> size_t
   {
     auto ntts = ex.getScene()->getAffordanceEntities(nttName);
+    RcsGraph* ikGraph = ex.getGraph();
 
     for (const auto& ntt : ntts)
     {
-      const RcsBody* bdy = ntt->body(ex.getGraph());
+      const RcsBody* bdy = ntt->body(ikGraph);
       RCHECK_MSG(bdy->nShapes>0, "Body %s has no shapes attached", ntt->bdyName.c_str());
       const RcsShape* sh = &bdy->shapes[0];
-      double newOrigin[3];
-      Vec3d_copy(newOrigin, sh->A_CB.org);
-      newOrigin[2] += 0.5*growMode* height;
+      std::vector<double> newOrigin(sh->A_CB.org, sh->A_CB.org+3);
+      newOrigin[2] += 0.5*growMode*(height-sh->extents[2]);
 
-      ex.getEntity().publish("ChangeShapeHeight", ntt->bdyName, height);
-      ex.getEntity().publish("ChangeShapeOrigin", ntt->bdyName, newOrigin);
+      ex.getEntity().publish("ChangeShapeHeight", ikGraph, ntt->bdyName, height);
+      ex.getEntity().publish("ChangeShapeOrigin", ikGraph, ntt->bdyName, newOrigin);
     }
-
-    ex.getEntity().process();
 
     return ntts.size();
   })
-  .def("changeShapeDiameter", [](aff::ExampleActionsECS& ex, std::string nttName, double diameter)
+  .def("changeShapeDiameter", [](aff::ExampleActionsECS& ex, std::string nttName, double diameter) -> size_t
   {
-    ex.getEntity().publish("ChangeShapeDiameter", diameter);
-    // ex.getEntity().process();
+    auto ntts = ex.getScene()->getAffordanceEntities(nttName);
+    RcsGraph* ikGraph = ex.getGraph();
+
+    for (const auto& ntt : ntts)
+    {
+      ex.getEntity().publish("ChangeShapeDiameter", ikGraph, ntt->bdyName, diameter);
+    }
+
+    return ntts.size();
   })
   .def("changeBodyOrigin", [](aff::ExampleActionsECS& ex, std::string bodyName, double x, double y, double z)
   {
-    double org[3];
-    Vec3d_set(org, x, y, z);
-    ex.getEntity().publish("ChangeBodyOrigin", bodyName, org);
-    // ex.getEntity().process();
+    std::vector<double> org {x, y, z};
+    RcsGraph* ikGraph = ex.getGraph();
+
+    ex.getEntity().publish("ChangeBodyOrigin", ikGraph, bodyName, org);
+  })
+  .def("changeShapeOrigin", [](aff::ExampleActionsECS& ex, std::string bodyName, double x, double y, double z)
+  {
+    std::vector<double> org {x, y, z};
+    RcsGraph* ikGraph = ex.getGraph();
+    RLOG(1, "***");
+    ex.getEntity().publish("ChangeShapeOrigin", ikGraph, bodyName, org);
   })
   .def("reset", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().publish("ActionSequence", std::string("reset"));
-    ex.getEntity().process();
   })
   .def("render", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().publish("Render");
-    ex.getEntity().process();
   })
   .def("process", [](aff::ExampleActionsECS& ex)
   {
@@ -412,7 +425,6 @@ PYBIND11_MODULE(pyAffaction, m)
     if (success)
     {
       ex.getEntity().publish("Render");
-      ex.getEntity().process();
     }
 
     return success;

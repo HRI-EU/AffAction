@@ -33,6 +33,7 @@
 #include "GraphComponent.h"
 
 #include <Rcs_joint.h>
+#include <Rcs_shape.h>
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_Vec3d.h>
@@ -93,9 +94,9 @@ void GraphComponent::onTriggerInitFromState()
   getEntity()->publish<const RcsGraph*>("InitFromState", graph);
 }
 
-void GraphComponent::onChangeShapeHeight(std::string bodyName, double height)
+void GraphComponent::onChangeShapeHeight(RcsGraph* g, std::string bodyName, double height)
 {
-  RcsShape* sh = getShape(bodyName, 0);
+  RcsShape* sh = getShape(g, bodyName, 0);
 
   if (sh)
   {
@@ -103,9 +104,9 @@ void GraphComponent::onChangeShapeHeight(std::string bodyName, double height)
   }
 }
 
-void GraphComponent::onChangeShapeDiameter(std::string bodyName, double diameter)
+void GraphComponent::onChangeShapeDiameter(RcsGraph* g, std::string bodyName, double diameter)
 {
-  RcsShape* sh = getShape(bodyName, 0);
+  RcsShape* sh = getShape(g, bodyName, 0);
 
   if (sh)
   {
@@ -113,32 +114,31 @@ void GraphComponent::onChangeShapeDiameter(std::string bodyName, double diameter
   }
 }
 
-void GraphComponent::onChangeShapeParameters(std::string bodyName, size_t shapeIndex, double extents[3])
+void GraphComponent::onChangeShapeOrigin(RcsGraph* g, std::string bodyName, std::vector<double> origin)
 {
-  RcsShape* sh = getShape(bodyName, shapeIndex);
+  RcsShape* sh = getShape(g, bodyName, 0);
 
   if (sh)
   {
-    Vec3d_copy(sh->extents, extents);
+    RLOG(1, "Changing origin of shape 0 of %s to %f %f %f",
+         bodyName.c_str(), origin[0], origin[1], origin[2]);
+    Vec3d_copy(sh->A_CB.org, origin.data());
   }
-}
-
-void GraphComponent::onChangeShapeOrigin(std::string bodyName, size_t shapeIndex, double origin[3])
-{
-  RcsShape* sh = getShape(bodyName, shapeIndex);
-
-  if (sh)
+  else
   {
-    Vec3d_copy(sh->A_CB.org, origin);
+    RLOG_CPP(1, "Body " << bodyName << " not found");
   }
+
 }
 
-void GraphComponent::onChangeBodyOrigin(std::string bodyName, double origin[3])
+void GraphComponent::onChangeBodyOrigin(RcsGraph* g, std::string bodyName, std::vector<double> origin)
 {
-  RcsBody* bdy = RcsGraph_getBodyByName(graph, bodyName.c_str());
+  RcsBody* bdy = RcsGraph_getBodyByName(g, bodyName.c_str());
   if (bdy)
   {
-    Vec3d_copy(bdy->A_BP.org, origin);
+    RLOG(1, "Changing origin of body %s to %f %f %f",
+         bodyName.c_str(), origin[0], origin[1], origin[2]);
+    Vec3d_copy(bdy->A_BP.org, origin.data());
   }
   else
   {
@@ -146,9 +146,9 @@ void GraphComponent::onChangeBodyOrigin(std::string bodyName, double origin[3])
   }
 }
 
-RcsShape* GraphComponent::getShape(std::string bodyName, size_t shapeIndex)
+RcsShape* GraphComponent::getShape(RcsGraph* g, std::string bodyName, size_t shapeIndex)
 {
-  const RcsBody* bdy = RcsGraph_getBodyByName(graph, bodyName.c_str());
+  const RcsBody* bdy = RcsGraph_getBodyByName(g, bodyName.c_str());
 
   if (!bdy)
   {
