@@ -40,6 +40,7 @@
 #include "PhysicsComponent.h"
 #include "VirtualCameraWindow.h"
 #include "ActionEyeGaze.h"
+#include "GazeComponent.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -233,6 +234,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   virtualCameraHeight = 480;
   virtualCameraEnabled = false;
   virtualCameraWindowEnabled = false;
+  gazeComponentEnabled = false;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;
@@ -342,6 +344,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
   parser->getArgument("-earlyExitAction", &earlyExitAction, "Early exit with action prediction's first error");
+  parser->getArgument("-enableGazeComponent", &gazeComponentEnabled, "Start with gaze component");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -471,6 +474,13 @@ bool ExampleActionsECS::initAlgo()
   actionC->setMultiThreaded(!singleThreaded);
   actionC->setEarlyExitPrediction(true);
   addComponent(actionC);
+
+  if (gazeComponentEnabled)
+  {
+    auto gazeC = new GazeComponent(&entity, "head_front_glass", 2);
+    gazeC->addSceneToAttend(*getScene(), getGraph());
+    addComponent(gazeC);
+  }
 
 #if 1
   // Misuse contacts shape flag for Collision trajectory constraint
@@ -2081,5 +2091,33 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExamplePW70_pos, "Actions", "PTU position control");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAzure : public ExampleActionsECS
+{
+public:
+
+  ExampleAzure(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start python program with: python azure_tracking_socket.py --body --frame-id camera_01 --mediapipe --aruco");
+  }
+
+  virtual ~ExampleAzure()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    componentArgs = "-landmarks_zmq -azure  -aruco -landmarks_camera camera_0";
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAzure, "Actions", "AzureKinect test program");
 
 }   // namespace aff

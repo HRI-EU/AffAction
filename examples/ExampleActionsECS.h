@@ -125,6 +125,7 @@ public:
   std::vector<ActionResult> lastActionResult;
   unsigned int virtualCameraWidth, virtualCameraHeight;
   bool virtualCameraEnabled, virtualCameraWindowEnabled;
+  bool gazeComponentEnabled;
   std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;
