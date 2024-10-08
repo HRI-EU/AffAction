@@ -77,8 +77,9 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Received " + std::to_string(params.size()) + " objects to gaze at the same time.",
-                          "Specify only one object to gaze at.DEVELOPER : Number of passed strings is not 1",
-                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+                          "Specify only one object to gaze at.",
+                          "Number of passed strings is not 1 (" +
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__) + ")");
   }
 
   std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(params[0]);
@@ -98,20 +99,15 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
   {
     const Agent* agent = scene.getAgent(params[0]);
 
-    if (!agent)
+    // From here on, we have a valid agent. We look at its head
+    if (agent)
     {
-      throw ActionException(ActionException::ParamNotFound,
-                            "The agent or object " + params[0] + " is unknown. ",
-                            "Gaze at an object or agent name that is defined in the environment",
-                            "This name was checked: " + params[0]);
-    }
-
-    // From here on, we have a valid agent. We look at its (first) head
-    auto m = agent->getManipulatorsOfType(&scene, "head");
-    if (!m.empty())
-    {
-      gazeTargetInstance = m[0]->bdyName;
-      gazeTarget = m[0]->name;
+      auto m = agent->getManipulatorsOfType(&scene, "head");
+      if (!m.empty())
+      {
+        gazeTargetInstance = m[0]->bdyName;
+        gazeTarget = m[0]->name;
+      }
     }
 
   }
@@ -139,10 +135,6 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
 
 
 
-
-  // // Retrieve camera body \todo(MG): no explicit naming here
-  // cameraFrame = "head_kinect_rgb_link";
-  // const RcsBody* camBdy = RcsGraph_getBodyByNameNoCase(graph, cameraFrame.c_str());
 
   // \todo(CP): handle multiple agents
   std::vector<const Manipulator*> headsInScene = scene.getManipulatorsOfType("head");
