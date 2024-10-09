@@ -1003,8 +1003,8 @@ ActionPut::createTrajectory(double t_start,
   // Deactivate object collisions when released, and re-activate once the hand has been retracted.
   if (isObjCollidable)
   {
-    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_put, objBottomName, false));
-    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_release, objBottomName, true));
+    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_put, objName, false));
+    a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_release, objName, true));
   }
 
   return a1;
@@ -1413,8 +1413,8 @@ public:
     // Deactivate object collisions when released, and re-activate once the hand has been retracted.
     if (isObjCollidable)
     {
-      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_start, objBottomName, false));
-      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, objBottomName, true));
+      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_start, objName, false));
+      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, objName, true));
     }
 
     return a1;
