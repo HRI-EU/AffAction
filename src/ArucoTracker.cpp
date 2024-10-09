@@ -520,6 +520,13 @@ void ArucoTracker::updateGraph(RcsGraph* graph)
       continue;
     }
 
+    // Ignore the markers that are held in hand (have an articulated parent)
+    const RcsBody* markerBdy = RcsGraph_getBodyByName(graph, bdyName.c_str());
+    if (RcsBody_isArticulated(graph, markerBdy))
+    {
+      continue;
+    }
+
     const int qIdx = std::get<2>(marker);
     std::vector<double> q_rbj = std::get<3>(marker);
     NLOG_CPP(2, "Body " << bdyName <<" at index " << qIdx << ": Applying pose "
