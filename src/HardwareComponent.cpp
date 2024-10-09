@@ -543,7 +543,7 @@ ComponentBase* createComponent(EntityBase& entity,
     getKeyValuePair<std::string>(argsVec, "-mirror_eyes_gaze_target_topic", gazeTopic);
     getKeyValuePair<std::string>(argsVec, "-mirror_eyes_camera_topic", camTopic);
     getKeyValuePair<std::string>(argsVec, "-mirror_eyes_pupil_coords_topic", pubTopic);
-    return new MirrorEyeComponent(&entity, scene, gazeTopic, camTopic);
+    return new MirrorEyeComponent(&entity, scene, pubTopic, gazeTopic, camTopic);
   }
 #endif   // USE_ROS
 
