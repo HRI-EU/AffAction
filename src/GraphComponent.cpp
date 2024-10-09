@@ -110,7 +110,7 @@ void GraphComponent::onChangeShapeDiameter(RcsGraph* g, std::string bodyName, do
 
   if (sh)
   {
-    sh->extents[0] = diameter;
+    sh->extents[0] = 0.5*diameter;
   }
 }
 

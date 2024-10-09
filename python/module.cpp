@@ -372,7 +372,7 @@ PYBIND11_MODULE(pyAffaction, m)
       RCHECK_MSG(bdy->nShapes>0, "Body %s has no shapes attached", ntt->bdyName.c_str());
       const RcsShape* sh = &bdy->shapes[0];
       std::vector<double> newOrigin(sh->A_CB.org, sh->A_CB.org+3);
-      newOrigin[2] += 0.5*growMode*(height-sh->extents[2]);
+      newOrigin[2] = 0.5*growMode*(height-sh->extents[2]);
 
       ex.getEntity().publish("ChangeShapeHeight", ikGraph, ntt->bdyName, height);
       ex.getEntity().publish("ChangeShapeOrigin", ikGraph, ntt->bdyName, newOrigin);
