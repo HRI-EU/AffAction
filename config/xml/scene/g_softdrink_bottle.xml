@@ -35,9 +35,9 @@
     <Shape type="SSL" length="0.17"  radius="0.028" distance="true" graphics="false" physics="true" transform="0 0 0.04 0 0 0"/>
     <Shape type="SSL" length="0.2"   radius="0.015" distance="true" graphics="false" physics="true" transform="0 0 0.04 0 0 0"/>
     <Shape type="FRAME" marker="true" markerName="aruco_12" extents="0.042 0.042 0" scale="0.1"
-               transform="0.035 0 0.12 0 90 0"/>
+               transform="0.035 0 0.12 0 90 90"/>
     <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false"
-               textureFile="textures/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
+               textureFile="textures/4x4marker_12.jpg" transform="0.04 0 0.12 0 90 90"/>
   </Body>
   
   <Body name="tip_bottle_of" prev="bottle_of" transform="0 0 0.256 0 0 0">

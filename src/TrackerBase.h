@@ -31,8 +31,8 @@
 
 *******************************************************************************/
 
-#ifndef TRACKERBASE_H
-#define TRACKERBASE_H
+#ifndef AFF_TRACKERBASE_H
+#define AFF_TRACKERBASE_H
 
 #include "json.hpp"
 
@@ -66,4 +66,4 @@ protected:
 
 
 
-#endif // TRACKERBASE_H
+#endif // AFF_TRACKERBASE_H
