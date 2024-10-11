@@ -468,7 +468,7 @@ ComponentBase* createComponent(EntityBase& entity,
     if (componentName == "-pw70_pos")
     {
       auto c = new PW70Component(&entity, panIdx, tiltIdx);
-      bool success = c->setControlFrequency(controlFreq);
+      bool success = c->init(controlFreq);
       if (!success)
       {
         RLOG(0, "Couldn't create PW70Component - wrong controlFrequency: %d", controlFreq);
@@ -480,7 +480,7 @@ ComponentBase* createComponent(EntityBase& entity,
     else if (componentName == "-pw70_vel")
     {
       auto c = new PW70VelocityComponent(&entity, panIdx, tiltIdx);
-      bool success = c->setControlFrequency(controlFreq);
+      bool success = c->init(controlFreq);
       if (!success)
       {
         RLOG(0, "Couldn't create PW70VelocityComponent - wrong controlFrequency: %d", controlFreq);

@@ -122,6 +122,22 @@ PW70Component::PW70Component(EntityBase* parent, int panDofIdx, int tiltDofIdx) 
   enableCommands(false)
 {
   RLOG(0, "Creating PW70Component with panDofIdx=%d tiltDofIdx=%d", panDofIdx, tiltDofIdx);
+}
+
+PW70Component::~PW70Component()
+{
+  onStop();
+}
+
+bool PW70Component::init(int controlFrequency)
+{
+  bool success = setControlFrequency(controlFrequency);
+
+  if (!success)
+  {
+    return false;
+  }
+
   subscribe("PW70_InitPan", &PW70Component::onInitPan);
   subscribe("PW70_InitTilt", &PW70Component::onInitTilt);
   subscribe("PW70_ResetStop", &PW70Component::onResetStop);
@@ -130,6 +146,8 @@ PW70Component::PW70Component(EntityBase* parent, int panDofIdx, int tiltDofIdx) 
   subscribe("Start", &PW70Component::onStart);
   subscribe("Stop", &PW70Component::onStop);
   subscribe("UpdateGraph", &PW70Component::onUpdateGraph);
+
+  return true;
 }
 
 void PW70Component::onStart()
@@ -148,9 +166,16 @@ void PW70Component::onStart()
   std::this_thread::sleep_for(std::chrono::seconds(2));
 }
 
-PW70Component::~PW70Component()
+void PW70Component::onStop()
 {
-  //onStop();
+  if (pw70)
+  {
+    RLOG(0, "pw70->cleanup()");
+    //pw70->cleanup();
+    pw70.reset();
+    RLOG(0, "pw70.reset()");
+  }
+
 }
 
 bool PW70Component::setControlFrequency(int freq)
@@ -224,18 +249,6 @@ void PW70Component::onEnableCommands()
   enableCommands = true;
 }
 
-void PW70Component::onStop()
-{
-  if (pw70)
-  {
-    RLOG(0, "pw70->cleanup()");
-    //pw70->cleanup();
-    pw70.reset();
-    RLOG(0, "pw70.reset()");
-  }
-
-}
-
 void PW70Component::onInitPan()
 {
   if (!pw70)
@@ -299,6 +312,7 @@ void PW70Component::onMovePosition(double pan_in_degrees, double tilt_in_degrees
 PW70VelocityComponent::PW70VelocityComponent(EntityBase* parent, int panDofIdx, int tiltDofIdx) :
   PW70Component(parent, panDofIdx, tiltDofIdx), filterInitialized(false), panTiltFilt(0.1, 0.0, 0.02, 2)
 {
+  RLOG(0, "Creating PW70VelocityComponent with panDofIdx=%d tiltDofIdx=%d", panDofIdx, tiltDofIdx);
   subscribe("SetJointCommand", &PW70VelocityComponent::onSetJointPosition);
   subscribe("PW70_SetPanTiltInDegrees", &PW70VelocityComponent::onSetJointPositionInDegrees);
 
@@ -314,25 +328,38 @@ PW70VelocityComponent::~PW70VelocityComponent()
 
 bool PW70VelocityComponent::init(int controlFrequency)
 {
+  bool success = setControlFrequency(controlFrequency);
+
+  if (!success)
+  {
+    return false;
+  }
+
   panTiltFilt.setDt(1.0/controlFrequency);
 
-  if ((controlFrequency != 1) &&
-      (controlFrequency != 10) &&
-      (controlFrequency != 25) &&
-      (controlFrequency != 50) &&
-      (controlFrequency != 100))
+  subscribe("PW70_ResetStop", &PW70Component::onResetStop);
+  subscribe("EnableCommands", &PW70Component::onEnableCommands);
+  subscribe("Start", &PW70VelocityComponent::onStart);
+  subscribe("Stop", &PW70Component::onStop);
+  subscribe("UpdateGraph", &PW70Component::onUpdateGraph);
+
+  return true;
+}
+
+void PW70VelocityComponent::onStart()
+{
+  if (this->pw70)
   {
-    RLOG(1, "Control frequency is %d, but must be one out of: 1, 10, 25, 50, 100", controlFrequency);
-    return false;
+    RLOG(1, "PW70 already running - skipping start");
+    return;
   }
 
   // Create an instance of PW70CANInterface with the callbacks
   this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdateVel, this, controlFrequency);
+  this->pw70->reset_stop();
 
   // Wait a moment to allow the interface to initialize
   std::this_thread::sleep_for(std::chrono::seconds(2));
-
-  return true;
 }
 
 void PW70VelocityComponent::onSetJointPosition(const MatNd* q_des)
@@ -369,6 +396,8 @@ void PW70VelocityComponent::onSetJointPositionInDegrees(double pan_in_deg, doubl
 
 void PW70VelocityComponent::positionUpdateVel(double pan_angle, double tilt_angle, double timestamp, void* params)
 {
+  RLOG(1, "positionUpdateVel");
+
   PW70VelocityComponent* self = static_cast<PW70VelocityComponent*>(params);
   std::lock_guard<std::mutex> lock(self->filtMtx);
 
@@ -394,7 +423,7 @@ void PW70VelocityComponent::positionUpdateVel(double pan_angle, double tilt_angl
        RCS_RAD2DEG(filtVel[0]), RCS_RAD2DEG(filtVel[1]));
 
   self->velocityControlStep(filtPos[0], filtPos[1], filtVel[0], filtVel[1]);
-  //sinusoidalvelocityStep();
+  //self->sinusoidalvelocityStep();
 }
 
 void PW70VelocityComponent::velocityControlStep(double desired_pan_position, double desired_tilt_position,
@@ -472,6 +501,7 @@ void PW70VelocityComponent::sinusoidalvelocityStep()
   // Limit the corrected velocity to prevent abrupt movements
   double corrected_pan_velocity = Math_clip(desired_pan_velocity + velocity_correction, -PAN_VELOCITY_MAX_RAD, PAN_VELOCITY_MAX_RAD);
 
+  RLOG(1, "pan vel: %f", corrected_pan_velocity);
   // Command the pan velocity; keep tilt stationary
   pw70->move_velocity(corrected_pan_velocity, 0.0);
 
