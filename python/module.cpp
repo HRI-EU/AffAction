@@ -436,14 +436,7 @@ PYBIND11_MODULE(pyAffaction, m)
 
   .def("hideGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
-    if (!ex.viewer)
-    {
-      return false;
-    }
-
-    ex.viewer.reset();
-
-    return true;
+    return ex.eraseViewer();
   })
 
   .def("get_state", [](aff::ExampleActionsECS& ex) -> std::string

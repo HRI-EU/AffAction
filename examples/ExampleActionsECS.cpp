@@ -273,6 +273,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   setJointCommand = NULL;
   setRenderCommand = NULL;
 
+  viewer = nullptr;
   actionC = nullptr;
   graphC = nullptr;
   trajC = nullptr;
@@ -636,7 +637,8 @@ bool ExampleActionsECS::initGraphics()
   }
 
   bool viewerStartsWithStartEvent = true;
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, viewerStartsWithStartEvent);
+  viewer = new GraphicsWindow(&entity, viewerStartsWithStartEvent);
+  addComponent(viewer);
 
   // Add a physics node if physics is enabled
   auto sims = getComponents<PhysicsComponent>(components);
@@ -1009,7 +1011,8 @@ bool ExampleActionsECS::initGraphics()
   auto lmZmqs = getComponents<LandmarkZmqComponent>(components);
   for (auto& c : lmZmqs)
   {
-    c->createDebugGraphics(viewer.get());
+    //c->createDebugGraphics(viewer.get());
+    c->createDebugGraphics(viewer);
   }
 
 
@@ -1118,7 +1121,7 @@ std::string ExampleActionsECS::help()
   s << Rcs::RcsShape_distanceFunctionsToString();
   s << std::endl << "Hardware concurrency: " << std::thread::hardware_concurrency() << std::endl;
   s << "Turbo mode: " << (turbo ? "ON" : "OFF") << std::endl;
-  if (controller)
+  if (getGraph())
   {
     s << "Graph size[bytes]: " << RcsGraph_sizeInBytes(getGraph()) << std::endl;
   }
@@ -1651,6 +1654,24 @@ void ExampleActionsECS::addComponent(ComponentBase* component)
   }
 }
 
+bool ExampleActionsECS::eraseComponent(ComponentBase* component)
+{
+  bool success = false;
+
+  for (auto it = components.begin(); it != components.end(); ++it)
+  {
+    if (component && ((*it)==component))
+    {
+      delete *it;
+      components.erase(it);
+      success = true;
+      break;
+    }
+  }
+
+  return success;
+}
+
 void ExampleActionsECS::addHardwareComponent(ComponentBase* component)
 {
   if (component)
@@ -1712,7 +1733,14 @@ std::shared_ptr<ConcurrentSceneQuery> ExampleActionsECS::getQuery()
 
 GraphicsWindow* ExampleActionsECS::getViewer()
 {
-  return viewer ? viewer.get() : nullptr;
+  return viewer;
+}
+
+bool ExampleActionsECS::eraseViewer()
+{
+  bool success = eraseComponent(viewer);
+  viewer = nullptr;
+  return success;
 }
 
 const EntityBase& ExampleActionsECS::getEntity() const
@@ -2116,6 +2144,13 @@ public:
     return true;
   }
 
+  std::string help()
+  {
+    std::string str = "Start python program with: python azure_tracking_socket.py --body --frame-id camera_01 --mediapipe --aruco\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
 };
 
 RCS_REGISTER_EXAMPLE(ExampleAzure, "Actions", "AzureKinect test program");
@@ -2147,5 +2182,40 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleMirrorEyes, "Actions", "MirrorEyes test program");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAruco : public ExampleActionsECS
+{
+public:
+
+  ExampleAruco(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start python program with: python webcam_tracking_socket.py --mediapipe --aruco --camera_config_file Logitech-C920.yaml --visualize");
+  }
+
+  virtual ~ExampleAruco()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    componentArgs = "-landmarks_zmq -aruco_tracking -aruco_base aruco_base -landmarks_camera camera_0";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start python program with: python webcam_tracking_socket.py --mediapipe --aruco --camera_config_file Logitech-C920.yaml --visualize\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAruco, "Actions", "Aruco (with webcam) test program");
 
 }   // namespace aff

@@ -100,11 +100,13 @@ public:
   const RcsBroadPhase* getBroadPhase() const;
   std::shared_ptr<ConcurrentSceneQuery> getQuery();
   GraphicsWindow* getViewer();
+  bool eraseViewer();
   const EntityBase& getEntity() const;
   EntityBase& getEntity();
   const VirtualCamera* getVirtualCamera() const;
   VirtualCamera* getVirtualCamera();
   void addComponentArgument(const std::string& arg);
+  bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;
 
   void addComponent(ComponentBase* component);
@@ -134,7 +136,6 @@ public:
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool hasBeenStopped;
 
-  std::unique_ptr<GraphicsWindow> viewer;
 
 protected:
 
@@ -151,6 +152,7 @@ protected:
   unsigned int loopCount;
   std::atomic<bool> processingAction;
 
+  GraphicsWindow* viewer;
   ActionComponent* actionC;
   GraphComponent* graphC;
   TrajectoryComponent* trajC;

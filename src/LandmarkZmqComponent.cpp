@@ -128,7 +128,9 @@ LandmarkZmqComponent::~LandmarkZmqComponent()
 {
   if (threadRunning)
   {
-    RLOG(0, "Thread still running in destructor - please stop it before.");
+    RLOG(0, "Thread still running in destructor - stopping it now.");
+    stopZmqThread();
+    RLOG(0, "Thread stopped.");
   }
 }
 

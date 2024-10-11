@@ -58,7 +58,6 @@ GraphComponent::GraphComponent(EntityBase* parent, const RcsGraph* graph_) :
 
 GraphComponent::~GraphComponent()
 {
-  unsubscribe();
   RcsGraph_destroy(this->graph);
 }
 
