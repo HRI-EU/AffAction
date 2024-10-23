@@ -1,112 +1,125 @@
 <!--
-  Copyright (c) Honda Research Institute Europe GmbH
+    Copyright (c) Honda Research Institute Europe GmbH
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-  1. Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
-  2. Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-  3. Neither the name of the copyright holder nor the names of its
-     contributors may be used to endorse or promote products derived from
-     this software without specific prior written permission.
+3. Neither the name of the copyright holder nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
-  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
-  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
        resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
        name="JacoDefaultPoseArmsHigh"
        usage="
-&#xA;  Configuration file to load the two-arm Jaco robot with arms mounted at the shoulders.
-&#xA;  "
->
+       &#xA;  Configuration file to load the two-arm Jaco robot with arms mounted at the shoulders.
+       &#xA;  "
+       >
 
-    <Group>
+       <!-- Aluminum structure including PTU. -->
+       <xi:include href="../TwoArmJaco7/g_item_base.xml"/>
 
-        <xi:include href="g_item_base.xml"/>
+       <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+       <Group  prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+	 <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
+       </Group>
 
-        <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
-            <Shape type="FRAME" scale="0.3"/>
-            <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
-        </Body>
+       <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
+         <Shape type="FRAME" scale="0.3"/>
+         <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+       </Body>
 
-        <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
-            <noShape type="FRAME" scale="0.1"/>
-        </Body>
+       <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+         <noShape type="FRAME" scale="0.1"/>
+       </Body>
 
-        <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
-			<Shape type="SSL" radius="0.055" length="0.15" color="RED" distance="true" />
-            <noShape type="FRAME" scale="0.2"/>
-        </Body>
+       <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
+	 <Shape type="SSL" radius="0.055" length="0.15" color="RED" distance="true" />
+       </Body>
 
-        <Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
-            <xi:include href="gJacoGen3_7dof.xml"/>
-        </Group>
+       <Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
+         <xi:include href="gJacoGen3_7dof.xml"/>
+       </Group>
 
-        <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
-            <noShape type="FRAME" scale="0.1"/>
-        </Body>
+       <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+       </Body>
 
-        <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
-			<Shape type="SSL" radius="0.055" length="0.15" color="RED" distance="true" />
-			<xxShape type="FRAME" scale="0.2"/>
-        </Body>
+       <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
+	 <Shape type="SSL" radius="0.055" length="0.15" color="RED" distance="true" />
+       </Body>
 
-        <Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >
-            <xi:include href="gJacoGen3_7dof.xml"/>
-        </Group>
+       <Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >
+         <xi:include href="gJacoGen3_7dof.xml"/>
+       </Group>
 
-	<xi:include href="g_hand_left-gen3.xml"/>
-	<xi:include href="g_hand_right-gen3.xml"/>
+       <xi:include href="g_hand_left-gen3.xml"/>
+       <xi:include href="g_hand_right-gen3.xml"/>
 
-	</Group>
 
-  <Manipulator body="head_kinect_link" types="head">
-    <GazeCapability frame="head_kinect_lens" />
-  </Manipulator>
 
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-     <Component manipulator="hand_left_robot" />
-     <Component manipulator="hand_right_robot" />
-     <Component manipulator="head" />
-  </Agent>
+       <!-- The gaze model of the robot (testing).-->
+       <Group prev="head_shell" transform="0 0 0 0 0 0">
+	 <xi:include href="../TwoArmJaco7/g_gazemodel.xml" />
+       </Group>
 
-    <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
-        <joint_state joint="joint_1_right" position="80"/>
-        <joint_state joint="joint_2_right" position="70"/>
-        <joint_state joint="joint_3_right" position="80"/>
-        <joint_state joint="joint_4_right" position="-90"/>
-        <joint_state joint="joint_5_right" position="0"/>
-        <joint_state joint="joint_6_right" position="-20"/>
-        <joint_state joint="joint_7_right" position="-90"/>
-        <joint_state joint="joint_finger_1_right" position="10"/>
-        <joint_state joint="joint_finger_2_right" position="10"/>
-        <joint_state joint="joint_finger_3_right" position="10"/>
+       <Body name="GazePoint" >
+	 <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
+	 <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
+	 <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
+	 <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
+       </Body>
+       
+       <Manipulator body="head_kinect_link" types="head">
+	 <GazeCapability frame="head_kinect_lens" />
+       </Manipulator>
 
-        <joint_state joint="joint_1_left" position="100"/>
-        <joint_state joint="joint_2_left" position="-70"/>
-        <joint_state joint="joint_3_left" position="-80"/>
-        <joint_state joint="joint_4_left" position="90"/>
-        <joint_state joint="joint_5_left" position="0"/>
-        <joint_state joint="joint_6_left" position="20"/>
-        <joint_state joint="joint_7_left" position="90"/>
-        <joint_state joint="joint_finger_1_left" position="10"/>
-        <joint_state joint="joint_finger_2_left" position="10"/>
-        <joint_state joint="joint_finger_3_left" position="10"/>
-    </model_state>
+       <Agent body="Johnnie" types="robot" name="Johnnie" >
+	 <Component manipulator="hand_left_robot" />
+	 <Component manipulator="hand_right_robot" />
+	 <Component manipulator="head_kinect_link" />
+       </Agent>
 
-</Graph>
+       <model_state model="JacoDefaultPoseArmsHigh" time_stamp="0">
+         <joint_state joint="joint_1_right" position="80"/>
+         <joint_state joint="joint_2_right" position="70"/>
+         <joint_state joint="joint_3_right" position="80"/>
+         <joint_state joint="joint_4_right" position="-90"/>
+         <joint_state joint="joint_5_right" position="0"/>
+         <joint_state joint="joint_6_right" position="-20"/>
+         <joint_state joint="joint_7_right" position="-90"/>
+         <joint_state joint="joint_finger_1_right" position="10"/>
+         <joint_state joint="joint_finger_2_right" position="10"/>
+         <joint_state joint="joint_finger_3_right" position="10"/>
+
+         <joint_state joint="joint_1_left" position="100"/>
+         <joint_state joint="joint_2_left" position="-70"/>
+         <joint_state joint="joint_3_left" position="-80"/>
+         <joint_state joint="joint_4_left" position="90"/>
+         <joint_state joint="joint_5_left" position="0"/>
+         <joint_state joint="joint_6_left" position="20"/>
+         <joint_state joint="joint_7_left" position="90"/>
+         <joint_state joint="joint_finger_1_left" position="10"/>
+         <joint_state joint="joint_finger_2_left" position="10"/>
+         <joint_state joint="joint_finger_3_left" position="10"/>
+       </model_state>
+
+     </Graph>

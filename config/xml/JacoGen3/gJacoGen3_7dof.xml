@@ -51,7 +51,7 @@
  </Body>
 
   <Body name="forearm" prev="elbow" physics="dynamic" mass="0.9302" cogVector="-0.000018 -0.075478 -0.015006" inertia="0.008147 -1e-06 0   -1e-06 0.000631 -0.0005   0 -0.0005 0.008316" >
-    <Joint name="joint_4" range="-150 0 150" type="RotZ" transform="0 0.006375 -0.21038 90.00021 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="80" weightMetric="0.25" />
+    <Joint name="joint_4" range="-350 0 350" type="RotZ" transform="0 0.006375 -0.21038 90.00021 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="80" weightMetric="0.25" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/forearm_link.STL" color="#bfbfbfff" />
     <Shape type="SSL" length="0.186141" radius="0.051695" distance="true" physics="false" graphics="false" transform="-0.000175 0.000656 -0.029343 83.568128 0.043151 90.004865" color="RANDOM" />
   </Body>

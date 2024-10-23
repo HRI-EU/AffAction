@@ -103,6 +103,10 @@
   <Group prev="table" name="_cereal" color="WHITE" rigid_body_joints="0.03 0.375 0 0 0 0" >
     <xi:include href="../scene/g_cereal_box.xml"/>
   </Group>
+	
+  <Group prev="table_grid_0_7" name="_softdrink" color="WHITE" rigid_body_joints="true" >
+    <xi:include href="../scene/g_softdrink_bottle.xml"/>
+  </Group>
 		
   <model_state model="default" time_stamp="0">
     <joint_state joint="j2s7s300_joint_1_right" position="20"/>

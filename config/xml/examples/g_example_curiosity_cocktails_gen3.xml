@@ -27,7 +27,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="kinova_home" >
 
 	<ActionSequence name="1" text="get glass_green; shake glass_green" />
 	<ActionSequence name="2" text="get glass_green; inspect glass_green" />
@@ -36,8 +36,8 @@
 	<ActionSequence name="5" text="get bottle_of_fanta; move bottle_of_fanta above glass_green; pour bottle_of_fanta glass_green; put bottle_of_fanta table frame table_grid_0_1; pose default" />
 	<ActionSequence name="6" text="get bottle_of_fanta; move bottle_of_fanta above glass_green; pour bottle_of_fanta glass_green; put bottle_of_fanta table frame table_grid_0_3; pose default" />
 
-	<Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" >
-  </Body>
+  <!-- The optional grapchics window camera perspective when starting up. -->
+  <Body name="default_camera_view" transform="-1.8 -2.5 3.0 -34 21 66" />
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body name="aruco_base" rigid_body_joints="true" color="PEWTER" >
@@ -54,6 +54,7 @@
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
     <Shape graphics="true" scale="0.2" type="FRAME"/>
   </Body>
+  
   <AffordanceModel body="camera_0" name="camera" types="camera.n.01">
     <Supportable frame="camera_0"/>
   </AffordanceModel>
@@ -63,14 +64,39 @@
     <xi:include href="../JacoGen3/g_robo-gen3.xml" />
   </Group>
 
-  <!--  Pizza scenario -->
-  <Group prev="aruco_base" >
+  <!--  Table with grid -->
+  <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.7 0 0 0" >
+    <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
+  </Group>
+
+  <!--  Cocktails scenario -->
+  <Group prev="table" >
     <xi:include href="../cocktails/g_spezi_with_agent.xml"/>
   </Group>
 
+	<!-- The agent sitting in front of the robot. -->
   <Group prev="aruco_base" name="Sheekeemy-sun" color="ORANGE" transform="0.7 0 0.5 0 0 0" >
     <xi:include href="g_human_agent.xml"/>
   </Group>
+
+
+  <model_state model="kinova_home" time_stamp="0">
+      <joint_state joint="joint_1_right" position="0"/>
+      <joint_state joint="joint_2_right" position="15"/>
+      <joint_state joint="joint_3_right" position="180"/>
+      <joint_state joint="joint_4_right" position="230"/>
+      <joint_state joint="joint_5_right" position="1"/>
+      <joint_state joint="joint_6_right" position="55" />
+      <joint_state joint="joint_7_right" position="91"/>
+
+      <joint_state joint="joint_1_left" position="0"/>
+      <joint_state joint="joint_2_left" position="15"/>
+      <joint_state joint="joint_3_left" position="180"/>
+      <joint_state joint="joint_4_left" position="230"/>
+      <joint_state joint="joint_5_left" position="1"/>
+      <joint_state joint="joint_6_left" position="55" />
+      <joint_state joint="joint_7_left" position="91"/>
+  </model_state>
 
 
   <model_state model="default" time_stamp="0">
