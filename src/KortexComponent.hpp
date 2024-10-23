@@ -98,7 +98,7 @@ class KortexComponent : public ComponentBase
 {
 public:
   KortexComponent(EntityBase* parent, std::string suffix="_right")
-    : ComponentBase(parent), stop_flag(false)
+    : ComponentBase(parent)
   {
     jntNameIdPairs.push_back(JointNameIndexPair("joint_1"+suffix));
     jntNameIdPairs.push_back(JointNameIndexPair("joint_2"+suffix));
@@ -128,8 +128,13 @@ public:
 
   void onStart()
   {
-    stop_flag = false;
+    if (runLoop)
+    {
+      RLOG(0, "KortexComponent already started - doing nothing");
+      return;
+    }
 
+    runLoop = true;
     recv_thread = std::thread(&KortexComponent::recvThreadFunc, this);
     recv_thread.detach();   // Needed, otherwise crashes
 
@@ -170,7 +175,7 @@ public:
 
   void onStop()
   {
-    stop_flag = true;
+    runLoop = false;
 
     if (recv_thread.joinable())
     {
@@ -315,7 +320,7 @@ private:
 
     RLOG_CPP(0, "Entering while loop");
 
-    while (true)
+    while (runLoop)
     {
       // Check for motor commands (non-blocking)
       zmq::pollitem_t items[] = {{recv_socket, 0, ZMQ_POLLIN, 0}};
@@ -326,7 +331,10 @@ private:
       }
 
       // Send motor commands
-      send_motor_commands(send_socket);
+      if (enableCommands)
+      {
+        send_motor_commands(send_socket);
+      }
     }
 
     RLOG(0, "Quitting run thread");
@@ -405,8 +413,8 @@ private:
 
 
   std::thread recv_thread;
-  bool stop_flag;
   bool enableCommands = false;
+  bool runLoop = false;
   bool eStop = false;
   std::vector<JointNameIndexPair> jntNameIdPairs;
   std::vector<double> jointPosition, jointVelocity, jointTorque;
