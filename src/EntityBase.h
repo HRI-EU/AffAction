@@ -79,7 +79,7 @@ public:
   /*! \brief Sets the time step between two calls to process(). No checking is
    *         done.
    */
-  void setDt(double dt_);
+  void setDt(double dt);
 
   /*! \brief Returns the accumulated time. It is incremented by dt in each call
    *         to stepTime()
@@ -88,7 +88,7 @@ public:
 
   /*! \brief Sets the classes internal time to the given value.
    */
-  void setTime(double time_);
+  void setTime(double time);
 
   /*! \brief Increments the internal time by the internal dt.
    */

@@ -134,9 +134,9 @@ void EntityBase::onPrint()
 {
   RLOG_CPP(0, "Dynamic queue has size " << dynamicQueue.size()
            << " max. was " << maxQueueSize);
-  auto copyOfMap = getRegisteredEvents();
+  const auto& events = getRegisteredEvents();
   size_t count = 1;
-  for (auto& entry : copyOfMap)
+  for (const auto& entry : events)
   {
     std::string eventName = entry.first;
     RLOG_CPP(0, "Event " << count++ << ": " << eventName);

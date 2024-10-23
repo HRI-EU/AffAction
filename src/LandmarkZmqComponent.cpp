@@ -31,7 +31,6 @@
 
 *******************************************************************************/
 
-
 #include "LandmarkZmqComponent.h"
 #include "ArucoTracker.h"
 
