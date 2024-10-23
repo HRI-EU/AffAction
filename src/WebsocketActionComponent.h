@@ -40,9 +40,16 @@
 
 #if defined (_MSC_VER)
 #define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
+#pragma warning(push)
+#pragma warning(disable : 4267)
 #endif
+
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+
+#if defined (_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #include <thread>
 
