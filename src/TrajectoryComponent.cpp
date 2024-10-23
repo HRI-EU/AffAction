@@ -98,7 +98,7 @@ TrajectoryComponent::TrajectoryComponent(EntityBase* parent,
   subscribe("EmergencyStop", &TrajectoryComponent::onEmergencyStop);
   subscribe("EmergencyRecover", &TrajectoryComponent::onEmergencyRecover);
   subscribe<const RcsGraph*>("InitFromState", &TrajectoryComponent::onInitFromState);
-  subscribe<RcsGraph*>("ComputeTrajectory", &TrajectoryComponent::stepTrajectory);
+  subscribe("ComputeTrajectory", &TrajectoryComponent::stepTrajectory);
   subscribe("CheckAndSetTrajectory", &TrajectoryComponent::onCheckAndSetTrajectory);
   subscribe("SetTrajectory", &TrajectoryComponent::onSetTrajectory);
   subscribe("SimulateTrajectory", &TrajectoryComponent::onSimulateTrajectory);
@@ -117,10 +117,10 @@ TrajectoryComponent::~TrajectoryComponent()
   MatNd_destroy(this->x_des);
 }
 
-void TrajectoryComponent::stepTrajectory(RcsGraph* from)
+void TrajectoryComponent::stepTrajectory(double dt)
 {
   this->lastMotionEndTime = motionEndTime;
-  this->motionEndTime = tc->step(getEntity()->getDt());
+  this->motionEndTime = tc->step(dt);
 
   const double phase = (motionDuration>0.0) ? 1.0 - (motionEndTime / motionDuration) : 0.0;
   const double phaseScale = sin(M_PI * phase);

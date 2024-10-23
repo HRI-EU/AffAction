@@ -140,7 +140,7 @@ public:
 protected:
 
   EntityBase entity;
-  double trajTime;
+  double trajTime, trajTimeScaling;
   std::string sequenceCommand;
   std::string componentArgs;
   std::string physicsEngine;
@@ -183,11 +183,13 @@ protected:
   void onSetTurboMode(bool enable);
   void onClearTrajectory();
   void onSetPupilSpeedWeight(double weight);
+  void onPause();
+  void onResume();
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeTrajectory;
+  ES::SubscriberCollectionDecay<double>* computeTrajectory;
   ES::SubscriberCollectionDecay<const MatNd*, const MatNd*>* setTaskCommand;
   ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand;
   ES::SubscriberCollectionDecay<>* setRenderCommand;

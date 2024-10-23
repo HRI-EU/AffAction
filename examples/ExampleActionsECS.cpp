@@ -224,6 +224,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   }
 
   trajTime = 0.0;
+  trajTimeScaling = 1.0;
   ikType = IKComponent::IkSolverType::RMR;
   dt = 0.01;
   dt_max = 0.0;
@@ -393,11 +394,13 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
   entity.subscribe("ClearTrajectory", &ExampleActionsECS::onClearTrajectory, this);
   entity.subscribe("SetPupilSpeedWeight", &ExampleActionsECS::onSetPupilSpeedWeight, this);
+  entity.subscribe("PauseTrajectory", &ExampleActionsECS::onPause, this);
+  entity.subscribe("ResumeTrajectory", &ExampleActionsECS::onResume, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
   computeKinematics = entity.registerEvent<RcsGraph*>("ComputeKinematics");
-  computeTrajectory = entity.registerEvent<RcsGraph*>("ComputeTrajectory");
+  computeTrajectory = entity.registerEvent<double>("ComputeTrajectory");
   setTaskCommand = entity.registerEvent<const MatNd*, const MatNd*>("SetTaskCommand");
   setJointCommand = entity.registerEvent<const MatNd*>("SetJointCommand");
   setRenderCommand = entity.registerEvent<>("Render");
@@ -1068,7 +1071,7 @@ void ExampleActionsECS::step()
   updateGraph->call(getCurrentGraph());
   computeKinematics->call(getCurrentGraph());
   postUpdateGraph->call(ikc->getGraph(), getCurrentGraph());
-  computeTrajectory->call(ikc->getGraph());
+  computeTrajectory->call(trajTimeScaling*entity.getDt());
   setTaskCommand->call(trajC->getActivationPtr(), trajC->getTaskCommandPtr());
   setJointCommand->call(ikc->getJointCommandPtr());
   setRenderCommand->call();
@@ -1838,6 +1841,16 @@ void ExampleActionsECS::onClearTrajectory()
 void ExampleActionsECS::onSetPupilSpeedWeight(double weight)
 {
   ActionEyeGaze::setPupilSpeedWeight(getGraph(), weight);
+}
+
+void ExampleActionsECS::onPause()
+{
+  trajTimeScaling = 0.0;
+}
+
+void ExampleActionsECS::onResume()
+{
+  trajTimeScaling = 1.0;
 }
 
 bool ExampleActionsECS::isFinalPoseRunning() const

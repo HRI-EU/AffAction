@@ -110,7 +110,7 @@ public:
 
 private:
 
-  void stepTrajectory(RcsGraph* from);
+  void stepTrajectory(double dt);
   void onEmergencyStop();
   void onEmergencyRecover();
   void onInitFromState(const RcsGraph* target);
