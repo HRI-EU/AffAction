@@ -53,12 +53,6 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
                                                      bool dryRun,
                                                      std::string extraArgs=std::string());
 
-ComponentBase* createComponent(EntityBase& entity,
-                               const RcsGraph* graph,
-                               const ActionScene* scene,
-                               const std::string& componentName,
-                               std::string extraArgs = std::string());
-
 template<typename T>
 std::vector<T*> getComponents(const std::vector<ComponentBase*>& components)
 {

@@ -40,6 +40,7 @@
 #include "FaceGestureComponent.h"
 #include "PW70Component.h"
 #include "FaceTracker.h"
+#include "KortexComponent.hpp"
 #include "StringParserTools.hpp"
 
 #if defined USE_ROS
@@ -115,6 +116,105 @@ static void initROS(double rosDt)
 #endif
 }
 
+static ComponentBase* createLandmarkZmqComponent(EntityBase& entity,
+                                                 const RcsGraph* graph,
+                                                 const ActionScene* scene,
+                                                 std::string extraArgs)
+{
+  auto argsVec = Rcs::String_split(extraArgs, " ");
+  std::string connection = "tcp://localhost:5555";
+  std::string landmarksCamera = "camera_0";
+  getKeyValuePair<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
+  getKeyValuePair<std::string>(argsVec, "-landmarks_connection", connection);
+  RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
+  if (!cam)
+  {
+    RLOG_CPP(0, "Couldn't find camera body '" << landmarksCamera
+             << "' for LandmarkZmqComponent");
+    return nullptr;
+  }
+
+  RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+  LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity, connection);
+  lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
+
+  if (getKey(argsVec, "-face_tracking"))
+  {
+    std::string faceBdyName = "face";
+    getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
+    auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
+  }
+
+  if (getKey(argsVec, "-aruco_tracking"))
+  {
+    std::string arucoBaseBdyName = "aruco_base";
+    getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
+    lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
+  }
+
+  if (getKey(argsVec, "-skeleton_tracking"))
+  {
+    RLOG(0, "Enabling Azure skeleton tracker");
+    double r_agent = DBL_MAX;
+    getKeyValuePair<double>(argsVec, "-skeleton_radius", r_agent);
+
+    // Add skeleton tracker and ALL agents in the scene
+    int numAgents = lmc->addSkeletonTrackerForAgents(r_agent);
+    RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
+  }
+
+  // Initialize all tracker camera transforms from the xml file
+  lmc->setCameraTransform(&cam->A_BI);
+
+  return lmc;
+}
+
+static ComponentBase* createPW70Component(EntityBase& entity,
+                                          const RcsGraph* graph,
+                                          const ActionScene* scene,
+                                          const std::string& componentName,
+                                          std::string extraArgs)
+{
+  auto argsVec = Rcs::String_split(extraArgs, " ");
+  std::string panJointName, tiltJointName;
+  int controlFreq = 50;
+  getKeyValuePair(argsVec, "-pw70_pan_joint_name", panJointName);
+  getKeyValuePair(argsVec, "-pw70_tilt_joint_name", tiltJointName);
+  getKeyValuePair(argsVec, "-pw70_control_frequency", controlFreq);
+  const RcsJoint* panJnt = RcsGraph_getJointByName(graph, panJointName.c_str());
+  const RcsJoint* tiltJnt = RcsGraph_getJointByName(graph, tiltJointName.c_str());
+  const int panIdx = panJnt ? panJnt->jointIndex : -1;
+  const int tiltIdx = tiltJnt ? tiltJnt->jointIndex : -1;
+  RLOG_CPP(0, "Pan joint: " << panJointName << " index=" << panIdx);
+
+  if (componentName == "-pw70_pos")
+  {
+    auto c = new PW70Component(&entity, panIdx, tiltIdx);
+    bool success = c->init(controlFreq);
+    if (!success)
+    {
+      RLOG(0, "Couldn't create PW70Component - wrong controlFrequency: %d", controlFreq);
+      delete c;
+      c = nullptr;
+    }
+    return c;
+  }
+  else if (componentName == "-pw70_vel")
+  {
+    auto c = new PW70VelocityComponent(&entity, panIdx, tiltIdx);
+    bool success = c->init(controlFreq);
+    if (!success)
+    {
+      RLOG(0, "Couldn't create PW70VelocityComponent - wrong controlFrequency: %d", controlFreq);
+      delete c;
+      c = nullptr;
+    }
+    return c;
+  }
+
+  return nullptr;
+}
+
 std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
                                                      const RcsGraph* graph,
                                                      const ActionScene* scene,
@@ -129,15 +229,27 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
 
-  if (argP.hasArgument("-jacoShm7r", "Start with Jaco7 Shm right") && (!dryRun))
+#if !defined (_MSC_VER)
+  if (dryRun)
   {
-    components.push_back(createComponent(entity, graph, scene, "-jacoShm7r"));
+    argP.addDescription("-jacoShm7r", "Start with Jaco7 Shm right");
+    argP.addDescription("-jacoShm7l", "Start with Jaco7 Shm left");
   }
+  else
+  {
+    if (getKey(argvStrVec, "-jacoShm7r"))
+    {
+      ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_right);
+      components.push_back(c);
+    }
 
-  if (argP.hasArgument("-jacoShm7l", "Start with Jaco7 Shm left") && (!dryRun))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-jacoShm7l"));
+    if (getKey(argvStrVec, "-jacoShm7l"))
+    {
+      ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_left);
+      components.push_back(c);
+    }
   }
+#endif
 
   if (dryRun)
   {
@@ -145,25 +257,40 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     argP.addDescription("-pw70_pan_joint_name", "Name of PW70 pan joint (default: empty string)");
     argP.addDescription("-pw70_tilt_joint_name", "Name of PW70 pan joint (default: empty string)");
     argP.addDescription("-pw70_control_frequency", "PW70 PTU control frequency (Must be 1, 10, 25, 50 or 100. Default: 50)");
+    argP.addDescription("-pw70_vel", "Start with Scitos PTU in velocity mode");
   }
-  else if (getKey(argvStrVec, "-pw70_pos"))
+  else
   {
-    components.push_back(createComponent(entity, graph, scene, "-pw70_pos", argvString));
+    if (getKey(argvStrVec, "-pw70_pos"))
+    {
+      RCHECK_MSG(!getKey(argvStrVec, "-pw70_vel"), "Can't start PW70 component both in position and velocity mode");
+      components.push_back(createPW70Component(entity, graph, scene, "-pw70_pos", argvString));
+    }
+    else if (getKey(argvStrVec, "-pw70_vel"))
+    {
+      RCHECK_MSG(!getKey(argvStrVec, "-pw70_pos"), "Can't start PW70 component both in position and velocity mode");
+      components.push_back(createPW70Component(entity, graph, scene, "-pw70_vel", argvString));
+    }
   }
 
   if (dryRun)
   {
-    argP.addDescription("-pw70_vel", "Start with Scitos PTU in velocity mode");
+    argP.addDescription("-kortex", "Start with Kinova Kortex component");
   }
-  else if (getKey(argvStrVec, "-pw70_vel"))
+  else if (getKey(argvStrVec, "-kortex"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-pw70_vel", argvString));
+    components.push_back(new aff::KortexComponent(&entity));
   }
 
 #if defined USE_ROS
-  if (argP.hasArgument("-ptu", "Start with Scitos PTU") && (!dryRun))
+  if (dryRun)
   {
-    components.push_back(createComponent(entity, graph, scene, "-ptu"));
+    argP.addDescription("-ptu", "Connect with Scitos PTU action server");
+  }
+  else if (getKey(argvStrVec, "-ptu"))
+  {
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    components.push_back(new PtuActionComponent(&entity));
   }
 #endif
 
@@ -189,30 +316,35 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
 
-
-  if (argP.hasArgument("-tts", "Start with native text-to-speech") && (!dryRun))
+  if (dryRun)
   {
-    components.push_back(createComponent(entity, graph, scene, "-tts"));
+    argP.addDescription("-tts", "Start with native text-to-speech");
+    argP.addDescription("-piper_tts_alan", "Start with piper text-to-speech, Alan's voice");
+    argP.addDescription("-piper_tts_joe", "Start with piper text-to-speech, Joe's voice");
+    argP.addDescription("-piper_tts_kathleen", "Start with piper text-to-speech, Kathleen's voice");
+    argP.addDescription("-piper", "Start with piper text-to-speech, Kathleen's voice");
   }
-
-  if (argP.hasArgument("-piper_tts_alan", "Start with piper text-to-speech, Alan's voice") && (!dryRun))
+  else if (getKey(argvStrVec, "-tts"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-piper_tts_alan"));
+    components.push_back(new TTSComponent(&entity));
   }
-
-  if (argP.hasArgument("-piper_tts_joe", "Start with piper text-to-speech, Joe's voice") && (!dryRun))
+  else if (getKey(argvStrVec, "-piper_tts_alan"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-piper_tts_joe"));
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("alan");
+    components.push_back(tts);
   }
-
-  if (argP.hasArgument("-piper_tts_kathleen", "Start with piper text-to-speech, Kathleen's voice") && (!dryRun))
+  else if (getKey(argvStrVec, "-piper_tts_joe"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-piper_tts_kathleen"));
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("joe");
+    components.push_back(tts);
   }
-
-  if (argP.hasArgument("-piper", "Start with piper text-to-speech, Kathleen's voice") && (!dryRun))
+  else if (getKey(argvStrVec, "-piper_tts_kathleen") || getKey(argvStrVec, "-piper"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-piper_tts_kathleen"));
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("kathleen");
+    components.push_back(tts);
   }
 
   if (dryRun)
@@ -221,7 +353,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-websocket"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-websocket"));
+    components.push_back(new WebsocketActionComponent(&entity));
   }
 
   // The debug graphics will be handled in initGraphics.
@@ -234,10 +366,12 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
     argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
+    argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
+    argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-landmarks_zmq", argvString));
+    components.push_back(createLandmarkZmqComponent(entity, graph, scene, argvString));
   }
 
   if (dryRun)
@@ -247,7 +381,10 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-camera_view"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-camera_view", argvString));
+    std::string camBdyName = "face";
+    getKeyValuePair<std::string>(argvStrVec, "-camera_view_body", camBdyName);
+    RCHECK_MSG(RcsGraph_getBodyByName(graph, camBdyName.c_str()), "Camera attachment for parameter '-camera_view_body' %s not found", camBdyName.c_str());
+    components.push_back(new CameraViewComponent(&entity, camBdyName, false));
   }
 
   if (dryRun)
@@ -256,12 +393,24 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-physics"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-physics", argvString));
+    std::string physicsConfig;
+    std::string physicsEngine = "Bullet";
+    getKeyValuePair<std::string>(argvStrVec, "-physics", physicsEngine);
+    getKeyValuePair<std::string>(argvStrVec, "-physics_config", physicsConfig);
+    RLOG_CPP(5, "Creating physics with engine " << physicsEngine << " and config file '" << physicsConfig << "'");
+    RCHECK(graph);
+    components.push_back(new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig));
   }
 
-  if (argP.hasArgument("-face_gesture", "Add face gesture component") && (!dryRun))
+  if (dryRun)
   {
-    components.push_back(createComponent(entity, graph, scene, "-face_gesture", argvString));
+    argP.addDescription("-face_gesture", "Add face gesture component");
+  }
+  else if (getKey(argvStrVec, "-face_gesture"))
+  {
+    std::string faceBdyName = "face";
+    getKeyValuePair<std::string>(argvStrVec, "-face_bodyName", faceBdyName);
+    components.push_back(new aff::FaceGestureComponent(&entity, faceBdyName));
   }
 
 #if defined USE_ROS
@@ -269,10 +418,18 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   if (dryRun)
   {
     argP.hasArgument("-respeaker", "Start with Respeaker");
+    argP.hasArgument("-respeaker_listenWithRaisedHandOnly", "Dialogue only considered if agent has hand reised");
   }
   else if (getKey(argvStrVec, "-respeaker"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-respeaker"));
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    RCHECK(scene);
+    aff::ComponentBase* respeaker = new RespeakerComponent(&entity, scene);
+    if (getKey(argvStrVec, "-respeaker_listenWithRaisedHandOnly"))
+    {
+      respeaker->setParameter("PublishDialogueWithRaisedHandOnly", true);
+    }
+    components.push_back(respeaker);
   }
 
   if (dryRun)
@@ -281,7 +438,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-nuance_tts"))
   {
-    components.push_back(createComponent(entity, graph, scene, "-nuance_tts"));
+    initROS(HWC_DEFAULT_ROS_SPIN_DT);
+    components.push_back(new NuanceTTSComponent(&entity));
   }
 
   if (dryRun)
@@ -289,226 +447,6 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.hasArgument("-landmarks_ros", "Start with ROS landmarks component");
   }
   else if (getKey(argvStrVec, "-landmarks_ros"))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-landmarks_ros"));
-  }
-
-  if (dryRun)
-  {
-    argP.hasArgument("-holo", "Add HoloLens component");
-  }
-  else if (getKey(argvStrVec, "-holo"))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-holo", argvString));
-  }
-
-  if (dryRun)
-  {
-    argP.addDescription("-mirror_eyes", "Start with Mirror Eyes component");
-    argP.addDescription("-mirror_eyes_gaze_target_topic",
-                        "Name of the ROS subscriber topic for the gaze target name (default: %s)",
-                        aff::MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC);
-    argP.addDescription("-mirror_eyes_camera_topic",
-                        "Name of the ROS subscriber topic for the camera name (default: %s)",
-                        aff::MIRROR_EYES_DEFAULT_CAMERA_TOPIC);
-    argP.addDescription("-mirror_eyes_pupil_coords_topic",
-                        "Name of the ROS publisher topic (default: %s)",
-                        aff::MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC);
-  }
-  else if (getKey(argvStrVec, "-mirror_eyes"))
-  {
-    components.push_back(createComponent(entity, graph, scene, "-mirror_eyes", argvString));
-  }
-#endif
-
-
-
-  for (size_t i = 0; i < components.size(); ++i)
-  {
-    RCHECK_MSG(components[i], "Found NULL component at index %zu", i);
-  }
-
-  return components;
-}
-
-ComponentBase* createComponent(EntityBase& entity,
-                               const RcsGraph* graph,
-                               const ActionScene* scene,
-                               const std::string& componentName,
-                               std::string extraArgs)
-{
-  if (componentName == "-tts")
-  {
-    return new TTSComponent(&entity);
-  }
-  else if (componentName == "-piper_tts_alan")
-  {
-    auto tts = new TTSComponent(&entity, "piper");
-    tts->setPiperVoice("alan");
-    return tts;
-  }
-  else if (componentName == "-piper_tts_joe")
-  {
-    auto tts = new TTSComponent(&entity, "piper");
-    tts->setPiperVoice("joe");
-    return tts;
-  }
-  else if (componentName == "-piper_tts_kathleen")
-  {
-    auto tts = new TTSComponent(&entity, "piper");
-    tts->setPiperVoice("kathleen");
-    return tts;
-  }
-  else if (componentName == "-websocket")
-  {
-    return new WebsocketActionComponent(&entity);
-  }
-  else if (componentName == "-landmarks_zmq")
-  {
-    auto argsVec = Rcs::String_split(extraArgs, " ");
-    std::string connection = "tcp://localhost:5555";
-    std::string landmarksCamera = "camera_0";
-    getKeyValuePair<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
-    getKeyValuePair<std::string>(argsVec, "-landmarks_connection", connection);
-    RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
-    if (!cam)
-    {
-      RLOG_CPP(0, "Couldn't find camera body '" << landmarksCamera << "' for LandmarkZmqComponent");
-      return nullptr;
-    }
-
-    RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-    LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity, connection);
-    lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
-
-    if (getKey(argsVec, "-face_tracking"))
-    {
-      std::string faceBdyName = "face";
-      getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
-      auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
-    }
-
-    if (getKey(argsVec, "-aruco_tracking"))
-    {
-      std::string arucoBaseBdyName = "aruco_base";
-      getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
-      lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
-    }
-
-    if (getKey(argsVec, "-skeleton_tracking"))
-    {
-      RLOG(0, "Enabling Azure skeleton tracker");
-      size_t numSkeletons = 3;
-      double r_agent = DBL_MAX;
-      // argP.getArgument("-numSkeletons", &numSkeletons,
-      //                  "Max. number of skeletons to be tracked (default: %zu)", numSkeletons);
-      // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
-
-      // Add skeleton tracker and ALL agents in the scene
-      int numAgents = lmc->addSkeletonTrackerForAgents(r_agent);
-      RLOG(0, "Added skeleton tracker with %d agents", numAgents);
-
-      // if (ex.getViewer())
-      // {
-      //   ex.getViewer()->setKeyCallback('W', [&ex](char k)
-      //   {
-      //     RLOG(0, "Calibrate camera");
-      //     ex.getEntity().publish("EstimateCameraPose", 20);
-      //   }, "Calibrate camera");
-      // }
-
-      RLOG(0, "Done adding skeleton tracker");
-    }
-
-    // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
-
-    return lmc;
-  }
-  else if (componentName == "-camera_view")
-  {
-    auto argsVec = Rcs::String_split(extraArgs, " ");
-    std::string camBdyName = "face";
-    getKeyValuePair<std::string>(argsVec, "-camera_view_body", camBdyName);
-    RCHECK_MSG(RcsGraph_getBodyByName(graph, camBdyName.c_str()), "Camera attachment for parameter '-camera_view_body' %s not found", camBdyName.c_str());
-    return new CameraViewComponent(&entity, camBdyName, false);
-  }
-  else if (componentName == "-face_gesture")
-  {
-    auto argsVec = Rcs::String_split(extraArgs, " ");
-    std::string faceBdyName = "face";
-    getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
-    return new aff::FaceGestureComponent(&entity, faceBdyName);
-  }
-  else if (componentName == "-physics")
-  {
-    auto argsVec = Rcs::String_split(extraArgs, " ");
-    std::string physicsConfig;
-    std::string physicsEngine = "Bullet";
-    getKeyValuePair<std::string>(argsVec, "-physics", physicsEngine);
-    getKeyValuePair<std::string>(argsVec, "-physics_config", physicsConfig);
-    RLOG_CPP(5, "Creating physics with engine " << physicsEngine << " and config file '" << physicsConfig << "'");
-    RCHECK(graph);
-    return new PhysicsComponent(&entity, graph, physicsEngine, physicsConfig);
-  }
-  else if (componentName.substr(0, 6) == "-pw70_")
-  {
-    auto argsVec = Rcs::String_split(extraArgs, " ");
-    std::string panJointName, tiltJointName;
-    int controlFreq = 50;
-    getKeyValuePair(argsVec, "-pw70_pan_joint_name", panJointName);
-    getKeyValuePair(argsVec, "-pw70_tilt_joint_name", tiltJointName);
-    getKeyValuePair(argsVec, "-pw70_control_frequency", controlFreq);
-    const RcsJoint* panJnt = RcsGraph_getJointByName(graph, panJointName.c_str());
-    const RcsJoint* tiltJnt = RcsGraph_getJointByName(graph, tiltJointName.c_str());
-    const int panIdx = panJnt ? panJnt->jointIndex : -1;
-    const int tiltIdx = tiltJnt ? tiltJnt->jointIndex : -1;
-    RLOG_CPP(0, "Pan joint: " << panJointName << " index=" << panIdx);
-
-    if (componentName == "-pw70_pos")
-    {
-      auto c = new PW70Component(&entity, panIdx, tiltIdx);
-      bool success = c->init(controlFreq);
-      if (!success)
-      {
-        RLOG(0, "Couldn't create PW70Component - wrong controlFrequency: %d", controlFreq);
-        delete c;
-        c = nullptr;
-      }
-      return c;
-    }
-    else if (componentName == "-pw70_vel")
-    {
-      auto c = new PW70VelocityComponent(&entity, panIdx, tiltIdx);
-      bool success = c->init(controlFreq);
-      if (!success)
-      {
-        RLOG(0, "Couldn't create PW70VelocityComponent - wrong controlFrequency: %d", controlFreq);
-        delete c;
-        c = nullptr;
-      }
-      return c;
-    }
-  }
-
-#if defined USE_ROS
-  else if (componentName == "-ptu")
-  {
-    initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    return new PtuActionComponent(&entity);
-  }
-  else if (componentName == "-respeaker")
-  {
-    initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    RCHECK(scene);
-    return new RespeakerComponent(&entity, scene);
-  }
-  else if (componentName == "-nuance_tts")
-  {
-    initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    return new NuanceTTSComponent(&entity);
-  }
-  else if (componentName == "-landmarks_ros")
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
     LandmarkROSComponent* lmc = new LandmarkROSComponent(&entity);
@@ -526,41 +464,53 @@ ComponentBase* createComponent(EntityBase& entity,
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
 
-    return lmc;
+    components.push_back(lmc);
   }
-  else if (componentName == "-holo")
+
+  if (dryRun)
+  {
+    argP.hasArgument("-holo", "Add HoloLens component");
+  }
+  else if (getKey(argvStrVec, "-holo"))
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    return new HololensConnection(&entity, true);
+    components.push_back(new HololensConnection(&entity, true));
   }
-  else if (componentName == "-mirror_eyes")
+
+  if (dryRun)
+  {
+    argP.addDescription("-mirror_eyes", "Start with Mirror Eyes component");
+    argP.addDescription("-mirror_eyes_gaze_target_topic",
+                        "Name of the ROS subscriber topic for the gaze target name (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC);
+    argP.addDescription("-mirror_eyes_camera_topic",
+                        "Name of the ROS subscriber topic for the camera name (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_CAMERA_TOPIC);
+    argP.addDescription("-mirror_eyes_pupil_coords_topic",
+                        "Name of the ROS publisher topic (default: %s)",
+                        aff::MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC);
+  }
+  else if (getKey(argvStrVec, "-mirror_eyes"))
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    auto argsVec = Rcs::String_split(extraArgs, " ");
     std::string pubTopic = MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC;
     std::string gazeTopic = MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC;
     std::string camTopic = MIRROR_EYES_DEFAULT_CAMERA_TOPIC;
-    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_gaze_target_topic", gazeTopic);
-    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_camera_topic", camTopic);
-    getKeyValuePair<std::string>(argsVec, "-mirror_eyes_pupil_coords_topic", pubTopic);
-    return new MirrorEyeComponent(&entity, scene, pubTopic, gazeTopic, camTopic);
+    getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_gaze_target_topic", gazeTopic);
+    getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_camera_topic", camTopic);
+    getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_pupil_coords_topic", pubTopic);
+    components.push_back(new MirrorEyeComponent(&entity, scene, pubTopic, gazeTopic, camTopic));
   }
-#endif   // USE_ROS
+#endif
 
-#if !defined (_MSC_VER)
-  else if (componentName == "-jacoShm7r")
-  {
-    RCHECK(graph);
-    return RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_right);
-  }
-  else if (componentName == "-jacoShm7l")
-  {
-    RCHECK(graph);
-    return RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_left);
-  }
-#endif   // _MSC_VER
 
-  return nullptr;
+
+  for (size_t i = 0; i < components.size(); ++i)
+  {
+    RCHECK_MSG(components[i], "Found NULL component at index %zu", i);
+  }
+
+  return components;
 }
 
 }   // namespace

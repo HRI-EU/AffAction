@@ -73,40 +73,6 @@ RCS_INSTALL_ERRORHANDLERS
 
 
 //////////////////////////////////////////////////////////////////////////////
-// Fully threaded tree prediction and execution function.
-//////////////////////////////////////////////////////////////////////////////
-void _planActionSequenceThreaded(aff::ExampleActionsECS& ex,
-                                 std::string sequenceCommand,
-                                 size_t maxNumThreads)
-{
-  std::string errMsg;
-  std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-  auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                            seq, ex.getEntity().getDt(), maxNumThreads);
-  auto res = tree->findSolutionPathAsStrings();
-
-  if (res.empty())
-  {
-    RLOG_CPP(0, "Could not find solution");
-    ex.setProcessingAction(false);
-    ex.clearCompletedActionStack();
-    return;
-  }
-
-  RLOG_CPP(0, "Sequence has " << res.size() << " steps");
-
-  std::string newCmd;
-  for (size_t i = 0; i < res.size(); ++i)
-  {
-    newCmd += res[i];
-    newCmd += ";";
-  }
-
-  RLOG_CPP(0, "Command : " << newCmd);
-  ex.getEntity().publish("ActionSequence", newCmd);
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // Simple helper class that blocks the execution in the wait() function
 // until the ActionResult event has been received.
 //////////////////////////////////////////////////////////////////////////////
@@ -130,8 +96,6 @@ public:
 
   aff::ExampleActionsECS* sim;
 };
-
-
 
 
 
@@ -223,17 +187,6 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return success;
   }, "Initializes algorithm, guis and graphics")
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Update one LlmSim instance from anotuer one
-  //////////////////////////////////////////////////////////////////////////////
-  .def("sync", [](aff::ExampleActionsECS& ex, py::object obj)
-  {
-    aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
-    RcsGraph_copy(ex.getGraph(), sim->getGraph());
-    ex.getScene()->agents = sim->getScene()->agents;
-    ex.step();
-  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if the agent can see all objects or a json in the form:
@@ -337,11 +290,6 @@ PYBIND11_MODULE(pyAffaction, m)
     return false;
   }, "Check if agent can reach to the given position")
 
-  .def("initHardwareComponents", [](aff::ExampleActionsECS& ex)
-  {
-    ex.getEntity().initialize(ex.getCurrentGraph());
-  }, "Initializes hardware components")
-
   //////////////////////////////////////////////////////////////////////////////
   // Calls the run method in a new thread, releases the GIL and returns to the
   // python context (e.g. console).
@@ -356,6 +304,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.getEntity().publish(eventName);
   })
+
   //////////////////////////////////////////////////////////////////////////////
   // -1: grow down, 0: symmetric, 1: grow up
   // Returns number of changed shapes
@@ -433,12 +382,10 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     return ex.initGuis();
   })
-
   .def("hideGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
     return ex.eraseViewer();
   })
-
   .def("get_state", [](aff::ExampleActionsECS& ex) -> std::string
   {
     return ex.getQuery()->getSceneState().dump();
@@ -538,7 +485,6 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // Execute the action command, and return immediately.
   //////////////////////////////////////////////////////////////////////////////
-  //.def("execute", &aff::ExampleActionsECS::onActionSequence)
   .def("execute", [](aff::ExampleActionsECS& ex, std::string actionCommand)
   {
     ex.getEntity().publish("ActionSequence", actionCommand);
@@ -574,66 +520,6 @@ PYBIND11_MODULE(pyAffaction, m)
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
                                               seq, ex.getEntity().getDt());
     return tree ? tree->findSolutionPathAsStrings() : std::vector<std::string>();
-    //return ex.getQuery()->planActionSequence(seq, seq.size());
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree
-  // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
-  //////////////////////////////////////////////////////////////////////////////
-  .def("planActionSequenceThreaded", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
-  {
-    ex.setProcessingAction(true);
-    const size_t maxNumthreads = 0;   // 0 means auto-select
-    std::thread t1(_planActionSequenceThreaded, std::ref(ex), sequenceCommand, maxNumthreads);
-    t1.detach();
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree
-  // Call it like: agent.sim.planActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
-  //////////////////////////////////////////////////////////////////////////////
-  .def("planActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool blocking) -> bool
-  {
-    std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    std::string errMsg;
-
-    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.getEntity().getDt());
-    auto res = tree->findSolutionPathAsStrings();
-
-    if (res.empty())
-    {
-      RLOG_CPP(0, "Could not find solution");
-      return false;
-    }
-
-    RLOG_CPP(0, "Sequence has " << res.size() << " steps");
-
-    std::string newCmd;
-    for (size_t i = 0; i < res.size(); ++i)
-    {
-      newCmd += res[i];
-      newCmd += ";";
-    }
-
-    RLOG_CPP(0, "Command : " << newCmd);
-
-    PollBlockerComponent blocker(&ex);
-    ex.getEntity().publish("ActionSequence", newCmd);
-
-    bool success = true;
-
-    if (blocking)
-    {
-      blocker.wait();
-      success = ex.lastActionResult[0].success();
-      RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
-    }
-
-    RLOG_CPP(0, "Finished: " << newCmd);
-
-    return success;
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -824,33 +710,6 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to listen to the Respeaker ROS nose, and to acquire the
-  // sound directions, ASR etc.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addRespeaker", [](aff::ExampleActionsECS& ex,
-                          bool listenWitHandRaisedOnly,
-                          bool gazeAtSpeaker,
-                          bool speakOut) -> bool
-  {
-    if (!ex.getScene())
-    {
-      RLOG(0, "Initialize ExampleActionsECS before adding Respeaker - skipping");
-      return false;
-    }
-
-    aff::ComponentBase* respeaker = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-respeaker");
-    if (respeaker)
-    {
-      respeaker->setParameter("PublishDialogueWithRaisedHandOnly", listenWitHandRaisedOnly);
-      ex.addComponent(respeaker);
-      return true;
-    }
-
-    RLOG(1, "Can't instantiate respeaker");
-    return false;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
   // Sets or clears the talk flag. This only has an effect if the Respeaker
   // component has been added, and the ASR module is running.
   //////////////////////////////////////////////////////////////////////////////
@@ -861,159 +720,10 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to listen to the landmarks publishers through ROS, which
-  // is for instance the Azure Kinect, and later also the Mediapipe components
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkROS", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-landmarks_ros");
-    if (c)
-    {
-      ex.addComponent(c);
-      aff::LandmarkBase* lmc = dynamic_cast<aff::LandmarkBase*>(c);
-      RCHECK(lmc);
-      lmc->enableDebugGraphics(ex.getViewer());
-      return true;
-    }
-
-    return true;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to listen to the landmarks publishers through ROS, which
-  // is for instance the Azure Kinect, and later also the Mediapipe components
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
-
-    RLOG(0, "Adding trackers");
-    std::string connection="tcp://localhost:5555";
-    double r_agent = DBL_MAX;
-    // argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
-
-    auto lmc = new aff::LandmarkZmqComponent(&ex.getEntity(), connection);
-    ex.addComponent(lmc);   // Takes care of deletion
-    lmc->setScenePtr(ex.getGraph(), ex.getScene());
-
-    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), "camera");
-    RCHECK(cam);
-    lmc->addArucoTracker(cam->name, "aruco_base");
-
-    // Add skeleton tracker and ALL agents in the scene
-    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    lmc->enableDebugGraphics(ex.getViewer());
-    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
-
-    // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
-    RLOG(0, "Done adding trackers");
-
-    return true;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to connect to the PTU action server ROS node, and to being
-  // able to send pan / tilt commands to the PTU
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addPTU", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    RCHECK_MSG(ex.getScene(), "Initialize ExampleActionsECS before adding PTU");
-    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-ptu");
-    if (c)
-    {
-      ex.addHardwareComponent(c);
-      return true;
-    }
-
-    return false;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
   // Sets the path for finding the piper TTS executables, libraries and voices
   //////////////////////////////////////////////////////////////////////////////
   .def_static("setPiperPath", &aff::TTSComponent::setPiperPath)
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to connect to enable the text-to-speech functionality.
-  // Currently, 2 modes are supported: the Nuance TTS which requires the
-  // corresponding ROS node to run, and a native Unix espeak TTS.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addTTS", [](aff::ExampleActionsECS& ex, std::string type) -> bool
-  {
-    if (type == "nuance")
-    {
-      auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-nuance_tts");
-      ex.addComponent(c);
-      return c ? true : false;
-    }
-    else if (type == "native")
-    {
-      auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-tts");
-      ex.addComponent(c);
-      return c ? true : false;
-    }
-    else if (type == "piper" || type=="piper_kathleen")
-    {
-      auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-piper_tts_kathleen");
-      ex.addComponent(c);
-      return c ? true : false;
-    }
-    else if (type == "piper_alan")
-    {
-      auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-piper_tts_alan");
-      ex.addComponent(c);
-      return c ? true : false;
-    }
-    else if (type == "piper_joe")
-    {
-      auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                               ex.getScene(), "-piper_tts_joe");
-      ex.addComponent(c);
-      return c ? true : false;
-    }
-
-    return false;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to connect to a websocket client. The component receives
-  // action commands, and sends back the state.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addWebsocket", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    auto c = createComponent(ex.getEntity(), ex.getGraph(),
-                             ex.getScene(), "-websocket");
-    ex.addComponent(c);
-    return c ? true : false;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to connect to the left Jaco7 Gen2 arm
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoLeft", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    auto c = aff::createComponent(ex.getEntity(), ex.getGraph(),
-                                  ex.getScene(), "-jacoShm7l");
-    ex.addHardwareComponent(c);
-    return c ? true : false;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Adds a component to connect to the right Jaco7 Gen2 arm
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addJacoRight", [](aff::ExampleActionsECS& ex) -> bool
-  {
-    auto c = aff::createComponent(ex.getEntity(), ex.getGraph(),
-                                  ex.getScene(), "-jacoShm7r");
-    ex.addHardwareComponent(c);
-    return c ? true : false;
-  })
   .def("getCompletedActionStack", &aff::ExampleActionsECS::getCompletedActionStack)
   .def("isFinalPoseRunning", &aff::ExampleActionsECS::isFinalPoseRunning)
   .def("isProcessingAction", &aff::ExampleActionsECS::isProcessingAction)
@@ -1044,6 +754,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.getEntity().publish("SetPupilSpeedWeight", value);
   })
+
   //////////////////////////////////////////////////////////////////////////////
   // Pupil point in screen coordinates: z points outwards, x points left, y
   // points down. Origin is screen center. TODO: Make threadsafe
@@ -1063,6 +774,137 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return std::make_pair(xy_right, xy_left);
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Pausing and interrupting trajectories
+  //////////////////////////////////////////////////////////////////////////////
+  .def("clearTrajectory", [](aff::ExampleActionsECS& ex)
+  {
+    ex.getEntity().publish("ClearTrajectory");
+  })
+  .def("pauseTrajectory", [](aff::ExampleActionsECS& ex)
+  {
+    ex.getEntity().publish("PauseTrajectory");
+  })
+  .def("resumeTrajectory", [](aff::ExampleActionsECS& ex)
+  {
+    ex.getEntity().publish("ResumeTrajectory");
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Components to be added. The methods must be called before init.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("addWebsocket", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to connect to a websocket client. The component receives
+    // action commands, and sends back the state.
+    ex.addComponentArgument("-websocket");
+  })
+  .def("addJacoLeft", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to connect to the left Jaco7 Gen2 arm
+    ex.addComponentArgument("-jacoShm7l");
+  })
+  .def("addJacoRight", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to connect to the right Jaco7 Gen2 arm
+    ex.addComponentArgument("-jacoShm7r");
+  })
+  .def("addRespeaker", [](aff::ExampleActionsECS& ex, bool listenWitHandRaisedOnly)
+  {
+    // Adds a component to listen to the Respeaker ROS nose, and to acquire the
+    // sound directions, ASR etc.
+    ex.addComponentArgument("-respeaker");
+    if (listenWitHandRaisedOnly)
+    {
+      ex.addComponentArgument("-respeaker_listenWithRaisedHandOnly");
+    }
+  })
+  .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex,
+                            const std::string& connection,
+                            const std::string& camera_name,
+                            bool withFaceTracking,
+                            const std::string& face_name,
+                            bool withArucoTracking,
+                            const std::string& base_marker,
+                            bool withSkeletonTracking,
+                            double skeleton_radius)
+  {
+    ex.addComponentArgument("-landmarks_zmq");
+    ex.addComponentArgument("-landmarks_connection" + connection);
+    ex.addComponentArgument("-landmarks_camera" + camera_name);
+
+    if (withFaceTracking)
+    {
+      ex.addComponentArgument("-face_tracking");
+      ex.addComponentArgument("-face_bodyName" + face_name);
+    }
+
+    if (withArucoTracking)
+    {
+      ex.addComponentArgument("-aruco_tracking");
+      ex.addComponentArgument("-aruco_base" + base_marker);
+    }
+
+    if (withSkeletonTracking)
+    {
+      ex.addComponentArgument("-skeleton_tracking");
+      ex.addComponentArgument("-skeleton_radius" + std::to_string(skeleton_radius));
+    }
+  },
+  py::arg("connection") = "tcp://localhost:5555",
+  py::arg("camera_name") = "camera_0",
+  py::arg("withFaceTracking") = false,
+  py::arg("face_name") = "face",
+  py::arg("withArucoTracking") = false,
+  py::arg("base_marker") = "aruco_base",
+  py::arg("withSkeletonTracking") = false,
+  py::arg("skeleton_radius") = DBL_MAX
+      )
+  .def("addPTU", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to connect to the PTU action server ROS node, and to being
+    // able to send pan / tilt commands to the PTU
+    ex.addComponentArgument("-ptu");
+  })
+  .def("addLandmarkROS", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to listen to the landmarks publishers through ROS, which
+    // is for instance the Azure Kinect, and later also the Mediapipe components
+    ex.addComponentArgument("-respeaker");
+  })
+  .def("addTTS", [](aff::ExampleActionsECS& ex, std::string type, std::string voice)
+  {
+    // Adds a component to connect to enable the text-to-speech functionality.
+    // Currently, 2 modes are supported: the Nuance TTS which requires the
+    // corresponding ROS node to run, and a native Unix espeak TTS.
+    if (type == "nuance")
+    {
+      ex.addComponentArgument("-nuance_tts");
+    }
+    else if (type == "native")
+    {
+      ex.addComponentArgument("-tts");
+    }
+    else if (type == "piper")
+    {
+      if (voice == "alan")
+      {
+        ex.addComponentArgument("-piper_tts_alan");
+      }
+      else if (voice == "joe")
+      {
+        ex.addComponentArgument("-piper_tts_joe");
+      }
+      else
+      {
+        ex.addComponentArgument("-piper_tts_kathleen");
+      }
+
+    }
+  },
+  py::arg("type") = "piper",
+  py::arg("voice") = "kathleen")
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
