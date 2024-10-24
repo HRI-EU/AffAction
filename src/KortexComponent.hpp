@@ -97,7 +97,7 @@ public:
 class KortexComponent : public ComponentBase
 {
 public:
-  KortexComponent(EntityBase* parent, std::string suffix="_right")
+  KortexComponent(EntityBase* parent, std::string suffix="")
     : ComponentBase(parent)
   {
     jntNameIdPairs.push_back(JointNameIndexPair("joint_1"+suffix));

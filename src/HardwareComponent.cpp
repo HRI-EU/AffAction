@@ -275,11 +275,25 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
 
   if (dryRun)
   {
-    argP.addDescription("-kortex", "Start with Kinova Kortex component");
+    argP.addDescription("-jacoGen3Zmq_left", "Start with Kinova Kortex component");
+    argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component");
   }
-  else if (getKey(argvStrVec, "-kortex"))
+  else
   {
-    components.push_back(new aff::KortexComponent(&entity));
+    if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
+    {
+      components.push_back(new aff::KortexComponent(&entity, "left"));
+    }
+
+    if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
+    {
+      components.push_back(new aff::KortexComponent(&entity, "right"));
+    }
+
+    if (getKey(argvStrVec, "-jacoGen3Zmq"))
+    {
+      components.push_back(new aff::KortexComponent(&entity));
+    }
   }
 
 #if defined USE_ROS
