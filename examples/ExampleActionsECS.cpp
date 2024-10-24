@@ -2206,7 +2206,10 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
+    speedUp = 1;
+    eyeIkEnabled = true;
     componentArgs = "-mirror_eyes -mirror_eyes_gaze_target_topic /mirror_eyes/gaze_target -mirror_eyes_camera_topic /mirror_eyes/camera -mirror_eyes_pupil_coords_topic /mirror_eyes/pupil_coordinates";
+    componentArgs += " -pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }
 

@@ -355,8 +355,15 @@ void PW70VelocityComponent::onStart()
   }
 
   // Create an instance of PW70CANInterface with the callbacks
-  this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdateVel, this, controlFrequency);
-  this->pw70->reset_stop();
+  try
+  {
+    this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdateVel, this, controlFrequency);
+    this->pw70->reset_stop();
+  }
+  catch (...)
+  {
+    RLOG_CPP(0, "Failed to create PW70 CAN interface");
+  }
 
   // Wait a moment to allow the interface to initialize
   std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -463,6 +470,12 @@ void PW70VelocityComponent::velocityControlStep(double desired_pan_position, dou
 
 void PW70VelocityComponent::sinusoidalvelocityStep()
 {
+  if (!pw70)
+  {
+    RLOG(0, "pw70 not initialized - quitting control thread");
+    return;
+  }
+
   // Parameters for the sinusoidal trajectory
   const double amplitude = RCS_DEG2RAD(30.0);  // Degrees (peak amplitude of the sine wave)
   const double frequency = 0.1 * 4.0;   // Hz (frequency of the sine wave)

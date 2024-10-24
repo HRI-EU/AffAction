@@ -89,6 +89,7 @@ private:
 #endif // PW70CANINTERFACELINUX_H
 
 
+#include <Rcs_macros.h>
 
 #include <iostream>
 #include <cstring>
@@ -117,16 +118,16 @@ PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> li
   // Open CAN socket
   if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
   {
-    perror("Error while opening socket");
-    exit(EXIT_FAILURE);
+    RLOG(0, "Error while opening socket: %s (%d)", strerror(errno), errno);
+    throw std::runtime_error("Error while opening socket");
   }
 
   struct ifreq ifr;
   std::strcpy(ifr.ifr_name, "can0");
   if (ioctl(s, SIOCGIFINDEX, &ifr) < 0)
   {
-    perror("Error in ioctl");
-    exit(EXIT_FAILURE);
+    RLOG(0, "Error in ioctl: %s (%d)", strerror(errno), errno);
+    throw std::runtime_error("Error in ioctl");
   }
 
   struct sockaddr_can addr;
@@ -136,8 +137,8 @@ PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> li
   // Bind the socket
   if (bind(s, (struct sockaddr*)&addr, sizeof(addr)) < 0)
   {
-    perror("Error in socket bind");
-    exit(EXIT_FAILURE);
+    RLOG(0, "Error in socket bind: %s (%d)", strerror(errno), errno);
+    throw std::runtime_error("Error in socket bind");
   }
 
   // Start the receive thread

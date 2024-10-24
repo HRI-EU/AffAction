@@ -49,7 +49,7 @@ MirrorEyeComponent::MirrorEyeComponent(EntityBase* parent, const ActionScene* sc
                                        std::string pubTopic,
                                        std::string gazeAtTopic,
                                        std::string camTopic) :
-  ComponentBase(parent), scenePtr(scene), loopCount(0),
+  ComponentBase(parent), scenePtr(scene), loopCount(0), receivedNewGazeTarget(false),
   pupilCoordsPublisherTopic(pubTopic), gazeTargetSubscriberTopic(gazeAtTopic), cameraSubscriberTopic(camTopic)
 {
   subscribe("Start", &MirrorEyeComponent::onStart);
@@ -101,8 +101,11 @@ void MirrorEyeComponent::onStop()
 #if defined (USE_ROS)
 void MirrorEyeComponent::gazeTargetNameRosCallback(const std_msgs::String::ConstPtr& object)
 {
+  RLOG_CPP(0, "Received gaze target: '" << object->data << "'");
+
   std::lock_guard<std::mutex> lock(rosLock);
   currentGazeTarget = object->data;
+  receivedNewGazeTarget = true;
 }
 
 void MirrorEyeComponent::cameraNameRosCallback(const std_msgs::String::ConstPtr& camera)
@@ -162,9 +165,19 @@ void MirrorEyeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   std::string gazedAtObject, gazingCam;
   {
     std::lock_guard<std::mutex> lock(rosLock);
-    gazedAtObject = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, desired, this->currentGazeTarget);
-    //gazedAtObject = this->currentGazeTarget;
+
+    if (receivedNewGazeTarget)
+    {
+      std::string receivedBdy = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, desired, this->currentGazeTarget);
+      getEntity()->publish("SetGazeTarget", receivedBdy);
+      receivedNewGazeTarget = false;
+      RLOG(1, "Publishing new gaze target");
+    }
+
+    gazedAtObject = this->currentGazeTarget;
     gazingCam = this->currentCamera;
+
+    // publish
   }
 
   if (scenePtr && (!gazedAtObject.empty()) && (!gazingCam.empty()))
@@ -174,7 +187,7 @@ void MirrorEyeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   }
 
   std::string gazeString = gazeJson.dump();
-  RLOG_CPP(0, "Gaze JSON: '" << gazeString << "'");
+  RLOG_CPP(4, "Gaze JSON: '" << gazeString << "'");
 
 #if defined (USE_ROS)
   std_msgs::String gazeMsg;

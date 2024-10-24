@@ -99,6 +99,7 @@ private:
   const ActionScene* scenePtr;
   size_t loopCount;
   std::string currentGazeTarget, currentCamera;
+  bool receivedNewGazeTarget;
   std::string pupilCoordsPublisherTopic, gazeTargetSubscriberTopic, cameraSubscriberTopic;
   std::mutex rosLock;
 
