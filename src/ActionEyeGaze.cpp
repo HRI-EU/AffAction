@@ -32,6 +32,7 @@
 
 #include "ActionEyeGaze.h"
 #include "ActionFactory.h"
+
 #include <ActivationSet.h>
 #include <VectorConstraint.h>
 #include <PositionConstraint.h>
@@ -61,7 +62,7 @@ static const std::string gazePoint      = "GazePoint";
 ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                              const RcsGraph* graph,
                              std::vector<std::string> params) :
-  isGazeTargetInHand(false), keepTasksActiveAfterEnd(true)
+  keepTasksActiveAfterEnd(true)
 {
   parseParams(params);
 
@@ -82,49 +83,11 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__) + ")");
   }
 
-  std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(params[0]);
-
-  if (!ntts.empty())
-  {
-    if (ntts.size()!=1)
-    {
-      RLOG_CPP(1, "Found several object with the name " << params[0]);
-    }
-
-    gazeTargetInstance = ntts[0]->bdyName;
-    gazeTarget = ntts[0]->name;
-  }
-
-  if (gazeTarget.empty())
-  {
-    const Agent* agent = scene.getAgent(params[0]);
-
-    // From here on, we have a valid agent. We look at its head
-    if (agent)
-    {
-      auto m = agent->getManipulatorsOfType(&scene, "head");
-      if (!m.empty())
-      {
-        gazeTargetInstance = m[0]->bdyName;
-        gazeTarget = m[0]->name;
-      }
-    }
-
-  }
-
-  // Check if gaze target is a native RcsBody name
-  if (gazeTarget.empty())
-  {
-    const RcsBody* gazeBdy = RcsGraph_getBodyByName(graph, params[0].c_str());
-    if (gazeBdy)
-    {
-      gazeTargetInstance = params[0];
-      gazeTarget = params[0];
-    }
-  }
+  // Rcs body name of object to gazed at. For agents, we resolve it to be the head.
+  gazeTargetBody = resolveGazeTargetBodyName(scene, graph, params[0]);
 
   // Give up: gazeTarget is no entity, no agent, no RcsBody.
-  if (gazeTarget.empty())
+  if (gazeTargetBody.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
                           "Can't gaze at " + params[0] + ". It is neither an entity nor an agent nor a body",
@@ -132,7 +95,7 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-
+  RLOG_CPP(0, "Gaze target is " << gazeTargetBody);
 
 
 
@@ -185,15 +148,9 @@ ActionEyeGaze::ActionEyeGaze(const ActionScene& scene,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  // Determine if object to be looked at has been grasped
-  if (!ntts.empty())
-  {
-    isGazeTargetInHand = scene.getGraspingHand(graph, ntts[0]) ? true : false;
-  }
-
 
   // Task naming
-  this->taskGaze = "Gaze-" + cameraFrame + "-" + gazeTargetInstance;
+  this->taskGaze = "Gaze-" + cameraFrame + "-" + gazeTargetBody;
 }
 
 ActionEyeGaze::~ActionEyeGaze()
@@ -211,6 +168,35 @@ ActionEyeGaze::~ActionEyeGaze()
 
 */
 std::vector<std::string> ActionEyeGaze::createTasksXML() const
+{
+  std::vector<std::string> tasks = createEyeTasksXML();
+  std::string xmlTask;
+
+  // xmlTask = "<Task name=\"EyeL C1\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
+  // tasks.push_back(xmlTask);
+
+  // xmlTask = "<Task name=\"EyeL C2\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
+  // tasks.push_back(xmlTask);
+
+  // xmlTask = "<Task name=\"GazeL\"  effector=\"" + gazePoint + "\" refBdy=\"" + leftGazePoint + "\" controlVariable=\"XYZ\" />";
+  // tasks.push_back(xmlTask);
+
+  // xmlTask = "<Task name=\"EyeR C1\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
+  // tasks.push_back(xmlTask);
+
+  // xmlTask = "<Task name=\"EyeR C2\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
+  // tasks.push_back(xmlTask);
+
+  // xmlTask = "<Task name=\"GazeR\" effector=\"" + gazePoint + "\" refBdy=\"" + rightGazePoint + "\" controlVariable=\"XYZ\" />";
+  // tasks.push_back(xmlTask);
+
+  xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetBody + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
+  tasks.push_back(xmlTask);
+
+  return tasks;
+}
+
+std::vector<std::string> ActionEyeGaze::createEyeTasksXML()
 {
   std::vector<std::string> tasks;
   std::string xmlTask;
@@ -233,8 +219,8 @@ std::vector<std::string> ActionEyeGaze::createTasksXML() const
   xmlTask = "<Task name=\"GazeR\" effector=\"" + gazePoint + "\" refBdy=\"" + rightGazePoint + "\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
 
-  xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetInstance + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
-  tasks.push_back(xmlTask);
+  // xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetBody + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
+  // tasks.push_back(xmlTask);
 
   return tasks;
 }
@@ -281,11 +267,6 @@ std::vector<std::string> ActionEyeGaze::getManipulators() const
   return usedManipulators;
 }
 
-std::string ActionEyeGaze::getGazeTarget() const
-{
-  return gazeTarget;
-}
-
 std::unique_ptr<ActionBase> ActionEyeGaze::clone() const
 {
   return std::make_unique<ActionEyeGaze>(*this);
@@ -298,7 +279,7 @@ double ActionEyeGaze::getDefaultDuration() const
 
 std::string ActionEyeGaze::getActionCommand() const
 {
-  std::string actionCommand = "eye_gaze " + gazeTargetInstance;
+  std::string actionCommand = "eye_gaze " + gazeTargetBody;
 
   if (getDuration() != getDefaultDuration())
   {
@@ -336,6 +317,53 @@ bool ActionEyeGaze::setPupilSpeedWeight(RcsGraph* graph, double weight)
   tilt->weightMetric = 1.0-weight;
 
   return true;
+}
+
+std::string ActionEyeGaze::resolveGazeTargetBodyName(const ActionScene& scene,
+                                                     const RcsGraph* graph,
+                                                     const std::string& nttName)
+{
+  std::string gazeTargetBody;
+
+  std::vector<const AffordanceEntity*> ntts = scene.getAffordanceEntities(nttName);
+
+  if (!ntts.empty())
+  {
+    if (ntts.size()!=1)
+    {
+      RLOG_CPP(1, "Found several object with the name " << nttName);
+    }
+
+    gazeTargetBody = ntts[0]->bdyName;
+  }
+
+  if (gazeTargetBody.empty())
+  {
+    const Agent* agent = scene.getAgent(nttName);
+
+    // From here on, we have a valid agent. We look at its head
+    if (agent)
+    {
+      auto m = agent->getManipulatorsOfType(&scene, "head");
+      if (!m.empty())
+      {
+        gazeTargetBody = m[0]->bdyName;
+      }
+    }
+
+  }
+
+  // Check if gaze target is a native RcsBody name
+  if (gazeTargetBody.empty())
+  {
+    const RcsBody* gazeBdy = RcsGraph_getBodyByName(graph, nttName.c_str());
+    if (gazeBdy)
+    {
+      gazeTargetBody = nttName;
+    }
+  }
+
+  return gazeTargetBody;
 }
 
 bool ActionEyeGaze::computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3])

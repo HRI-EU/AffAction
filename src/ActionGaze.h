@@ -52,8 +52,6 @@ public:
   virtual ~ActionGaze();
   std::unique_ptr<ActionBase> clone() const override;
 
-  std::string getGazeTarget() const;
-
   //protected:
 
   std::vector<std::string> createTasksXML() const;

@@ -363,6 +363,14 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.getEntity().publish("Render");
   })
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the gaze target body for the eye gaze model. This only takes effect
+  // if the class has been initialized with the eyeIkEnabled flag set to true.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setGazeTarget", [](aff::ExampleActionsECS& ex, std::string targetBody)
+  {
+    ex.getEntity().publish("SetGazeTarget", targetBody);
+  })
   .def("process", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().process();
@@ -926,6 +934,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("virtualCameraWindowEnabled", &aff::ExampleActionsECS::virtualCameraWindowEnabled)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
+  .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
   ;
 
 

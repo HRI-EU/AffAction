@@ -164,7 +164,6 @@ ActionScene::ActionScene(const ActionScene& copyFromMe)
 {
   entities = copyFromMe.entities;
   manipulators = copyFromMe.manipulators;
-  foveatedEntity = copyFromMe.foveatedEntity;
 
   for (size_t i=0; i<copyFromMe.agents.size(); ++i)
   {
@@ -203,8 +202,6 @@ ActionScene& ActionScene::operator= (const ActionScene& copyFromMe)
     agents.push_back(copyFromMe.agents[i]->clone());
   }
 
-  foveatedEntity = copyFromMe.foveatedEntity;
-
   return *this;
 }
 
@@ -217,7 +214,6 @@ bool ActionScene::reload(const std::string& xmlFile)
     delete agents[i];
   }
   agents.clear();
-  foveatedEntity.clear();
   std::string groupSuffix;
 
   char cfgFile[RCS_MAX_FILENAMELEN] = "";

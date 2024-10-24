@@ -89,7 +89,7 @@ public:
    */
   nlohmann::json getSceneState();
 
-  /*! \brief Returns the scene in a form of a URDF. Used for inspecting 
+  /*! \brief Returns the scene in a form of a URDF. Used for inspecting
    *         the scene in more detail from Python.
    */
   std::string getURDF();

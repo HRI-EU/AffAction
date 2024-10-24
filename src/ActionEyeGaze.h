@@ -45,7 +45,7 @@ class ActionEyeGaze : public ActionBase
 {
 public:
 
-  ActionEyeGaze(const ActionScene& domain,
+  ActionEyeGaze(const ActionScene& scene,
                 const RcsGraph* graph,
                 std::vector<std::string> params);
 
@@ -55,6 +55,9 @@ public:
   std::string getGazeTarget() const;
   static bool computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3]);
   static bool setPupilSpeedWeight(RcsGraph* graph, double weight);
+  static std::string resolveGazeTargetBodyName(const ActionScene& scene, const RcsGraph* graph,
+                                               const std::string& nttName);
+  static std::vector<std::string> createEyeTasksXML();
 
   static std::string getRightGazePointName();
   static std::string getLeftGazePointName();
@@ -72,12 +75,10 @@ protected:
   std::string getActionCommand() const;
 
   std::string agentName;
-  std::string gazeTarget;
-  std::string gazeTargetInstance;
+  std::string gazeTargetBody;
   std::string cameraFrame;
   std::string taskGaze;
   std::vector<std::string> usedManipulators;
-  bool isGazeTargetInHand;
   bool keepTasksActiveAfterEnd;
 };
 

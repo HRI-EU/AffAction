@@ -50,7 +50,6 @@ class ActionScene
 public:
   std::vector<AffordanceEntity> entities;
   std::vector<Manipulator> manipulators;
-  std::string foveatedEntity;
   std::vector<Agent*> agents;   // Pointer needed for polymorphism
 
   ActionScene();

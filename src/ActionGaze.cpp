@@ -242,11 +242,6 @@ std::vector<std::string> ActionGaze::getManipulators() const
   return usedManipulators;
 }
 
-std::string ActionGaze::getGazeTarget() const
-{
-  return gazeTarget;
-}
-
 std::unique_ptr<ActionBase> ActionGaze::clone() const
 {
   return std::make_unique<ActionGaze>(*this);

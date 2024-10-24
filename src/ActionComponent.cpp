@@ -244,45 +244,6 @@ void ActionComponent::actionThread(std::string text)
 
 
 
-  // \todo(MG): HACK for foveated objects. We currently do this here, since the
-  // actions only receive const references to the affordance models ans scenes.
-  // For multi-agent settings, we also should consider several foveated items etc.
-  ActionGaze* aGaze = dynamic_cast<ActionGaze*>(action.get());
-  if (aGaze)
-  {
-    // We ignore the action request if no valid prediction was found. We don't
-    // necessarily need to do this here, since there is a final check in the
-    // TrajectoryComponent. This is a bit more accessible, since we can "see"
-    // the trajectory with the 'd' key.
-    if (predictions.empty() || (!predictions[0].success))
-    {
-      std::vector<ActionResult> errMsg(1);
-      if (predictions.empty())
-      {
-        errMsg[0].error = "ERROR";
-        errMsg[0].reason = "Gaze action could not find solution";
-        errMsg[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
-      }
-      else
-      {
-        errMsg[0] = predictions[0].feedbackMsg;
-      }
-
-      getEntity()->publish("ActionResult", false, 0.0, errMsg);
-      return;
-    }
-
-    domain.foveatedEntity = aGaze->getGazeTarget();
-    RLOG_CPP(0, "Now gazing at " << domain.foveatedEntity);
-    getEntity()->publish("PtuLookAtCommand", domain.foveatedEntity);
-    // return;
-    // We let the function continue here so that the graphics is reflecting
-    // the PTU motion. It might not be the same as the one that really happens.
-  }
-
-
-
-
   std::vector<std::string> taskVec = action->createTasksXML();
 
   if (taskVec.empty())
