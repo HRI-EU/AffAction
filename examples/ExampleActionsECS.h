@@ -128,6 +128,7 @@ public:
   unsigned int virtualCameraWidth, virtualCameraHeight;
   bool virtualCameraEnabled, virtualCameraWindowEnabled;
   bool gazeComponentEnabled;
+  bool eyeIkEnabled;
   std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;

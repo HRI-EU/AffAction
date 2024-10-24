@@ -41,6 +41,7 @@
 #include "VirtualCameraWindow.h"
 #include "ActionEyeGaze.h"
 #include "GazeComponent.h"
+#include "EyeModelIKComponent.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -236,6 +237,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   virtualCameraEnabled = false;
   virtualCameraWindowEnabled = false;
   gazeComponentEnabled = false;
+  eyeIkEnabled = false;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;
@@ -347,6 +349,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
   parser->getArgument("-earlyExitAction", &earlyExitAction, "Early exit with action prediction's first error");
   parser->getArgument("-enableGazeComponent", &gazeComponentEnabled, "Start with gaze component");
+  parser->getArgument("-enableEyeIK", &eyeIkEnabled, "Start with eye gaze model");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -484,6 +487,12 @@ bool ExampleActionsECS::initAlgo()
     auto gazeC = new GazeComponent(&entity, "head_front_glass", 2);
     gazeC->addSceneToAttend(*getScene(), getGraph());
     addComponent(gazeC);
+  }
+
+  if (eyeIkEnabled)
+  {
+    auto eyeIK = new EyeModelIKComponent(&entity, getGraph());
+    addComponent(eyeIK);
   }
 
 #if 1
@@ -917,8 +926,17 @@ bool ExampleActionsECS::initGraphics()
       return;
     }
 
-    auto textCmd = "eye_gaze " + std::string(bn->body()->name);
-    entity.publish("PlanDFSEE", textCmd);
+    if (eyeIkEnabled)
+    {
+      entity.publish("SetGazeTarget", std::string(bn->body()->name));
+    }
+    else
+    {
+      auto textCmd = "eye_gaze " + std::string(bn->body()->name);
+      entity.publish("PlanDFSEE", textCmd);
+    }
+
+
 
   }, "Get body under mouse");
 
@@ -2230,5 +2248,50 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleAruco, "Actions", "Aruco (with webcam) test program");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleJacoGen3 : public ExampleActionsECS
+{
+public:
+
+  ExampleJacoGen3(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start bin/KortexDriver");
+
+    RMSG("fmod(361,360) = %f", fmod(361.0,360.0));
+    RMSG("fmod(359,360) = %f", fmod(359.0,360.0));
+    RMSG("fmod(1,360) = %f", fmod(1.0,360.0));
+    RMSG("fmod(-1,360) = %f", fmod(-1.0,360.0));
+    RMSG("fmod(-361,360) = %f", fmod(-361.0,360.0));
+    RMSG("fmod(-359,360) = %f", fmod(-359.0,360.0));
+  }
+
+  virtual ~ExampleJacoGen3()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "gJacoGen3_7dof.xml";
+    configDirectory = "config/xml/AffAction/xml/JacoGen3";
+    speedUp = 1;
+    addComponentArgument("-jacoGen3Zmq");
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start python program with: python webcam_tracking_socket.py --mediapipe --aruco --camera_config_file Logitech-C920.yaml --visualize\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleJacoGen3, "Actions", "Jaco Gen3 test");
 
 }   // namespace aff
