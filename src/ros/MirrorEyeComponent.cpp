@@ -162,7 +162,8 @@ void MirrorEyeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   std::string gazedAtObject, gazingCam;
   {
     std::lock_guard<std::mutex> lock(rosLock);
-    gazedAtObject = this->currentGazeTarget;
+    gazedAtObject = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, desired, this->currentGazeTarget);
+    //gazedAtObject = this->currentGazeTarget;
     gazingCam = this->currentCamera;
   }
 
