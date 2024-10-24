@@ -289,6 +289,7 @@ src/EntityBase.cpp
 src/GraphicsWindow.cpp
 src/GraphComponent.cpp
 src/IKComponent.cpp
+src/EyeModelIKComponent.cpp
 src/TrajectoryComponent.cpp
 src/EventGui.cpp
 src/TaskGuiComponent.cpp
