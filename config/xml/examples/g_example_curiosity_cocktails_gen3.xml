@@ -319,8 +319,7 @@
     <Body name="screen_link"/>
     <Body name="head_kinect_link"/>
     <Body name="adapter_shoulder_left_3"/>
-    <Body name="adapter_shoulder_right_3"/>
-	  
+    <Body name="adapter_shoulder_right_3"/>	  
   </BroadPhase>
 	
 </Graph>
