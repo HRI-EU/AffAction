@@ -2286,9 +2286,25 @@ public:
     return true;
   }
 
+  virtual bool initGraphics()
+  {
+    bool success = ExampleActionsECS::initGraphics();
+    graphC->setEnableRender(true);
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+    entity.process();
+    Timer_waitDT(0.5);
+    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+    entity.process();
+
+    return success;
+  }
+
   std::string help()
   {
-    std::string str = "Start python program with: python webcam_tracking_socket.py --mediapipe --aruco --camera_config_file Logitech-C920.yaml --visualize\n\n";
+    std::string str = "Start bin/KortexDriver\n\n";
     str += ExampleActionsECS::help();
     return str;
   }

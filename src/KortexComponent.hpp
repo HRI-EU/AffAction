@@ -241,7 +241,7 @@ private:
 
   void recvThreadFunc()
   {
-    Timer_waitDT(2.0);
+    //Timer_waitDT(2.0);
 
     RLOG_CPP(0, "Creating zmq context");
     zmq::context_t context(1);
@@ -360,8 +360,15 @@ private:
       jointVelocity = recv_json["velocity"].get<std::vector<double>>();
       jointTorque = recv_json["torque"].get<std::vector<double>>();
 
-      // Further processing of joint angles here...
 
+      // Further processing of joint angles here...
+      std::vector<double> tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
+      for (size_t i=0; i<tool_wrench.size(); ++i)
+      {
+        RLOG(1, "tool_wrench[%zu] = %.6f", i, tool_wrench[i]);
+      }
+
+      //std::vector<double> sepp = recv_json["sepp"].get<std::vector<double>>();
     }
     catch (const nlohmann::json::parse_error& e)
     {
