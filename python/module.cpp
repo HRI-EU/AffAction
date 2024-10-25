@@ -875,6 +875,27 @@ PYBIND11_MODULE(pyAffaction, m)
     // able to send pan / tilt commands to the PTU
     ex.addComponentArgument("-ptu");
   })
+  .def("addTrackingControllerPTU", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to connect to the PW70 CAN bus, and to being able to
+    // send pan / tilt commands to the PTU. Please make sure to not have any
+    // other PTU process (e.g. ROS ActionServer) running.
+    ex.addComponentArgument("-pw70_vel -pw70_control_frequency 50");
+    ex.addComponentArgument("-pw70_pan_joint_name ptu_pan_joint");
+    ex.addComponentArgument("-pw70_tilt_joint_name ptu_tilt_joint");
+  })
+  .def("addMirrorEyes", [](aff::ExampleActionsECS& ex, std::string gazeTargetTopic, std::string cameraTopic, std::string pupilCoordsTopic)
+  {
+    // Adds the ROS interface to the MirrorEye system, and enables the IK-based eye model.
+    ex.addComponentArgument("-mirror_eyes");
+    ex.addComponentArgument("-mirror_eyes_gaze_target_topic " + gazeTargetTopic);
+    ex.addComponentArgument("-mirror_eyes_camera_topic " + cameraTopic);
+    ex.addComponentArgument("-mirror_eyes_pupil_coords_topic " + pupilCoordsTopic);
+    ex.eyeIkEnabled = true;
+  },
+  py::arg("gazeTargetTopic") = "/mirror_eyes/gaze_target",
+  py::arg("cameraTopic") = "/mirror_eyes/camera",
+  py::arg("pupilCoordsTopic") = "/mirror_eyes/pupil_coordinates")
   .def("addLandmarkROS", [](aff::ExampleActionsECS& ex)
   {
     // Adds a component to listen to the landmarks publishers through ROS, which
