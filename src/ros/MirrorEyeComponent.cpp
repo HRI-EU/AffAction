@@ -45,11 +45,13 @@
 namespace aff
 {
 
-MirrorEyeComponent::MirrorEyeComponent(EntityBase* parent, const ActionScene* scene,
+MirrorEyeComponent::MirrorEyeComponent(EntityBase* parent,
+                                       const ActionScene* scene,
+                                       const RcsGraph* graph,
                                        std::string pubTopic,
                                        std::string gazeAtTopic,
                                        std::string camTopic) :
-  ComponentBase(parent), scenePtr(scene), loopCount(0), receivedNewGazeTarget(false),
+  ComponentBase(parent), scenePtr(scene), loopCount(0),
   pupilCoordsPublisherTopic(pubTopic), gazeTargetSubscriberTopic(gazeAtTopic), cameraSubscriberTopic(camTopic)
 {
   subscribe("Start", &MirrorEyeComponent::onStart);
@@ -102,10 +104,57 @@ void MirrorEyeComponent::onStop()
 void MirrorEyeComponent::gazeTargetNameRosCallback(const std_msgs::String::ConstPtr& object)
 {
   RLOG_CPP(0, "Received gaze target: '" << object->data << "'");
+  nlohmann::json eye_commands;
 
-  std::lock_guard<std::mutex> lock(rosLock);
-  currentGazeTarget = object->data;
-  receivedNewGazeTarget = true;
+  try
+  {
+    eye_commands = nlohmann::json::parse(object->data);
+
+    if (eye_commands.contains("gaze_target"))
+    {
+      std::string gaze_target = eye_commands["gaze_target"];
+      RLOG_CPP(0, "Json received: " << gaze_target);
+      std::string receivedBdy = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, graphPtr, gaze_target);
+      RLOG_CPP(0, "Resolved body: " << receivedBdy);
+      getEntity()->publish("SetGazeTarget", receivedBdy);
+
+      std::lock_guard<std::mutex> lock(rosLock);
+      currentGazeTarget = object->data;
+    }
+
+    if (eye_commands.contains("gaze_camera"))
+    {
+      std::string gaze_camera = eye_commands["gaze_camera"];
+      RLOG_CPP(0, "New gaze camera: " << gaze_camera);
+      std::lock_guard<std::mutex> lock(rosLock);
+      currentCamera = gaze_camera;
+    }
+
+    if (eye_commands.contains("pupil_weight"))
+    {
+      double pupil_weight = eye_commands["pupil_weight"];
+    }
+
+    if (eye_commands.contains("gesture"))
+    {
+      std::string gesture = eye_commands["gesture"];
+      getEntity()->publish("StartGesture", gesture);
+    }
+
+  }
+  catch (...)
+  {
+    RLOG_CPP(0, "No json received - setting gaze target as " << object->data);
+    std::string receivedBdy = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, graphPtr, object->data);
+    getEntity()->publish("SetGazeTarget", receivedBdy);
+
+    std::lock_guard<std::mutex> lock(rosLock);
+    currentGazeTarget = object->data;
+    return;
+  }
+
+
+
 }
 
 void MirrorEyeComponent::cameraNameRosCallback(const std_msgs::String::ConstPtr& camera)
@@ -165,19 +214,8 @@ void MirrorEyeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   std::string gazedAtObject, gazingCam;
   {
     std::lock_guard<std::mutex> lock(rosLock);
-
-    if (receivedNewGazeTarget)
-    {
-      std::string receivedBdy = ActionEyeGaze::resolveGazeTargetBodyName(*scenePtr, desired, this->currentGazeTarget);
-      getEntity()->publish("SetGazeTarget", receivedBdy);
-      receivedNewGazeTarget = false;
-      RLOG(1, "Publishing new gaze target");
-    }
-
     gazedAtObject = this->currentGazeTarget;
     gazingCam = this->currentCamera;
-
-    // publish
   }
 
   if (scenePtr && (!gazedAtObject.empty()) && (!gazingCam.empty()))

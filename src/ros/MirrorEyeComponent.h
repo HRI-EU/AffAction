@@ -66,8 +66,24 @@
                valid object and camera are received, this field will not exist in the json.
 
   - Subscriber: on topic /mirror_eyes/gaze_target, this message will be received:
-                - std_msgs::String object: The object that is currently gazed at
+                - std_msgs::String object:
+                  - Either a json with this structure (all elements are optional),
+                    gesture and gesture_time_series are exclusive:
+                    {
+                    "gaze_target": "object-to-gaze-at",
+                    "gaze_camera": "name-of-gaze-camera",
+                    "pupil_weight": 1.0,
+                    "gesture_time_series": [['time':0.2, 'pan': 0.4, 'tilt':-0.9],
+                                            ['time':0.4, 'pan':-0.4, 'tilt':0.9],
+                                            ['time':0.6, 'pan': 0.4, 'tilt':-0.9]],
+                    "gesture": "name of the gesture (yes or no)",
+                    }
+
+                  - or a simple string: The object that is currently gazed at
+
+                on topic /mirror_eyes/camera, this message will be received:
                 - std_msgs::String camera: The camera that the object is looked at
+
                 If both object and camera are valid (can be retrieved in the graph), then
                 the "bounding_box" string of the publisher will be filled according to the
                 documentation in SceneJsonHelpers::getObjectInCamera.
@@ -84,7 +100,9 @@ class MirrorEyeComponent : public ComponentBase
 {
 public:
 
-  MirrorEyeComponent(EntityBase* parent, const ActionScene* scene,
+  MirrorEyeComponent(EntityBase* parent,
+                     const ActionScene* scene,
+                     const RcsGraph* graph,
                      std::string publisherTopic=MIRROR_EYES_DEFAULT_PUPIL_COORDINATES_TOPIC,
                      std::string gazeTopic=MIRROR_EYES_DEFAULT_GAZTARGET_TOPIC,
                      std::string cameraTopic=MIRROR_EYES_DEFAULT_CAMERA_TOPIC);
@@ -97,10 +115,12 @@ private:
   void onStop();
 
   const ActionScene* scenePtr;
+  const RcsGraph* graphPtr;
   size_t loopCount;
   std::string currentGazeTarget, currentCamera;
-  bool receivedNewGazeTarget;
-  std::string pupilCoordsPublisherTopic, gazeTargetSubscriberTopic, cameraSubscriberTopic;
+  std::string pupilCoordsPublisherTopic;
+  std::string gazeTargetSubscriberTopic;
+  std::string cameraSubscriberTopic;
   std::mutex rosLock;
 
 #if defined (USE_ROS)

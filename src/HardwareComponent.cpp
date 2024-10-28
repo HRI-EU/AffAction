@@ -513,7 +513,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_gaze_target_topic", gazeTopic);
     getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_camera_topic", camTopic);
     getKeyValuePair<std::string>(argvStrVec, "-mirror_eyes_pupil_coords_topic", pubTopic);
-    components.push_back(new MirrorEyeComponent(&entity, scene, pubTopic, gazeTopic, camTopic));
+    components.push_back(new MirrorEyeComponent(&entity, scene, graph, pubTopic, gazeTopic, camTopic));
   }
 #endif
 
