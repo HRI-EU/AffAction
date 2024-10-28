@@ -362,7 +362,18 @@ private:
 
 
       // Further processing of joint angles here...
-      std::vector<double> tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
+      std::vector<double> tool_wrench;
+      if (recv_json.contains("tool_wrench"))
+      {
+        tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
+      }
+      else
+      {
+        // Handle missing key, e.g., by initializing with default values
+        tool_wrench = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; // Example default values
+      }
+
+
       for (size_t i=0; i<tool_wrench.size(); ++i)
       {
         RLOG(1, "tool_wrench[%zu] = %.6f", i, tool_wrench[i]);
