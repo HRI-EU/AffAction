@@ -274,14 +274,9 @@ src/LandmarkBase.cpp
 src/ConcurrentExecutor.cpp
 src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
-src/FaceGestureComponent.cpp
-src/GazeComponent.cpp
-src/CameraViewComponent.cpp
-src/PhysicsComponent.cpp
 src/VirtualCamera.cpp
-src/VirtualCameraWindow.cpp
 src/StringParserTools.cpp
-src/PW70Component.cpp
+src/HeadGesture.cpp
 )
 
 SET(ECS_SRCS
@@ -298,13 +293,19 @@ src/ActionComponent.cpp
 src/HardwareComponent.cpp
 src/WebsocketActionComponent.cpp
 src/LandmarkZmqComponent.cpp
+src/FaceGestureComponent.cpp
+src/GazeComponent.cpp
+src/CameraViewComponent.cpp
+src/PhysicsComponent.cpp
+src/PW70Component.cpp
+src/VirtualCameraWindow.cpp
+src/TTSComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
 examples/ExampleFlowMatching.cpp
 src/JacoShmComponent.cpp
-src/TTSComponent.cpp
 )
 
 IF (USE_AFFACTION_ROS)

@@ -236,7 +236,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   virtualCameraHeight = 480;
   virtualCameraEnabled = false;
   virtualCameraWindowEnabled = false;
-  gazeComponentEnabled = false;
+  gazeComponentEnabled = true;
   eyeIkEnabled = false;
   speedUp = 1;
   loopCount = 0;

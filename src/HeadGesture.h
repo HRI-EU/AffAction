@@ -30,77 +30,59 @@
 
 *******************************************************************************/
 
-#ifndef AFF_EYEMODELIKCOMPONENT_H
-#define AFF_EYEMODELIKCOMPONENT_H
+#ifndef AFF_HEADGESTURE_H
+#define AFF_HEADGESTURE_H
 
-#include "ComponentBase.h"
-#include "HeadGesture.h"
+#include <ControllerBase.h>
 
-#include <IkSolverRMR.h>
-#include <Rcs_filters.h>
-
+#include <vector>
+#include <string>
 
 
 namespace aff
 {
 
-class EyeModelIKComponent : public ComponentBase
+class HeadGesture
 {
 public:
 
-  EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph);
-  virtual ~EyeModelIKComponent();
+  HeadGesture(const std::string& name, double duration, std::vector<int> jointIds);
+  virtual ~HeadGesture();
+  std::vector<double> stepPrecise(const Rcs::ControllerBase* controller, MatNd* taskActivations, RcsGraph* targetGraph, double dt);
+  void step(const RcsGraph* graph, RcsGraph* targetGraph, double dt);
+  void start();
+  std::string getName() const;
 
-  void setPanJointName(const std::string& name);
-  void setTiltJointName(const std::string& name);
-  bool setPupilSpeedWeight(RcsGraph* graph, double weight);
+protected:
+  void updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
+                       double pan_gesture, double tilt_gesture);
+  virtual std::vector<double> computePanTilt(double t) = 0;
 
-private:
-
-  void onEmergencyStop();
-  void onEmergencyRecover();
-  void onInitFromState(const RcsGraph* target);
-  void onComputeIK(RcsGraph* desired, RcsGraph* current);
-  void onRender();
-  void onSetGazeTarget(std::string bdyName);
-  void onStartNodding();
-  void onStartGesture(std::string gestureName);
-  void onSetPupilWeight(double weight);
-
-  double headshake();
-  double nod();
-
-  void setPanJointActivation(bool enable);
-  void setTiltJointActivation(bool enable);
-
-  std::vector<std::string> createTasksXML() const;
-  std::vector<int> jointIds;
-
-  Rcs::ControllerBase* controller;
-  Rcs::IkSolverRMR* ikSolver;
-  MatNd* a_des;
-  MatNd* x_des;
-  MatNd* dx_des;
-  MatNd* dH;
-  MatNd* dq_des;
-  std::string gazeTargetBody;
-  std::string panJointName;   // default: "ptu_pan_joint"
-  std::string tiltJointName;  // default: "ptu_tilt_joint"
-  Rcs::RampFilterND goalFilt;
-
-  bool eStop;
-  double alpha;
-  double lambda;
+  std::string name;
   double t_gesture;
-
-  std::vector<std::unique_ptr<HeadGesture>> headGestures;
-
-  /*! \brief We disallow copying and assigning this class.
-   */
-  EyeModelIKComponent(const EyeModelIKComponent&) = delete;
-  EyeModelIKComponent& operator=(const EyeModelIKComponent&) = delete;
+  double gestureDuration;
+  int panJointId;
+  int tiltJointId;
+  std::vector<int> jointIds;
 };
 
-}
+class HeadNod : public HeadGesture
+{
+public:
+  HeadNod(const std::string& name, double duration, std::vector<int> jointIds);
+  std::vector<double> computePanTilt(double t);
+};
 
-#endif   // AFF_EYEMODELCOMPONENT_H
+class HeadShake : public HeadGesture
+{
+public:
+  HeadShake(const std::string& name, double duration, std::vector<int> jointIds);
+  std::vector<double> computePanTilt(double t);
+};
+
+
+
+}   // namespace aff
+
+
+#endif   // AFF_HEADGESTURE_H
