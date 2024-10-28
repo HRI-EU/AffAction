@@ -119,7 +119,7 @@ void MirrorEyeComponent::gazeTargetNameRosCallback(const std_msgs::String::Const
       getEntity()->publish("SetGazeTarget", receivedBdy);
 
       std::lock_guard<std::mutex> lock(rosLock);
-      currentGazeTarget = object->data;
+      currentGazeTarget = gaze_target;
     }
 
     if (eye_commands.contains("gaze_camera"))
