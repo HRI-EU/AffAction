@@ -142,7 +142,6 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   subscribe("Render", &EyeModelIKComponent::onRender);
   subscribe("SetGazeTarget", &EyeModelIKComponent::onSetGazeTarget);
   subscribe("SetPupilWeight", &EyeModelIKComponent::onSetPupilWeight);
-  subscribe("StartNodding", &EyeModelIKComponent::onStartNodding);
   subscribe("StartGesture", &EyeModelIKComponent::onStartGesture);
 }
 
@@ -284,12 +283,6 @@ void EyeModelIKComponent::setTiltJointName(const std::string& name)
   tiltJointName = name;
 }
 
-//  plot 12 * sin(pi* x), 12*pi*cos(pi * x): 4 seconds, 2 shakes
-void EyeModelIKComponent::onStartNodding()
-{
-  t_gesture = 0.0;
-}
-
 void EyeModelIKComponent::onSetPupilWeight(double weight)
 {
   setPupilSpeedWeight(controller->getGraph(), weight);
@@ -304,59 +297,6 @@ void EyeModelIKComponent::onStartGesture(std::string gestureName)
       g->start();
     }
   }
-}
-
-double EyeModelIKComponent::headshake()
-{
-  return 0.0;
-
-  static double panStart = 0.0;
-  if (t_gesture < 0.0)
-  {
-    return 0.0;
-  }
-  else if (t_gesture >= 3.0)
-  {
-    setPanJointActivation(false);
-    t_gesture = -1.0;
-    x_des->ele[3] = 0.0;
-    return 0.0;
-  }
-  else if (t_gesture == 0.0)
-  {
-    setPanJointActivation(true);
-    controller->getTask("Pan")->computeX(&panStart);
-    RLOG(0, "Pan start: %f", panStart);
-  }
-
-  //double f = RCS_DEG2RAD(12.0) * sin(M_PI * t_gesture);
-  double f = RCS_DEG2RAD(6.0) * sin(2.0*M_PI*t_gesture);
-  x_des->ele[3] = panStart + f;
-  t_gesture += getEntity()->getDt();
-  RLOG(0, "Headshake[t=%.3f] = %.2f", t_gesture, RCS_RAD2DEG(x_des->ele[3]));
-
-  return -f;
-}
-
-double EyeModelIKComponent::nod()
-{
-  if (t_gesture < 0.0)
-  {
-    return 0.0;
-  }
-  else if (t_gesture >= 3.0)
-  {
-    t_gesture = -1.0;
-    return 0.0;
-  }
-
-  //double f = RCS_DEG2RAD(12.0) * sin(M_PI * t_gesture);
-  double f = RCS_DEG2RAD(6.0) * sin(2.0 * M_PI * t_gesture);
-  //RLOG(0, "Nodding: t=%f   f=%f", t_gesture, f);
-
-  t_gesture += getEntity()->getDt();
-
-  return -f;
 }
 
 void EyeModelIKComponent::setPanJointActivation(bool enable)
@@ -378,8 +318,8 @@ bool EyeModelIKComponent::setPupilSpeedWeight(RcsGraph* graph, double weight)
     return false;
   }
 
-  RcsJoint* pan = RcsGraph_getJointByName(graph, "ptu_pan_joint");
-  RcsJoint* tilt = RcsGraph_getJointByName(graph, "ptu_tilt_joint");
+  RcsJoint* pan = RcsGraph_getJointByName(graph, panJointName.c_str());
+  RcsJoint* tilt = RcsGraph_getJointByName(graph, tiltJointName.c_str());
 
   if (!pan)
   {

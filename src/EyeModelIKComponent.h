@@ -63,12 +63,8 @@ private:
   void onComputeIK(RcsGraph* desired, RcsGraph* current);
   void onRender();
   void onSetGazeTarget(std::string bdyName);
-  void onStartNodding();
   void onStartGesture(std::string gestureName);
   void onSetPupilWeight(double weight);
-
-  double headshake();
-  double nod();
 
   void setPanJointActivation(bool enable);
   void setTiltJointActivation(bool enable);
