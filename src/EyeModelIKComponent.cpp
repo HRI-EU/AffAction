@@ -47,6 +47,7 @@ static std::vector<int> getJointIndexBackwardRecursion(const RcsGraph* graph, co
 {
   std::vector<int> jointIds;
   const RcsBody* startBody = RcsGraph_getBodyByName(graph, bdyName.c_str());
+  RCHECK_MSG(startBody, "Couldn't find body '%s' in graph", bdyName.c_str());
   RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, startBody);
 
   // Traverse backwards through the joints
