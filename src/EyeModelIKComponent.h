@@ -51,6 +51,7 @@ public:
   EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph);
   virtual ~EyeModelIKComponent();
 
+  static bool hasEyeModel(const RcsGraph* graph);
   void setPanJointName(const std::string& name);
   void setTiltJointName(const std::string& name);
   bool setPupilSpeedWeight(RcsGraph* graph, double weight);

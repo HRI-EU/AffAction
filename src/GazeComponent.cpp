@@ -99,6 +99,7 @@ const RcsBody* GazeComponent::getBody(const RcsGraph* graph, const std::string& 
   if ((bdyId == -1) || (std::string(graph->bodies[bdyId].name) != bdyName))
   {
     bdy = RcsGraph_getBodyByName(graph, bdyName.c_str());
+    RCHECK_MSG(bdy, "%s", bdyName.c_str());
     bdyId = bdy->id;
   }
   else

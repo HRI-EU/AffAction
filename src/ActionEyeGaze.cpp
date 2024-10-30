@@ -428,5 +428,42 @@ std::string ActionEyeGaze::getLeftPupilName()
   return leftPupil;
 }
 
+bool ActionEyeGaze::hasEyeModel(const RcsGraph* graph)
+{
+  const RcsBody* bdy = nullptr;
+
+  bdy = RcsGraph_getBodyByName(graph, getRightGazePointName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+  bdy = RcsGraph_getBodyByName(graph, getLeftGazePointName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+  bdy = RcsGraph_getBodyByName(graph, getGazePointName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+  bdy = RcsGraph_getBodyByName(graph, getScreenName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+  bdy = RcsGraph_getBodyByName(graph, getRightPupilName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+  bdy = RcsGraph_getBodyByName(graph, getLeftPupilName().c_str());
+  if (!bdy)
+  {
+    return false;
+  }
+
+  return true;
+}
 
 }   // namespace aff

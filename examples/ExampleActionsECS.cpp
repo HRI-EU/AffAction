@@ -236,8 +236,8 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   virtualCameraHeight = 480;
   virtualCameraEnabled = false;
   virtualCameraWindowEnabled = false;
-  gazeComponentEnabled = true;
-  eyeIkEnabled = false;
+  gazeComponentEnabled = false;
+  eyeIkEnabled = true;
   speedUp = 1;
   loopCount = 0;
   maxNumThreads = 0;
@@ -491,8 +491,16 @@ bool ExampleActionsECS::initAlgo()
 
   if (eyeIkEnabled)
   {
-    auto eyeIK = new EyeModelIKComponent(&entity, getGraph());
-    addComponent(eyeIK);
+    if (EyeModelIKComponent::hasEyeModel(getGraph()))
+    {
+      auto eyeIK = new EyeModelIKComponent(&entity, getGraph());
+      addComponent(eyeIK);
+    }
+    else
+    {
+      RLOG(1, "Eye model enabled, but not existent int he graph - skipping eye IK");
+      eyeIkEnabled = false;
+    }
   }
 
 #if 1

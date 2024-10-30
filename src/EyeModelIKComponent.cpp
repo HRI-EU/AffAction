@@ -340,5 +340,9 @@ bool EyeModelIKComponent::setPupilSpeedWeight(RcsGraph* graph, double weight)
   return true;
 }
 
+bool EyeModelIKComponent::hasEyeModel(const RcsGraph* graph)
+{
+  return ActionEyeGaze::hasEyeModel(graph);
+}
 
 }   // namespace aff
