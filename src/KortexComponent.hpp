@@ -37,6 +37,8 @@
 #include <Rcs_typedef.h>
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
+#include <Rcs_math.h>
+#include <Rcs_dynamics.h>
 
 #include <zmq.hpp>
 
@@ -147,6 +149,56 @@ public:
 
   }
 
+  void estimateTouch(const RcsGraph* graph)
+  {
+    // Torques read back from the robot
+    MatNd* T_robo = MatNd_create(jointTorque.size(), 1);
+    VecNd_copy(T_robo->ele, jointTorque.data(), T_robo->size);
+
+    // Gravity compensation model. We ignore the gripper dof
+    MatNd* T_gravity = MatNd_create(graph->nJ, 1);
+    double gravityVec[3] = {0.0, 0.0, -9.81};
+    RcsGraph_computeGravityTorque(graph, gravityVec, T_gravity);
+    T_gravity->m--;
+
+    if (T_robo->m!=T_gravity->m)
+    {
+      RLOG(0, "Mismatch in torque vector dimensions: robo: %d   gravity: %d", T_robo->m, T_gravity->m);
+      return;
+    }
+
+    REXEC(2)
+    {
+      RLOG(0, "gravity   sensor");
+      MatNd_printTwoArraysDiff(T_gravity, T_robo, 3);
+    }
+
+
+    if (torqueTic==-1)
+    {
+      MatNd_subSelf(T_robo, T_gravity);
+      const double trq = VecNd_sqrLength(T_robo->ele, T_robo->size);
+      RLOG(1, "Torque: %f", trq);
+      if (trq>40.0)
+      {
+        torqueTic++;
+        getEntity()->publish("Speak", std::string("Hey, get your fingers away from me!"));
+      }
+    }
+    else if (torqueTic>100)
+    {
+      torqueTic = -1;
+    }
+    else
+    {
+      torqueTic++;
+    }
+
+
+    MatNd_destroy(T_gravity);
+    MatNd_destroy(T_robo);
+  }
+
   void onUpdateGraph(RcsGraph* graph)
   {
     std::vector<double> jntPosTmp, jntVelTmp;
@@ -167,10 +219,19 @@ public:
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Joint '%s' not fund in graph", jntNameIdPairs[i].jointName.c_str());
-      MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
-      MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
+
+      if (i<jntPosTmp.size())
+      {
+        MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
+      }
+
+      if (i<jntVelTmp.size())
+      {
+        MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
+      }
     }
 
+    estimateTouch(graph);
   }
 
   void onStop()
@@ -241,8 +302,6 @@ private:
 
   void recvThreadFunc()
   {
-    //Timer_waitDT(2.0);
-
     RLOG_CPP(0, "Creating zmq context");
     zmq::context_t context(1);
 
@@ -335,6 +394,10 @@ private:
       {
         send_motor_commands(send_socket);
       }
+
+
+
+      Timer_waitDT(0.01);
     }
 
     RLOG(0, "Quitting run thread");
@@ -356,9 +419,27 @@ private:
       RLOG_CPP(1, "Parsed joint angles: " << recv_json.dump(4));
 
       std::lock_guard<std::mutex> lock(recvMtx);
-      jointPosition = recv_json["position"].get<std::vector<double>>();
-      jointVelocity = recv_json["velocity"].get<std::vector<double>>();
-      jointTorque = recv_json["torque"].get<std::vector<double>>();
+
+      if (recv_json.contains("position"))
+      {
+        jointPosition = recv_json["position"].get<std::vector<double>>();
+        // for (size_t i=0; i<jointPosition.size(); ++i)
+        // {
+        //   RLOG(1, "jointPosition[%zu] = %.6f deg", i, RCS_RAD2DEG(jointPosition[i]));
+        // }
+      }
+
+
+      if (recv_json.contains("velocity"))
+      {
+        jointVelocity = recv_json["velocity"].get<std::vector<double>>();
+      }
+
+
+      if (recv_json.contains("torque"))
+      {
+        jointTorque = recv_json["torque"].get<std::vector<double>>();
+      }
 
 
       // Further processing of joint angles here...
@@ -367,19 +448,7 @@ private:
       {
         tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
       }
-      else
-      {
-        // Handle missing key, e.g., by initializing with default values
-        tool_wrench = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; // Example default values
-      }
 
-
-      for (size_t i=0; i<tool_wrench.size(); ++i)
-      {
-        RLOG(1, "tool_wrench[%zu] = %.6f", i, tool_wrench[i]);
-      }
-
-      //std::vector<double> sepp = recv_json["sepp"].get<std::vector<double>>();
     }
     catch (const nlohmann::json::parse_error& e)
     {
@@ -395,9 +464,6 @@ private:
     }
 
 
-
-    //json joint_angles = json::parse(angles_str);
-    //RLOG_CPP(0, "Received joint angles: " << joint_angles.dump());
   }
 
   void send_motor_commands(zmq::socket_t& send_socket)
@@ -434,8 +500,9 @@ private:
   bool enableCommands = false;
   bool runLoop = false;
   bool eStop = false;
+  int torqueTic = -1;
   std::vector<JointNameIndexPair> jntNameIdPairs;
-  std::vector<double> jointPosition, jointVelocity, jointTorque;
+  std::vector<double> jointPosition, jointVelocity, jointTorque, gravityTorque;
   std::vector<double> jointCommands, jointCommandsPrev;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;

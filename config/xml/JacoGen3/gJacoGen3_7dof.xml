@@ -29,9 +29,9 @@
 
 <Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="kinova_home" >
 
-	<ActionSequence name="1" text="pose pose1; pose kinova_home" />
+  <ActionSequence name="1" text="pose pose1; pose kinova_home" />
 
-	<Body name="base_link" physics="dynamic" mass="1.697" cogVector="-0.000648 -0.000166 0.084487" inertia="0.004622 9e-06 6e-05   9e-06 0.004495 9e-06   6e-05 9e-06 0.002079" >
+  <Body name="base_link" physics="dynamic" mass="1.697" cogVector="-0.000648 -0.000166 0.084487" inertia="0.004622 9e-06 6e-05   9e-06 0.004495 9e-06   6e-05 9e-06 0.002079" >
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/base_link.STL" color="#bfbfbfff" />
   </Body>
 
@@ -53,7 +53,7 @@
  </Body>
 
   <Body name="forearm" prev="elbow" physics="dynamic" mass="0.9302" cogVector="-0.000018 -0.075478 -0.015006" inertia="0.008147 -1e-06 0   -1e-06 0.000631 -0.0005   0 -0.0005 0.008316" >
-    <Joint name="joint_4" range="-400 0 400" type="RotZ" transform="0 0.006375 -0.21038 90 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.25" />
+    <Joint name="joint_4" range="-150 0 150" type="RotZ" transform="0 0.006375 -0.21038 90 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.25" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/forearm_link.STL" color="#bfbfbfff" />
     <Shape type="SSL" length="0.186141" radius="0.051695" distance="true" physics="false" graphics="false" transform="-0.000175 0.000656 -0.029343 83.568128 0.043151 90.004865" color="RANDOM" />
   </Body>
@@ -95,7 +95,7 @@
     <Shape type="FRAME" scale="0.1" />
   </Body>
 
-  <Body name="robotiq_arg2f_base_link" prev="end_effector_link" transform="0 0 0 0 0 90" physics="fixed" mass="0.22652" cogVector="0 -0.000005 0.03145" inertia="0.00020005 -4.2442e-10 -2.9069e-10   -4.2442e-10 0.00017832 -3.4402e-08   -2.9069e-10 -3.4402e-08 0.00013478" >
+  <Body name="robotiq_arg2f_base_link" prev="end_effector_link" transform="0 0 0 0 0 90" physics="fixed" mass="0.82652" was_mass="0.22652" cogVector="0 -0.000005 0.03145" inertia="0.00020005 -4.2442e-10 -2.9069e-10   -4.2442e-10 0.00017832 -3.4402e-08   -2.9069e-10 -3.4402e-08 0.00013478" >
     <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_base_link.stl" color="#191919ff" />
     <xxShape type="MESH" distance="true" physics="true" graphics="false" meshFile="kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_base_link.stl" />
     <Shape type="SSL" length="0.001585" radius="0.055817" distance="true" physics="false" graphics="false" transform="0.000163 -0.000688 0.043124 -70.185647 0.041055 -90.014792" color="RANDOM" />
@@ -189,7 +189,7 @@
       <joint_state joint="joint_1" position="0"/>
       <joint_state joint="joint_2" position="15"/>
       <joint_state joint="joint_3" position="180"/>
-      <joint_state joint="joint_4" position="390"/>
+      <joint_state joint="joint_4" position="30"/>
       <joint_state joint="joint_5" position="1"/>
       <joint_state joint="joint_6" position="-40" />
       <joint_state joint="joint_7" position="120"/>
