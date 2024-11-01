@@ -89,7 +89,7 @@ namespace aff
 RespeakerComponent::RespeakerComponent(EntityBase* parent, const ActionScene* scene_) :
   ComponentBase(parent), scene(scene_), respeakerBdyName("respeaker"), isASREnabled(false),
   isSoundDirectionEstimationEnabled(true), isAnyHandRaised(false), isAnyHandRaisedOverride(false),
-  publishDialogueWithRaisedHandOnly(true), handAboveHeadThreshold(10.0)
+  publishDialogueWithRaisedHandOnly(false), handAboveHeadThreshold(10.0)
 {
   soundDirectionROS.resize(3);
   soundDirectionROS[0] = 0.0;
