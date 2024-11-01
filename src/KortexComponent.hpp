@@ -110,6 +110,8 @@ public:
     jntNameIdPairs.push_back(JointNameIndexPair("joint_6"+suffix));
     jntNameIdPairs.push_back(JointNameIndexPair("joint_7"+suffix));
 
+    gripperNameIdPairs.push_back(JointNameIndexPair("finger_joint"+suffix));
+
     RLOG(0, "Subscribing to events");
     subscribe("Start", &KortexComponent::onStart);
     subscribe("Stop", &KortexComponent::onStop);
@@ -119,6 +121,7 @@ public:
     subscribe("EmergencyStop", &KortexComponent::onEmergencyStop);
     subscribe("EmergencyRecover", &KortexComponent::onEmergencyRecover);
     subscribe("EnableCommands", &KortexComponent::onEnableCommands);
+    subscribe("SetGripperForce", &KortexComponent::onSetGripperForce);
 
     RLOG(0, "Done constructor");
   }
@@ -218,7 +221,7 @@ public:
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
-      RCHECK_MSG(jnt, "Joint '%s' not fund in graph", jntNameIdPairs[i].jointName.c_str());
+      RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph", jntNameIdPairs[i].jointName.c_str());
 
       if (i<jntPosTmp.size())
       {
@@ -229,6 +232,14 @@ public:
       {
         MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
       }
+    }
+
+    for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
+    {
+      RcsJoint* jnt = gripperNameIdPairs[i].getJoint(graph);
+      RCHECK_MSG(jnt, "Gripper joint '%s' not found in graph", gripperNameIdPairs[i].jointName.c_str());
+      const double gripper_angle = RCS_DEG2RAD(0.4*gripper_position);
+      MatNd_set(graph->q, jnt->jointIndex, 0, gripper_angle);
     }
 
     estimateTouch(graph);
@@ -265,8 +276,19 @@ private:
         q7.push_back(qi);
       }
 
+      double gripper_des = 0.0;
+      for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
+      {
+        RCHECK_MSG(gripperNameIdPairs[i].jointId!=-1, "Joint: '%s'",
+                   gripperNameIdPairs[i].jointName.c_str());
+        gripper_des = MatNd_get(q_des, gripperNameIdPairs[i].jointId, 0);
+      }
+
+
+
       std::lock_guard<std::mutex> lock(cmdMtx);
       jointCommands = q7;
+      gripper_command = gripper_des;
     }
 
   }
@@ -298,6 +320,12 @@ private:
   void onEnableCommands()
   {
     enableCommands = true;
+  }
+
+  void onSetGripperForce(double force)   // between 0 and 100
+  {
+    std::lock_guard<std::mutex> lock(cmdMtx);
+    gripper_force = force;
   }
 
   void recvThreadFunc()
@@ -423,22 +451,21 @@ private:
       if (recv_json.contains("position"))
       {
         jointPosition = recv_json["position"].get<std::vector<double>>();
-        // for (size_t i=0; i<jointPosition.size(); ++i)
-        // {
-        //   RLOG(1, "jointPosition[%zu] = %.6f deg", i, RCS_RAD2DEG(jointPosition[i]));
-        // }
       }
-
 
       if (recv_json.contains("velocity"))
       {
         jointVelocity = recv_json["velocity"].get<std::vector<double>>();
       }
 
-
       if (recv_json.contains("torque"))
       {
         jointTorque = recv_json["torque"].get<std::vector<double>>();
+      }
+
+      if (recv_json.contains("gripper_position"))
+      {
+        gripper_position = recv_json["gripper_position"].get<double>();
       }
 
 
@@ -452,15 +479,8 @@ private:
     }
     catch (const nlohmann::json::parse_error& e)
     {
-      // Handle JSON parsing errors gracefully
-      std::cerr << "JSON parsing error: " << e.what() << std::endl;
-      std::cerr << "Invalid JSON string: " << recv_json << std::endl;
-
-      // You can take additional actions here, such as:
-      // - Logging the error to a file
-      // - Attempting a retry
-      // - Returning a default value
-      // - Skipping the current message and continuing
+      RLOG_CPP(0, "JSON parsing error: " << e.what());
+      RLOG_CPP(0, "Invalid JSON string: " << recv_json);
     }
 
 
@@ -476,22 +496,37 @@ private:
 
     RLOG_CPP(0, "Sending motor commands");
 
-    // Simulate motor commands (replace with actual control values)
+    bool isNewCommand = false;
     nlohmann::json cmdJson;
 
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
-      cmdJson["q_des"] = jointCommands;
+      if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
+      {
+        cmdJson["q_des"] = jointCommands;
+        isNewCommand = true;
+      }
+
+      if (gripper_command!=gripper_command_prev)
+      {
+        cmdJson["gripper_command"] = RCS_RAD2DEG(gripper_command)/0.4;
+        cmdJson["gripper_force"] = gripper_force;
+        isNewCommand = true;
+      }
     }
 
-    std::string message_str = cmdJson.dump();
-    zmq::message_t message(message_str.size());
-    memcpy(message.data(), message_str.c_str(), message_str.size());
+    if (isNewCommand)
+    {
+      std::string message_str = cmdJson.dump();
+      zmq::message_t message(message_str.size());
+      memcpy(message.data(), message_str.c_str(), message_str.size());
 
-    send_socket.send(message, zmq::send_flags::none);
-    RLOG_CPP(0, "Sent motor commands: " << message_str);
+      send_socket.send(message, zmq::send_flags::none);
+      RLOG_CPP(0, "Sent motor commands: " << message_str);
+    }
 
     jointCommandsPrev = jointCommands;
+    gripper_command_prev = gripper_command;
   }
 
 
@@ -502,7 +537,12 @@ private:
   bool eStop = false;
   int torqueTic = -1;
   std::vector<JointNameIndexPair> jntNameIdPairs;
+  std::vector<JointNameIndexPair> gripperNameIdPairs;
   std::vector<double> jointPosition, jointVelocity, jointTorque, gravityTorque;
+  double gripper_position = 0.0;   // 0: open, 100: closed
+  double gripper_command = 0.0;
+  double gripper_command_prev = 0.0;
+  double gripper_force = 10.0;
   std::vector<double> jointCommands, jointCommandsPrev;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
