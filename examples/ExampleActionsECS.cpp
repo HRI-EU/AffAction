@@ -936,11 +936,13 @@ bool ExampleActionsECS::initGraphics()
 
     if (eyeIkEnabled)
     {
+      RMSG_CPP("SetGazeTarget(" << std::string(bn->body()->name) << ")");
       entity.publish("SetGazeTarget", std::string(bn->body()->name));
     }
     else
     {
       auto textCmd = "eye_gaze " + std::string(bn->body()->name);
+      RMSG_CPP(textCmd);
       entity.publish("PlanDFSEE", textCmd);
     }
 
@@ -2202,7 +2204,7 @@ class ExampleMirrorEyes : public ExampleActionsECS
 {
 public:
 
-  ExampleMirrorEyes(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  ExampleMirrorEyes(int argc, char** argv) : ExampleActionsECS(argc, argv), withPTU(false)
   {
     RMSG("Start ROS program to connect");
   }
@@ -2211,16 +2213,32 @@ public:
   {
   }
 
+  bool parseArgs(Rcs::CmdLineParser* parser)
+  {
+    bool res = ExampleActionsECS::parseArgs(parser);
+    parser->getArgument("-pw70", &withPTU, "Start PW70 velocity component (default: false)");
+
+    return res;
+  }
+
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
     speedUp = 1;
     eyeIkEnabled = true;
     componentArgs = "-mirror_eyes -mirror_eyes_gaze_target_topic /mirror_eyes/gaze_target -mirror_eyes_camera_topic /mirror_eyes/camera -mirror_eyes_pupil_coords_topic /mirror_eyes/pupil_coordinates";
-    componentArgs += " -pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+
+    if (withPTU)
+    {
+      componentArgs += " -pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
+    }
+
     return true;
   }
 
+private:
+
+  bool withPTU;
 };
 
 RCS_REGISTER_EXAMPLE(ExampleMirrorEyes, "Actions", "MirrorEyes test program");

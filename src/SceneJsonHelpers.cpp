@@ -582,7 +582,7 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   }
   else
   {
-    RLOG(0, "Failed to compute AABB for object %s - skipping vertex calculation", objectName.c_str());
+    RLOG(4, "Failed to compute AABB for object %s - skipping vertex calculation", objectName.c_str());
   }
 
   return json;
