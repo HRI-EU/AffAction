@@ -121,14 +121,12 @@ namespace aff
 // Helper function to convert float to little-endian uint32_t
 uint32_t PW70CANInterface::float_to_le(float value)
 {
-  uint32_t int_value = *reinterpret_cast<uint32_t*>(&value);
-  return _byteswap_ulong(int_value); // Swap byte order
+  return *reinterpret_cast<uint32_t*>(&value);
 }
 
 // Helper function to convert little-endian uint32_t to float
 float PW70CANInterface::le_to_float(uint32_t value)
 {
-  value = _byteswap_ulong(value); // Swap byte order
   return *reinterpret_cast<float*>(&value);
 }
 
