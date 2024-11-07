@@ -220,7 +220,8 @@ void MirrorEyeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
 
   if (scenePtr && (!gazedAtObject.empty()) && (!gazingCam.empty()))
   {
-    nlohmann::json bb = getObjectInCamera(gazedAtObject, gazingCam, scenePtr, graph);
+    bool useHeadAABB = true;
+    nlohmann::json bb = getObjectInCamera(gazedAtObject, gazingCam, scenePtr, graph, useHeadAABB);
     gazeJson["bounding_box"] = bb;
   }
 

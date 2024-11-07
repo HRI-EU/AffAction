@@ -494,6 +494,40 @@ bool HumanAgent::canReachTo(const ActionScene* scene,
   return false;
 }
 
+bool HumanAgent::computeAABBHead(double xyzMin[3], double xyzMax[3], MatNd* vertices) const
+{
+  if (markers.empty())
+  {
+    return false;
+  }
+
+  std::vector<size_t> headIndices = {3, 26, 27, 28, 29, 30, 31};
+
+  Vec3d_copy(xyzMin, markers[0].org);
+  Vec3d_copy(xyzMax, markers[0].org);
+
+  for (const auto& i : headIndices)
+  {
+    const double* markerXYZ = markers[i].org;
+
+    for (size_t j = 0; j < 3; ++j)
+    {
+      xyzMin[j] = std::min(markerXYZ[j], xyzMin[j]);
+      xyzMax[j] = std::max(markerXYZ[j], xyzMax[j]);
+    }
+  }
+
+  // Here we compute all 8 vertices of the boundig box.
+  if (vertices)
+  {
+    MatNd_reshape(vertices, 8, 3);
+    double(*bb)[3] = (double(*)[3])vertices->ele;
+    Math_computeVerticesAABB(bb, xyzMin, xyzMax);
+  }
+
+  return true;
+}
+
 bool HumanAgent::computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const
 {
   if (markers.empty())

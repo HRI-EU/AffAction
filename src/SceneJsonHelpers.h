@@ -75,7 +75,8 @@ nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
 nlohmann::json getObjectInCamera(const std::string& objectName,
                                  const std::string& cameraName,
                                  const ActionScene* scene,
-                                 const RcsGraph* graph);
+                                 const RcsGraph* graph,
+                                 bool computeHeadAABB=false);
 
 bool isAgentBusy(const std::string& agentName,
                  const ActionScene* scene,

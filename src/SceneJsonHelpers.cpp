@@ -522,7 +522,8 @@ nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
 nlohmann::json getObjectInCamera(const std::string& objectName,
                                  const std::string& cameraName,
                                  const ActionScene* scene,
-                                 const RcsGraph* graph)
+                                 const RcsGraph* graph,
+                                 bool computeHeadAABB)
 {
   nlohmann::json json;
 
@@ -565,7 +566,15 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   else if (dynamic_cast<const HumanAgent*>(objectEntities[0]))
   {
     const HumanAgent* human = dynamic_cast<const HumanAgent*>(objectEntities[0]);
-    aabbValid = human->computeAABB(xyzMin, xyzMax, &vertices);
+
+    if (computeHeadAABB)
+    {
+      aabbValid = human->computeAABBHead(xyzMin, xyzMax, &vertices);
+    }
+    else
+    {
+      aabbValid = human->computeAABB(xyzMin, xyzMax, &vertices);
+    }
   }
 
   if (aabbValid)

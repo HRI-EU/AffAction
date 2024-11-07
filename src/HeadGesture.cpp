@@ -181,7 +181,7 @@ std::string HeadGesture::getName() const
 }
 
 /******************************************************************************
- *
+ * gnuplot> plot 6*sin(2*pi*x), 12*pi*cos(2*pi*x)
  *****************************************************************************/
 HeadNod::HeadNod(const std::string& gestureName, double duration, std::vector<int> jntIds) :
   HeadGesture(gestureName, duration, jntIds)
@@ -212,4 +212,3 @@ std::vector<double> HeadShake::computePanTilt(double t)
 
 
 }   // namespace aff
-

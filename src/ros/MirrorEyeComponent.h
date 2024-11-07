@@ -91,7 +91,6 @@
                 How to try with rostopic:
 
                 rostopic pub /mirror_eyes/gaze_target std_msgs/String "data: '{\"gaze_target\": \"Felix\"}'"
-
 */
 
 namespace aff
