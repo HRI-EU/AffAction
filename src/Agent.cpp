@@ -503,8 +503,8 @@ bool HumanAgent::computeAABBHead(double xyzMin[3], double xyzMax[3], MatNd* vert
 
   std::vector<size_t> headIndices = {3, 26, 27, 28, 29, 30, 31};
 
-  Vec3d_copy(xyzMin, markers[0].org);
-  Vec3d_copy(xyzMax, markers[0].org);
+  Vec3d_copy(xyzMin, markers[headIndices[0]].org);
+  Vec3d_copy(xyzMax, markers[headIndices[0]].org);
 
   for (const auto& i : headIndices)
   {
