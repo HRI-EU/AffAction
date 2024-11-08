@@ -51,7 +51,7 @@ MirrorEyeComponent::MirrorEyeComponent(EntityBase* parent,
                                        std::string pubTopic,
                                        std::string gazeAtTopic,
                                        std::string camTopic) :
-  ComponentBase(parent), scenePtr(scene), loopCount(0),
+  ComponentBase(parent), scenePtr(scene), graphPtr(graph), loopCount(0),
   pupilCoordsPublisherTopic(pubTopic), gazeTargetSubscriberTopic(gazeAtTopic), cameraSubscriberTopic(camTopic)
 {
   subscribe("Start", &MirrorEyeComponent::onStart);

@@ -40,7 +40,7 @@
   </Body>
   
   <Body name="Head_" prev="Seat_" rigid_body_joints="0 0 0.7 90 0 90">
-	<Shape type="BOX" distance="false" extents="0.2 0.15 0.25" graphics="true" physics="false" />
+	<Shape type="BOX" distance="true" extents="0.2 0.15 0.25" graphics="true" physics="false" />
 	<Shape type="SSL" distance="false" graphics="true" length="0.5" physics="false" radius="0.02" transform="0 0 0 -90 0 0" />
 	<Shape type="FRAME" scale="0.2" />
   </Body>
