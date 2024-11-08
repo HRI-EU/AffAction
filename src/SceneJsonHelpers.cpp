@@ -559,7 +559,8 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   MatNd vertices = MatNd_fromPtr(8, 3, &verticesBuf[0][0]);
   bool aabbValid = false;
 
-  if (dynamic_cast<const AffordanceEntity*>(objectEntities[0]))
+  if (dynamic_cast<const AffordanceEntity*>(objectEntities[0]) ||
+      dynamic_cast<const Manipulator*>(objectEntities[0]))
   {
     aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &vertices);
   }
