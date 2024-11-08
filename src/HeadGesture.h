@@ -51,6 +51,8 @@ public:
   std::vector<double> stepPrecise(const Rcs::ControllerBase* controller, MatNd* taskActivations, RcsGraph* targetGraph, double dt);
   void step(const RcsGraph* graph, RcsGraph* targetGraph, double dt);
   void start();
+  void setAmplitude(double amplitude);
+  void setNumTurns(int numTurns);
   std::string getName() const;
 
 protected:
@@ -61,6 +63,8 @@ protected:
   std::string name;
   double t_gesture;
   double gestureDuration;
+  double amplitude;
+  int numTurns;
   int panJointId;
   int tiltJointId;
   std::vector<int> jointIds;

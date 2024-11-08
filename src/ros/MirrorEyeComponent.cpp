@@ -137,8 +137,13 @@ void MirrorEyeComponent::gazeTargetNameRosCallback(const std_msgs::String::Const
 
     if (eye_commands.contains("gesture"))
     {
-      std::string gesture = eye_commands["gesture"];
-      getEntity()->publish("StartGesture", gesture);
+      const nlohmann::json& gestureJson = eye_commands["gesture"];
+
+      std::string gesture = gestureJson["name"];
+      double gestureAmplitude = gestureJson.contains("amplitude") ? gestureJson["amplitude"].get<double>() : 6.0; // Default to 6 deg
+      int nTurns = gestureJson.contains("num_turns") ? gestureJson["num_turns"].get<int>() : 3; // Default to 3 turns
+      gestureAmplitude = RCS_DEG2RAD(gestureAmplitude);
+      getEntity()->publish("StartGesture", gesture, gestureAmplitude, nTurns);
     }
 
   }

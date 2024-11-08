@@ -76,7 +76,11 @@
                     "gesture_time_series": [['time':0.2, 'pan': 0.4, 'tilt':-0.9],
                                             ['time':0.4, 'pan':-0.4, 'tilt':0.9],
                                             ['time':0.6, 'pan': 0.4, 'tilt':-0.9]],
-                    "gesture": "name of the gesture (yes or no)",
+                    "gesture": {
+                        "name": "name of the gesture (yes or no)",
+                        "amplitude": 20.0,
+                        "num_turns": 3
+                        }
                     }
 
                   - or a simple string: The object that is currently gazed at
@@ -91,6 +95,7 @@
                 How to try with rostopic:
 
                 rostopic pub /mirror_eyes/gaze_target std_msgs/String "data: '{\"gaze_target\": \"Felix\"}'"
+                rostopic pub /mirror_eyes/gaze_target std_msgs/String "data: '{\"gesture\": {\"name\": \"yes\", \"amplitude\": 1} }'"
 */
 
 namespace aff

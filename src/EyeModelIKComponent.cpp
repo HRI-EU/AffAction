@@ -167,8 +167,13 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
 
   if (headGestures.empty())
   {
-    headGestures.push_back(std::make_unique<HeadNod>("yes", 3.0, jointIds));
-    headGestures.push_back(std::make_unique<HeadShake>("no", 3.0, jointIds));
+    HeadNod* nod = new HeadNod("yes", 3.0, jointIds);
+    nod->setAmplitude(RCS_DEG2RAD(6.0));
+    headGestures.push_back(std::unique_ptr<HeadNod>(nod));
+
+    HeadShake* shake = new HeadShake("no", 3.0, jointIds);
+    shake->setAmplitude(RCS_DEG2RAD(18.0));
+    headGestures.push_back(std::unique_ptr<HeadShake>(shake));
   }
 
   // Update gaze target
@@ -289,12 +294,15 @@ void EyeModelIKComponent::onSetPupilWeight(double weight)
   setPupilSpeedWeight(controller->getGraph(), weight);
 }
 
-void EyeModelIKComponent::onStartGesture(std::string gestureName)
+void EyeModelIKComponent::onStartGesture(std::string gestureName, double gestureAmplitude, int numTurns)
 {
   for (auto& g : headGestures)
   {
     if (g->getName() == gestureName)
     {
+      g->setNumTurns(numTurns);
+      g->setAmplitude(gestureAmplitude);
+      g->setNumTurns(numTurns);
       g->start();
     }
   }

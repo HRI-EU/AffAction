@@ -64,7 +64,7 @@ private:
   void onComputeIK(RcsGraph* desired, RcsGraph* current);
   void onRender();
   void onSetGazeTarget(std::string bdyName);
-  void onStartGesture(std::string gestureName);
+  void onStartGesture(std::string gestureName, double amplitude, int numTurns);
   void onSetPupilWeight(double weight);
 
   void setPanJointActivation(bool enable);

@@ -49,13 +49,23 @@ namespace aff
  *
  *****************************************************************************/
 HeadGesture::HeadGesture(const std::string& gestureName, double duration, std::vector<int> jntIds) :
-  name(gestureName), t_gesture(-1.0), gestureDuration(duration),
-  panJointId(-1), tiltJointId(-1), jointIds(jntIds)
+  name(gestureName), t_gesture(-1.0), gestureDuration(duration), amplitude(RCS_DEG2RAD(6.0)),
+  numTurns(3), panJointId(-1), tiltJointId(-1), jointIds(jntIds)
 {
 }
 
 HeadGesture::~HeadGesture()
 {
+}
+
+void HeadGesture::setAmplitude(double newAmplitude)
+{
+  amplitude = newAmplitude;
+}
+
+void HeadGesture::setNumTurns(int turns)
+{
+  numTurns = turns;
 }
 
 std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controller, MatNd* a_des, RcsGraph* targetGraph, double dt)
@@ -171,7 +181,7 @@ void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
 
 void HeadGesture::start()
 {
-  RLOG_CPP(0, "Starting gesture " << name << " with duration " << gestureDuration);
+  RLOG_CPP(0, "Starting gesture " << name);
   t_gesture = 0.0;
 }
 
@@ -190,8 +200,12 @@ HeadNod::HeadNod(const std::string& gestureName, double duration, std::vector<in
 
 std::vector<double> HeadNod::computePanTilt(double t)
 {
+  const double vmax = RCS_DEG2RAD(40.0);
+  const double phase = vmax/amplitude;
+  gestureDuration = numTurns*2.0*M_PI/phase;
+
   std::vector<double> panTilt(2, 0.0);
-  panTilt[1] = -RCS_DEG2RAD(6.0) * sin(2.0 * M_PI * t);
+  panTilt[1] = -amplitude * sin(phase*t);
   return panTilt;
 }
 
@@ -205,8 +219,12 @@ HeadShake::HeadShake(const std::string& gestureName, double duration, std::vecto
 
 std::vector<double> HeadShake::computePanTilt(double t)
 {
+  const double vmax = RCS_DEG2RAD(40.0);
+  const double phase = vmax/amplitude;
+  gestureDuration = numTurns*2.0*M_PI/phase;
+
   std::vector<double> panTilt(2, 0.0);
-  panTilt[0] = -RCS_DEG2RAD(3*6.0) * sin(2.0 * M_PI * t);
+  panTilt[0] = -amplitude * sin(phase*t);
   return panTilt;
 }
 
