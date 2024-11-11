@@ -32,6 +32,7 @@
 *******************************************************************************/
 
 #include "TrackerBase.h"
+#include <Rcs_macros.h>
 
 #include <chrono>
 
@@ -39,7 +40,7 @@
 namespace aff
 {
 
-TrackerBase::TrackerBase() : currentTime(0.0)
+TrackerBase::TrackerBase() : currentTime(0.0), frozen(false)
 {
 }
 
@@ -65,6 +66,11 @@ double TrackerBase::getCurrentTime() const
   double seconds = durationSinceEpoch.count();
 
   return seconds;
+}
+
+void TrackerBase::setFrozen(bool freeze)
+{
+  this->frozen = freeze;
 }
 
 }   // namespace

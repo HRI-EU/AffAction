@@ -54,12 +54,14 @@ public:
   virtual void updateGraph(RcsGraph* graph) = 0;
   virtual void setCameraTransform(const HTr* A_camI) = 0;
   virtual void setCurrentTime(double time);
+  virtual void setFrozen(bool frozen);
   virtual double getCurrentTime() const;
   static double getWallclockTime();
 
 protected:
 
   double currentTime;
+  bool frozen;
 };
 
 }   // namespace

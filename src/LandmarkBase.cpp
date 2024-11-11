@@ -115,7 +115,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
 
   for (auto& entry : json["data"].items())
   {
-    //RLOG_CPP(1, entry.key());
+    NLOG_CPP(1, entry.key());
 
     for (const auto& tracker : trackers)
     {
@@ -284,6 +284,10 @@ bool LandmarkBase::isFrozen() const
 void LandmarkBase::onFreezePerception(bool freeze)
 {
   this->frozen = freeze;
+  for (auto& tracker : getTrackers())
+  {
+    tracker->setFrozen(freeze);
+  }
 }
 
 void LandmarkBase::setSyncInputWithWallclock(bool enable)

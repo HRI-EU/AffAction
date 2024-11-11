@@ -1042,7 +1042,7 @@ bool ExampleActionsECS::initGraphics()
   auto lmZmqs = getComponents<LandmarkZmqComponent>(components);
   for (auto& c : lmZmqs)
   {
-    //c->createDebugGraphics(viewer.get());
+    RLOG_CPP(0, "Adding debug graphics to LandmarkZmqComponent");
     c->createDebugGraphics(viewer);
   }
 
@@ -2026,7 +2026,8 @@ public:
 
     s << ExampleActionsECS::help() << std::endl;
     s << "Start python webcam program: " << std::endl;
-    s << "python webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml";
+    s << "export PYTHONPATH=${PYTHONPATH:+${PYTHONPATH}:}../src/Smile/src/camera_tracking/src" << std::endl;
+    s << "python ../src/Smile/src/camera_tracking/scripts/webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml";
     return s.str();
   }
 
@@ -2171,7 +2172,7 @@ public:
 
   ExampleAzure(int argc, char** argv) : ExampleActionsECS(argc, argv)
   {
-    RMSG("Start python program with: python azure_tracking_socket.py --body --frame-id camera_01 --mediapipe --aruco");
+    RMSG("Start python program with: python azure_tracking_socket.py --body --frame-id camera_01 --aruco");
   }
 
   virtual ~ExampleAzure()
@@ -2181,15 +2182,18 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
-    componentArgs = "-landmarks_zmq -azure  -aruco -landmarks_camera camera_0";
+    componentArgs += " -landmarks_zmq -skeleton_tracking -aruco_tracking -landmarks_camera camera_0";
     return true;
   }
 
   std::string help()
   {
-    std::string str = "Start python program with: python azure_tracking_socket.py --body --frame-id camera_01 --mediapipe --aruco\n\n";
-    str += ExampleActionsECS::help();
-    return str;
+    std::stringstream s;
+    s << "Start python webcam program: " << std::endl;
+    s << "export PYTHONPATH=${PYTHONPATH:+${PYTHONPATH}:}../src/Smile/src/camera_tracking/src" << std::endl;
+    s << "python ../src/Smile/src/camera_tracking/scripts/azure_tracking_socket.py --body --frame-id camera_01 --aruco\n\n";
+    s << ExampleActionsECS::help();
+    return s.str();
   }
 
 };

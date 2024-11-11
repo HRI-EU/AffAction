@@ -124,6 +124,80 @@ typedef enum
 
 } BodyName;
 
+
+static std::string getLinkNameById(int id)
+{
+  switch (id)
+  {
+    case PELVIS:
+      return "PELVIS";
+    case SPINE_NAVEL:
+      return "SPINE_NAVEL";
+    case SPINE_CHEST:
+      return "SPINE_CHEST";
+    case NECK:
+      return "NECK";
+    case CLAVICLE_LEFT:
+      return "CLAVICLE_LEFT";
+    case SHOULDER_LEFT:
+      return "SHOULDER_LEFT";
+    case ELBOW_LEFT:
+      return "ELBOW_LEFT";
+    case WRIST_LEFT:
+      return "WRIST_LEFT";
+    case HAND_LEFT:
+      return "HAND_LEFT";
+    case HANDTIP_LEFT:
+      return "HANDTIP_LEFT";
+    case THUMB_LEFT:
+      return "THUMB_LEFT";
+    case CLAVICLE_RIGHT:
+      return "CLAVICLE_RIGHT";
+    case SHOULDER_RIGHT:
+      return "SHOULDER_RIGHT";
+    case ELBOW_RIGHT:
+      return "ELBOW_RIGHT";
+    case WRIST_RIGHT:
+      return "WRIST_RIGHT";
+    case HAND_RIGHT:
+      return "HAND_RIGHT";
+    case HANDTIP_RIGHT:
+      return "HANDTIP_RIGHT";
+    case THUMB_RIGHT:
+      return "THUMB_RIGHT";
+    case HIP_LEFT:
+      return "HIP_LEFT";
+    case KNEE_LEFT:
+      return "KNEE_LEFT";
+    case ANKLE_LEFT:
+      return "ANKLE_LEFT";
+    case FOOT_LEFT:
+      return "FOOT_LEFT";
+    case HIP_RIGHT:
+      return "HIP_RIGHT";
+    case KNEE_RIGHT:
+      return "KNEE_RIGHT";
+    case ANKLE_RIGHT:
+      return "ANKLE_RIGHT";
+    case FOOT_RIGHT:
+      return "FOOT_RIGHT";
+    case HEAD:
+      return "HEAD";
+    case NOSE:
+      return "NOSE";
+    case EYE_LEFT:
+      return "EYE_LEFT";
+    case EAR_LEFT:
+      return "EAR_LEFT";
+    case EYE_RIGHT:
+      return "EYE_RIGHT";
+    case EAR_RIGHT:
+      return "EAR_RIGHT";
+    default:
+      return "UNKNOWN";
+  }
+}
+
 /*
   Connection indices:
 
@@ -589,7 +663,7 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
     skeletons[i]->alphaPrev = skeletons[i]->alpha;
     skeletons[i]->alpha = Math_clip((skeletons[i]->maxAge - skeletons[i]->age)/skeletons[i]->maxAge, 0.0, 1.0);
     skeletons[i]->alpha = lround(skeletons[i]->alpha*100.0)/100.0;
-    if (skeletons[i]->alpha>0.8)
+    if (skeletons[i]->alpha>0.6)
     {
       skeletons[i]->alpha = 1.0;
     }
@@ -639,7 +713,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
 
     const int skeletonId = atoi(entry.key().c_str());
     std::vector<HTr> markers(NUM_FRAMES);
-    RLOG_CPP(1, "json: " << nlohmann::to_string(entry.value()));
+    RLOG_CPP(5, "json: " << nlohmann::to_string(entry.value()));
     //RLOG_CPP(1, "pelvis: " << nlohmann::to_string(entry.value()["pelvis"]));
 
     markers[PELVIS] = parsePose(entry.value()["pelvis"]);
@@ -687,8 +761,14 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
       HTr_transform(&marker, &A_CI, &tmp);
     }
 
-
-    NLOG(3, "pelvis: %.3f %.3f %.3f", markers[PELVIS].org[0], markers[PELVIS].org[1], markers[PELVIS].org[2]);
+    REXEC(5)
+    {
+      for (size_t i=0; i<markers.size(); ++i)
+      {
+        RLOG_CPP(0, "Marker " + getLinkNameById(i) + "[" + std::to_string(i) + "]: ");
+        HTr_fprint(stderr, &markers[i]);
+      }
+    }
 
     markerMap[skeletonId] = markers;
 
