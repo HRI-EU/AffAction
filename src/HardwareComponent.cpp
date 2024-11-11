@@ -41,6 +41,7 @@
 #include "PW70Component.h"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
+#include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
 
 #if defined USE_ROS
@@ -329,6 +330,18 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   auto extraArgsVec = Rcs::String_split(extraArgs, " ");
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
+  if (dryRun)
+  {
+    argP.hasArgument("-zmq_listener", "Start with face recognition client");
+    argP.hasArgument("-zmq_listener_ip", "Server ip adress (default: tcp://*:5555)");
+  }
+  else if (getKey(argvStrVec, "-zmq_listener"))
+  {
+    std::string ip_address = "tcp://*:5555";
+    getKeyValuePair<std::string>(argvStrVec, "-zmq_listener_ip", ip_address);
+    components.push_back(new ZmqJsonSubscriber(&entity, ip_address));
+  }
 
   if (dryRun)
   {

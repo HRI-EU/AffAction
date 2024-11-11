@@ -53,10 +53,10 @@ private:
   std::string ip_address;
 
 public:
-  ZmqJsonSubscriber(EntityBase* parent, std::string zmq_ip="tcp://*:5555")
+  ZmqJsonSubscriber(EntityBase* parent, std::string zmq_ip="tcp://*:5556")
     : ComponentBase(parent), ip_address(zmq_ip)
   {
-    RLOG(0, "Creating ZmqJsonSubscriber");
+    RLOG_CPP(0, "Creating ZmqJsonSubscriber with ip " << zmq_ip);
     subscribe("Start", &ZmqJsonSubscriber::onStart);
     subscribe("Stop", &ZmqJsonSubscriber::onStop);
   }
@@ -105,15 +105,20 @@ public:
     try
     {
       socket = std::make_unique<zmq::socket_t>(context, ZMQ_SUB);
-      socket->bind(ip_address); // Bind to all available interfaces
-      //socket.connect(ip_address);
+
 #if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
       socket->setsockopt(ZMQ_RCVTIMEO, 3000); // Timeout in milliseconds
       socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 #else
       socket->set(zmq::sockopt::rcvtimeo, 3000);
       socket->set(zmq::sockopt::subscribe, "");
+      socket->set(zmq::sockopt::conflate, 1); // Receive only last message
 #endif
+
+      socket->bind(ip_address); // Bind to all available interfaces
+
+      // Little timeout to avoid getting queued messages
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
     catch (const zmq::error_t& e)
     {
@@ -122,6 +127,19 @@ public:
       return;
     }
 
+    // Flush the queue
+    {
+      int count = 0;
+      zmq::message_t message;
+      while (socket->recv(message, zmq::recv_flags::dontwait))
+      {
+        // Discard the message, effectively clearing the queue
+        count++;
+      }
+      RLOG_CPP(0, "Flushed " << count << " messages");
+    }
+
+
     while (runLoop)
     {
       zmq::message_t request;
@@ -129,8 +147,27 @@ public:
       if (socket->recv(request, zmq::recv_flags::none))
       {
         std::string json_str(static_cast<char*>(request.data()), request.size());
-        nlohmann::json json_data = nlohmann::json::parse(json_str);
         RLOG_CPP(0, "Received json:\n\n" << json_str);
+
+        // Parse the JSON data with error handling
+        nlohmann::json json_data;
+        try
+        {
+          json_data = nlohmann::json::parse(json_str);
+
+          if (json_data.contains("type"))
+          {
+            std::string msgType = json_data["type"];
+            getEntity()->publish("ReceiveZMQ", msgType, json_str);
+          }
+
+
+        }
+        catch (const nlohmann::json::parse_error& e)
+        {
+          RLOG_CPP(0, "JSON parsing error: " << e.what() << "\nReceived data: " << json_str);
+        }
+
       }
       else
       {
