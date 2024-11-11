@@ -86,6 +86,7 @@ public:
 
   bool isVisible() const;
   void enableDebugGraphics(bool enable);
+  bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
 
   static const std::string& getFaceMeshDebugString(const std::string& fileName = "FaceMesh.txt");
 

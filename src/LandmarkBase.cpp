@@ -324,25 +324,11 @@ void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer)
 {
   for (auto& tracker : getTrackers())
   {
-    // Add skeleton graphics
-    aff::AzureSkeletonTracker* st = dynamic_cast<aff::AzureSkeletonTracker*>(tracker.get());
-    if (st)
+    bool success = tracker->initDebugGraphics(viewer, getGraph());
+    if (!success)
     {
-      st->initGraphics(getGraph(), viewer);
+      RLOG_CPP(1, "Failed to add tracker for '" << tracker->getRequestKeyword() <<"'");
     }
-
-    // Add facemesh graphics
-    aff::FaceTracker* ft = dynamic_cast<aff::FaceTracker*>(tracker.get());
-    if (ft)
-    {
-      const RcsBody* cam = RcsGraph_getBodyByName(getGraph(), ft->getCameraName().c_str());
-      bool success = ft->addGraphics(viewer, cam);
-      if (!success)
-      {
-        RLOG_CPP(0, "Couldn't add debug graphics with camera '" << ft->getCameraName() <<"'");
-      }
-    }
-
   }
 
 }

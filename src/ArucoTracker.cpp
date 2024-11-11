@@ -739,4 +739,9 @@ bool ArucoTracker::isCalibrating() const
   return calibration ? calibration->isCalibrating() : false;
 }
 
+bool ArucoTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
+{
+  return true;
+}
+
 }   // namespace

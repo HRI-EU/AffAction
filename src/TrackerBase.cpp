@@ -73,4 +73,9 @@ void TrackerBase::setFrozen(bool freeze)
   this->frozen = freeze;
 }
 
+bool TrackerBase::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
+{
+  return false;
+}
+
 }   // namespace

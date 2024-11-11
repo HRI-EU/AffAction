@@ -37,6 +37,7 @@
 #include "json.hpp"
 
 #include <Rcs_graph.h>
+#include <RcsViewer.h>
 
 #include <string>
 
@@ -56,6 +57,7 @@ public:
   virtual void setCurrentTime(double time);
   virtual void setFrozen(bool frozen);
   virtual double getCurrentTime() const;
+  virtual bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
   static double getWallclockTime();
 
 protected:

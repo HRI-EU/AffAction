@@ -885,11 +885,11 @@ bool AzureSkeletonTracker::isSkeletonVisible(size_t idx) const
   return false;
 }
 
-void AzureSkeletonTracker::initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer)
+bool AzureSkeletonTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   if (!viewer)
   {
-    return;
+    return false;
   }
 
   static std::vector<std::string> gCol{ "RED", "ORANGE", "YELLOW", "BLUE", "GREEN",
@@ -901,6 +901,7 @@ void AzureSkeletonTracker::initGraphics(const RcsGraph* graph, Rcs::Viewer* view
     skeletons[i]->initGraphics(graph, viewer, gCol[i%gCol.size()]);
   }
 
+  return true;
 }
 
 void AzureSkeletonTracker::setCameraTransform(const HTr* A_camI)

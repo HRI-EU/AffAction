@@ -1039,7 +1039,7 @@ bool ExampleActionsECS::initGraphics()
   // If we have a LandmarkZmw component, we initialize its debug graphics
   // here. We have to defer it to this point, since there's no GraphicsWindow
   // before this.
-  auto lmZmqs = getComponents<LandmarkZmqComponent>(components);
+  auto lmZmqs = getComponents<LandmarkBase>(components);
   for (auto& c : lmZmqs)
   {
     RLOG_CPP(0, "Adding debug graphics to LandmarkZmqComponent");

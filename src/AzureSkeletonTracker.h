@@ -59,7 +59,8 @@ public:
 
   virtual ~AzureSkeletonTracker();
 
-  void initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer);
+  bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
+  //void initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer);
 
   // Process aruco frames. Called from control loop (100Hz or so)
   void updateGraph(RcsGraph* graph);

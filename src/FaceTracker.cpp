@@ -463,4 +463,22 @@ void FaceTracker::enableDebugGraphics(bool enable)
   }
 }
 
+bool FaceTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
+{
+  if (!viewer)
+  {
+    return false;
+  }
+
+  const RcsBody* cam = RcsGraph_getBodyByName(graph, getCameraName().c_str());
+  bool success = addGraphics(viewer, cam);
+
+  if (!success)
+  {
+    RLOG_CPP(1, "Couldn't add debug graphics with camera '" << getCameraName() <<"'");
+  }
+
+  return success;
+}
+
 }   // namespace aff

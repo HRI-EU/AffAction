@@ -191,6 +191,8 @@ public:
    */
   bool isCalibrating() const;
 
+  bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
+
 
 private:
 
