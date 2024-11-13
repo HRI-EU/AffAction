@@ -60,10 +60,9 @@ public:
   virtual ~AzureSkeletonTracker();
 
   bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
-  //void initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer);
 
   // Process aruco frames. Called from control loop (100Hz or so)
-  void updateGraph(RcsGraph* graph);
+  void update(ActionScene* scene, RcsGraph* graph);
 
   std::string getRequestKeyword() const;
 
@@ -77,26 +76,20 @@ public:
 
   void setSkeletonName(size_t skeletonIdx, const std::string& name);
 
-  void addAgent(const std::string& agentName);
-
-  void addAgents();
-
-  void setScene(aff::ActionScene* scene);
-
-  void jsonFromSkeletons(nlohmann::json& json) const;
+  void addAgents(const ActionScene* scene);
 
   void registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback);
-
-  // bool setParameter(const std::string& parameterName, void* ptr);
 
 private:
 
   // Process landmark frames. Called from perception thread (30Hz or so)
   void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
 
-  void updateAgents(RcsGraph* graph);
+  void updateAgents(ActionScene* scene, RcsGraph* graph);
 
   void updateSkeletons(RcsGraph* graph);
+
+  void addAgent(const ActionScene* scene, const std::string& agentName);
 
   std::vector<int> findCorrespondences(std::map<int, std::vector<HTr>> markerMap) const;
   std::vector<std::unique_ptr<Skeleton>> skeletons;
@@ -105,7 +98,6 @@ private:
   double defaultPosRadius;
   HTr A_CI;
   size_t skeletonIndex = 0;
-  ActionScene* scene;
 };
 
 } // namespace aff

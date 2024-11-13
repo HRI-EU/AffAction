@@ -36,7 +36,6 @@
 
 #include <ComponentBase.h>
 #include <Rcs_macros.h>
-#include <Rcs_timer.h>
 #include <Rcs_utils.h>
 
 #include <zmq.hpp>
@@ -116,7 +115,7 @@ LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, std::string conne
 
   subscribe("Start", &LandmarkZmqComponent::startZmqThread);
   subscribe("Stop", &LandmarkZmqComponent::stopZmqThread);
-  subscribe("PostUpdateGraph", &LandmarkZmqComponent::onPostUpdateGraph);
+  subscribe("UpdateScene", &LandmarkZmqComponent::onUpdateScene);
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
   subscribe("EstimateCameraPose", &LandmarkZmqComponent::onEstimateCameraPose);
   subscribe("ToggleJsonLogging", &LandmarkZmqComponent::onToggleJsonLogging);
@@ -151,17 +150,10 @@ void LandmarkZmqComponent::onToggleJsonLogging()
   logging = !logging;
 }
 
-// Same as in LandmarkBase with the addition of the time being handled
-// differently when data comes from a file.
-void LandmarkZmqComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
+double LandmarkZmqComponent::getCurrentTime() const
 {
-  const double wallClockTime = readDataFromFile ? 0.0 : TrackerBase::getWallclockTime();
-  for (const auto& tracker : trackers)
-  {
-    tracker->setCurrentTime(wallClockTime);
-  }
-
-  updateGraph(desired);
+  //RLOG(1, "DERIVED");
+  return readDataFromFile ? 0.0 : LandmarkBase::getCurrentTime();
 }
 
 void LandmarkZmqComponent::onEstimateCameraPose(int numFrames)
@@ -196,8 +188,6 @@ void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
     {
       nlohmann::json j;
       ifs >> j;
-      // (CP) disabled for other debugging
-      //RLOG_CPP(1, "json: '" << j << "'");
       j["header"]["timestamp"] = 0.0;
       jsons.push_back(j);
     }
@@ -213,11 +203,11 @@ void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
   {
     for (auto& json : jsons)
     {
-      if (!frozen)
+      //if (!frozen)
       {
         setJsonInput(json);
       }
-      Timer_waitDT(0.2);
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
       // Inner loop check so that quitting is a bit more responsive
       if (!threadRunning)
@@ -256,7 +246,7 @@ void LandmarkZmqComponent::zmqThreadFunc()
   RLOG(5, "Starting thread loop");
   while (this->threadRunning && !timedOut)
   {
-    double t_mp = Timer_getSystemTime();
+    double t_mp = TrackerBase::getWallclockTime();
 
     nlohmann::json request;
 
@@ -298,21 +288,11 @@ void LandmarkZmqComponent::zmqThreadFunc()
     }
 
     // Timing statistics
-    t_mp = Timer_getSystemTime() - t_mp;
+    t_mp = TrackerBase::getWallclockTime() - t_mp;
     frameRate = (frameRate == 0.0) ? 1.0 / t_mp : 0.99 * frameRate + 0.01 * (1.0 / t_mp);
 
     RLOG(5, "Framerate: %.2f Hz", this->frameRate);
   }
-
-  // Quit the python server
-#if defined (_MSC_VER)
-  //if (quitPythonServerOnExit)
-  //{
-  //  nlohmann::json request;
-  //  request["quit"] = true;
-  //  sendRequest(socket, request);
-  //}
-#endif
 
   threadFunctionCompleted = true;
   RLOG(1, "Quitting thread function");
@@ -362,7 +342,7 @@ void LandmarkZmqComponent::stopZmqThread()
   // RLOG(0, "Thread joined");
   while (!threadFunctionCompleted)
   {
-    Timer_waitDT(0.1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
   RLOG(0, "onStop() completed");

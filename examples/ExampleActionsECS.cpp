@@ -268,13 +268,14 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   dtEvents = 0.0;
   failCount = 0;
 
-  updateGraph = NULL;
-  postUpdateGraph = NULL;
-  computeKinematics = NULL;
-  computeTrajectory = NULL;
-  setTaskCommand = NULL;
-  setJointCommand = NULL;
-  setRenderCommand = NULL;
+  updateGraph = nullptr;
+  postUpdateGraph = nullptr;
+  updateScene = nullptr;
+  computeKinematics = nullptr;
+  computeTrajectory = nullptr;
+  setTaskCommand = nullptr;
+  setJointCommand = nullptr;
+  setRenderCommand = nullptr;
 
   viewer = nullptr;
   actionC = nullptr;
@@ -408,6 +409,7 @@ bool ExampleActionsECS::initAlgo()
   setJointCommand = entity.registerEvent<const MatNd*>("SetJointCommand");
   setRenderCommand = entity.registerEvent<>("Render");
   postUpdateGraph = entity.registerEvent<RcsGraph*, RcsGraph*>("PostUpdateGraph");
+  updateScene = entity.registerEvent<RcsGraph*, RcsGraph*, ActionScene*>("UpdateScene");
 
   if (pause)
   {
@@ -1099,6 +1101,7 @@ void ExampleActionsECS::step()
   updateGraph->call(getCurrentGraph());
   computeKinematics->call(getCurrentGraph());
   postUpdateGraph->call(ikc->getGraph(), getCurrentGraph());
+  updateScene->call(ikc->getGraph(), getCurrentGraph(), getScene());
   computeTrajectory->call(trajTimeScaling*entity.getDt());
   setTaskCommand->call(trajC->getActivationPtr(), trajC->getTaskCommandPtr());
   setJointCommand->call(ikc->getJointCommandPtr());
@@ -2023,11 +2026,16 @@ public:
   std::string help()
   {
     std::stringstream s;
-
-    s << ExampleActionsECS::help() << std::endl;
     s << "Start python webcam program: " << std::endl;
+#if defined (_MSC_VER)
+    s << "set PYTHONPATH=%PYTHONPATH%;..\\src\\Smile\\src\\camera_tracking\\src" << std::endl;
+    s << "python ../src/Smile/src/camera_tracking/scripts/webcam_tracking_socket.py --mediapipe ../src/Smile/src/camera_tracking/data/calibration/Logitech-C920.yaml";
+#else
     s << "export PYTHONPATH=${PYTHONPATH:+${PYTHONPATH}:}../src/Smile/src/camera_tracking/src" << std::endl;
     s << "python ../src/Smile/src/camera_tracking/scripts/webcam_tracking_socket.py --mediapipe --camera_config_file Logitech-C920.yaml";
+#endif
+
+    s << std::endl << std::endl << ExampleActionsECS::help() << std::endl;
     return s.str();
   }
 

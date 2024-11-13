@@ -44,6 +44,7 @@
 
 namespace aff
 {
+class ActionScene;
 
 class TrackerBase
 {
@@ -52,7 +53,7 @@ public:
   TrackerBase();
   virtual std::string getRequestKeyword() const = 0;
   virtual void parse(const nlohmann::json& json, double time, const std::string& cameraFrame) = 0;
-  virtual void updateGraph(RcsGraph* graph) = 0;
+  virtual void update(ActionScene* scene, RcsGraph* graph) = 0;
   virtual void setCameraTransform(const HTr* A_camI) = 0;
   virtual void setCurrentTime(double time);
   virtual void setFrozen(bool frozen);

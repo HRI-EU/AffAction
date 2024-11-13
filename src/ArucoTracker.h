@@ -87,10 +87,12 @@ public:
    * accurate real-time tracking by updating only the relevant transformations
    * based on marker detections, filtering, and validation checks.
    *
+   * \param[in,out] scene Pointer to the ActionScene structure representing the
+   *                      entities and agents.
    * \param[in,out] graph Pointer to the RcsGraph structure representing the
    *                      tracked bodies and joints.
    */
-  void updateGraph(RcsGraph* graph);
+  void update(ActionScene* scene, RcsGraph* graph);
 
   /*!
    * \brief Returns the keyword associated with ArUco marker processing
@@ -199,7 +201,6 @@ private:
   struct MarkerBodyData
   {
     MarkerBodyData();
-    bool isHeldInHand() const;
     bool hasUpdate() const;
     void print(const RcsGraph* graph=nullptr) const;
     const RcsBody* body(const RcsGraph* graph);
@@ -207,7 +208,6 @@ private:
     int bodyId;
     int jointIndex;
     double t_latest;
-    bool heldInHand;
     bool frozen;
     std::vector<double> q_rbj;
     std::vector<std::string> markerNames;
@@ -231,11 +231,6 @@ private:
                                                  const RcsBody* body,
                                                  const HTr* T_camI,
                                                  const std::map<std::string, std::vector<double>>& arucoMap);
-
-  static void computeDofsFromAruco(const RcsGraph* graph,
-                                   const HTr* T_camI,
-                                   const std::map<std::string, std::vector<double>>& arucoMap,
-                                   std::map<std::string, ArucoTracker::MarkerBodyData>& markerMap);
 };
 
 }   // namespace

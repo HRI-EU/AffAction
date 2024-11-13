@@ -69,7 +69,7 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 
 // In case the iris is estimated, there are 10 more landmarks
 FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
-  scene(nullptr), mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
+  mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
 {
   std::string meshFile = Rcs::getAbsoluteFileName("hri_scitos_description/FaceMesh-holes-478.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
@@ -152,8 +152,10 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
   HTr C_leftIris, C_rightIris;
   estimateIrisTransform(landmarks, &faceTrf, &C_leftIris, &C_rightIris);
 
-  // Update debug graphics
-  if (sw.valid())
+  // Update debug graphics. Locking the viewer mutex might lead to waiting
+  // the whole step() cycle. In parse(), it is acceptable, since it is a slow
+  // and non-deterministic loop.
+  if (sw.valid() && sw->isVisible())
   {
     viewer->lock();
     faceMeshNode->update(mesh);
@@ -169,7 +171,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
 
 }
 
-void FaceTracker::updateGraph(RcsGraph* graph)
+void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
 
@@ -236,21 +238,6 @@ void FaceTracker::updateGraph(RcsGraph* graph)
     double* dst = &mesh->vertices[3 * i];
     Vec3d_transform(dst, &this->A_camI, MatNd_getRowPtr(landmarks, i));
     dst[0] += DISTANCE_FACE_TO_CAM;
-  }
-
-}
-
-
-void FaceTracker::setScene(aff::ActionScene* scene_)
-{
-  this->scene = scene_;
-}
-
-void FaceTracker::updateAgents(RcsGraph* graph)
-{
-  if (!this->scene)
-  {
-    return;
   }
 
 }

@@ -67,14 +67,12 @@ public:
   // Inherited methods
   std::string getRequestKeyword() const;
   void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
-  void updateGraph(RcsGraph* graph);
+  void update(ActionScene* scene, RcsGraph* graph);
   void setCameraTransform(const HTr* A_CI);
 
 
 
   bool addGraphics(Rcs::Viewer* viewer, const RcsBody* cameraFrame);
-  void setScene(aff::ActionScene* scene);
-  void updateAgents(RcsGraph* graph);
 
   // These methods are onl used for adding the debug graphics,
   // where the face mesh is transformed into world coordinates.
@@ -101,7 +99,6 @@ private:
   static bool estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A_FC,
                                     HTr* leftIris, HTr* rightIris);
 
-  ActionScene* scene;
   RcsMeshData* mesh;
   MatNd* landmarks;
   Rcs::Viewer* viewer;

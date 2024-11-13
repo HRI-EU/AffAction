@@ -58,12 +58,16 @@ public:
 
   virtual std::string getName() const;
 
+protected:
+
+  double getCurrentTime() const;
+
 private:
 
   /*! \brief Same as in LandmarkBase with the addition of the time being handled
    *         differently when data comes from a file.
    */
-  void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
+  //void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
 
   void onToggleJsonLogging();
   void onEstimateCameraPose(int numFrames);

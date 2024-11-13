@@ -47,50 +47,13 @@ namespace aff
 {
 
 
-LandmarkBase::LandmarkBase() : scene(NULL), graph(NULL), frozen(false),
-  syncInputJsonWithWallclockTime(false)
+LandmarkBase::LandmarkBase() :
+  graphPtr(nullptr), frozen(false), syncInputJsonWithWallclockTime(false)
 {
 }
 
 LandmarkBase::~LandmarkBase()
 {
-}
-
-void LandmarkBase::setScenePtr(RcsGraph* graph_, ActionScene* scene_)
-{
-  graph = graph_;
-  scene = scene_;
-}
-
-void LandmarkBase::updateGraph(RcsGraph* g)
-{
-  for (const auto& tracker : trackers)
-  {
-    tracker->updateGraph(g);
-  }
-}
-
-std::string LandmarkBase::getTrackerState() const
-{
-  if ((!graph) || (!scene))
-  {
-    RLOG(1, "Can't update scene - no graph has been added");
-    return std::string();
-  }
-
-  nlohmann::json json;
-
-  // Add skeleton information
-  for (const auto& tracker : trackers)
-  {
-    AzureSkeletonTracker* st = dynamic_cast<AzureSkeletonTracker*>(tracker.get());
-    if (st)
-    {
-      st->jsonFromSkeletons(json);
-    }
-  }
-
-  return json.dump();
 }
 
 void LandmarkBase::addTracker(std::unique_ptr<TrackerBase> tracker)
@@ -157,7 +120,7 @@ TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
   return tracker;
 }
 
-int LandmarkBase::addSkeletonTrackerForAgents(double r)
+int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r)
 {
   if (!scene)
   {
@@ -181,9 +144,8 @@ int LandmarkBase::addSkeletonTrackerForAgents(double r)
   }
 
   auto tracker = new AzureSkeletonTracker(numHumanAgents);
-  tracker->setScene(this->scene);
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
-  tracker->addAgents();
+  tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
   RLOG(0, "Added SkeletonTracker");
 
@@ -216,7 +178,7 @@ void LandmarkBase::setSkeletonTrackerDefaultPosition(size_t skeletonIndex, doubl
   }
 }
 
-TrackerBase* LandmarkBase::addFaceTracker(const std::string& faceBodyName, const std::string& camera)
+TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::string& faceBodyName, const std::string& camera)
 {
   if (!scene)
   {
@@ -225,7 +187,6 @@ TrackerBase* LandmarkBase::addFaceTracker(const std::string& faceBodyName, const
   }
 
   FaceTracker* tracker = new FaceTracker(faceBodyName);
-  tracker->setScene(this->scene);
   tracker->setCameraName(camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));
 
@@ -262,18 +223,21 @@ bool LandmarkBase::isCalibrating(const std::string& camera) const
   return false;
 }
 
-void LandmarkBase::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
+void LandmarkBase::onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene)
 {
-  const double wallClockTime = TrackerBase::getWallclockTime();
-  for (const auto& tracker : trackers)
+  const double wallClockTime = getCurrentTime();
+
+  for (auto& tracker : trackers)
   {
     tracker->setCurrentTime(wallClockTime);
+    tracker->update(scene, desired);
   }
 
-  if (!frozen)
-  {
-    updateGraph(desired);
-  }
+}
+
+double LandmarkBase::getCurrentTime() const
+{
+  return TrackerBase::getWallclockTime();
 }
 
 bool LandmarkBase::isFrozen() const
@@ -302,17 +266,7 @@ bool LandmarkBase::getSyncInputWithWallclock() const
 
 const RcsGraph* LandmarkBase::getGraph() const
 {
-  return this->graph;
-}
-
-const ActionScene* LandmarkBase::getScene() const
-{
-  return this->scene;
-}
-
-ActionScene* LandmarkBase::getScene()
-{
-  return this->scene;
+  return this->graphPtr;
 }
 
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
@@ -337,8 +291,6 @@ void LandmarkBase::enableDebugGraphics(bool enable)
 {
   for (auto& tracker : getTrackers())
   {
-
-
     // Handle facemesh graphics
     aff::FaceTracker* ft = dynamic_cast<aff::FaceTracker*>(tracker.get());
     if (ft)

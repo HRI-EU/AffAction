@@ -53,13 +53,8 @@ namespace aff
 /*******************************************************************************
   MarkerBodyData class implementation
  *******************************************************************************/
-ArucoTracker::MarkerBodyData::MarkerBodyData() : bodyId(-1), jointIndex(-1), t_latest(0.0), heldInHand(false), frozen(false)
+ArucoTracker::MarkerBodyData::MarkerBodyData() : bodyId(-1), jointIndex(-1), t_latest(0.0), frozen(false)
 {
-}
-
-bool ArucoTracker::MarkerBodyData::isHeldInHand() const
-{
-  return heldInHand;
 }
 
 bool ArucoTracker::MarkerBodyData::hasUpdate() const
@@ -70,7 +65,8 @@ bool ArucoTracker::MarkerBodyData::hasUpdate() const
 void ArucoTracker::MarkerBodyData::print(const RcsGraph* graph) const
 {
   std::string bdyName = graph ? std::string(RCSBODY_NAME_BY_ID(graph, bodyId)) : std::to_string(bodyId);
-  std::cout << "Body " << bdyName << " at index " << jointIndex << ": " << "Frozen is " << (frozen ? "true" : "false");
+  std::cout << "Body " << bdyName << " at index " << jointIndex << ": "
+            << "Frozen is " << (frozen ? "true" : "false");
 
   if (hasUpdate())
   {
@@ -140,7 +136,6 @@ ArucoTracker::MarkerBodyData ArucoTracker::computeBodyDofsFromAruco(const RcsGra
 {
   ArucoTracker::MarkerBodyData mData;
   mData.bodyId = body->id;
-  mData.heldInHand = RcsBody_isArticulated(graph, body);
   mData.jointIndex = graph->joints[body->jntId].jointIndex;
   mData.frozen = true;
 
@@ -208,7 +203,6 @@ ArucoTracker::MarkerBodyData ArucoTracker::computeBodyDofsFromAruco(const RcsGra
     double q_rbj[6];
     HTr_to6DVector(q_rbj, &T_BP_array[0]);
     mData.q_rbj = std::vector<double>(q_rbj, q_rbj + 6);
-    //RLOG(1, "Updating body %s", body->name);
   }
   else if (T_BP_array.size() > 1)
   {
@@ -244,48 +238,6 @@ ArucoTracker::MarkerBodyData ArucoTracker::computeBodyDofsFromAruco(const RcsGra
   return mData;
 }
 
-void ArucoTracker::computeDofsFromAruco(const RcsGraph* graph,
-                                        const HTr* T_camI,
-                                        const std::map<std::string, std::vector<double>>& arucoMap,
-                                        std::map<std::string, ArucoTracker::MarkerBodyData>& markerMap)
-{
-  RCSGRAPH_FOREACH_BODY(graph)
-  {
-    // We only add entries that correspond to valid rigid bodies that have at least one marker.
-    if ((!BODY->rigid_body_joints) || (BODY->id==-1) ||
-        (RcsBody_numShapesOfType(BODY, RCSSHAPE_COMPUTE_MARKER)==0))
-    {
-      continue;
-    }
-
-    auto markerItem = computeBodyDofsFromAruco(graph, BODY, T_camI, arucoMap);
-    auto it = markerMap.find(BODY->name);
-
-    // Marker body never seen before: initilize
-    if (it == markerMap.end())
-    {
-      markerMap[BODY->name] = markerItem;
-    }
-    // Update marker data
-    else
-    {
-      if (markerItem.hasUpdate())
-      {
-        it->second.t_latest = markerItem.t_latest;
-        it->second.q_rbj = markerItem.q_rbj;
-        it->second.markerNames = markerItem.markerNames;
-        it->second.frozen = markerItem.frozen;
-      }
-
-      it->second.bodyId = markerItem.bodyId;
-      it->second.jointIndex = markerItem.jointIndex;
-      it->second.heldInHand = markerItem.heldInHand;   // This is the reason we need to do this in each time step
-    }
-
-  }   // RCSGRAPH_FOREACH_BODY(graph)
-
-}
-
 /*******************************************************************************
   We require the camera to be a child of the base marker, for instance:
 
@@ -310,9 +262,6 @@ public:
   // Process aruco frames. Called from control loop (100Hz or so)
   void updateCalibration(RcsGraph* graph,
                          const std::map<std::string,std::vector<double>>& arucoMap,
-                         const std::tuple<std::string,std::vector<std::string>,int,std::vector<double>>& marker);
-  void updateCalibration(RcsGraph* graph,
-                         const std::map<std::string,std::vector<double>>& arucoMap,
                          std::string bdyName,
                          std::vector<std::string> markerShapeNames);
 
@@ -335,7 +284,13 @@ private:
   std::vector<std::function<void(const HTr*)>> cameraCalibrationFinishedCb;
 };
 
-ArucoCalibrator::ArucoCalibrator(const std::string& cameraBodyName_, const std::string& baseMarkerBdyName_) : cameraBodyName(cameraBodyName_), baseMarkerBdyName(baseMarkerBdyName_), updateCameraPoseFromAruco(-1), tmc(0.05), numCalibrationSteps(20)
+ArucoCalibrator::ArucoCalibrator(const std::string& cameraBodyName_,
+                                 const std::string& baseMarkerBdyName_) :
+  cameraBodyName(cameraBodyName_),
+  baseMarkerBdyName(baseMarkerBdyName_),
+  updateCameraPoseFromAruco(-1),
+  tmc(0.05),
+  numCalibrationSteps(20)
 {
   HTr_setIdentity(&A_ArucoCam);
 }
@@ -362,89 +317,14 @@ void ArucoCalibrator::registerCallback(std::function<void(const HTr*)> callback)
 // Process aruco frames. Called from control loop (100Hz or so)
 void ArucoCalibrator::updateCalibration(RcsGraph* graph,
                                         const std::map<std::string,std::vector<double>>& arucoMap,
-                                        const std::tuple<std::string,std::vector<std::string>,int,std::vector<double>>& marker)
-{
-  // marker: 1. body name, 2. marker shapes 3. q-index, 4. vector with 6 joint values
-  std::string bdyName = std::get<0>(marker);
-
-  NLOG(1, "updateCameraPoseFromAruco = %d", updateCameraPoseFromAruco);
-  NLOG_CPP(1, "bdyName: " << bdyName << " baseMarkerBdyName " << baseMarkerBdyName);
-
-  if ((updateCameraPoseFromAruco<0) || (bdyName!=baseMarkerBdyName))
-  {
-    return;
-  }
-
-  // For the base marker body, we assume only one marker shape.
-  std::vector<std::string> markerShapeNames = std::get<1>(marker);
-  RCHECK(markerShapeNames.size()==1);
-  RLOG(0, "Calibration step %d - Native base marker name is %s",
-       updateCameraPoseFromAruco, markerShapeNames[0].c_str());
-
-  auto it = arucoMap.find(markerShapeNames[0]);
-  RCHECK(it != arucoMap.end());
-
-  // Transform from camera to marker, from aruco processing. The
-  // it->second.data() pointer has actually 13 elements, the last
-  // one being the last update time.
-  HTr A_MC;
-  HTr_fromVector(&A_MC, it->second.data());
-
-  // Relative transformation of shape to body frame in case the shape marker is offset
-  const RcsBody* baseMarkerBody = RcsGraph_getBodyByName(graph, baseMarkerBdyName.c_str());
-  RCHECK(baseMarkerBody);
-  RCSBODY_TRAVERSE_SHAPES(baseMarkerBody)
-  {
-    if (std::string(SHAPE->material)==markerShapeNames[0])
-    {
-      HTr A_BC;
-      HTr_transpose(&A_BC, &SHAPE->A_CB);
-      RLOG(1, "Scaling with %f", SHAPE->extents[0]/default_marker_length);
-      Vec3d_constMulSelf(A_MC.org, SHAPE->extents[0]/default_marker_length);
-      HTr_transformSelf(&A_MC, &A_BC);
-      break;
-    }
-  }
-
-  HTr_transposeSelf(&A_MC);
-
-  // Apply a simple 1st order LPF to the camera estimates to eliminate some noise.
-  if (updateCameraPoseFromAruco == 0)
-  {
-    HTr_copy(&A_ArucoCam, &A_MC);
-  }
-  else
-  {
-    HTr_firstOrderLPF(&A_ArucoCam, &A_MC, tmc);
-  }
-
-  updateCameraPoseFromAruco++;
-
-  if (updateCameraPoseFromAruco>numCalibrationSteps)
-  {
-    RLOG(0, "Calibration finished");
-    double x[6];
-    HTr_to6DVector(x, &A_ArucoCam);
-    RLOG(0, "Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
-         x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
-    updateCameraPoseFromAruco = -1;
-    for (auto& cb : cameraCalibrationFinishedCb)
-    {
-      cb(&A_ArucoCam);
-    }
-    updateCameraTransform(graph);
-  }
-
-}
-
-// Process aruco frames. Called from control loop (100Hz or so)
-void ArucoCalibrator::updateCalibration(RcsGraph* graph,
-                                        const std::map<std::string,std::vector<double>>& arucoMap,
                                         std::string bdyName,
                                         std::vector<std::string> markerShapeNames)
 {
 
-  if ((updateCameraPoseFromAruco<0) || (bdyName!=baseMarkerBdyName) || arucoMap.empty())
+  if ((updateCameraPoseFromAruco<0) ||
+      (bdyName!=baseMarkerBdyName) ||
+      arucoMap.empty() ||
+      markerShapeNames.empty())
   {
     return;
   }
@@ -569,59 +449,74 @@ std::string ArucoTracker::getRequestKeyword() const
 }
 
 // Process aruco frames. Called from control loop (100Hz or so)
-// We have to call computeDofsFromAruco() here, since it depends on the graph.
-void ArucoTracker::updateGraph(RcsGraph* graph)
+void ArucoTracker::update(ActionScene* scene, RcsGraph* graph)
 {
-
-  // Just the camera transform and the arucoMap can be written from
-  // different threads. We protect them here.
-  arucoMapMtx.lock();
-  std::map<std::string, std::vector<double>> localArucoMap = arucoMap;
-  HTr A_camI = this->A_CI;
-  bool newupdate = newArucoUpdate;
-  if (newArucoUpdate)
+  // Just the camera transform and the arucoMap can be written from different threads. We protect them here.
+  HTr A_camI;
+  bool newupdate = false;
+  std::map<std::string, std::vector<double>> localArucoMap;
+  if (!frozen)
   {
-    arucoMap.clear();
-    newArucoUpdate = false;
+    std::lock_guard<std::mutex> lock(arucoMapMtx);
+    localArucoMap = this->arucoMap;
+    HTr_copy(&A_camI, &this->A_CI);
+    newupdate = this->newArucoUpdate;
+    if (this->newArucoUpdate)
+    {
+      this->arucoMap.clear();
+      this->newArucoUpdate = false;
+    }
   }
-  arucoMapMtx.unlock();
 
   // markers contain only updates from the previous input, not including
   // transforms of objects that are held in any hand.
   if (newupdate)
   {
-    computeDofsFromAruco(graph, &A_camI, localArucoMap, markerMap);
-  }
+    RCSGRAPH_FOREACH_BODY(graph)
+    {
+      // We only add entries that correspond to valid rigid bodies that have at least one marker.
+      if ((!BODY->rigid_body_joints) || (BODY->id==-1) ||
+          (RcsBody_numShapesOfType(BODY, RCSSHAPE_COMPUTE_MARKER)==0))
+      {
+        continue;
+      }
 
-  // We need to do this here, since the above method is static.
-  for (auto& marker : markerMap)
-  {
-    marker.second.frozen |= this->frozen;
-    marker.second.heldInHand = RcsBody_isArticulated(graph, marker.second.body(graph));
-  }
+      auto markerItem = computeBodyDofsFromAruco(graph, BODY, &A_camI, localArucoMap);
+      auto it = markerMap.find(BODY->name);
 
-  // Calibration update happens only if new update has been received.
-  auto it = markerMap.find(calibration->getBaseMarkerName());
-  if (it != markerMap.end() && (!it->second.markerNames.empty()))
-  {
-    calibration->updateCalibration(graph, localArucoMap, it->first, it->second.markerNames);
+      // Marker body never seen before: initilize
+      if (it == markerMap.end())
+      {
+        markerMap[BODY->name] = markerItem;
+      }
+      // Update marker data
+      else
+      {
+        if (markerItem.hasUpdate())
+        {
+          it->second.t_latest = markerItem.t_latest;
+          it->second.q_rbj = markerItem.q_rbj;
+          it->second.markerNames = markerItem.markerNames;
+          it->second.frozen = markerItem.frozen;
+        }
+
+        it->second.bodyId = markerItem.bodyId;
+        it->second.jointIndex = markerItem.jointIndex;
+
+        // Calibration update happens only if new update has been received.
+        calibration->updateCalibration(graph, localArucoMap, it->first, it->second.markerNames);
+      }
+    }   // RCSGRAPH_FOREACH_BODY(graph)
   }
 
   // Computation in each step for filtering etc.
-  for (auto const& marker : markerMap)
+  for (auto& marker : markerMap)
   {
-
-    REXEC(5)
-    {
-      if (marker.first!=calibration->getBaseMarkerName())
-      {
-        marker.second.print(graph);
-      }
-    }
+    marker.second.frozen |= this->frozen;   // This leaves it be frozen until there is an update
+    const bool heldInHand = RcsBody_isArticulated(graph, marker.second.body(graph));
 
     // Ignore the base marker and invalid (unseen, held-in-hand ...) entries
-    if ((marker.first==calibration->getBaseMarkerName()) ||
-        (marker.second.isHeldInHand()) || (marker.second.frozen))
+    if ((marker.first==calibration->getBaseMarkerName()) || heldInHand || marker.second.frozen)
     {
       continue;
     }
@@ -633,12 +528,7 @@ void ArucoTracker::updateGraph(RcsGraph* graph)
     HTr_from6DVector(&filt, &graph->q->ele[marker.second.jointIndex]);
     HTr_firstOrderLPF(&filt, &raw, tmc);
     HTr_to6DVector(&graph->q->ele[marker.second.jointIndex], &filt);
-
-    // That's without filtering (for reference)
-    //VecNd_copy(&graph->q->ele[qIdx], q_rbj.data(), 6);
-
-  }   // for (auto const& marker : markers)
-
+  }
 
 }
 
@@ -671,7 +561,8 @@ void ArucoTracker::parse(const nlohmann::json& json, double time, const std::str
   {
     if (entry.value().size() != 1)
     {
-      RLOG_CPP(0, "Cannot handle multiple detections of '" << entry.key() << "'. Taking first.");
+      RLOG_CPP(0, "Cannot handle multiple detections of '" << entry.key()
+               << "'. Taking first.");
     }
 
     auto pose = parsePose(entry.value()[0]);

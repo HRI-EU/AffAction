@@ -288,6 +288,9 @@ static std::vector<std::pair<int,int>> readConnectionData()
   return idx;
 }
 
+/*******************************************************************************
+ *
+ *******************************************************************************/
 struct Skeleton
 {
   Skeleton();
@@ -504,8 +507,11 @@ void Skeleton::setAlphaRecursive(osg::Node* node, double newAlpha)
 
 
 
+/*******************************************************************************
+ *
+ *******************************************************************************/
 AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons) :
-  newAzureUpdate(false), defaultPosRadius(DBL_MAX), scene(NULL)
+  newAzureUpdate(false), defaultPosRadius(DBL_MAX)
 {
   HTr_setIdentity(&A_CI);
   for (size_t i=0; i<numSkeletons; ++i)
@@ -523,21 +529,16 @@ std::string AzureSkeletonTracker::getRequestKeyword() const
   return "body";
 }
 
-void AzureSkeletonTracker::setScene(aff::ActionScene* scene_)
-{
-  this->scene = scene_;
-}
-
-void AzureSkeletonTracker::updateGraph(RcsGraph* graph)
+void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
 {
   updateSkeletons(graph);
-  updateAgents(graph);
+  updateAgents(scene, graph);
   newAzureUpdate = false;
 }
 
-void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
+void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 {
-  if (!this->scene)
+  if (!scene)
   {
     return;
   }
@@ -571,7 +572,7 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
       const double tmc = 0.05;
 
       // Transform pelvis
-      const RcsBody* bdy = RcsGraph_getBodyByName(graph, human->bdyName.c_str());
+      const RcsBody* bdy = human->body(graph);
       int jidx = RcsBody_getJointIndex(graph, bdy);
       if (jidx!=-1)
       {
@@ -591,7 +592,7 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
         // A_PI is the Manipulator's parent transform
         const aff::Manipulator* m = scene->getManipulator(mName);
         RCHECK_MSG(m, "Manipulator '%s' not found", mName.c_str());
-        bdy = RcsGraph_getBodyByName(graph, m->bdyName.c_str());
+        bdy = m->body(graph);
         jidx = RcsBody_getJointIndex(graph, bdy);
         if (jidx==-1)
         {
@@ -603,35 +604,21 @@ void AzureSkeletonTracker::updateAgents(RcsGraph* graph)
 
         if (m->isOfType("head"))
         {
-          //const HTr* A_MI = &human->markers[HEAD];   // marker transform in world
           HTr A_MI = human->getMarker(HEAD);   // marker transform in world
           HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
-          //lpFiltTrf(q_rbj, A_MI, tmc);
-
-          // Get transform from q-vector so that estimate is not one step lagging behind
-          // HTr headTrf;
-          // HTr_from6DVector(&headTrf, &graph->q->ele[jidx]);
-          // const double* gazePos = headTrf.org;
-          // const double* gazeDir = headTrf.rot[1];
-          // Vec3d_copy(human->headPosition, gazePos);
-          // Vec3d_copy(human->gazeDirection, gazeDir);
         }
         else if (m->isOfType("hand_left"))
         {
-          //const HTr* A_MI = &human->markers[HANDTIP_LEFT];   // marker transform in world
-          HTr A_MI = human->getMarker(HANDTIP_LEFT);   // marker transform in world
+          HTr A_MI = human->getMarker(HANDTIP_LEFT);
           HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
-          //lpFiltTrf(q_rbj, A_MI, tmc);
         }
         else if (m->isOfType("hand_right"))
         {
-          //const HTr* A_MI = &human->markers[HANDTIP_RIGHT];   // marker transform in world
-          HTr A_MI = human->getMarker(HANDTIP_RIGHT);   // marker transform in world
+          HTr A_MI = human->getMarker(HANDTIP_RIGHT);
           HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
-          //lpFiltTrf(q_rbj, A_MI, tmc);
         }
 
       }
@@ -714,7 +701,6 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     const int skeletonId = atoi(entry.key().c_str());
     std::vector<HTr> markers(NUM_FRAMES);
     RLOG_CPP(5, "json: " << nlohmann::to_string(entry.value()));
-    //RLOG_CPP(1, "pelvis: " << nlohmann::to_string(entry.value()["pelvis"]));
 
     markers[PELVIS] = parsePose(entry.value()["pelvis"]);
 
@@ -927,7 +913,7 @@ void AzureSkeletonTracker::setSkeletonDefaultPositionRadius(double r)
 }
 
 // Map an agent (defined in the config) to a skeleton
-void AzureSkeletonTracker::addAgent(const std::string& agentName)
+void AzureSkeletonTracker::addAgent(const ActionScene* scene, const std::string& agentName)
 {
   if (skeletonIndex >= skeletons.size())
   {
@@ -975,88 +961,14 @@ void AzureSkeletonTracker::addAgent(const std::string& agentName)
 }
 
 // Map ALL agents (defined in the config) to available skeletons
-void AzureSkeletonTracker::addAgents()
+void AzureSkeletonTracker::addAgents(const ActionScene* scene)
 {
   RCHECK(scene);
   for (size_t i = 0; i < scene->agents.size(); i++)
   {
-    addAgent(scene->agents[i]->name);
+    addAgent(scene, scene->agents[i]->name);
   }
 }
-
-/* Json format for (skeleton) agents
-
-"agent":
-{
-  { 1,
-    {"type" : "human",
-    "visible" : true / false,
-    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                ...
-                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
-    }
-  },
-  { 2,
-    {"type" : "human",
-    "visible" : true / false,
-    "links" : [{"link_id": 0, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                {"link_id": 1, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] },
-                ...
-                {"link_id": 31, "position": [0, 0, 1], "euler_xyz": [1, 2, 3] }]
-    }
-  }
-
-}
-
-*/
-void AzureSkeletonTracker::jsonFromSkeletons(nlohmann::json& json) const
-{
-  // Here we have a valid skeleton tracker
-  size_t skeletonId = 0;
-
-  for (const auto& skeleton : skeletons)
-  {
-    nlohmann::json skeletonJson;
-    skeletonJson["skeleton_id"] = skeletonId;
-    skeletonJson["types"] = skeleton->agentTypes;
-    skeletonJson["name"] = skeleton->agentName;
-    skeletonJson["visible"] = skeleton->isVisible ? true : false;
-
-    size_t linkId = 0;
-
-    for (auto& link : skeleton->markers)
-    {
-      double ea[3];
-      Mat3d_toEulerAngles(ea, link.rot);
-
-      nlohmann::json linkJson =
-      {
-        {"link_id", linkId},
-        {"position", std::vector<double>(link.org, link.org+3)},
-        {"euler_xyzr", std::vector<double>(ea, ea+3)}
-      };
-      skeletonJson["links"] += linkJson;
-      linkId++;
-    }   // for (const auto& link : skeleton->markers)
-
-    //RLOG_CPP(0, "skeletonJson: '" << skeletonJson.dump() << "'");
-    json["agent"][skeletonId] = skeletonJson;
-    skeletonId++;
-  }   // for (const auto& skeleton : st->skeletons)
-
-}
-
-// bool AzureSkeletonTracker::setParameter(const std::string& parameterName, void* ptr)
-// {
-//   if (parameterName=="DebugViewer")
-//   {
-//     initGraphics(graph, (Rcs::Viewer*)ptr);
-//     return true;
-//   }
-
-//   return false;
-// }
 
 void AzureSkeletonTracker::registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback)
 {

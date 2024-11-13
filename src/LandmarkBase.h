@@ -52,23 +52,21 @@ public:
   virtual ~LandmarkBase();
 
   void setJsonInput(const nlohmann::json& json);
-  std::string getTrackerState() const;
 
-  void updateGraph(RcsGraph* graph);
   void addTracker(std::unique_ptr<TrackerBase> tracker);
   void setCameraTransform(const HTr* A_CI);
   void addArucoTracker(const std::string& camera="camera",
                        const std::string& baseMarker="aruco_base");
   TrackerBase* addSkeletonTracker(size_t numSkeletons);
-  int addSkeletonTrackerForAgents(double defaultRadius);
+  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 
-  TrackerBase* addFaceTracker(const std::string& agent, const std::string& camera);
+  TrackerBase* addFaceTracker(const ActionScene* scene, const std::string& agent, const std::string& camera);
 
   void startCalibration(const std::string& camera, size_t numFrames);
   bool isCalibrating(const std::string& camera) const;
-  void setScenePtr(RcsGraph* graph, ActionScene* scene);
+  //void setScenePtr(RcsGraph* graph, ActionScene* scene);
 
   void onFreezePerception(bool freeze);
   bool isFrozen() const;
@@ -77,9 +75,7 @@ public:
   bool getSyncInputWithWallclock() const;
 
   const RcsGraph* getGraph() const;
-  const ActionScene* getScene() const;
-  ActionScene* getScene();
-  virtual void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
+  virtual void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
 
   // Graphics debug
@@ -105,9 +101,10 @@ public:
 
 protected:
 
+  virtual double getCurrentTime() const;
+
   std::vector<std::unique_ptr<TrackerBase>> trackers;
-  ActionScene* scene;
-  RcsGraph* graph;
+  RcsGraph* graphPtr;
   bool frozen;
   bool syncInputJsonWithWallclockTime;
 };

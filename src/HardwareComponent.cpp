@@ -117,10 +117,11 @@ static void initROS(double rosDt)
 #endif
 }
 
-static ComponentBase* createLandmarkZmqComponent(EntityBase& entity,
-                                                 const RcsGraph* graph,
-                                                 const ActionScene* scene,
-                                                 std::string extraArgs)
+static ComponentBase* createLandmarkComponent(EntityBase& entity,
+                                              const RcsGraph* graph,
+                                              const ActionScene* scene,
+                                              std::string extraArgs,
+                                              bool zmq_true_ros_false=true)
 {
   auto argsVec = Rcs::String_split(extraArgs, " ");
   std::string connection = "tcp://localhost:5555";
@@ -135,39 +136,59 @@ static ComponentBase* createLandmarkZmqComponent(EntityBase& entity,
     return nullptr;
   }
 
-  RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-  LandmarkZmqComponent* lmc = new LandmarkZmqComponent(&entity, connection);
-  lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
 
-  if (getKey(argsVec, "-face_tracking"))
+  ComponentBase* ret = nullptr;
   {
-    std::string faceBdyName = "face";
-    getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
-    auto ft = lmc->addFaceTracker(faceBdyName, landmarksCamera);
+    LandmarkBase* lmc = nullptr;
+
+    if (zmq_true_ros_false)
+    {
+      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, connection);
+      lmc = lmcz;
+      ret = lmcz;
+    }
+#if defined USE_ROS
+    else
+    {
+      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity);
+      lmc = lmcz;
+      ret = lmcz;
+    }
+#endif
+
+    if (getKey(argsVec, "-face_tracking"))
+    {
+      std::string faceBdyName = "face";
+      getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
+      auto ft = lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
+    }
+
+    if (getKey(argsVec, "-aruco_tracking"))
+    {
+      std::string arucoBaseBdyName = "aruco_base";
+      getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
+      lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
+    }
+
+    if (getKey(argsVec, "-skeleton_tracking"))
+    {
+      RLOG(0, "Enabling Azure skeleton tracker");
+      double r_agent = DBL_MAX;
+      getKeyValuePair<double>(argsVec, "-skeleton_radius", r_agent);
+
+      // Add skeleton tracker and ALL agents in the scene
+      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent);
+      RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
+    }
+
+    // Initialize all tracker camera transforms from the xml file
+    lmc->setCameraTransform(&cam->A_BI);
+
   }
 
-  if (getKey(argsVec, "-aruco_tracking"))
-  {
-    std::string arucoBaseBdyName = "aruco_base";
-    getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
-    lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
-  }
-
-  if (getKey(argsVec, "-skeleton_tracking"))
-  {
-    RLOG(0, "Enabling Azure skeleton tracker");
-    double r_agent = DBL_MAX;
-    getKeyValuePair<double>(argsVec, "-skeleton_radius", r_agent);
-
-    // Add skeleton tracker and ALL agents in the scene
-    int numAgents = lmc->addSkeletonTrackerForAgents(r_agent);
-    RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
-  }
-
-  // Initialize all tracker camera transforms from the xml file
-  lmc->setCameraTransform(&cam->A_BI);
-
-  return lmc;
+  return ret;
 }
 
 static ComponentBase* createPW70Component(EntityBase& entity,
@@ -398,7 +419,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
-    components.push_back(createLandmarkZmqComponent(entity, graph, scene, argvString));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString));
   }
 
   if (dryRun)
@@ -476,22 +497,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   else if (getKey(argvStrVec, "-landmarks_ros"))
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    LandmarkROSComponent* lmc = new LandmarkROSComponent(&entity);
-    lmc->setScenePtr((RcsGraph*)graph, (ActionScene*)scene);
-
-    const RcsBody* cam = RcsGraph_getBodyByName(graph, "camera");
-    RCHECK(cam);
-    lmc->addArucoTracker(cam->name, "aruco_base");
-
-    // Add skeleton tracker and ALL agents in the scene
-    double r_agent = DBL_MAX;
-    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
-
-    // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
-
-    components.push_back(lmc);
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, false));
   }
 
   if (dryRun)

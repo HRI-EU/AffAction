@@ -60,7 +60,7 @@ public:
   {
     subscribe("Start", &LandmarkROSComponent::onStart);
     subscribe("Stop", &LandmarkROSComponent::onStop);
-    subscribe("PostUpdateGraph", &LandmarkBase::onPostUpdateGraph);
+    subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
     subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
     //subscribe("EstimateCameraPose", &LandmarkROSComponent::onEstimateCameraPose);
   }

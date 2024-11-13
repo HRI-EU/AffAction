@@ -491,6 +491,46 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns a json string with the affordance description of an entity
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getAffordanceFrame", [](aff::ExampleActionsECS& ex, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
+  {
+    std::vector<std::string> frames;
+    nlohmann::json data;
+
+    const aff::AffordanceEntity* entity = ex.getScene()->getAffordanceEntity(bodyName);
+
+    if (entity)
+    {
+      for (aff::Affordance* affordance : entity->affordances)
+      {
+        if (affordance->classType == affordanceType)
+        {
+          frames.push_back(affordance->frame);
+        }
+      }
+    }
+    else
+    {
+      NLOG(0, "Entity `%s` found in scene!", bodyName.c_str());
+    }
+
+    for (const auto& f : frames)
+    {
+      const RcsBody* b = RcsGraph_getBodyByName(ex.getGraph(), f.c_str());
+
+      data[f] = {};
+      data[f]["position"] = b->A_BI.org;
+
+      double ea[3];
+      Mat3d_toEulerAngles(ea, (double(*)[3])b->A_BI.rot);
+      data[f]["euler_xyzr"] = ea;
+    }
+
+    return data;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Execute the action command, and return immediately.
   //////////////////////////////////////////////////////////////////////////////
   .def("execute", [](aff::ExampleActionsECS& ex, std::string actionCommand)
@@ -975,26 +1015,25 @@ PYBIND11_MODULE(pyAffaction, m)
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RLOG_CPP(1, sim->help());
     auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
-    lm->setScenePtr(sim->getGraph(), sim->getScene());
+    //lm->setScenePtr(sim->getGraph(), sim->getScene());
 
-    sim->getEntity().subscribe("PostUpdateGraph", &aff::LandmarkBase::onPostUpdateGraph, lm.get());
+    sim->getEntity().subscribe("UpdateScene", &aff::LandmarkBase::onUpdateScene, lm.get());
     sim->getEntity().subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
 
     return std::move(lm);
   }))
   .def("addArucoTracker", &aff::LandmarkBase::addArucoTracker)
-  .def("addSkeletonTrackerForAgents_org", &aff::LandmarkBase::addSkeletonTrackerForAgents)
   .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r) -> int
   {
     aff::ExampleActionsECS* sim = sim_.cast<aff::ExampleActionsECS*>();
-    if (!lm.getScene())
+    if (!sim->getScene())
     {
       RLOG(0, "Can't add skeleton tracker for agents - scene has not been set");
       return 0;
     }
 
     int numHumanAgents = 0;
-    for (const auto& agent : lm.getScene()->agents)
+    for (const auto& agent : sim->getScene()->agents)
     {
       if (dynamic_cast<aff::HumanAgent*>(agent))
       {
@@ -1009,9 +1048,8 @@ PYBIND11_MODULE(pyAffaction, m)
     }
 
     auto tracker = new aff::AzureSkeletonTracker(numHumanAgents);
-    tracker->setScene(lm.getScene());
     lm.addTracker(std::unique_ptr<aff::AzureSkeletonTracker>(tracker));
-    tracker->addAgents();
+    tracker->addAgents(sim->getScene());
     tracker->setSkeletonDefaultPositionRadius(r);
     tracker->registerAgentAppearDisappearCallback([sim](const std::string& agentName, bool appear)
     {
@@ -1023,7 +1061,6 @@ PYBIND11_MODULE(pyAffaction, m)
     return numHumanAgents;
   })
   .def("setJsonInput", &aff::LandmarkBase::setJsonInput)
-  .def("getTrackerState", &aff::LandmarkBase::getTrackerState)
   .def("startCalibration", &aff::LandmarkBase::startCalibration)
   .def("isCalibrating", &aff::LandmarkBase::isCalibrating)
   .def("setSyncInputWithWallclock", &aff::LandmarkBase::setSyncInputWithWallclock)
@@ -1040,37 +1077,9 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("getAffordanceFrame", [](aff::LandmarkBase& lm, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
   {
-    std::vector<std::string> frames;
     nlohmann::json data;
 
-    const aff::AffordanceEntity* entity = lm.getScene()->getAffordanceEntity(bodyName);
-
-    if (entity)
-    {
-      for (aff::Affordance* affordance : entity->affordances)
-      {
-        if (affordance->classType == affordanceType)
-        {
-          frames.push_back(affordance->frame);
-        }
-      }
-    }
-    else
-    {
-      NLOG(0, "Entity `%s` found in scene!", bodyName.c_str());
-    }
-
-    for (auto f : frames)
-    {
-      const RcsBody* b = RcsGraph_getBodyByName(lm.getGraph(), f.c_str());
-
-      data[f] = {};
-      data[f]["position"] = b->A_BI.org;
-
-      double ea[3];
-      Mat3d_toEulerAngles(ea, (double(*)[3])b->A_BI.rot);
-      data[f]["euler_xyzr"] = ea;
-    }
+    RFATAL("This method is now part of the LlmSim class - please don't call it from this here");
 
     return data;
   })

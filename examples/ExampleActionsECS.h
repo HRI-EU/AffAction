@@ -189,6 +189,7 @@ protected:
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
+  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*, ActionScene*>* updateScene;
   ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
   ES::SubscriberCollectionDecay<double>* computeTrajectory;
   ES::SubscriberCollectionDecay<const MatNd*, const MatNd*>* setTaskCommand;
