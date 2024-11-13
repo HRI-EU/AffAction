@@ -47,8 +47,8 @@ namespace aff
 {
 
 
-LandmarkBase::LandmarkBase() :
-  graphPtr(nullptr), frozen(false), syncInputJsonWithWallclockTime(false)
+LandmarkBase::LandmarkBase(RcsGraph* graph) :
+  graphPtr(graph), frozen(false), syncInputJsonWithWallclockTime(false)
 {
 }
 

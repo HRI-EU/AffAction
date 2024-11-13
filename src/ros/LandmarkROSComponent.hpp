@@ -55,8 +55,8 @@ class LandmarkROSComponent : public ComponentBase, public LandmarkBase
 {
 public:
 
-  LandmarkROSComponent(EntityBase* parent, std::string topic_="/landmarks/camera"):
-    ComponentBase(parent), LandmarkBase(), topic(topic_)
+  LandmarkROSComponent(EntityBase* parent, RcsGraph* graph, std::string topic_="/landmarks/camera"):
+    ComponentBase(parent), LandmarkBase(graph), topic(topic_)
   {
     subscribe("Start", &LandmarkROSComponent::onStart);
     subscribe("Stop", &LandmarkROSComponent::onStop);

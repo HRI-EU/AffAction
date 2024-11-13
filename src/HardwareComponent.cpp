@@ -144,7 +144,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     if (zmq_true_ros_false)
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, connection);
+      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, (RcsGraph*)graph, connection);
       lmc = lmcz;
       ret = lmcz;
     }
@@ -152,7 +152,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     else
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-      LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity);
+      LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity, (RcsGraph*)graph);
       lmc = lmcz;
       ret = lmcz;
     }

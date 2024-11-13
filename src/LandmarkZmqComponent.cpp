@@ -106,8 +106,8 @@ namespace aff
 {
 
 
-LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, std::string connection):
-  ComponentBase(parent), LandmarkBase(),
+LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, std::string connection):
+  ComponentBase(parent), LandmarkBase(graph),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
   readDataFromFile(false), socketTimeoutInMsec(3000), frameRate(0.0), logging(false)
 {

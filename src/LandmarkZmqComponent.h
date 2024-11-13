@@ -52,6 +52,7 @@ public:
    *         passed to the class methods, instead of running a zmq interface.
    */
   LandmarkZmqComponent(EntityBase* parent,
+                       RcsGraph* graph,
                        std::string connection = "tcp://localhost:5555");
 
   virtual ~LandmarkZmqComponent();
@@ -63,11 +64,6 @@ protected:
   double getCurrentTime() const;
 
 private:
-
-  /*! \brief Same as in LandmarkBase with the addition of the time being handled
-   *         differently when data comes from a file.
-   */
-  //void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
 
   void onToggleJsonLogging();
   void onEstimateCameraPose(int numFrames);

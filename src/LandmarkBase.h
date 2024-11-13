@@ -47,7 +47,7 @@ class LandmarkBase
 {
 public:
 
-  LandmarkBase();
+  LandmarkBase(RcsGraph* graph);
 
   virtual ~LandmarkBase();
 

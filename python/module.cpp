@@ -1009,13 +1009,11 @@ PYBIND11_MODULE(pyAffaction, m)
   // LandmarkBase perception class wrapper
   //////////////////////////////////////////////////////////////////////////////
   py::class_<aff::LandmarkBase>(m, "LandmarkBase")
-  .def(py::init<>())
   .def(py::init<>([](py::object obj)
   {
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RLOG_CPP(1, sim->help());
-    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
-    //lm->setScenePtr(sim->getGraph(), sim->getScene());
+    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase(sim->getGraph()));
 
     sim->getEntity().subscribe("UpdateScene", &aff::LandmarkBase::onUpdateScene, lm.get());
     sim->getEntity().subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
