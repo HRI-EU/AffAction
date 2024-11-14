@@ -467,10 +467,11 @@ PYBIND11_MODULE(pyAffaction, m)
   // Returns empty json if there are no objects or a json in the form:
   // {"agents": ['Daniel', 'Felix', 'Robot'] }
   //////////////////////////////////////////////////////////////////////////////
-  .def("get_agents", [](aff::ExampleActionsECS& ex) -> nlohmann::json
+  .def("get_agents", [](aff::ExampleActionsECS& ex, bool onlyVisibleAgents) -> nlohmann::json
   {
     return ex.getQuery()->getAgents();
-  })
+  },
+  py::arg("onlyVisibleAgents") = false)
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns an empty string if there are no objects held in the hand, or the

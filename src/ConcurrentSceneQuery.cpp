@@ -447,7 +447,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectsHeldBy(const std::string& agentNa
   return json;
 }
 
-nlohmann::json ConcurrentSceneQuery::getAgents()
+nlohmann::json ConcurrentSceneQuery::getAgents(bool onlyVisibleAgents)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
@@ -456,7 +456,10 @@ nlohmann::json ConcurrentSceneQuery::getAgents()
 
   for (const auto& a : scene.agents)
   {
-    json["agents"].push_back(a->name);
+    if ((onlyVisibleAgents && a->isVisible()) || (!onlyVisibleAgents))
+    {
+      json["agents"].push_back(a->name);
+    }
   }
 
   return json;
