@@ -402,7 +402,7 @@ void ActionGet::init(const ActionScene& domain,
   if (graspingHand)
   {
     handOver = true;
-    handOverHand = graspingHand->name;
+    handOverHand = graspingHand->bdyName;
 
     // We also reset the lift height so that we don't get increased height
     // per each hand-over.
@@ -893,6 +893,16 @@ void ActionGet::print() const
   std::cout << "affordanceFrame: " << affordanceFrame << std::endl;
   std::cout << "fingerJoints: " << fingerJoints << std::endl;
   std::cout << "graspType: " << graspTypeToString(graspType) << std::endl;
+
+  std::cout << "taskObjHandPos   : " << taskObjHandPos   << std::endl;
+  std::cout << "taskObjPosX      : " << taskObjPosX      << std::endl;
+  std::cout << "taskObjPosY      : " << taskObjPosY      << std::endl;
+  std::cout << "taskObjPosZ      : " << taskObjPosZ      << std::endl;
+  std::cout << "taskObjOri       : " << taskObjOri       << std::endl;
+  std::cout << "taskHandObjOri   : " << taskHandObjOri   << std::endl;
+  std::cout << "taskFingers      : " << taskFingers      << std::endl;
+  std::cout << "handOverHand     : " << handOverHand     << std::endl;
+  std::cout << "taskHandOverHand : " << taskHandOverHand << std::endl;
 
   REXEC(5)
   {
