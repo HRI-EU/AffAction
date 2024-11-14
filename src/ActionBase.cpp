@@ -189,11 +189,23 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   const double delay = 5.0*dt;
   auto tSet = createTrajectory(delay, duration+delay);
   aff::TrajectoryPredictor pred(tc.get());
-  pred.setTrajectory(tSet);   // also clears it
+  bool trajSuccess = pred.setTrajectory(tSet);   // also clears it
+  aff::TrajectoryPredictor::PredictionResult result;
+
+  if (!trajSuccess)
+  {
+    result.feedbackMsg.error = "ERROR";
+    result.feedbackMsg.reason = "Some trajectories could not be generated";
+    result.feedbackMsg.suggestion = "Try the action differently";
+    result.feedbackMsg.developer = "Some trajectories could not be generated";
+    result.feedbackMsg.actionCommand = getActionCommand();
+    result.success = false;
+    return result;
+  }
 
   // Perform the actual prediction
   t_clone = Timer_getSystemTime();
-  aff::TrajectoryPredictor::PredictionResult result = pred.predict(dt, earlyExit);
+  result = pred.predict(dt, earlyExit);
 
   // Add an action-specific cost. It is 0 per default, and can be used by
   // actions to bias the solution.

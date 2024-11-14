@@ -677,10 +677,18 @@ void TrajectoryPredictor::initFromState(const MatNd* q, const MatNd* q_dot)
   tc->init();
 }
 
-void TrajectoryPredictor::setTrajectory(TCS_sptr tSet)
+bool TrajectoryPredictor::setTrajectory(TCS_sptr tSet)
 {
   tc->clear();
-  tc->addAndApply(std::shared_ptr<ConstraintSet>(tSet->clone()));
+  bool permissive = true;
+  bool success = tc->addAndApply(std::shared_ptr<ConstraintSet>(tSet->clone()), permissive);
+
+  if (!success)
+  {
+    tc->clear();
+  }
+
+  return success;
 }
 
 bool TrajectoryPredictor::check(bool jointLimitCheck, bool collisionCheck,

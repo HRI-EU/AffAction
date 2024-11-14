@@ -90,7 +90,7 @@ public:
   /*! \brief Applies a deep copy of tSet to the class's internal trajectory
    *         controller. Before that, all trajectories are cleared.
    */
-  void setTrajectory(tropic::TCS_sptr tSet);
+  bool setTrajectory(tropic::TCS_sptr tSet);
 
   PredictionResult predict(double dt, bool earlyExit=true);
   bool check(bool jointLimits=true, bool collisions=true,
