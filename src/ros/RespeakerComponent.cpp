@@ -332,7 +332,6 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   nlohmann::json micJson = nlohmann::json::parse(spoken);
   nlohmann::json eventJson;
 
-  eventJson["index"] = micJson["index"];
 
   if (!micJson["is_final"])
   {
@@ -377,6 +376,11 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
       eventJson["assignment_static"] = assignmentStaticJson;
     }
 
+  }
+
+  if (!eventJson.empty())
+  {
+    eventJson["index"] = micJson["index"];
     std::string eventString = eventJson.dump();
     RLOG_CPP(0, "Event JSON: '" << eventString << "'");
 
@@ -386,6 +390,7 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
     event_pub.publish(eventMsg);
 #endif
   }
+
 }
 
 void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appear)
