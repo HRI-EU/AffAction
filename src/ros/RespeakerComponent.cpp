@@ -330,36 +330,52 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   }
 
   nlohmann::json micJson = nlohmann::json::parse(spoken);
-  std::string text = micJson["text"];
+  nlohmann::json eventJson;
 
-  if ((publishDialogueWithRaisedHandOnly && isAnyHandRaised) ||
-      (!publishDialogueWithRaisedHandOnly))
+  eventJson["index"] = micJson["index"];
+
+  if (!micJson["is_final"])
   {
-    nlohmann::json assignmentJson;
-    assignmentJson["text"] = text;
-    if (speaker)
-    {
-      assignmentJson["sender"] = speaker->name;
-    }
-    else
-    {
-      assignmentJson["sender"] = nlohmann::json();
-    }
-    if (listener)
-    {
-      assignmentJson["receiver"] = listener->name;
-    }
-    else
-    {
-      assignmentJson["receiver"] = nlohmann::json();
-    }
-
-    nlohmann::json eventJson;
-    eventJson["id"] = "speaking";
-    eventJson["assignment"] = assignmentJson;
+    eventJson["name"] = "speaking_onset";
+    //eventJson["assignment"] = nlohmann::json();
     eventJson["present"] = true;
     eventJson["publish"] = true;
-    eventJson["speech_template_past"] = "{sender} said to {receiver}: {text}";
+    eventJson["speech_template_past"] = "Somebody started speaking.";
+  }
+  else
+  {
+
+    if ((publishDialogueWithRaisedHandOnly && isAnyHandRaised) ||
+        (!publishDialogueWithRaisedHandOnly))
+    {
+      nlohmann::json assignmentJson;
+      if (speaker)
+      {
+        assignmentJson["sender"] = speaker->name;
+      }
+      else
+      {
+        assignmentJson["sender"] = nlohmann::json();
+      }
+      if (listener)
+      {
+        assignmentJson["receiver"] = listener->name;
+      }
+      else
+      {
+        assignmentJson["receiver"] = nlohmann::json();
+      }
+
+      eventJson["name"] = "speaking";
+      eventJson["assignment"] = assignmentJson;
+      eventJson["present"] = true;
+      eventJson["publish"] = true;
+      eventJson["speech_template_past"] = "{sender} said to {receiver}: {text}";
+
+      nlohmann::json assignmentStaticJson;
+      assignmentStaticJson["text"] = micJson["text"];
+      eventJson["assignment_static"] = assignmentStaticJson;
+    }
 
     std::string eventString = eventJson.dump();
     RLOG_CPP(0, "Event JSON: '" << eventString << "'");
@@ -375,20 +391,21 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
 void RespeakerComponent::onAgentChanged(const std::string& agentName, bool appear)
 {
   std::string appearStr = appear ? " appeared" : " disappeared";
-  RLOG_CPP(0, "Agent " << agentName << appearStr);
-
-  RLOG(0, "RespeakerComponent::onAgentChanged()");
-
-  nlohmann::json assignmentJson;
-  assignmentJson["person"] = agentName;
-  assignmentJson["present"] = appear;
+  RLOG_CPP(0, "RespeakerComponent::onAgentChanged(): Agent: " << agentName << appearStr);
 
   nlohmann::json eventJson;
-  eventJson["id"] = "person_changed";
-  eventJson["assignment"] = assignmentJson;
+  eventJson["name"] = "person_changed";
   eventJson["present"] = true;
   eventJson["publish"] = true;
   eventJson["speech_template_past"] = "{person}" + appearStr + ".";
+
+  nlohmann::json assignmentJson;
+  assignmentJson["person"] = agentName;
+  eventJson["assignment"] = assignmentJson;
+
+  nlohmann::json assignmentStaticJson;
+  assignmentStaticJson["present"] = appear;
+  eventJson["assignment_static"] = assignmentStaticJson;
 
   std::string eventString = eventJson.dump();
   RLOG_CPP(0, "Event JSON: '" << eventString << "'");
