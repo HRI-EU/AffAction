@@ -59,6 +59,7 @@ public:
     RLOG_CPP(0, "Creating ZmqJsonSubscriber with ip " << zmq_ip);
     subscribe("Start", &ZmqJsonSubscriber::onStart);
     subscribe("Stop", &ZmqJsonSubscriber::onStop);
+    subscribe("ReceiveZMQ", &ZmqJsonSubscriber::onReceiveZMQ);
   }
 
   virtual ~ZmqJsonSubscriber()
@@ -147,7 +148,7 @@ public:
       if (socket->recv(request, zmq::recv_flags::none))
       {
         std::string json_str(static_cast<char*>(request.data()), request.size());
-        RLOG_CPP(0, "Received json:\n\n" << json_str);
+        RLOG_CPP(1, "Received json:\n\n" << json_str);
 
         // Parse the JSON data with error handling
         nlohmann::json json_data;
@@ -172,13 +173,60 @@ public:
       else
       {
         // Timeout occurred, handle it here
-        RLOG_CPP(0, "No message received within timeout. Waiting...");
+        RLOG_CPP(5, "No message received within timeout. Waiting...");
       }
 
     }
 
     nwThreadRunning = false;
     std::cout << "Quitting network thread" << std::endl;
+  }
+
+  void onReceiveZMQ(std::string msgType, std::string json_str)
+  {
+    RLOG_CPP(1, "Received: " << json_str);
+    nlohmann::json json_data;
+
+    try
+    {
+      json_data = nlohmann::json::parse(json_str);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+      RLOG_CPP(0, "JSON parsing error: " << e.what() << "\nReceived data: " << json_str);
+    }
+
+    // Check if "type" is "transcription"
+    if (msgType == "wake_word")
+    {
+      getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", std::string("GREEN"));
+    }
+    else if (msgType == "transcription")
+    {
+      //std::cout << "The type is transcription." << std::endl;
+
+      // Get the "is_final" boolean if it exists
+      if (json_data.contains("is_final") && json_data["is_final"].is_boolean())
+      {
+        bool isFinal = json_data["is_final"];
+        //std::cout << "is_final: " << (isFinal ? "true" : "false") << std::endl;
+        if (isFinal)
+        {
+          RLOG_CPP(0, "transcription: " << json_data["transcription"]);
+        }
+        else
+        {
+          std::cout << ".";
+        }
+        std::string color = isFinal ? "" : "DARKGREEN";
+        getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", color);
+      }
+      else
+      {
+        std::cout << "\"is_final\" field is missing or not a boolean." << std::endl;
+      }
+    }
+
   }
 
 };

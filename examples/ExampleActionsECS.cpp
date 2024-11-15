@@ -36,11 +36,11 @@
 #include "AnimationSequence.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
-#include "LandmarkZmqComponent.h"
 #include "PhysicsComponent.h"
 #include "VirtualCameraWindow.h"
 #include "ActionEyeGaze.h"
 #include "GazeComponent.h"
+#include "LandmarkBase.h"
 #include "EyeModelIKComponent.h"
 
 #include <EventGui.h>
@@ -88,7 +88,6 @@ void AffActionExampleInfo()
 
 namespace aff
 {
-
 
 /*******************************************************************************
  *
@@ -1038,13 +1037,13 @@ bool ExampleActionsECS::initGraphics()
 
   entity.process();
 
-  // If we have a LandmarkZmw component, we initialize its debug graphics
+  // If we have a LandmarkComponent, we initialize its debug graphics
   // here. We have to defer it to this point, since there's no GraphicsWindow
   // before this.
-  auto lmZmqs = getComponents<LandmarkBase>(components);
-  for (auto& c : lmZmqs)
+  auto lmbs = getComponents<aff::LandmarkBase>(components);
+  for (auto& c : lmbs)
   {
-    RLOG_CPP(0, "Adding debug graphics to LandmarkZmqComponent");
+    RLOG_CPP(0, "Adding debug graphics to LandmarkComponent");
     c->createDebugGraphics(viewer);
   }
 

@@ -332,7 +332,7 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   nlohmann::json micJson = nlohmann::json::parse(spoken);
   nlohmann::json eventJson;
 
-
+  // This is received once a sentence has only been partially recognized.
   if (!micJson["is_final"])
   {
     eventJson["name"] = "speaking_onset";
@@ -340,7 +340,9 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
     eventJson["present"] = true;
     eventJson["publish"] = true;
     eventJson["speech_template_past"] = "Somebody started speaking.";
+    getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", std::string("GREEN"));
   }
+  // This is received once a sentence has been completely recognized.
   else
   {
 
@@ -374,6 +376,7 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
       nlohmann::json assignmentStaticJson;
       assignmentStaticJson["text"] = micJson["text"];
       eventJson["assignment_static"] = assignmentStaticJson;
+      getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", std::string(""));
     }
 
   }
