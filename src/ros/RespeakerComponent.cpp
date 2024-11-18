@@ -340,6 +340,11 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
     eventJson["present"] = true;
     eventJson["publish"] = true;
     eventJson["speech_template_past"] = "Somebody started speaking.";
+
+    nlohmann::json assignmentStaticJson;
+    assignmentStaticJson["text"] = micJson["text"];
+    eventJson["assignment_static"] = assignmentStaticJson;
+
     getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", std::string("GREEN"));
   }
   // This is received once a sentence has been completely recognized.
