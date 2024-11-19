@@ -56,10 +56,10 @@ public:
                       bool depth = false,
                       const HTr* A_camI = nullptr);
   virtual ~VirtualCameraWindow();
-  
+
   void setCameraTransform(double x, double y, double z, double thx, double thy, double thz);
   void setCameraTransform(const HTr* A_camI);
-  
+
   virtual void update();
   void setEnabled(bool);
   bool isEnabled();
@@ -76,7 +76,7 @@ protected:
 
   VirtualCamera* const virtualCamera;
   HTr cameraTransform;
-  
+
 private:
   VirtualCameraWindow(const VirtualCameraWindow&) = delete;
   VirtualCameraWindow& operator=(const VirtualCameraWindow&) = delete;

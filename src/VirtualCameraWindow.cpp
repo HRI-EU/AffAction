@@ -39,9 +39,9 @@ namespace aff
 {
 
 VirtualCameraWindow::VirtualCameraWindow(EntityBase* parent,
-                    VirtualCamera* _virtualCamera,
-                    bool color, bool depth, const HTr* A_CamI) :
-  ComponentBase(parent), virtualCamera(_virtualCamera), 
+                                         VirtualCamera* _virtualCamera,
+                                         bool color, bool depth, const HTr* A_CamI) :
+  ComponentBase(parent), virtualCamera(_virtualCamera),
   colorBuffer(color ? _virtualCamera->width * _virtualCamera->height * 3 : 0),
   depthBuffer(depth ? _virtualCamera->width * _virtualCamera->height : 0)
 {
@@ -56,8 +56,12 @@ VirtualCameraWindow::VirtualCameraWindow(EntityBase* parent,
 
   subscribe("Render", &VirtualCameraWindow::update);
   subscribe("ToggleVirtualRenderGui", &VirtualCameraWindow::toggle);
+
+  enable();
 }
-VirtualCameraWindow::~VirtualCameraWindow() {}
+VirtualCameraWindow::~VirtualCameraWindow()
+{
+}
 
 void VirtualCameraWindow::setCameraTransform(double x, double y, double z,
                                              double thx, double thy, double thz)
@@ -74,7 +78,7 @@ void VirtualCameraWindow::setCameraTransform(const HTr* A_CamI)
 
 void VirtualCameraWindow::update()
 {
-  virtualCamera->render(&cameraTransform, colorBuffer.empty() ? nullptr : colorBuffer.data(), 
+  virtualCamera->render(&cameraTransform, colorBuffer.empty() ? nullptr : colorBuffer.data(),
                         depthBuffer.empty() ? nullptr : depthBuffer.data());
 }
 

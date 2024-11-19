@@ -182,7 +182,25 @@ public:
     std::cout << "Quitting network thread" << std::endl;
   }
 
+  /*******************************************************************************
+   *
+   ******************************************************************************/
   void onReceiveZMQ(std::string msgType, std::string json_str)
+  {
+    bool success = false;
+
+    if (msgType=="wake_word" || msgType=="transcription")
+    {
+      success = handleASR(msgType, json_str);
+    }
+
+
+  }
+
+  /*******************************************************************************
+  *
+  ******************************************************************************/
+  bool handleASR(std::string msgType, std::string json_str)
   {
     RLOG_CPP(1, "Received: " << json_str);
     nlohmann::json json_data;
@@ -194,22 +212,19 @@ public:
     catch (const nlohmann::json::parse_error& e)
     {
       RLOG_CPP(0, "JSON parsing error: " << e.what() << "\nReceived data: " << json_str);
+      return false;
     }
 
-    // Check if "type" is "transcription"
     if (msgType == "wake_word")
     {
       getEntity()->publish<std::string, std::string>("RenderCommand", "BackgroundColor", std::string("GREEN"));
     }
     else if (msgType == "transcription")
     {
-      //std::cout << "The type is transcription." << std::endl;
-
-      // Get the "is_final" boolean if it exists
       if (json_data.contains("is_final") && json_data["is_final"].is_boolean())
       {
         bool isFinal = json_data["is_final"];
-        //std::cout << "is_final: " << (isFinal ? "true" : "false") << std::endl;
+
         if (isFinal)
         {
           RLOG_CPP(0, "transcription: " << json_data["transcription"]);
@@ -223,10 +238,12 @@ public:
       }
       else
       {
-        std::cout << "\"is_final\" field is missing or not a boolean." << std::endl;
+        RLOG_CPP(0, "\"is_final\" field is missing or not a boolean.");
+        return false;
       }
     }
 
+    return true;
   }
 
 };

@@ -355,11 +355,11 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   if (dryRun)
   {
     argP.hasArgument("-zmq_listener", "Start with face recognition client");
-    argP.hasArgument("-zmq_listener_ip", "Server ip adress (default: tcp://*:5555)");
+    argP.hasArgument("-zmq_listener_ip", "Server ip adress (default: tcp://*:5556)");
   }
   else if (getKey(argvStrVec, "-zmq_listener"))
   {
-    std::string ip_address = "tcp://*:5555";
+    std::string ip_address = "tcp://*:5556";
     getKeyValuePair<std::string>(argvStrVec, "-zmq_listener_ip", ip_address);
     components.push_back(new ZmqJsonSubscriber(&entity, ip_address));
   }
