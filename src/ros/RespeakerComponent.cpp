@@ -318,9 +318,9 @@ void RespeakerComponent::onPostUpdateGraph(RcsGraph* graph, RcsGraph* current)
   getMicrophonePosition(graph, micPos);
 
   // Check which agent is speaking
-  const RcsBody* respeakerBdy = RcsGraph_getBodyByName(graph, respeakerBdyName.c_str());
+  RcsBody* respeakerBdy = RcsGraph_getBodyByName(graph, respeakerBdyName.c_str());
   double sndDirInWorld[3];
-  Vec3d_invTransform(sndDirInWorld, &respeakerBdy->A_BI, soundDirectionFilt.data());
+  Vec3d_transRotate(sndDirInWorld, respeakerBdy->A_BI.rot, soundDirectionFilt.data());
 
   HumanAgent* speaker = getSpeaker(micPos, sndDirInWorld, graph);
   const Agent* listener = getListener(micPos, speaker, graph);
