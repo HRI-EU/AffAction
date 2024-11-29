@@ -46,7 +46,6 @@
 #include <mutex>
 
 
-#define N_DOUBLES_IN_HTR   (sizeof(HTr)/sizeof(double))
 
 using namespace tropic;
 
@@ -223,7 +222,21 @@ void TrajectoryComponent::onSetTrajectory(TCS_sptr tSet)
   }
 
   RLOG(0, "Applying trajectory");
-  tc->addAndApply(tSet);
+  const bool permissive = true;
+  const bool success = tc->addAndApply(tSet, permissive);
+
+  if (!success)
+  {
+    RLOG(0, "FATAL: This must not happen. Failed to set trajectory - clearing it");
+    tc->clear();
+    std::vector<ActionResult> fbmsg(1);
+    fbmsg[0].error = "FATAL_ERROR";
+    fbmsg[0].reason = "Coudld not apply trajectory";
+    fbmsg[0].suggestion = "Ask for help from an engineer";
+    fbmsg[0].developer = std::string(__FILENAME__) + " " + std::to_string(__LINE__);
+    getEntity()->publish("ActionResult", false, 0.0, fbmsg);
+    return;
+  }
 
   motionDuration = tSet->getDuration();
 }

@@ -1068,8 +1068,8 @@ std::string ActionGet::graspTypeToString(GraspType gType)
       break;
 
     case GraspType::TopGrasp:
-      //str = "TopGrasp";
-      str = "TwistGrasp";
+      str = "TopGrasp";
+      //str = "TwistGrasp";
       break;
 
     case GraspType::BallGrasp:
