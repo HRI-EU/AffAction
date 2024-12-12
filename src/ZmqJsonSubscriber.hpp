@@ -227,7 +227,12 @@ public:
 
         if (isFinal)
         {
-          RLOG_CPP(0, "transcription: " << json_data["transcription"]);
+          std::string transcription = json_data["transcription"];
+          RLOG_CPP(0, "transcription: " << transcription);
+          if (!transcription.empty())
+          {
+            getEntity()->publish("EventReceived", transcription);
+          }
         }
         else
         {

@@ -60,6 +60,7 @@ private:
   void localThread();
 
   bool threadRunning;
+  int audioRate;
   std::string textToSpeak;
   std::string whichTTS;
   std::string onnxStr, jsonStr;
