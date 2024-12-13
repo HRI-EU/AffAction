@@ -488,4 +488,35 @@ std::string ConcurrentSceneQuery::getHoldingHand(const std::string& objectName)
   return std::string();
 }
 
+
+nlohmann::json ConcurrentSceneQuery::getGazeData()
+{
+  sim->lockStepMtx();
+  nlohmann::json gazeData = sim->getUsersGazeData();
+  sim->unlockStepMtx();
+  return gazeData;
+}
+
+nlohmann::json ConcurrentSceneQuery::getRecordedTransformations(double start_time, double end_time)
+{
+  sim->lockStepMtx();
+  nlohmann::json json = sim->getRecordedTransformations(start_time, end_time);
+  sim->unlockStepMtx();
+  return json;
+}
+
+void ConcurrentSceneQuery::loadTransformationDataFromFile(const std::string& filename)
+{
+  sim->lockStepMtx();
+  sim->loadTransformationDataFromFile(filename);
+  sim->unlockStepMtx();
+}
+
+void ConcurrentSceneQuery::startPlaybackTransformationData()
+{
+  sim->lockStepMtx();
+  sim->startPlaybackTransformationData();
+  sim->unlockStepMtx();
+}
+
 }   // namespace aff

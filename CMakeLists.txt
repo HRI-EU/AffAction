@@ -52,41 +52,6 @@ ENDMACRO()
 ENDIF(NOT COMMAND COPY_DLL)
 
 ################################################################################
-# Macro to copy directories
-################################################################################
-IF (NOT COMMAND COPY_CONFIG_DIR)
-MACRO(COPY_CONFIG_DIR CFG_FROM CFG_TO_BASEDIR CFG_TO_SUBDIRNAME)
-  SET(CFG_TO ${CFG_TO_BASEDIR}/${CFG_TO_SUBDIRNAME})
-
-  IF (WIN32 AND (NOT IS_DIRECTORY "${CFG_TO}") AND (EXISTS "${CFG_TO}"))
-    MESSAGE(STATUS "Removing non-directory ${CONFIG_DST_DIR}")
-    FILE(REMOVE ${CONFIG_DST_DIR})
-  ENDIF()
-
-  IF(NOT EXISTS "${CFG_TO}")
-
-    IF (NOT EXISTS ${CFG_TO_BASEDIR})
-      FILE(MAKE_DIRECTORY ${CFG_TO_BASEDIR})
-    ENDIF()
-
-    IF(UNIX)
-      SET(CONFIGDIR_COPY_COMMAND create_symlink)
-      MESSAGE(STATUS "Linking config directory from ${CFG_FROM} to ${CFG_TO}")
-    ELSE()
-      SET(CONFIGDIR_COPY_COMMAND copy_directory)
-      MESSAGE(STATUS "Copying config directory from ${CFG_FROM} to ${CFG_TO}")
-    ENDIF()
-
-    EXECUTE_PROCESS (COMMAND
-     ${CMAKE_COMMAND} -E ${CONFIGDIR_COPY_COMMAND} ${CFG_FROM} ${CFG_TO})
-    MESSAGE(STATUS "Config directory ${CFG_TO} already exists - skipping")
-  ELSE()
-    MESSAGE(STATUS "Config directory ${CFG_TO} already exists - skipping")
-  ENDIF()
-ENDMACRO()
-ENDIF(NOT COMMAND COPY_CONFIG_DIR)
-
-################################################################################
 # Check if project is stand-alone or inside tree with dependencies
 ################################################################################
 SET(STANDALONE_PROJECT OFF)
@@ -128,6 +93,7 @@ ELSE()
   ELSE()
     MESSAGE(STATUS "Could not find websocket header-only library")
   ENDIF()
+  LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Rcs/cmake)
   LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
   MESSAGE(STATUS "Compiling ${PROJECT_NAME} as in-tree project")
 ENDIF()
@@ -211,7 +177,7 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 ################################################################################
 # ROS
 ################################################################################
-OPTION(USE_AFFACTION_ROS "Enable ROS for the retro project" OFF)
+OPTION(USE_AFFACTION_ROS "Enable ROS for the AffAction project" OFF)
 
 IF(USE_AFFACTION_ROS)
   LIST(APPEND CMAKE_PREFIX_PATH /opt/ros/noetic) #$ENV{ROS_DISTRO})
@@ -277,6 +243,8 @@ src/FaceTracker.cpp
 src/VirtualCamera.cpp
 src/StringParserTools.cpp
 src/HeadGesture.cpp
+src/SceneTransformationDataRecorder.cpp
+src/SceneTransformationDataPlayer.cpp
 )
 
 SET(ECS_SRCS
@@ -336,7 +304,7 @@ TARGET_LINK_LIBRARIES(AffAction PUBLIC Tropic RcsGraphics RcsGui RcsPhysics)
 IF (WIN32)
 find_package(PCAN-Basic REQUIRED)
 if(TARGET PCAN-Basic::PCAN-Basic)
-    target_link_libraries(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
+    TARGET_LINK_LIBRARIES(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
 endif()
 ENDIF()
 
@@ -347,6 +315,29 @@ IF (WIN32)
 ELSE()
   TARGET_LINK_LIBRARIES(AffAction PRIVATE zmq)
 ENDIF()
+
+# Experimental respeaker c++ class
+# LIBUSB_1_INCLUDE_DIRS, LIBUSB_1_LIBRARIES
+# PORTAUDIO_INCLUDE_DIR, PORTAUDIO_LIBRARIES
+OPTION(USE_AFFACTION_RESPEAKER "Enable respeaker" OFF)
+
+IF(USE_AFFACTION_RESPEAKER)
+  
+  IF (UNIX)
+    FIND_PACKAGE(PkgConfig)
+    pkg_check_modules(libusb-1.0 REQUIRED libusb-1.0)
+    SET(PORTAUDIO_INCLUDE_DIR $ENV{SIT}/External/portaudio/1.9/include)
+    SET(PORTAUDIO_LIBRARIES $ENV{SIT}/External/portaudio/1.9/lib/focal64/libportaudio.so)
+    #SET(LIBUSB_1_INCLUDE_DIRS )
+    SET(LIBUSB_1_LIBRARIES ${libusb-1.0_LIBRARIES})
+  ELSEIF (WIN32)
+    FIND_PACKAGE(libusb-1.0 REQUIRED)
+  ENDIF(UNIX)
+
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE ${LIBUSB_1_LIBRARIES} ${PORTAUDIO_LIBRARIES})
+  TARGET_INCLUDE_DIRECTORIES(AffAction PRIVATE ${PORTAUDIO_INCLUDE_DIR})
+  
+ENDIF(USE_AFFACTION_RESPEAKER)
 
 # We add this option to force the linker to export the symbols. This
 # solves the issue that it will not be exposed, since all initialization
@@ -392,17 +383,40 @@ TARGET_COMPILE_DEFINITIONS(ExampleRunnerAff PRIVATE -DRCS_CONFIG_DIR="${RCS_CONF
 ADD_EXECUTABLE(TestAffordance examples/TestAffordance.cpp)
 TARGET_LINK_LIBRARIES(TestAffordance AffAction)
 
+# To fix issues with remote graphics, we call XInitThreads in TestLLMSim.
+# That's why we need to link against X11 under Linux.
 ADD_EXECUTABLE(TestLLMSim examples/TestLLMSim.cpp)
 TARGET_LINK_LIBRARIES(TestLLMSim AffAction)
+IF (UNIX)
+  TARGET_LINK_LIBRARIES(TestLLMSim X11)
+ENDIF()
 
 ADD_EXECUTABLE(TreeTest examples/TreeTest.cpp)
 TARGET_LINK_LIBRARIES(TreeTest RcsCore)
 
-# To fix issues with remote graphics, we call XInitThreads in TestLLMSim.
-# That's why we need to link against X11 under Linux.
-IF (UNIX)
-  TARGET_LINK_LIBRARIES(TestLLMSim X11)
+IF (WIN32)
+  ADD_EXECUTABLE(MqttTest examples/MqttTest.cpp)
+  TARGET_INCLUDE_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
+  TARGET_LINK_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
+  TARGET_LINK_LIBRARIES(MqttTest PUBLIC RcsCore mosquitto mosquittopp)
+  ADD_CUSTOM_COMMAND(
+    TARGET MqttTest POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    $ENV{SIT}/External/mosquitto/mosquitto.dll
+    ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/mosquitto.dll)
 ENDIF()
+
+IF (USE_AFFACTION_RESPEAKER)
+  # Experimental respeaker c++ class
+  FIND_PACKAGE(PkgConfig)
+  pkg_check_modules(libusb-1.0 REQUIRED libusb-1.0)
+  #FIND_PACKAGE(libusb-1.0 REQUIRED)
+  SET(PORTAUDIO_INCLUDE_DIR $ENV{SIT}/External/portaudio/1.9/include)
+  SET(PORTAUDIO_LIBRARIES $ENV{SIT}/External/portaudio/1.9/lib/focal64/libportaudio.so)
+  ADD_EXECUTABLE(TestRespeaker examples/TestRespeaker.cpp)
+  TARGET_LINK_LIBRARIES(TestRespeaker PRIVATE ${libusb-1.0_LIBRARIES} ${PORTAUDIO_LIBRARIES} zmq)
+  TARGET_INCLUDE_DIRECTORIES(TestRespeaker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external ${PORTAUDIO_INCLUDE_DIR})
+ENDIF(USE_AFFACTION_RESPEAKER)
 
 ################################################################################
 # Python module with pybind11
@@ -417,7 +431,6 @@ ADD_SUBDIRECTORY (doc)
 ###############################################################################
 # Install the libraries and the binaries
 ###############################################################################
-#INSTALL(TARGETS AffAction EXPORT AffActionExport DESTINATION lib)
 INSTALL(TARGETS AffAction EXPORT AffActionExport
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
@@ -447,10 +460,8 @@ INSTALL(
 ###############################################################################
 COPY_DLL(AffAction)
 
-################################################################################
-# Copy / link config directories
-################################################################################
-COPY_CONFIG_DIR("${CMAKE_CURRENT_SOURCE_DIR}/config" "${PROJECT_BINARY_DIR}/config/xml" "AffAction")
+INCLUDE(CopyOrLinkConfig)
+RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}/config)
 
 ################################################################################
 # Target export script

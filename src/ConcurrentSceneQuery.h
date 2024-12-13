@@ -199,6 +199,10 @@ public:
    */
   std::vector<double> getPanTilt(const std::string& agentName,
                                  const std::string& sceneEntity);
+  nlohmann::json getGazeData();
+  nlohmann::json getRecordedTransformations(double start_time, double end_time);
+  void loadTransformationDataFromFile(const std::string& filename);
+  void startPlaybackTransformationData();
 
 
 private:

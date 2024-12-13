@@ -47,19 +47,13 @@
 
 #include <ExampleBase.h>
 #include <IkSolverRMR.h>
-#include <RcsViewer.h>
-#include <KeyCatcher.h>
-#include <GraphNode.h>
-#include <HUD.h>
-#include <BodyPointDragger.h>
-#include <VertexArrayNode.h>
-#include <ControllerWidgetBase.h>
-#include <JointWidget.h>
-#include <MatNdWidget.h>
 #include <ActionBase.h>
 
 #include <atomic>
 
+#include "GazeComponent.h"
+#include "SceneTransformationDataRecorder.h"
+#include "SceneTransformationDataPlayer.h"
 
 
 extern "C" {
@@ -125,10 +119,15 @@ public:
   std::string xmlFileName;
   std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
+  std::vector<std::string> eventQueue;
+
   unsigned int virtualCameraWidth, virtualCameraHeight;
   bool virtualCameraEnabled, virtualCameraWindowEnabled;
   bool gazeComponentEnabled;
   bool eyeIkEnabled;
+  bool usersGazeComponentEnabled;
+  bool sceneTransformationDataRecorderEnabled;
+  bool sceneTransformationDataPlayerEnabled;
   std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;
@@ -137,6 +136,17 @@ public:
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool hasBeenStopped;
 
+
+
+  /*! \brief Retrieves the gaze data in JSON format.
+  * This methods aggregates the gaze data from all gaze components and returns it in JSON format.
+  * \return JSON object containing the gaze data from all the agents.
+  */
+  nlohmann::json getUsersGazeData() const;
+   
+  nlohmann::json getRecordedTransformations(double start_time, double end_time) const;
+  void loadTransformationDataFromFile(const std::string& filename) const;
+  void startPlaybackTransformationData() const;
 
 protected:
 
@@ -186,6 +196,7 @@ protected:
   void onSetPupilSpeedWeight(double weight);
   void onPause();
   void onResume();
+  void onEventReceived(std::string event);
 
   ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
   ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
@@ -204,6 +215,20 @@ protected:
   std::vector<ComponentBase*> components;
 
   RcsGraph* graphToInitializeWith;
+
+  /*! \brief List of gaze components.
+  * 
+  * This vector contains pointers to instances of GazeComponent,
+  * each of which is responsible for tracking the gaze of a specific agent.
+  * 
+  */
+  std::vector<GazeComponent*> gazeComponents;
+  SceneTransformationDataRecorder* sceneTransformationDataRecorder; 
+  SceneTransformationDataPlayer * sceneTransformationDataPlayer;
+
+  
+
+
 };
 
 }   // namespace aff

@@ -474,6 +474,47 @@ PYBIND11_MODULE(pyAffaction, m)
   py::arg("onlyVisibleAgents") = false)
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns gaze data as a JSON object. If no gaze data is available, 
+  // it returns an empty JSON object. The JSON is structured as:
+  // {
+  //     "agent_name": "AgentName",
+  //     "gaze_data": [
+  //         {
+  //             "time": 123.45,
+  //             "gaze_velocity": 5.67,
+  //             "objects": [
+  //                 {
+  //                     "name": "ObjectName",
+  //                     "angle_diff": 12.34,
+  //                     "distance": 1.23,
+  //                     "angle_diffXY": 5.67,
+  //                     "angle_diffXZ": 8.90
+  //                 }
+  //             ]
+  //         }
+  //     ]
+  // }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_gaze_data", [](aff::ExampleActionsECS& ex) -> nlohmann::json
+  {
+    return ex.getQuery()->getGazeData();
+  })
+  .def("get_recorded_transformations", [](aff::ExampleActionsECS& ex, double start_time, double end_time) -> nlohmann::json
+  {
+    return ex.getQuery()->getRecordedTransformations(start_time, end_time);
+  })
+
+    .def("load_transformation_data_from_file", [](aff::ExampleActionsECS& ex, std::string filename)
+  {
+    ex.getQuery()->loadTransformationDataFromFile(filename);
+  })
+
+  .def("start_playback_transformation_data", [](aff::ExampleActionsECS& ex)
+  {
+    ex.getQuery()->startPlaybackTransformationData();
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns an empty string if there are no objects held in the hand, or the
   // name of the holding hand
   //////////////////////////////////////////////////////////////////////////////
@@ -779,6 +820,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("step", &aff::ExampleActionsECS::step)
   .def("stop", &aff::ExampleActionsECS::stop)
   .def("isRunning", &aff::ExampleActionsECS::isRunning)
+  .def("addComponentArgument", &aff::ExampleActionsECS::addComponentArgument)
 
   //////////////////////////////////////////////////////////////////////////////
   // Scales the durations of actions (global scope)
@@ -943,6 +985,13 @@ PYBIND11_MODULE(pyAffaction, m)
     // is for instance the Azure Kinect, and later also the Mediapipe components
     ex.addComponentArgument("-respeaker");
   })
+  .def("addZmqListener", [](aff::ExampleActionsECS& ex, std::string ip_string)
+  {
+    // Adds a component to listen to the ZeroMQ publishers, which
+    // is for instance the Webcam Tracking or ASR
+    ex.addComponentArgument("-zmq_listener");
+  },
+  py::arg("ip_string") = "tcp://*:5556")
   .def("addTTS", [](aff::ExampleActionsECS& ex, std::string type, std::string voice)
   {
     // Adds a component to connect to enable the text-to-speech functionality.
@@ -975,6 +1024,13 @@ PYBIND11_MODULE(pyAffaction, m)
   },
   py::arg("type") = "piper",
   py::arg("voice") = "kathleen")
+  .def("addVirtualCamera", [](aff::ExampleActionsECS& ex, int width, int height, bool withGui)
+  {
+    ex.virtualCameraEnabled = true;
+  },
+  py::arg("width") = 640,
+  py::arg("height") = 480,
+  py::arg("withGui") = false)
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
@@ -997,6 +1053,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
   .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
+  .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
   ;
 
 

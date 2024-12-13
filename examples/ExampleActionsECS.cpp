@@ -62,6 +62,7 @@
 #include <Rcs_broadphase.h>
 #include <Rcs_graphicsUtils.h>
 
+#include <ControllerWidgetBase.h>
 #include <CmdLineWidget.h>
 
 #include <BodyPointDragger.h>
@@ -236,6 +237,9 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   virtualCameraEnabled = false;
   virtualCameraWindowEnabled = false;
   gazeComponentEnabled = false;
+  usersGazeComponentEnabled = false;
+  sceneTransformationDataRecorderEnabled = false;
+  sceneTransformationDataPlayerEnabled = false;
   eyeIkEnabled = true;
   speedUp = 1;
   loopCount = 0;
@@ -308,7 +312,7 @@ ExampleActionsECS::~ExampleActionsECS()
 bool ExampleActionsECS::initParameters()
 {
   xmlFileName = "g_attentive_support.xml";
-  configDirectory = "config/xml/AffAction/xml/examples";
+  configDirectory = "config/xml/examples";
   speedUp = 3;
 
   return true;
@@ -350,7 +354,9 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-earlyExitAction", &earlyExitAction, "Early exit with action prediction's first error");
   parser->getArgument("-enableGazeComponent", &gazeComponentEnabled, "Start with gaze component");
   parser->getArgument("-enableEyeIK", &eyeIkEnabled, "Start with eye gaze model");
-
+  parser->getArgument("-enableUsersGazeComponent", &usersGazeComponentEnabled, "Start with users gaze component");
+  parser->getArgument("-enableSceneTransformationsDataRecorder", &sceneTransformationDataRecorderEnabled, "Enable recording of scene transformations");
+  parser->getArgument("-enableSceneTransformationPlayer", &sceneTransformationDataPlayerEnabled, "Enable playing of scene transformations");
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
@@ -399,6 +405,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("SetPupilSpeedWeight", &ExampleActionsECS::onSetPupilSpeedWeight, this);
   entity.subscribe("PauseTrajectory", &ExampleActionsECS::onPause, this);
   entity.subscribe("ResumeTrajectory", &ExampleActionsECS::onResume, this);
+  entity.subscribe("EventReceived", &ExampleActionsECS::onEventReceived, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -485,9 +492,39 @@ bool ExampleActionsECS::initAlgo()
 
   if (gazeComponentEnabled)
   {
-    auto gazeC = new GazeComponent(&entity, "head_front_glass", 2);
+    auto gazeC = new GazeComponent(&entity, "Johnnie", "head_front_glass", 2);
     gazeC->addSceneToAttend(*getScene(), getGraph());
     addComponent(gazeC);
+  }
+  
+  if (usersGazeComponentEnabled){
+    // Retrieve all agents from the scene
+    std::vector<const Agent*> agents = getScene()->getAgents<Agent>();
+
+    // Iterate over all agents and add the GazeComponent to all agents except the robot called "Johnnie"
+    for (const auto& agent : agents)
+    {
+      if (agent->name != "Johnnie") 
+      {
+          // Create a new GazeComponent for the agent
+          // The GazeComponent tracks the agent's gazing objects using the following parameters:
+          // - parent: Reference to the entity managing events (here, 'entity')
+          // - agentName: Name of the agent
+          // - gazingBody: The part of the agent used for gaze tracking (e.g., "Head_Elisabeth")
+          // - dirIdx: Index indicating gaze direction (default: 1 for the y-axis)
+        GazeComponent* gC = new GazeComponent(&entity, agent->name, "Head_"+agent->name, 1);
+
+        // Add current scene and graph to the GazeComponent
+        gC->addSceneToAttend(*getScene(), getGraph());
+
+        // Store the GazeComponent in the list of components
+        gazeComponents.push_back(gC);
+
+        // Add the GazeComponent to the entity
+        addComponent(gC);
+      }
+      
+    }
   }
 
   if (eyeIkEnabled)
@@ -601,6 +638,23 @@ bool ExampleActionsECS::initAlgo()
     virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getCurrentGraph()),
                                                     virtualCameraWidth, virtualCameraHeight);
   }
+    // Add the SceneTransformationDataRecorder
+  if (sceneTransformationDataRecorderEnabled)
+  {
+    double timeRecording = 30.0;
+    RLOG(0, "Recording scene transformations with a maximum time of %f", timeRecording);
+    sceneTransformationDataRecorder = new SceneTransformationDataRecorder(&entity, int(timeRecording/dt));
+    sceneTransformationDataRecorder->addSceneToRecord(*getScene(), getGraph());
+    addComponent(sceneTransformationDataRecorder);
+  }
+  if (sceneTransformationDataPlayerEnabled)
+  {
+    RLOG(0, "Playing transformations");
+    sceneTransformationDataPlayer = new SceneTransformationDataPlayer(&entity);
+    sceneTransformationDataPlayer->getRobotBodies(getGraph());
+    addComponent(sceneTransformationDataPlayer);
+
+  }
 
   // Printing the help prompt
   RLOG_CPP(1, help());
@@ -624,6 +678,18 @@ bool ExampleActionsECS::initAlgo()
   //}
 
   return true;
+}
+
+
+
+void ExampleActionsECS::loadTransformationDataFromFile(const std::string& filename) const
+{
+  sceneTransformationDataPlayer->loadFromFile(filename);
+}
+
+void ExampleActionsECS::startPlaybackTransformationData() const
+{
+  sceneTransformationDataPlayer->startPlayback();
 }
 
 bool ExampleActionsECS::initGraphics()
@@ -1883,6 +1949,11 @@ void ExampleActionsECS::onResume()
   trajTimeScaling = 1.0;
 }
 
+void ExampleActionsECS::onEventReceived(std::string event)
+{
+  eventQueue.push_back(event);
+}
+
 bool ExampleActionsECS::isFinalPoseRunning() const
 {
   RCHECK(actionC);
@@ -1922,6 +1993,106 @@ void ExampleActionsECS::addComponentArgument(const std::string& arg)
 std::string ExampleActionsECS::getComponentArguments() const
 {
   return componentArgs;
+}
+
+nlohmann::json ExampleActionsECS::getUsersGazeData() const
+{
+    nlohmann::json gazeDataJson = nlohmann::json::array();  // Create an empty JSON array
+    // Loop through all gaze components
+    for (const auto gC: gazeComponents){
+        nlohmann::json userGazeDataJson;
+        userGazeDataJson["agent_name"] = gC->getAgentName(); // Add the agent name to the JSON 
+ 
+        const std::deque<GazeDataPoint>* gazeData = gC->getGazeData();
+        // Create a JSON array for gaze data points of the current user
+        nlohmann::json dataJson = nlohmann::json::array();
+
+        // Iteterate over the gaze data deque
+        for(const auto& dataPoint : *gazeData){
+            nlohmann::json dataPointJson;
+            dataPointJson["time"] = dataPoint.time; // Add the time of the data point to the JSON 
+            dataPointJson["gaze_velocity"] = dataPoint.gazeVel; // Add the head velocity to the JSON 
+
+            // Create a JSON array for objects and their associated data
+            nlohmann::json objectsJson = nlohmann::json::array();
+            for (size_t i = 0; i < dataPoint.objectNames.size(); ++i) {
+                nlohmann::json objectJson;
+                objectJson["name"] = dataPoint.objectNames[i]; // Object name
+                objectJson["angle_diff"] = dataPoint.angleDiffs[i]; // Angular difference
+                objectJson["distance"] = dataPoint.distances[i]; // Distance to the object
+                objectJson["angle_diffXY"] = dataPoint.angleDiffsXY[i]; // Angular difference in XY plane
+                objectJson["angle_diffXZ"] = dataPoint.angleDiffsXZ[i]; // Angular difference in XZ plane
+                objectsJson.push_back(objectJson);
+            }
+            dataPointJson["objects"] = objectsJson; // Add the objects array to the data point JSON
+            dataJson.push_back(dataPointJson); // Add the data point JSON to the array
+        }
+        userGazeDataJson["gaze_data"] = dataJson; // Add the data array to the user JSON
+        gazeDataJson.push_back(userGazeDataJson); // Add user JSON to the main JSON array
+    }
+
+    return gazeDataJson;  // Return the JSON array of all gaze data points for all users
+}
+
+//---------------------------- SceneTransformationDataRecorder component ------------------------------------------------ //
+nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, double end_time) const{
+    nlohmann::json recordedTransformationsJson = nlohmann::json::array();  // Create an empty JSON array
+    const std::deque<TransformationRecord> recordedTransformations = sceneTransformationDataRecorder->getRecordedTransformations();
+
+
+
+    // Iterate through the recorded transformations in the deque
+    for (const auto& record : recordedTransformations)
+    {
+        // Only process records within the specified time range
+        if (record.time >= start_time && record.time <= end_time)
+        {
+            // Create a JSON object for the current record
+            nlohmann::json recordJson;
+            recordJson["time"] = record.time;
+
+            // Create an array of transformations for this record
+            nlohmann::json transformationsJson = nlohmann::json::array();
+
+            for (const auto& transformation : record.transformations)
+            {
+                nlohmann::json transformationJson;
+                transformationJson["parent"] = transformation.parent;
+                transformationJson["child"] = transformation.child;
+
+                // Store the relative transformation matrix
+                nlohmann::json relativeTransformationJson;
+                for (int i = 0; i < 3; ++i)
+                {
+                    relativeTransformationJson["position"].push_back(transformation.relativeTransformation.org[i]);
+                }
+
+                // Store the rotation matrix as a 3x3 array
+                nlohmann::json rotationJson = nlohmann::json::array();
+                for (int i = 0; i < 3; ++i)
+                {
+                    for (int j = 0; j < 3; ++j)
+                    {
+                        rotationJson.push_back(transformation.relativeTransformation.rot[i][j]);
+                    }
+                }
+                relativeTransformationJson["rotation"] = rotationJson;
+
+                // Add the transformation JSON to the list of transformations
+                transformationJson["relative_transformation"] = relativeTransformationJson;
+                transformationsJson.push_back(transformationJson);
+            }
+
+            // Add the transformations array to the record JSON object
+            recordJson["transformations"] = transformationsJson;
+
+            // Add this record to the final JSON array
+            recordedTransformationsJson.push_back(recordJson);
+        }
+    }
+
+    return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
+
 }
 
 
@@ -2077,7 +2248,7 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
-    configDirectory = "config/xml/AffAction/xml/examples";
+    configDirectory = "config/xml/examples";
     xmlFileName = "g_example_curiosity_cocktails.xml";
     speedUp = 1;
     physicsEngine = "Bullet";
@@ -2087,7 +2258,7 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "Render");
+RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "RenderFromSiluation");
 
 
 /*******************************************************************************
@@ -2108,7 +2279,7 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
-    configDirectory = "config/xml/AffAction/xml/examples";
+    configDirectory = "config/xml/examples";
     xmlFileName = "g_example_pizza.xml";
     speedUp = 1;
     componentArgs = "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
@@ -2317,7 +2488,7 @@ public:
   {
     ExampleActionsECS::initParameters();
     xmlFileName = "gJacoGen3_7dof.xml";
-    configDirectory = "config/xml/AffAction/xml/JacoGen3";
+    configDirectory = "config/xml/JacoGen3";
     speedUp = 1;
     addComponentArgument("-jacoGen3Zmq");
     return true;
