@@ -43,6 +43,7 @@
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
+#include "RespeakerSoundDirComponent.hpp"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -351,6 +352,15 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   auto extraArgsVec = Rcs::String_split(extraArgs, " ");
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
+  if (dryRun)
+  {
+    argP.hasArgument("-respeaker_usb", "Start with respeaker USB");
+  }
+  else if (getKey(argvStrVec, "-respeaker_usb"))
+  {
+    components.push_back(new RespeakerUSBComponent(&entity));
+  }
 
   if (dryRun)
   {
