@@ -370,6 +370,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-piper_tts_alan", "Start with piper text-to-speech, Alan's voice");
     argP.addDescription("-piper_tts_joe", "Start with piper text-to-speech, Joe's voice");
     argP.addDescription("-piper_tts_kathleen", "Start with piper text-to-speech, Kathleen's voice");
+    argP.addDescription("-piper_tts_ryan", "Start with piper text-to-speech, Ryan's voice");
     argP.addDescription("-piper", "Start with piper text-to-speech, Kathleen's voice");
   }
   else if (getKey(argvStrVec, "-tts"))
@@ -388,10 +389,16 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     tts->setPiperVoice("joe");
     components.push_back(tts);
   }
-  else if (getKey(argvStrVec, "-piper_tts_kathleen") || getKey(argvStrVec, "-piper"))
+  else if (getKey(argvStrVec, "-piper_tts_kathleen"))
   {
     auto tts = new TTSComponent(&entity, "piper");
     tts->setPiperVoice("kathleen");
+    components.push_back(tts);
+  }
+  else if (getKey(argvStrVec, "-piper_tts_ryan") || getKey(argvStrVec, "-piper"))
+  {
+    auto tts = new TTSComponent(&entity, "piper");
+    tts->setPiperVoice("ryan");
     components.push_back(tts);
   }
 
