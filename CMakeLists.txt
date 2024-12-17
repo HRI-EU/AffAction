@@ -35,6 +35,9 @@ STRING (REPLACE "\\" "/" PIPER_PATH "$ENV{SIT}/External/piper")
 SET(AFFACTION_PIPER_PATH "${PIPER_PATH}" CACHE STRING "Path to piper executable")
 
 OPTION(AFFACTION_WITH_OPTIM "Build with optimization" OFF)
+OPTION(AFFACTION_WITH_MQTT "Enable Mqtt communication" OFF)
+OPTION(AFFACTION_WITH_ROS "Enable ROS for the AffAction project" OFF)
+OPTION(AFFACTION_WITH_RESPEAKER "Enable respeaker" OFF)
 
 ################################################################################
 # Macro to copy dlls into bin directory
@@ -177,9 +180,8 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 ################################################################################
 # ROS
 ################################################################################
-OPTION(USE_AFFACTION_ROS "Enable ROS for the AffAction project" OFF)
 
-IF(USE_AFFACTION_ROS)
+IF(AFFACTION_WITH_ROS)
   LIST(APPEND CMAKE_PREFIX_PATH /opt/ros/noetic) #$ENV{ROS_DISTRO})
   SET(SMILE_WS_PATH "$ENV{SMILE_WORKSPACE_PATH}" CACHE STRING "Path to smile ROS workspace")
   FIND_PACKAGE(roscpp QUIET)
@@ -189,7 +191,7 @@ IF(USE_AFFACTION_ROS)
     MESSAGE(STATUS "Found roscpp installed at ${roscpp_DIR}, so building ROS-specific functionality.")
   ENDIF()
   FIND_PACKAGE(actionlib REQUIRED)
-ENDIF(USE_AFFACTION_ROS)
+ENDIF(AFFACTION_WITH_ROS)
 
 ###############################################################################
 # Library
@@ -276,7 +278,7 @@ examples/ExampleFlowMatching.cpp
 src/JacoShmComponent.cpp
 )
 
-IF (USE_AFFACTION_ROS)
+IF (AFFACTION_WITH_ROS)
   SET(ROS_SRCS
   src/ros/PtuComponent.cpp
   src/ros/PtuActionComponent.cpp
@@ -284,7 +286,7 @@ IF (USE_AFFACTION_ROS)
   src/ros/NuanceTTSComponent.cpp
   src/ros/MirrorEyeComponent.cpp
 )
-ENDIF(USE_AFFACTION_ROS)
+ENDIF(AFFACTION_WITH_ROS)
 
 SET_PROPERTY(SOURCE src/TTSComponent.cpp PROPERTY COMPILE_DEFINITIONS AFFACTION_PIPER_PATH="${AFFACTION_PIPER_PATH}")
 
@@ -319,25 +321,26 @@ ENDIF()
 # Experimental respeaker c++ class
 # LIBUSB_1_INCLUDE_DIRS, LIBUSB_1_LIBRARIES
 # PORTAUDIO_INCLUDE_DIR, PORTAUDIO_LIBRARIES
-OPTION(USE_AFFACTION_RESPEAKER "Enable respeaker" OFF)
 
-IF(USE_AFFACTION_RESPEAKER)
-  
+# Experimental respeaker c++ class
+IF (AFFACTION_WITH_RESPEAKER)
   IF (UNIX)
-    FIND_PACKAGE(PkgConfig)
-    pkg_check_modules(libusb-1.0 REQUIRED libusb-1.0)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(libusb-1.0 REQUIRED libusb-1.0)
     SET(PORTAUDIO_INCLUDE_DIR $ENV{SIT}/External/portaudio/1.9/include)
     SET(PORTAUDIO_LIBRARIES $ENV{SIT}/External/portaudio/1.9/lib/focal64/libportaudio.so)
-    #SET(LIBUSB_1_INCLUDE_DIRS )
+    SET(LIBUSB_1_INCLUDE_DIRS )
     SET(LIBUSB_1_LIBRARIES ${libusb-1.0_LIBRARIES})
   ELSEIF (WIN32)
-    FIND_PACKAGE(libusb-1.0 REQUIRED)
-  ENDIF(UNIX)
+    FIND_PACKAGE(libusb REQUIRED)
+	SET(LIBUSB_1_LIBRARIES ${LIBUSB_LIBRARIES})
+	SET(LIBUSB_1_INCLUDE_DIRS ${LIBUSB_INCLUDE_DIRS})
+	#SET(LIBUSB_1_LIBRARIES  hid setupapi)
+  ENDIF()
 
   TARGET_LINK_LIBRARIES(AffAction PRIVATE ${LIBUSB_1_LIBRARIES} ${PORTAUDIO_LIBRARIES})
-  TARGET_INCLUDE_DIRECTORIES(AffAction PRIVATE ${PORTAUDIO_INCLUDE_DIR})
-  
-ENDIF(USE_AFFACTION_RESPEAKER)
+  TARGET_INCLUDE_DIRECTORIES(AffAction PRIVATE ${LIBUSB_1_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIR})
+ENDIF(AFFACTION_WITH_RESPEAKER)
 
 # We add this option to force the linker to export the symbols. This
 # solves the issue that it will not be exposed, since all initialization
@@ -359,14 +362,14 @@ IF(AFFACTION_WITH_OPTIM)
 ENDIF()
 
 # PTUComponent currently uses ROS
-IF (USE_AFFACTION_ROS)
+IF (AFFACTION_WITH_ROS)
   TARGET_LINK_LIBRARIES(AffAction PRIVATE ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES})
   TARGET_INCLUDE_DIRECTORIES(AffAction SYSTEM PUBLIC ${roscpp_INCLUDE_DIRS})
   TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DUSE_ROS)  
   TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC ${SMILE_WS_PATH}/devel/include)
   TARGET_LINK_DIRECTORIES(AffAction PUBLIC /opt/ros/noetic/lib)
   TARGET_LINK_LIBRARIES(AffAction PRIVATE actionlib)
-ENDIF(USE_AFFACTION_ROS)
+ENDIF(AFFACTION_WITH_ROS)
 
 ################################################################################
 # Executables
@@ -394,7 +397,8 @@ ENDIF()
 ADD_EXECUTABLE(TreeTest examples/TreeTest.cpp)
 TARGET_LINK_LIBRARIES(TreeTest RcsCore)
 
-IF (WIN32)
+
+IF (WIN32 AND AFFACTION_WITH_MQTT)
   ADD_EXECUTABLE(MqttTest examples/MqttTest.cpp)
   TARGET_INCLUDE_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
   TARGET_LINK_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
@@ -405,18 +409,6 @@ IF (WIN32)
     $ENV{SIT}/External/mosquitto/mosquitto.dll
     ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/mosquitto.dll)
 ENDIF()
-
-IF (USE_AFFACTION_RESPEAKER)
-  # Experimental respeaker c++ class
-  FIND_PACKAGE(PkgConfig)
-  pkg_check_modules(libusb-1.0 REQUIRED libusb-1.0)
-  #FIND_PACKAGE(libusb-1.0 REQUIRED)
-  SET(PORTAUDIO_INCLUDE_DIR $ENV{SIT}/External/portaudio/1.9/include)
-  SET(PORTAUDIO_LIBRARIES $ENV{SIT}/External/portaudio/1.9/lib/focal64/libportaudio.so)
-  ADD_EXECUTABLE(TestRespeaker examples/TestRespeaker.cpp)
-  TARGET_LINK_LIBRARIES(TestRespeaker PRIVATE ${libusb-1.0_LIBRARIES} ${PORTAUDIO_LIBRARIES} zmq)
-  TARGET_INCLUDE_DIRECTORIES(TestRespeaker PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external ${PORTAUDIO_INCLUDE_DIR})
-ENDIF(USE_AFFACTION_RESPEAKER)
 
 ################################################################################
 # Python module with pybind11

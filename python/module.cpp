@@ -474,7 +474,7 @@ PYBIND11_MODULE(pyAffaction, m)
   py::arg("onlyVisibleAgents") = false)
 
   //////////////////////////////////////////////////////////////////////////////
-  // Returns gaze data as a JSON object. If no gaze data is available, 
+  // Returns gaze data as a JSON object. If no gaze data is available,
   // it returns an empty JSON object. The JSON is structured as:
   // {
   //     "agent_name": "AgentName",
@@ -504,7 +504,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return ex.getQuery()->getRecordedTransformations(start_time, end_time);
   })
 
-    .def("load_transformation_data_from_file", [](aff::ExampleActionsECS& ex, std::string filename)
+  .def("load_transformation_data_from_file", [](aff::ExampleActionsECS& ex, std::string filename)
   {
     ex.getQuery()->loadTransformationDataFromFile(filename);
   })
@@ -1015,9 +1015,13 @@ PYBIND11_MODULE(pyAffaction, m)
       {
         ex.addComponentArgument("-piper_tts_joe");
       }
-      else
+      else if (voice == "kathleen")
       {
         ex.addComponentArgument("-piper_tts_kathleen");
+      }
+      else
+      {
+        ex.addComponentArgument("-piper_tts_ryan");
       }
 
     }

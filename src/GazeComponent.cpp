@@ -81,14 +81,14 @@ void GazeComponent::addSceneToAttend(const ActionScene& scene, const RcsGraph* g
 
     if (ntt->bdyName == gazingBody || ntt->bdyName == agentName)
     {
-	    continue;
+      continue;
     }
-    
+
     if (ntt->bdyName.find("robot") != std::string::npos)
     {
       continue;
     }
-   
+
 
     double xyzMin[3], xyzMax[3];
     bool aabbValid = RcsGraph_computeBodyAABB(graph, bdy->id, -1, xyzMin, xyzMax, NULL);
@@ -154,7 +154,7 @@ void GazeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   double gazeDirXY[3];
   Vec3d_set(gazeDirXY, gazeDir[0], gazeDir[1], 0);
   double gazeDirXZ[3];
-  Vec3d_set(gazeDirXZ, gazeDir[0], 0, gazeDir[2]); 
+  Vec3d_set(gazeDirXZ, gazeDir[0], 0, gazeDir[2]);
 
 
   // This is kind of a saccade suppression. If the gaze point moves quickly, we
@@ -164,13 +164,13 @@ void GazeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
   double gazeVel = Vec3d_getLength(head->omega);
 
   bool useClosestPointAABB = true;
-  
-  if(Vec3d_getLength(prevHeadDirection)!=0)
-  {
-      double gazeOmega[3];
-      Vec3d_sub(gazeOmega, gazeDir, prevHeadDirection);
 
-      gazeVel = Vec3d_getLength(gazeOmega);
+  if (Vec3d_getLength(prevHeadDirection)!=0)
+  {
+    double gazeOmega[3];
+    Vec3d_sub(gazeOmega, gazeDir, prevHeadDirection);
+
+    gazeVel = Vec3d_getLength(gazeOmega);
 
   }
 
@@ -194,14 +194,14 @@ void GazeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
     if (aabbValid)
     {
 
-      if(useClosestPointAABB &&  agentName!= "Johnnie")
+      if (useClosestPointAABB &&  agentName!= "Johnnie")
       {
         // RLOG(0, "Using AABB points for object %s", o.bdyName.c_str());
         std::vector<std::array<double,3>> pointsObject;
         // Get  points for each aabb
         getPointsAABBSurface(xyzMin, xyzMax, pointsObject, 0.015);
-        
-        for(const auto& point: pointsObject)
+
+        for (const auto& point: pointsObject)
         {
           double p[3];
           Vec3d_set(p, point[0], point[1], point[2]);
@@ -217,17 +217,18 @@ void GazeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
           double angleXY = Vec3d_diffAngle(eye_objXY, gazeDirXY);
           double angleXZ = Vec3d_diffAngle(eye_objXZ, gazeDirXZ);
           // RLOG(1, "Angle %f", angle*180.0/M_PI);
-          if(angle<o.gazeAngle){
+          if (angle<o.gazeAngle)
+          {
             o.gazeAngle = angle;
             o.objectPointDistance = Vec3d_distance(p, eyePos);
             o.gazeAngleXY = angleXY;
             o.gazeAngleXZ = angleXZ;
           }
         }
-        
+
       }
       else
-      {   
+      {
         // Use only centroid
         Vec3d_set(centroid, 0.5*(xyzMin[0]+xyzMax[0]), 0.5*(xyzMin[1]+xyzMax[1]), 0.5*(xyzMin[2]+xyzMax[2]));
         objPos = centroid;
@@ -259,56 +260,55 @@ void GazeComponent::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
 
   if (!objectsToAttend.empty())
   {
-  REXEC(2)
-  {
-    RLOG_CPP(1, objectsToAttend.size() << " gaze objects:");
-    for (auto& o : objectsToAttend)
+    REXEC(2)
     {
-      std::cout << o.name << ": " << (180.0/M_PI)*o.gazeAngle << std::endl;
+      RLOG_CPP(1, objectsToAttend.size() << " gaze objects:");
+      for (auto& o : objectsToAttend)
+      {
+        std::cout << o.name << ": " << (180.0/M_PI)*o.gazeAngle << std::endl;
+      }
     }
-  }
 
 
-      // Prepare data to store
-      std::vector<std::string> objectNames;
-      std::vector<double> gazeAngles;
-      std::vector<double> distances;
-      std::vector<double> gazeAnglesXY;
-      std::vector<double> gazeAnglesXZ;
-      for (const auto& o : objectsToAttend)
+    // Prepare data to store
+    std::vector<std::string> objectNames;
+    std::vector<double> gazeAngles;
+    std::vector<double> distances;
+    std::vector<double> gazeAnglesXY;
+    std::vector<double> gazeAnglesXZ;
+    for (const auto& o : objectsToAttend)
+    {
+      if (o.gazeAngle*(180.0/M_PI) > DEFAULT_MAX_GAZE_ANGLE_DIFF)
       {
-          if(o.gazeAngle*(180.0/M_PI) > DEFAULT_MAX_GAZE_ANGLE_DIFF)
-          {
-              break;
-          }
-          objectNames.push_back(o.name);
-          gazeAngles.push_back((180.0 / M_PI) * o.gazeAngle);  // Convert to degrees
-          distances.push_back(o.objectPointDistance);
-          gazeAnglesXY.push_back((180.0 / M_PI) * o.gazeAngleXY);
-          gazeAnglesXZ.push_back((180.0 / M_PI) * o.gazeAngleXZ);
+        break;
       }
+      objectNames.push_back(o.name);
+      gazeAngles.push_back((180.0 / M_PI) * o.gazeAngle);  // Convert to degrees
+      distances.push_back(o.objectPointDistance);
+      gazeAnglesXY.push_back((180.0 / M_PI) * o.gazeAngleXY);
+      gazeAnglesXZ.push_back((180.0 / M_PI) * o.gazeAngleXZ);
+    }
 
-      // Add data to deque
-      double currentTime = Timer_getSystemTime();
-      if(!gazeData.empty())
-      {
-          gazeVel = gazeVel*(180.0/M_PI)*100.0; // 100 Hz
-      }
-      else
-      {
-          gazeVel = 0;
-      }
-      addGazeDataPoint(currentTime, objectNames, gazeAngles, distances, gazeVel, gazeAnglesXY, gazeAnglesXZ);
+    // Add data to deque
+    double currentTime = Timer_getSystemTime();
+    if (!gazeData.empty())
+    {
+      gazeVel = gazeVel*(180.0/M_PI)*100.0; // 100 Hz
+    }
+    else
+    {
+      gazeVel = 0;
+    }
+    addGazeDataPoint(currentTime, objectNames, gazeAngles, distances, gazeVel, gazeAnglesXY, gazeAnglesXZ);
 
 
-  t_calc = Timer_getSystemTime() - t_calc;
+    t_calc = Timer_getSystemTime() - t_calc;
 
 
-  RLOG(1, "Took %.3f usec, gazeVel is %.3f", 1000.0 * t_calc, gazeVel);
-  RLOG(1, "Omega vector: (%.3f, %.3f, %.3f)", head->omega[0], head->omega[1], head->omega[2]);
-  RLOG(1, "Number of gazeData elements stored: %ld with a total duration: %.3f", gazeData.size(), totalDurationGazeData);
-  RLOG(1, "Oldest object in deque: %s Newest object in deque: %s", gazeData.front().objectNames[0].c_str(), gazeData.back().objectNames[0].c_str());
-      
+    RLOG(1, "Took %.3f usec, gazeVel is %.3f", 1000.0 * t_calc, gazeVel);
+    RLOG(1, "Omega vector: (%.3f, %.3f, %.3f)", head->omega[0], head->omega[1], head->omega[2]);
+    RLOG_CPP(1, "Number of gazeData elements stored: " << gazeData.size() << " with a total duration: " << totalDurationGazeData);
+    RLOG_CPP(1, "Oldest object in deque: " << gazeData.front().objectNames[0] << " Newest object in deque: " << gazeData.back().objectNames[0]);
   }
 }
 
@@ -318,92 +318,106 @@ void GazeComponent::addGazeDataPoint(double time, const std::vector<std::string>
                                      const std::vector<double>& distances, double gazeVel, const std::vector<double>& angleDiffsXY,
                                      const std::vector<double>& angleDiffsXZ)
 {
-      
-      if (!gazeData.empty()) {
-          totalDurationGazeData = time - gazeData.front().time;
-      }
 
-      // Add the new gaze data
-      gazeData.emplace_back(time, objectNames, angleDiffs, distances, gazeVel, angleDiffsXY, angleDiffsXZ);
+  if (!gazeData.empty())
+  {
+    totalDurationGazeData = time - gazeData.front().time;
+  }
 
-      // Remove oldest data points if total duration exceeds the maxDurationGazeData
-      while (totalDurationGazeData > DEFAULT_MAX_DURATION_GAZE_DATA && !gazeData.empty()) {
-          removeOldestGazeDataPoint();
-      }
+  // Add the new gaze data
+  gazeData.emplace_back(time, objectNames, angleDiffs, distances, gazeVel, angleDiffsXY, angleDiffsXZ);
+
+  // Remove oldest data points if total duration exceeds the maxDurationGazeData
+  while (totalDurationGazeData > DEFAULT_MAX_DURATION_GAZE_DATA && !gazeData.empty())
+  {
+    removeOldestGazeDataPoint();
+  }
 }
 
 // Remove the oldest gaze data from the deque
 void GazeComponent::removeOldestGazeDataPoint()
 {
 
-    gazeData.pop_front();  // Remove the oldest element
-    if (gazeData.size() > 1) {
-        totalDurationGazeData = gazeData.back().time-gazeData.front().time;
-    }
+  gazeData.pop_front();  // Remove the oldest element
+  if (gazeData.size() > 1)
+  {
+    totalDurationGazeData = gazeData.back().time-gazeData.front().time;
+  }
 
 }
 
-void GazeComponent::getPointsAABBSurface(const double (&xyzMin)[3], const double (&xyzMax)[3], std::vector<std::array<double,3>>& pointsObject, const double & distance){
+void GazeComponent::getPointsAABBSurface(const double (&xyzMin)[3], const double (&xyzMax)[3], std::vector<std::array<double,3>>& pointsObject, const double& distance)
+{
 
-    pointsObject.clear();
+  pointsObject.clear();
 
-    double lengthX = xyzMax[0] - xyzMin[0];
-    double lengthY = xyzMax[1] - xyzMin[1];
-    double lengthZ = xyzMax[2] - xyzMin[2];
+  double lengthX = xyzMax[0] - xyzMin[0];
+  double lengthY = xyzMax[1] - xyzMin[1];
+  double lengthZ = xyzMax[2] - xyzMin[2];
 
-    // RLOG(0, "LENGTHS: (%f, %f, %f)", lengthX, lengthY, lengthZ);
-    int stepsX = static_cast<int>(lengthX / distance) + 1;
-    int stepsY = static_cast<int>(lengthY / distance) + 1;
-    int stepsZ = static_cast<int>(lengthZ / distance) + 1;
+  // RLOG(0, "LENGTHS: (%f, %f, %f)", lengthX, lengthY, lengthZ);
+  int stepsX = static_cast<int>(lengthX / distance) + 1;
+  int stepsY = static_cast<int>(lengthY / distance) + 1;
+  int stepsZ = static_cast<int>(lengthZ / distance) + 1;
 
-    double stepX = lengthX / (stepsX);
-    double stepY = lengthY / (stepsY);
-    double stepZ = lengthZ / (stepsZ);
-
-    
-    // Reserve memory for points
-    pointsObject.reserve(2 * (stepsX * stepsY + stepsY * stepsZ + stepsX * stepsZ));
+  double stepX = lengthX / (stepsX);
+  double stepY = lengthY / (stepsY);
+  double stepZ = lengthZ / (stepsZ);
 
 
-    for (int i = 0; i < stepsX; ++i) {
-        double x = xyzMin[0] + i * stepX;
-        for (int j = 0; j < stepsY; ++j) {
-            std::array<double, 3> point = {x, xyzMin[1] + j * stepY, xyzMax[2] };
-            pointsObject.push_back(point);
-        }
+  // Reserve memory for points
+  pointsObject.reserve(2 * (stepsX * stepsY + stepsY * stepsZ + stepsX * stepsZ));
+
+
+  for (int i = 0; i < stepsX; ++i)
+  {
+    double x = xyzMin[0] + i * stepX;
+    for (int j = 0; j < stepsY; ++j)
+    {
+      std::array<double, 3> point = {x, xyzMin[1] + j * stepY, xyzMax[2] };
+      pointsObject.push_back(point);
     }
+  }
 
-    for (int i = 0; i < stepsY; ++i) {
-        double y = xyzMin[1] + i * stepY;
-        for (int j = 0; j < stepsZ; ++j) {
-            std::array<double, 3> point = { xyzMin[0], y, xyzMin[2] + j * stepZ };
-            pointsObject.push_back(point);
-        }
+  for (int i = 0; i < stepsY; ++i)
+  {
+    double y = xyzMin[1] + i * stepY;
+    for (int j = 0; j < stepsZ; ++j)
+    {
+      std::array<double, 3> point = { xyzMin[0], y, xyzMin[2] + j * stepZ };
+      pointsObject.push_back(point);
     }
+  }
 
-    for (int i = 0; i < stepsY; ++i) {
-        for (int j = 0; j < stepsZ; ++j) {
-            std::array<double, 3> point = { xyzMax[0], xyzMin[1] + i * stepY, xyzMin[2] + j * stepZ };
-            pointsObject.push_back(point);
-        }
+  for (int i = 0; i < stepsY; ++i)
+  {
+    for (int j = 0; j < stepsZ; ++j)
+    {
+      std::array<double, 3> point = { xyzMax[0], xyzMin[1] + i * stepY, xyzMin[2] + j * stepZ };
+      pointsObject.push_back(point);
     }
+  }
 
-    for (int i = 0; i < stepsX; ++i) {
-      double x = xyzMin[0] + i * stepX;
-        for (int j = 0; j < stepsZ; ++j) {
-            std::array<double, 3> point = { x, xyzMin[1], xyzMin[2] + j * stepZ };
-            pointsObject.push_back(point);
-        }
+  for (int i = 0; i < stepsX; ++i)
+  {
+    double x = xyzMin[0] + i * stepX;
+    for (int j = 0; j < stepsZ; ++j)
+    {
+      std::array<double, 3> point = { x, xyzMin[1], xyzMin[2] + j * stepZ };
+      pointsObject.push_back(point);
     }
+  }
 
-    for (int i = 0; i < stepsX; ++i) {
-        double x = xyzMin[0] + i * stepX;
-        for (int j = 0; j < stepsZ; ++j) {
-            std::array<double, 3> point = { x, xyzMax[1], xyzMin[2] + j * stepZ };
-            pointsObject.push_back(point);
-        }
+  for (int i = 0; i < stepsX; ++i)
+  {
+    double x = xyzMin[0] + i * stepX;
+    for (int j = 0; j < stepsZ; ++j)
+    {
+      std::array<double, 3> point = { x, xyzMax[1], xyzMin[2] + j * stepZ };
+      pointsObject.push_back(point);
     }
-    // RLOG(0, "Number of points: %ld", pointsObject.size());
+  }
+  // RLOG(0, "Number of points: %ld", pointsObject.size());
 }
 
 
