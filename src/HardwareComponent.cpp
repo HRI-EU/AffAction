@@ -43,7 +43,7 @@
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
-#include "RespeakerSoundDirComponent.hpp"
+#include "RespeakerSoundDirComponent.h"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
