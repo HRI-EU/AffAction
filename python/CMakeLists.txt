@@ -40,13 +40,17 @@ IF (EXISTS "${PYBIND_DIR_HINT}" AND IS_DIRECTORY "${PYBIND_DIR_HINT}")
   SET(MODULE_SRCS module.cpp)
 
   # The link-time optimization has an internal error when used from ToolBos, so disable it.
+  # Mark pybind11 include dirs as system to supress warnings in pybind11 code
   PYBIND11_ADD_MODULE(pyAffaction ${MODULE_SRCS})# NO_EXTRAS)
   TARGET_COMPILE_DEFINITIONS(pyAffaction PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-
   TARGET_LINK_LIBRARIES(pyAffaction PUBLIC AffAction)
-
-  # Mark pybind11 include dirs as system to supress warnings in pybind11 code
   TARGET_INCLUDE_DIRECTORIES(pyAffaction SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
+
+  PYBIND11_ADD_MODULE(pyPushT pyPushT.cpp)# NO_EXTRAS)
+  TARGET_COMPILE_DEFINITIONS(pyPushT PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
+  TARGET_LINK_LIBRARIES(pyPushT PUBLIC AffAction)
+  TARGET_INCLUDE_DIRECTORIES(pyPushT SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
+
 
   # Setup site-packages link for python build mode. This has issues if you don't have write permissions
   OPTION(SETUP_PYTHON_DEVEL "Add the build output dir to the pythonpath")

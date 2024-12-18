@@ -62,8 +62,13 @@ public:
   virtual bool initAlgo();
   virtual bool initGraphics();
   virtual void step();
+  virtual void stepTraining();
   virtual void stop();
   virtual void randomize(RcsGraph* graph) const;
+  virtual std::string help();
+
+  // For python wrapper
+  virtual void stepTest(const MatNd* vel_des);
 
   EntityBase entity;
 

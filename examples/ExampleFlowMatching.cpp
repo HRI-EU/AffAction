@@ -69,6 +69,54 @@
 #endif
 
 
+
+
+/*
+
+
+class HriPushTEnv(gym.Env):
+
+
+        """
+        Constructor with default settings
+        """
+    def __init__(self, render_action=True):
+        self.sim_hz = 100
+
+
+        """
+        Put environment state to some random configuration. Just call "randomize".
+        Returns image or state
+        """
+    def reset(self):
+        seed = self._seed
+        self._setup()
+        return obs, info
+
+
+        """
+        Steps physics for one action command: vel_x, vel_y, vel_thz as a vector in action
+        Returns new image or state, and reward. Reward can be binary
+        """
+    def step(self, action):
+        # Step physics.
+        self.space.step(dt)
+        return observation, reward, terminated, truncated, info
+
+
+        """
+        Returns new image or state, joint angles ...
+        """
+    def get_observation(self):
+        obs = np.array(
+            tuple(self.agent.position) \
+            + tuple(self.block.position) \
+            + (self.block.angle % (2 * np.pi),))
+        return obs
+
+
+ */
+
 namespace aff
 {
 
@@ -502,22 +550,39 @@ void ExampleFlowMatching::stop()
 
 void ExampleFlowMatching::step()
 {
+  stepTraining();
+}
+
+void ExampleFlowMatching::stepTest(const MatNd* vel_des)
+{
+  entity.publish("UpdateGraph", graphC->getGraph());
+  entity.publish("ComputeKinematics", graphC->getGraph());
+  entity.publish("SetJointCommand", vel_des);
+  entity.publish("Render");
+  entity.process();
+  entity.stepTime();
+}
+
+void ExampleFlowMatching::stepTraining()
+{
   double dtProcess = Timer_getSystemTime();
 
-  // 1kHz
+  // 1kHz: Calls simulate in physics
   for (size_t i=0; i<10; ++i)
   {
     entity.publish("UpdateGraph", graphC->getGraph());
   }
+
+  // 100Hz: Updates kinematics in sensed graph
   entity.publish("ComputeKinematics", graphC->getGraph());
 
-  // 30Hz
+  // 30Hz: Just visualization
   if (loopCount%3==0)
   {
     entity.publish("Render");
   }
 
-  // 10Hz
+  // 10Hz: Data sampling
   if (loopCount%10==0)
   {
     const RcsBody* block = RcsGraph_getBodyByName(graphC->getGraph(), "block");
@@ -592,6 +657,15 @@ void ExampleFlowMatching::randomize(RcsGraph* graph) const
   }
   while (RcsBody_distance(tbar, pusher, NULL, NULL, NULL) < 0.1);
 
+}
+
+std::string ExampleFlowMatching::help()
+{
+  std::stringstream s;
+
+  s << ExampleBase::help();
+
+  return s.str();
 }
 
 }   // namespace aff
