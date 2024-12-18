@@ -42,7 +42,7 @@ namespace aff
 
 RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase(parent), threadRunning(false)
 {
-#if defined(_WIN32)
+#if 0 // defined(_WIN32)
   rinterface = new RespeakerInterfaceWin();
 #else
   rinterface = new RespeakerInterfaceLinux();
@@ -92,12 +92,32 @@ void RespeakerUSBComponent::stopUSBThread()
 
 void RespeakerUSBComponent::usbThreadFunc()
 {
+  // Give device some time to reinitialize
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
   std::cout << "Respeaker version: " << (int)rinterface->version() << "\n";
 
   while (threadRunning)
   {
+#if 0
+    int angle;
+    bool isSpeaking;
+
+    bool success = rinterface->angle_in_degrees(angle, isSpeaking);
+
+    if (success)
+    {
+      RLOG(0, "angle = %d, isSpeaking = %s", angle, isSpeaking ? "true" : "false");
+    }
+    else
+    {
+      RLOG(0, "Error in angle_in_degrees");
+    }
+#else
     int angle = rinterface->angle_in_degrees();
     RLOG(0, "angle = %d", angle);
+#endif
+
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }

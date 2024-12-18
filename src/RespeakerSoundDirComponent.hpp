@@ -59,7 +59,7 @@ namespace aff
 
 // ------------------- Linux Implementation -------------------
 
-#if !defined(_WIN32)
+//#if !defined(_WIN32)
 
 #include <libusb-1.0/libusb.h>
 
@@ -96,7 +96,7 @@ public:
     }
 
     // Give device some time to reinitialize
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
     RLOG(5, "done");
   }
 
@@ -147,6 +147,13 @@ public:
 
   int angle_in_degrees() override
   {
+    // VOICEACTIVITY parameter: id = 19, offset = 32, type = int
+    int isVoice = readParam(19, 32, true);
+
+    // SPEECHACTIVITY parameter: id = 19, offset = 32, type = int
+    int isSpeech = readParam(19, 22, true);
+    RLOG(0, "isVoice = %d   isSpeech = %d", isVoice, isSpeech);
+
     return readParam(21, 0, true); // DOAANGLE is int
   }
 
@@ -212,6 +219,7 @@ private:
     int* ints = (int*)buf;
     // ints[0], ints[1]
     // For DOAANGLE it's an int parameter
+
     return ints[0];
   }
 
@@ -222,7 +230,7 @@ private:
   static constexpr unsigned int TIMEOUT = 100000;
 };
 
-#endif // !_WIN32
+//#endif // !_WIN32
 
 
 // ------------------- Windows Implementation -------------------
