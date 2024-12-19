@@ -63,6 +63,11 @@ public:
   virtual void update();
   void setEnabled(bool);
   bool isEnabled();
+  std::vector<double> getDepthBuffer() const;
+  std::vector<double> getColorBuffer() const;
+  const VirtualCamera* getCamera() const;
+  int getWidth() const;
+  int getHeight() const;
 
 protected:
   void enable();

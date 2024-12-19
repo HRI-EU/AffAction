@@ -90,12 +90,12 @@ ELSE(pybind11_FOUND)
 ENDIF()
 
 IF(UNIX)
-  INSTALL(TARGETS pyAffaction
+  INSTALL(TARGETS pyAffaction pyPushT
           RUNTIME DESTINATION bin 
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib/AffAction)
 ELSE()
-  INSTALL(TARGETS pyAffaction
+  INSTALL(TARGETS pyAffaction pyPushT
           RUNTIME DESTINATION bin 
           LIBRARY DESTINATION bin
           ARCHIVE DESTINATION lib/AffAction)

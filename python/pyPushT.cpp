@@ -41,6 +41,8 @@ namespace py = pybind11;
 
 #include <ExampleFlowMatching.h>
 #include <SegFaultHandler.h>
+#include <Rcs_typedef.h>
+#include <Rcs_math.h>
 
 #if !defined(_MSC_VER)
 #include <X11/Xlib.h>
@@ -50,10 +52,33 @@ RCS_INSTALL_ERRORHANDLERS
 
 
 
+static py::array_t<double> getColorImage(aff::ExampleFlowMatching& ex)
+{
+  ex.vcamC->update();
+
+  // Get the color buffer and dimensions
+  std::vector<double> buffer = ex.vcamC->getColorBuffer();
+  int width = ex.vcamC->getWidth();
+  int height = ex.vcamC->getHeight();
+
+  // Ensure the buffer size matches the dimensions
+  if (buffer.size() != width* height * 3)
+  {
+    throw std::runtime_error("Buffer size does not match image dimensions.");
+  }
+
+  // Create a NumPy array with shape (height, width, 3)
+  return py::array_t<double>({height, width, 3}, buffer.data());
+}
+
+
+
+
+
 //////////////////////////////////////////////////////////////////////////////
 // The python affaction module, mainly consisting off the LlmSim class.
 //////////////////////////////////////////////////////////////////////////////
-PYBIND11_MODULE(pyAffaction, m)
+PYBIND11_MODULE(pyPushT, m)
 {
 
   //////////////////////////////////////////////////////////////////////////////
@@ -75,6 +100,87 @@ PYBIND11_MODULE(pyAffaction, m)
     ex->initParameters();
     return std::move(ex);
   }))
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("init", [](aff::ExampleFlowMatching& ex, bool withGraphics=true) -> bool
+  {
+    bool success = ex.initAlgo();
+
+    if (withGraphics)
+    {
+      success = ex.initGraphics() && success;
+      ex.entity.publish("Render");
+      ex.entity.process();
+    }
+
+    std::string starLine(80, '*');
+    std::cerr << "\n\n" + starLine;
+    if (success)
+    {
+      std::cerr << "\n* PushT initialized\n";
+    }
+    else
+    {
+      std::cerr << "\n* Failed to initialize PushT\n";
+    }
+    std::cerr << starLine << "\n";
+
+    return success;
+  }, "Initializes algorithm, guis and graphics")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // New random pose. Needs to return image.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("reset", [](aff::ExampleFlowMatching& ex) -> py::array_t<double>
+  {
+    ex.randomize(ex.rndGraph);
+    ex.entity.call<const RcsGraph*>("InitFromState", ex.rndGraph);
+    ex.entity.call("UpdateGraph", ex.graphC->getGraph());
+    ex.entity.call("ComputeKinematics", ex.graphC->getGraph());
+    ex.entity.call("Render");
+    ex.entity.process();
+    ex.vcamC->update();
+
+    // Get the color buffer and dimensions
+    return getColorImage(ex);
+  }, "New random pose")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns the image
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_observation", [](aff::ExampleFlowMatching& ex) -> py::array_t<double>
+  {
+    return getColorImage(ex);
+  }, "Return observation")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Step one control command
+  //////////////////////////////////////////////////////////////////////////////
+  .def("step", [](aff::ExampleFlowMatching& ex, py::array_t<double> vel_des) -> py::array_t<double>
+  {
+    const RcsBody* block = RcsGraph_getBodyByName(ex.graphC->getGraph(), "block");
+    if (!block)
+    {
+      throw std::runtime_error("Could not find body with the name 'block' - but it is required.");
+    }
+
+    HTr A_BI = block->A_BI;
+    A_BI.org[0] += vel_des.data()[0];
+    A_BI.org[1] += vel_des.data()[1];
+    ex.physicsC->getPhysics()->applyTransform(block, &A_BI);
+
+    ex.entity.call("UpdateGraph", ex.graphC->getGraph());
+    ex.entity.call("ComputeKinematics", ex.graphC->getGraph());
+    ex.entity.call("Render");
+    ex.entity.process();
+    ex.entity.stepTime();
+
+    // Get camera image
+    return getColorImage(ex);
+  }, "Return observation")
   ;
 
 }

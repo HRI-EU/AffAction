@@ -131,4 +131,30 @@ void VirtualCameraWindow::disable()
   pixelGui.reset();
 }
 
+
+std::vector<double> VirtualCameraWindow::getDepthBuffer() const
+{
+  return depthBuffer;
+}
+
+std::vector<double> VirtualCameraWindow::getColorBuffer() const
+{
+  return colorBuffer;
+}
+
+int VirtualCameraWindow::getWidth() const
+{
+  return virtualCamera->width;
+}
+
+int VirtualCameraWindow::getHeight() const
+{
+  return virtualCamera->height;
+}
+
+const VirtualCamera* VirtualCameraWindow::getCamera() const
+{
+  return virtualCamera;
+}
+
 } // aff
