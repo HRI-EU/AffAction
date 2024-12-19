@@ -127,10 +127,29 @@ void RespeakerUSBComponent::usbThreadFunc()
 
 #else
 
+#include <Rcs_macros.h>
+
+
+namespace aff
+{
+
 RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase(parent)
 {
   RFATAL("Respeaker has no USB support compiled in");
 }
+
+RespeakerUSBComponent::~RespeakerUSBComponent()
+{
+}
+
+
+
+void RespeakerUSBComponent::startUSBThread() {}
+void RespeakerUSBComponent::stopUSBThread() {}
+void RespeakerUSBComponent::usbThreadFunc() {}
+
+
+} // namespace aff
 
 
 #endif   // AFFACTION_WITH_RESPEAKER
