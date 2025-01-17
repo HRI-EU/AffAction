@@ -51,6 +51,7 @@ class TrackerBase
 public:
 
   TrackerBase();
+  virtual ~TrackerBase() = default;
   virtual std::string getRequestKeyword() const = 0;
   virtual void parse(const nlohmann::json& json, double time, const std::string& cameraFrame) = 0;
   virtual void update(ActionScene* scene, RcsGraph* graph) = 0;
