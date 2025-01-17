@@ -216,6 +216,14 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns the position of the objects in camera coordinates
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getObjectsInCamera", [](aff::ExampleActionsECS& ex, std::vector<std::string> entityNames, std::string cameraName) -> nlohmann::json
+  {
+    return ex.getQuery()->getObjectsInCamera(entityNames, cameraName);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns a boolean indicating if any scene entity is closer to any hand of
   // the agent closer than a distance threshold.
   //////////////////////////////////////////////////////////////////////////////

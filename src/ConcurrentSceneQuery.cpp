@@ -179,13 +179,20 @@ nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::strin
   return aff::getObjectOccludersForAgent(agentName, objectName, &scene, graph);
 }
 
-
 nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& objectName,
                                                        const std::string& cameraName)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
   return aff::getObjectInCamera(objectName, cameraName, &scene, graph);
+}
+
+nlohmann::json ConcurrentSceneQuery::getObjectsInCamera(const std::vector<std::string>& entityNames,
+                                                        const std::string& cameraName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  return aff::getObjectsInCamera(entityNames, cameraName, &scene, graph);
 }
 
 std::string ConcurrentSceneQuery::getParentEntity(const std::string& objectName)

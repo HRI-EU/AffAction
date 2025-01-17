@@ -58,7 +58,9 @@ nlohmann::json getObjectOccludersForAgent(const std::string& agentName,
  *         HumanAgent, or an array of positions and 8 AABB-vertices of the entity or agent,
  *         projected into the frame of the given camera. The AABB is computed as
  *
- *         - the envelope around all distance shapes of an AffordanceEntitie's body
+ *         - the envelope around all boundingbox shapes of an AffordanceEntitie's body
+ *           (enable flag RCSSHAPE_COMPUTE_BOUNDINGBOX by specifying boundingbox="true"
+ *            in shape description in xml file
  *         - the envelope around all markers of a HumanAgent
  *
  *         If no AABB can be found, the 'vertex' part of the json will be skipped. This
@@ -77,6 +79,12 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
                                  const ActionScene* scene,
                                  const RcsGraph* graph,
                                  bool computeHeadAABB=false);
+
+nlohmann::json getObjectsInCamera(const std::vector<std::string>& objectNames,
+                                  const std::string& cameraName,
+                                  const ActionScene* scene,
+                                  const RcsGraph* graph,
+                                  bool computeHeadAABB=false);
 
 bool isAgentBusy(const std::string& agentName,
                  const ActionScene* scene,

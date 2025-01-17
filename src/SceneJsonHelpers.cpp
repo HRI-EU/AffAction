@@ -38,6 +38,7 @@
 #include <Rcs_shape.h>
 #include <Rcs_body.h>
 #include <Rcs_timer.h>
+#include <Rcs_geometry.h>
 
 #include <mutex>
 #include <queue>
@@ -562,7 +563,8 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   if (dynamic_cast<const AffordanceEntity*>(objectEntities[0]) ||
       dynamic_cast<const Manipulator*>(objectEntities[0]))
   {
-    aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &vertices);
+    aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_BOUNDINGBOX,
+                                         xyzMin, xyzMax, &vertices);
   }
   else if (dynamic_cast<const HumanAgent*>(objectEntities[0]))
   {
@@ -593,6 +595,112 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   else
   {
     RLOG(4, "Failed to compute AABB for object %s - skipping vertex calculation", objectName.c_str());
+  }
+
+  return json;
+}
+
+
+nlohmann::json getObjectsInCamera(const std::vector<std::string>& objectNames,
+                                  const std::string& cameraName,
+                                  const ActionScene* scene,
+                                  const RcsGraph* graph,
+                                  bool computeHeadAABB)
+{
+  nlohmann::json json;
+
+  // Check for exactly one camera with the given name
+  std::vector<const AffordanceEntity*> cameraEntities = scene->getAffordanceEntities(cameraName);
+
+  if (cameraEntities.size() != 1)
+  {
+    RLOG_CPP(0, "Expect 1 match for camera '" << cameraName << "' but got " << cameraEntities.size());
+    return json;
+  }
+
+  // Initialize bounding box and centroid
+  const RcsBody* cameraBdy = cameraEntities[0]->body(graph);
+  size_t numBBs = 0, numObjs = 0;
+  std::vector<double> xyzMin(3, 0.0), xyzMax(3, 0.0), centroid(3, 0.0);
+
+
+  // Loop over all objects in array
+  for (const auto& objectName : objectNames)
+  {
+    std::vector<const SceneEntity*> objectEntities = scene->getSceneEntities(objectName);
+
+    // We currently enforce unique objects
+    if (objectEntities.size() != 1)
+    {
+      RLOG_CPP(0, "Expect 1 match for object '" << objectName << "' but got " << objectEntities.size());
+      continue;
+    }
+
+    // Add object's origin to centroid
+    const RcsBody* objectBdy = objectEntities[0]->body(graph);
+    double objectInCamera[3];   // From camera to object frame: A_CO
+    Vec3d_invTransform(objectInCamera, &cameraBdy->A_BI, objectBdy->A_BI.org);
+    Vec3d_addSelf(centroid.data(), objectInCamera);
+    numObjs++;
+
+    // Compute set of 8 3d points (AABB vertices) in camera frame
+    bool aabbValid = false;
+    std::vector<double> bbMin(3), bbMax(3);
+
+    if (dynamic_cast<const AffordanceEntity*>(objectEntities[0]) ||
+        dynamic_cast<const Manipulator*>(objectEntities[0]))
+    {
+      aabbValid = RcsGraph_computeBodyAABB(graph, objectBdy->id, RCSSHAPE_COMPUTE_BOUNDINGBOX,
+                                           bbMin.data(), bbMax.data(), NULL);
+    }
+    else if (dynamic_cast<const HumanAgent*>(objectEntities[0]))
+    {
+      const HumanAgent* human = dynamic_cast<const HumanAgent*>(objectEntities[0]);
+
+      if (computeHeadAABB)
+      {
+        aabbValid = human->computeAABBHead(bbMin.data(), bbMax.data(), NULL);
+      }
+      else
+      {
+        aabbValid = human->computeAABB(bbMin.data(), bbMax.data(), NULL);
+      }
+    }
+
+    // Update overall bounding box
+    if (aabbValid)
+    {
+      xyzMin = std::min(bbMin, xyzMin);
+      xyzMax = std::max(bbMax, xyzMax);
+      numBBs++;
+    }
+
+  }   // for (const auto& objectName : objectNames)
+
+
+  if (numObjs>0)
+  {
+    json["x"] = centroid[0]/numBBs;
+    json["y"] = centroid[1]/numBBs;
+    json["z"] = centroid[2]/numBBs;
+  }
+
+  if (numBBs>0)
+  {
+    // Transform lower and upper bounds into camera coordinates
+    double vertices[8][3];
+    Vec3d_invTransformSelf(xyzMin.data(), &cameraBdy->A_BI);
+    Vec3d_invTransformSelf(xyzMax.data(), &cameraBdy->A_BI);
+    Math_computeVerticesAABB(vertices, xyzMin.data(), xyzMax.data());
+
+    // Expand bounding box in camera coordinates
+    nlohmann::json vertexJson;
+    for (int i = 0; i < 8; ++i)
+    {
+      vertexJson.push_back(std::vector<double>(vertices[i], vertices[i] + 3));
+    }
+
+    json["vertex"] = vertexJson;
   }
 
   return json;

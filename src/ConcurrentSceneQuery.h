@@ -135,6 +135,11 @@ public:
   nlohmann::json getObjectInCamera(const std::string& entityName,
                                    const std::string& cameraName);
 
+  /*! \brief Same as getObjectInCamera(), but around an array of entities.
+   */
+  nlohmann::json getObjectsInCamera(const std::vector<std::string>& entityNames,
+                                    const std::string& cameraName);
+
   /*! \brief Returns the name of the kinematic parent of the object, or an empty
    *         string if:
    *         - objectName is not the name / type of an AffordanceEntity
