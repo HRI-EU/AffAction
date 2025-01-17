@@ -157,6 +157,25 @@ PYBIND11_MODULE(pyPushT, m)
   }, "Return observation")
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns the x-y position of the push block
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_control", [](aff::ExampleFlowMatching& ex) -> py::array_t<double>
+  {
+    py::array_t<double> result(2);
+
+    const RcsBody* block = RcsGraph_getBodyByName(ex.graphC->getGraph(), "block");
+    if (!block)
+    {
+      throw std::runtime_error("Could not find body with the name 'block' - but it is required.");
+    }
+
+    auto buf = result.mutable_unchecked<1>();// 1d indexing
+    buf(0) = block->A_BI.org[0];
+    buf(1) = block->A_BI.org[1];
+    return result;
+  }, "Return the x-y position of the push block")
+
+  //////////////////////////////////////////////////////////////////////////////
   // Step one control command
   //////////////////////////////////////////////////////////////////////////////
   .def("step", [](aff::ExampleFlowMatching& ex, py::array_t<double> vel_des) -> py::array_t<double>
