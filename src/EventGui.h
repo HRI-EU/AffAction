@@ -80,5 +80,12 @@ private:
   ES::SubscriberCollectionBase* event;
 };
 
+class EventWidget : public QScrollArea
+{
+public:
+  EventWidget(ES::EventSystem* entity);
+  virtual ~EventWidget() = default;
+};
+
 }
 #endif //   AFF_EVENTGUI_H

@@ -343,12 +343,6 @@ void EventLine::handleButton()
   /*******************************************************************************
    *
    ******************************************************************************/
-  class EventWidget : public QScrollArea
-  {
-  public:
-    EventWidget(ES::EventSystem* entity);
-    virtual ~EventWidget() = default;
-  };
 
   EventWidget::EventWidget(ES::EventSystem* entity) : QScrollArea()
   {
