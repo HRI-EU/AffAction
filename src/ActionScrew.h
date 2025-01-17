@@ -57,14 +57,14 @@ public:
   virtual ~ActionScrew();
   std::unique_ptr<ActionBase> clone() const override;
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
   double getDurationHint() const;
   std::string explain() const;
-  std::vector<std::string> getManipulators() const;
+  std::vector<std::string> getManipulators() const override;
 
 protected:
 
-  std::vector<std::string> createTasksXML() const;
+  std::vector<std::string> createTasksXML() const override;
 
   std::string bottle;
   std::string hand;

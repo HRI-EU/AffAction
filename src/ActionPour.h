@@ -52,12 +52,12 @@ public:
   virtual ~ActionPour();
   std::unique_ptr<ActionBase> clone() const override;
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::vector<std::string> getManipulators() const;
-  double getDefaultDuration() const;
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
-  size_t getNumSolutions() const;
-  std::string getActionCommand() const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  std::vector<std::string> getManipulators() const override;
+  double getDefaultDuration() const override;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
+  size_t getNumSolutions() const override;
+  std::string getActionCommand() const override;
 
 protected:
 
@@ -67,7 +67,7 @@ protected:
             const std::string& objectToPourTo,
             double amountToPour);
 
-  std::vector<std::string> createTasksXML() const;
+  std::vector<std::string> createTasksXML() const override;
   void performLiquidTransition(const AffordanceEntity* pourFromAff,
                                const AffordanceEntity* pourToAff);
 

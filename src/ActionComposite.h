@@ -50,15 +50,15 @@ public:
   ActionComposite(const ActionComposite& other);
   std::unique_ptr<ActionBase> clone() const override;
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::vector<std::string> createTasksXML() const;
-  virtual double getDefaultDuration() const;
-  virtual double getDuration() const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  std::vector<std::string> createTasksXML() const override;
+  virtual double getDefaultDuration() const override;
+  virtual double getDuration() const override;
   void addAction(ActionBase* action);
-  std::vector<std::string> getManipulators() const;
-  std::string getActionCommand() const;
-  size_t getNumSolutions() const;
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  std::vector<std::string> getManipulators() const override;
+  std::string getActionCommand() const override;
+  size_t getNumSolutions() const override;
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
 
 protected:
 

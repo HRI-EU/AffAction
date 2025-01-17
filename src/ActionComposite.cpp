@@ -603,7 +603,7 @@ public:
 
   }
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override
   {
     const double afterTime = 0.5;
     ActionGet* actionGet = dynamic_cast<ActionGet*>(actions[0].get());
@@ -637,17 +637,17 @@ public:
     return cset;
   }
 
-  double getDuration() const
+  double getDuration() const override
   {
     return 1.0*(actions[0]->getDuration() + actions[1]->getDuration());
   }
 
-  size_t getNumSolutions() const
+  size_t getNumSolutions() const override
   {
     return actions[0]->getNumSolutions();
   }
 
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank)
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override
   {
     return actions[0]->initialize(domain, graph, solutionRank);
   }

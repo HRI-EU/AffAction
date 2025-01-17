@@ -50,10 +50,10 @@ public:
   virtual ~ActionFromXML();
 
   std::unique_ptr<ActionBase> clone() const override;
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::vector<std::string> getManipulators() const;
-  std::vector<std::string> createTasksXML() const;
-  std::string getActionCommand() const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  std::vector<std::string> getManipulators() const override;
+  std::vector<std::string> createTasksXML() const override;
+  std::string getActionCommand() const override;
 
 private:
 

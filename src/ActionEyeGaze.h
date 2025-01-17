@@ -69,11 +69,11 @@ public:
 
 protected:
 
-  std::vector<std::string> createTasksXML() const;
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::vector<std::string> getManipulators() const;
-  double getDefaultDuration() const;
-  std::string getActionCommand() const;
+  std::vector<std::string> createTasksXML() const override;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  std::vector<std::string> getManipulators() const override;
+  double getDefaultDuration() const override;
+  std::string getActionCommand() const override;
 
   std::string agentName;
   std::string gazeTargetBody;

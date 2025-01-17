@@ -52,17 +52,17 @@ public:
   virtual ~ActionDoor();
   std::unique_ptr<ActionBase> clone() const override;
 
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
   double getDurationHint() const;
-  std::vector<std::string> getManipulators() const;
+  std::vector<std::string> getManipulators() const override;
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,
-                                        double duration) const;
+                                        double duration) const override;
 
 protected:
 
-  std::vector<std::string> createTasksXML() const;
+  std::vector<std::string> createTasksXML() const override;
 
   std::string doorHandle;       // Object's affordance frame name
   std::string doorHingeJoint;   // Name of the RcsJoint hinge of the door

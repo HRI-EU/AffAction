@@ -59,19 +59,19 @@ public:
             const std::string& graspTypeStr,
             const std::string& whereFrom);
 
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
 
-  virtual tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
+  virtual tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
 
-  void print() const;
-  std::vector<std::string> getManipulators() const;
-  size_t getNumSolutions() const;
-  std::string getActionCommand() const;
-  double getDefaultDuration() const;
+  void print() const override;
+  std::vector<std::string> getManipulators() const override;
+  size_t getNumSolutions() const override;
+  std::string getActionCommand() const override;
+  double getDefaultDuration() const override;
 
   // Interface for optimization
   std::vector<double> getInitOptimState(tropic::TrajectoryControllerBase* tc,
-                                        double duration) const;
+                                        double duration) const override;
 
 
   //protected:
@@ -86,7 +86,7 @@ public:
 
   static std::string graspTypeToString(GraspType gType);
 
-  std::vector<std::string> createTasksXML() const;
+  std::vector<std::string> createTasksXML() const override;
 
   virtual std::shared_ptr<tropic::ConstraintSet>
   createTrajectory(double t_start,

@@ -51,13 +51,13 @@ public:
 
   virtual ~ActionPoint();
   virtual std::unique_ptr<ActionBase> clone() const override;
-  virtual std::string getActionCommand() const;
-  size_t getNumSolutions() const;
-  virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
-  void print() const;
-  virtual double getDefaultDuration() const;
+  virtual std::string getActionCommand() const override;
+  size_t getNumSolutions() const override;
+  virtual bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
+  void print() const override;
+  virtual double getDefaultDuration() const override;
   double actionCost(const ActionScene& domain,
-                    const RcsGraph* graph) const;
+                    const RcsGraph* graph) const override;
 
 protected:
 
@@ -68,9 +68,9 @@ protected:
                                         double fingerTipPosition[3]) const;
   virtual double getDefaultFingerDistance() const;
 
-  std::vector<std::string> createTasksXML() const;
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  std::vector<std::string> getManipulators() const;
+  std::vector<std::string> createTasksXML() const override;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  std::vector<std::string> getManipulators() const override;
   double pointDistance(const ActionScene& scene, const RcsGraph* graph,
                        const std::string& finger, const std::string& object) const;
 

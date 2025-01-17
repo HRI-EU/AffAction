@@ -52,17 +52,17 @@ public:
   virtual ~ActionDrop();
   std::unique_ptr<ActionBase> clone() const override;
 
-  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank);
+  bool initialize(const ActionScene& domain, const RcsGraph* graph, size_t solutionRank) override;
 
-  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const;
-  double getDuration() const;
-  double getDefaultDuration() const;
-  std::vector<std::string> getManipulators() const;
-  size_t getNumSolutions() const;
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
+  double getDuration() const override;
+  double getDefaultDuration() const override;
+  std::vector<std::string> getManipulators() const override;
+  size_t getNumSolutions() const override;
 
 protected:
 
-  std::vector<std::string> createTasksXML() const;
+  std::vector<std::string> createTasksXML() const override;
 
   std::string objectToDrop;
   std::string surfaceName;     // Name of surface to drop on
