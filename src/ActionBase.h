@@ -79,9 +79,9 @@ public:
   {
   }
 
-  virtual const char* what() const noexcept
+  virtual const char* what() const noexcept override
   {
-    std::string msg = (error == NoError) ? "SUCCESS" : "ERROR";
+    msg = (error == NoError) ? "SUCCESS" : "ERROR";
     msg += " REASON: " + feedbackMsg.reason + " SUGGESTION: " + feedbackMsg.suggestion;
     if (!feedbackMsg.developer.empty())
     {
@@ -133,6 +133,7 @@ protected:
 
   ActionResult feedbackMsg;
   ActionError error;
+  mutable std::string msg;
 };
 
 
