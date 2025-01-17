@@ -81,7 +81,7 @@ ActionGazeAtHand::ActionGazeAtHand(const ActionScene& scene,
   // Find robot agent that should point. \todo: handle multiple agents
   auto robots = scene.getAgents<RobotAgent>();
 
-  if (!robots.size() == 1)
+  if (robots.size() != 1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Found " + std::to_string(robots.size()) + " robots to inspect the same time.",
@@ -111,7 +111,7 @@ ActionGazeAtHand::ActionGazeAtHand(const ActionScene& scene,
   // Determine camera base link
   auto heads = robots[0]->getManipulatorsOfType(&scene, "head");
 
-  if (!heads.size() == 1)
+  if (heads.size() != 1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Found " + std::to_string(heads.size()) + " heads to inspect.",

@@ -108,7 +108,7 @@ ActionShake::ActionShake(const ActionScene& scene,
   // Find robot agent that should point. \todo: handle multiple agents
   auto robots = scene.getAgents<RobotAgent>();
 
-  if (!robots.size() == 1)
+  if (robots.size() != 1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Found " + std::to_string(robots.size()) + " robots to shake the same time.",

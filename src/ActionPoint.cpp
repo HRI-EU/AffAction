@@ -112,7 +112,7 @@ ActionPoint::ActionPoint(const ActionScene& scene,
   // Find robot agent that should point. \todo: handle multiple agents
   auto robots = scene.getAgents<RobotAgent>();
 
-  if (!robots.size() == 1)
+  if (robots.size() != 1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Found " + std::to_string(robots.size()) + " robots to point at the same time.",

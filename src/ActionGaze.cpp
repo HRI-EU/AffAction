@@ -62,7 +62,7 @@ ActionGaze::ActionGaze(const ActionScene& scene,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  if (!params.size()==1)
+  if (params.size()!=1)
   {
     throw ActionException(ActionException::ParamInvalid,
                           "Received " + std::to_string(params.size()) + " objects to gaze at the same time.",
