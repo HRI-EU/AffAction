@@ -38,6 +38,9 @@ OPTION(AFFACTION_WITH_OPTIM "Build with optimization" OFF)
 OPTION(AFFACTION_WITH_MQTT "Enable Mqtt communication" OFF)
 OPTION(AFFACTION_WITH_ROS "Enable ROS for the AffAction project" OFF)
 OPTION(AFFACTION_WITH_RESPEAKER "Enable respeaker" OFF)
+IF (WIN32)
+  OPTION(AFFACTION_WITH_PCAN_BASIC "Enable PCan-Basic PTU driver" OFF)
+ENDIF()
 
 ################################################################################
 # Macro to copy dlls into bin directory
@@ -150,6 +153,15 @@ IF(UNIX)
     # Strong optimization for release mode
     SET(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=native -ggdb")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ggdb")
+  ENDIF()
+
+  IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Suppress the "implicit conversion loses integer precision" warning
+    add_compile_options(-Wno-conversion)
+    #add_compile_options(-Wno-unused-function)
+    #add_compile_options(-Wno-overloaded-virtual)
+    #add_compile_options(-Wno-unused-but-set-variable)
+    ##add_compile_options(-Wno-inconsistent-missing-override)
   ENDIF()
 
 ENDIF()
@@ -304,17 +316,26 @@ TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
 
 TARGET_LINK_LIBRARIES(AffAction PUBLIC Tropic RcsGraphics RcsGui RcsPhysics)
 
-IF (WIN32)
+IF (AFFACTION_WITH_PCAN_BASIC)
   FIND_PACKAGE(PCAN-Basic REQUIRED)
   IF(TARGET PCAN-Basic::PCAN-Basic)
     TARGET_LINK_LIBRARIES(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
+    TARGET_COMPILE_DEFINITIONS(AffAction PRIVATE -DAFFACTION_WITH_PCAN_BASIC)
   ENDIF()
-ENDIF(WIN32)
+ENDIF(AFFACTION_WITH_PCAN_BASIC)
 
 # zmq library is used to communicate with python from MediaPipeComponent
 IF (WIN32)
   FIND_PACKAGE(cppzmq REQUIRED)
   TARGET_LINK_LIBRARIES(AffAction PRIVATE cppzmq)
+ELSEIF(APPLE)
+  find_package(PkgConfig REQUIRED)
+  #pkg_check_modules(zeromq REQUIRED)
+  pkg_check_modules(ZMQ REQUIRED libzmq)
+  MESSAGE("zmq libs: ${ZMQ_LIBRARIES}")
+  #link_directories(${ZMQ_LIBRARY_DIRS})
+  #TARGET_LINK_LIBRARIES(AffAction PRIVATE ${ZMQ_LIBRARIES})
+  TARGET_LINK_LIBRARIES(AffAction PRIVATE /opt/homebrew/Cellar/zeromq/4.3.5_1/lib/libzmq.5.dylib)
 ELSE()
   TARGET_LINK_LIBRARIES(AffAction PRIVATE zmq)
 ENDIF()
@@ -377,7 +398,7 @@ ENDIF(AFFACTION_WITH_ROS)
 # Executables
 ################################################################################
 ADD_EXECUTABLE(ExampleRunnerAff examples/ExampleRunner.cpp)
-IF (UNIX)
+IF (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   TARGET_LINK_LIBRARIES(ExampleRunnerAff -Wl,--no-as-needed RcsExamples AffAction -Wl,--as-needed)
 ELSE()
   TARGET_LINK_LIBRARIES(ExampleRunnerAff RcsExamples AffAction)
@@ -392,7 +413,7 @@ TARGET_LINK_LIBRARIES(TestAffordance AffAction)
 # That's why we need to link against X11 under Linux.
 ADD_EXECUTABLE(TestLLMSim examples/TestLLMSim.cpp)
 TARGET_LINK_LIBRARIES(TestLLMSim AffAction)
-IF (UNIX)
+IF (UNIX AND NOT APPLE)
   TARGET_LINK_LIBRARIES(TestLLMSim X11)
 ENDIF()
 

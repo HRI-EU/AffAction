@@ -30,10 +30,84 @@
 
 *******************************************************************************/
 
-#if defined (_MSC_VER)
+#if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
 #include "PW70CANInterfaceWin.hpp"
-#else
+#elif defined(__linux__) && !defined(__APPLE__)
 #include "PW70CANInterfaceLinux.hpp"
+#else
+#include <cmath>
+#include <thread>
+#include <vector>
+#include <functional>
+#include <mutex>
+#include <iostream>
+
+namespace aff
+{
+
+class PW70CANInterface
+{
+public:
+  // Constructor and Destructor
+  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
+                   std::function<void(double, double, double, void*)> position_callback,
+                   void* param, int freq) {}
+  ~PW70CANInterface() {}
+
+  // Public Methods
+  void cleanup() {}
+  bool enable_frequent_position_update(int frequency)
+  {
+    return true;
+  }
+  bool disable_frequent_position_update()
+  {
+    return true;
+  }
+  bool stop()
+  {
+    return true;
+  }
+  bool fast_stop()
+  {
+    return true;
+  }
+  bool reference_pan()
+  {
+    return true;
+  }
+  bool reference_tilt()
+  {
+    return true;
+  }
+  bool reset_stop()
+  {
+    return true;
+  }
+  bool set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+  {
+    return true;
+  }
+  bool set_target_position(double pan_radians, double tilt_radians)
+  {
+    return true;
+  }
+  bool move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
+  {
+    return true;
+  }
+  bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+  {
+    return true;
+  }
+
+  static void limit_check(double pan, double tilt, void* param);
+  static void position_update(double pan, double tilt, double timestamp, void* param);
+  static int test();
+};
+
+}   // namespace
+
 #endif
 
 namespace aff
@@ -392,7 +466,7 @@ void PW70VelocityComponent::onSetJointPositionInDegrees(double pan_in_deg, doubl
 {
   if (enableCommands && filterInitialized)
   {
-    // We clip the filtr goal to the permissable limits
+    // We clip the filter goal to the permissable limits
     double panTiltTarget[2];
     panTiltTarget[0] = Math_clip(RCS_DEG2RAD(pan_in_deg), PAN_MIN_RAD, PAN_MAX_RAD);
     panTiltTarget[1] = Math_clip(RCS_DEG2RAD(tilt_in_deg), TILT_MIN_RAD, TILT_MAX_RAD);
