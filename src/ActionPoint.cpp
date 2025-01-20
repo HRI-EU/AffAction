@@ -201,19 +201,7 @@ bool ActionPoint::initialize(const ActionScene& scene,
   const Manipulator* hand = scene.getManipulatorOwningFrame(pointerFrame);
   RCHECK(hand);
   this->handName = hand->bdyName;
-  this->pointingFingerAngles.clear();
-  auto pointMdlState = Rcs::RcsGraph_getModelState(graph, "point_fingers");
-
-  for (const auto& finger : hand->fingerJoints)
-  {
-    for (const auto& js : pointMdlState)
-    {
-      if (STREQ(graph->joints[js.first].name, finger.c_str()))
-      {
-        this->pointingFingerAngles.push_back(js.second);
-      }
-    }
-  }
+  this->pointingFingerAngles = hand->getFingerAnglesFromModelState(graph, "point_fingers");
 
   if (hand->getNumFingers()!=pointingFingerAngles.size())
   {

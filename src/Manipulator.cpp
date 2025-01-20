@@ -575,4 +575,32 @@ bool Manipulator::canReachTo(const ActionScene* scene,
   return reachable;
 }
 
+std::vector<double> Manipulator::getFingerAnglesFromModelState(const RcsGraph* graph, const std::string& modelState) const
+{
+  std::vector<double> fingerAngles;
+
+  auto pointMdlState = Rcs::RcsGraph_getModelState(graph, modelState.c_str());
+
+  for (const auto& finger : this->fingerJoints)
+  {
+    for (const auto& js : pointMdlState)
+    {
+      if (STREQ(graph->joints[js.first].name, finger.c_str()))
+      {
+        fingerAngles.push_back(js.second);
+      }
+    }
+  }
+
+  if (getNumFingers() != fingerAngles.size())
+  {
+    RLOG_CPP(4, "Manipulator '" << name << " ' number of fingers mismatch. Check the model_state '"
+             << modelState << " in your config file. Hand " << name << " has " << getNumFingers() <<
+             " finger joints, but only " << fingerAngles.size() << " found in xml file");
+    fingerAngles.clear();
+  }
+
+  return fingerAngles;
+}
+
 } // namespace aff

@@ -160,6 +160,8 @@ public:
   // Called by ActionScene::initializeKinematics()
   void computeBaseJointName(const ActionScene* scene,
                             const RcsGraph* graph);
+
+  std::vector<double> getFingerAnglesFromModelState(const RcsGraph* graph, const std::string& modelState) const;
 };
 
 } // namespace aff
