@@ -32,7 +32,6 @@
 
 #include "ActionPut.h"
 #include "ActionFactory.h"
-#include "CollisionModelConstraint.h"
 #include "StringParserTools.hpp"
 
 #include <ActivationSet.h>
@@ -41,6 +40,7 @@
 #include <EulerConstraint.h>
 #include <ConnectBodyConstraint.h>
 #include <VectorConstraint.h>
+#include <CollisionModelConstraint.h>
 
 #include <Rcs_utilsCPP.h>
 #include <Rcs_typedef.h>

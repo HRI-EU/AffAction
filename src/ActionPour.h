@@ -71,7 +71,7 @@ protected:
   void performLiquidTransition(const AffordanceEntity* pourFromAff,
                                const AffordanceEntity* pourToAff);
 
-  std::string bottle;
+  std::string bottle;   // Name of Pourable-frame of bottle
   std::string glas;     // Name of Containable frame of receiving entity
   std::string roboBaseFrame;
 

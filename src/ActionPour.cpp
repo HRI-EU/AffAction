@@ -39,6 +39,7 @@
 #include <PolarConstraint.h>
 #include <ConnectBodyConstraint.h>
 #include <VectorConstraint.h>
+#include <CollisionModelConstraint.h>
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
@@ -51,6 +52,10 @@
 
 
 
+#define DEFAULT_TILT_ANGLE (150.0*M_PI/180.0)
+#define T_FINGERMOVE  (2.0)
+
+
 namespace aff
 {
 REGISTER_ACTION(ActionPour, "pour");
@@ -58,7 +63,8 @@ REGISTER_ACTION(ActionPour, "pour");
 ActionPour::ActionPour(const ActionScene& domain,
                        const RcsGraph* graph,
                        std::vector<std::string> params) :
-  glasInHand(false), pouringVolume(0.1), tiltAngleAbs(RCS_DEG2RAD(150.0)), tiltAngle(RCS_DEG2RAD(150.0)), numSolutions(2)
+  glasInHand(false), pouringVolume(0.1),
+  tiltAngleAbs(DEFAULT_TILT_ANGLE), tiltAngle(DEFAULT_TILT_ANGLE), numSolutions(2)
 {
   parseParams(params);
 
@@ -71,6 +77,9 @@ ActionPour::ActionPour(const ActionScene& domain,
     tiltAngleAbs = fabs(tiltAngle);
   }
 
+  res = getAndEraseKeyValuePair(params, "amountToPour", pouringVolume);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+
   if (params.size()<2)
   {
     throw ActionException(ActionException::ParamInvalid,
@@ -82,10 +91,6 @@ ActionPour::ActionPour(const ActionScene& domain,
   const std::string& objectToPourFrom = params[0];
   const std::string& objectToPourInto = params[1];
   double amountToPour = pouringVolume;
-  if (params.size()>2)
-  {
-    amountToPour = std::stod(params[2]);
-  }
 
   if (amountToPour < 0.0)
   {
@@ -374,7 +379,7 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   a1->addActivation(t_start, true, 0.5, taskBottleOri);
   a1->addActivation(t_end + afterTime, false, 0.5, taskBottleOri);
   a1->add(std::make_shared<tropic::PolarConstraint>(t_prep, tiltAngle*(RCS_DEG2RAD(30.0)/M_PI), thetaTilt, taskBottleOri, 1));
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_up, tiltAngle*(RCS_DEG2RAD(150.0)/M_PI), thetaTilt, taskBottleOri));
+  a1->add(std::make_shared<tropic::PolarConstraint>(t_up, tiltAngle*(DEFAULT_TILT_ANGLE /M_PI), thetaTilt, taskBottleOri));
   a1->add(std::make_shared<tropic::PolarConstraint>(t_end, tiltAngle*(RCS_DEG2RAD(10.0)/M_PI), thetaTilt, taskBottleOri));
 
   if (glasInHand)
@@ -509,6 +514,11 @@ double ActionPour::getDefaultDuration() const
 std::string ActionPour::getActionCommand() const
 {
   std::string str = ActionBase::getActionCommand();
+
+  if (getDuration() != getDefaultDuration())
+  {
+    str += " duration " + std::to_string(getDuration());
+  }
 
   str += " tiltAngle " + std::to_string(RCS_RAD2DEG(tiltAngle));
 
@@ -774,5 +784,478 @@ protected:
 };
 
 REGISTER_ACTION(ActionFixPosition, "fix_position");
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ActionPourPut : public ActionPour
+{
+public:
+
+  ActionPourPut(const ActionScene& domain, const RcsGraph* graph, std::vector<std::string> params) :
+    ActionPour(domain, graph, params), isBottleCollidable(false)
+  {
+    int res = getAndEraseKeyValuePair(params, "near", nearTo);
+    RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+    if ((res == 0) && (!nearTo.empty()) && domain.getSceneEntities(nearTo).empty())
+    {
+      throw ActionException(ActionException::UnrecoverableError,
+                            "Cannot put an object near " + nearTo + " because " + nearTo + " is unknown",
+                            "Put it near another object in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    res = getAndEraseKeyValuePair(params, "far", farFrom);
+    RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+    if ((res == 0) && (!farFrom.empty()) && domain.getSceneEntities(farFrom).empty())
+    {
+      throw ActionException(ActionException::UnrecoverableError,
+                            "Cannot put an object far from " + farFrom + " because " + farFrom + " is unknown",
+                            "Put it far away of another object in the environment",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    res = getAndEraseKeyValuePair(params, "putPlace", putPlace);
+    RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+    const std::string& objToPourFrom = params[0];
+    const std::string& objToPourInto = params[1];
+
+    // Extract candidates where bottle can be put on. numSolutions is returned by
+    // ActionPour::getNumSolutions()
+    if (!putPlace.empty())
+    {
+      this->supports.push_back(putPlace);
+    }
+    else
+    {
+      this->supports = findSupportCandidates(domain, graph, usedManipulators[0], objToPourFrom, objToPourInto, nearTo, farFrom);
+    }
+
+    this->numSolutions *= supports.size();
+
+    const AffordanceEntity* pourFromAff = domain.getAffordanceEntity(objToPourFrom);
+    this->bottleBodyName = pourFromAff->bdyName;
+    auto bottleBottoms = getAffordances<Stackable>(pourFromAff);
+
+    // Both bottle need to have an opening
+    if (bottleBottoms.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "The " + objToPourFrom + " has no bottom.",
+                            "You cannot put it down.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+    this->bottleBottom = bottleBottoms[0]->frame;
+
+    // For retracting hand
+    this->isBottleCollidable = pourFromAff->isCollideable(graph);
+    initGraspFrames(domain, graph, pourFromAff, this->handGraspFrame, this->bottleGraspFrame);
+    this->taskObjHandPos = bottleGraspFrame + "-" + handGraspFrame + "-XYZ";
+  }
+
+  void initGraspFrames(const ActionScene& domain, const RcsGraph* graph,
+                       const AffordanceEntity* pourFromAff,
+                       std::string& graspFrm, std::string& objGraspFrm)
+  {
+    // Relative hand-object position for retracting (see ActionPut)
+    const Manipulator* graspingHand = usedManipulators.empty() ? nullptr : domain.getManipulator(usedManipulators[0]);
+    RCHECK(graspingHand);
+    auto graspCapability = graspingHand->getGraspingCapability(graph, pourFromAff);
+    graspFrm = graspCapability->frame;
+
+    auto ca = graspingHand->getGrasp(graph, pourFromAff);
+    const Affordance* a_grasp = std::get<1>(ca);
+    objGraspFrm = a_grasp->frame;
+
+    // For opening fingers
+    this->fingersOpenAngles = graspingHand->getFingerAnglesFromModelState(graph, "open_fingers");
+    this->taskFingers = graspingHand->name + "_fingers";
+
+    fingerJoints.clear();
+    for (auto& f : graspingHand->fingerJoints)
+    {
+      fingerJoints += f;
+      fingerJoints += " ";
+    }
+
+  }
+
+  std::unique_ptr<ActionBase> clone() const
+  {
+    return std::make_unique<ActionPourPut>(*this);
+  }
+
+  bool initialize(const ActionScene& domain,
+                  const RcsGraph* graph,
+                  size_t solutionRank)
+  {
+    if (solutionRank >= getNumSolutions())
+    {
+      return false;
+    }
+
+    if (getNumSolutions()==supports.size())
+    {
+      selectedSupport = supports[solutionRank];
+    }
+    else if (getNumSolutions()==2*supports.size())
+    {
+      selectedSupport = supports[solutionRank/2];
+      tiltAngle = (solutionRank % 2 == 0) ? tiltAngleAbs : -tiltAngleAbs;
+    }
+    else
+    {
+      RLOG_CPP(0, "Wrong number of solutions: " << getNumSolutions() << " "
+               << supports.size());
+      return false;
+    }
+
+    this->taskRelSupport = bottle + "-" + selectedSupport + "-XYZ";
+
+    RLOG_CPP(0, "Initializing solution " << solutionRank << " with supportable "
+             << selectedSupport << " and angle " << RCS_RAD2DEG(tiltAngle));
+    return true;
+  }
+
+  virtual std::vector<std::string> createTasksXML() const
+  {
+    std::vector<std::string> tasks = ActionPour::createTasksXML();
+
+    std::string xmlTask;
+    xmlTask = "<Task name=\"" + taskRelSupport + "\" " + "controlVariable=\"XYZ\" " +
+              "effector=\"" + bottleBottom + "\" " + "refBdy=\"" + selectedSupport + "\" />";
+    tasks.push_back(xmlTask);
+
+
+    // taskObjHandPos: XYZ-task with effector=object and refBdy=hand
+    xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
+              "controlVariable=\"XYZ\" " + "effector=\"" +
+              bottleGraspFrame + "\" " + "refBdy=\"" + handGraspFrame + "\" />";
+    tasks.push_back(xmlTask);
+
+
+    // Fingers
+    xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
+              "jnts=\"" + fingerJoints + "\" />";
+    tasks.push_back(xmlTask);
+
+    return tasks;
+  }
+
+  /*
+   * This action pours one container into antoher one. Here is the detailed
+   * description of the timings:
+   *
+   * - t_prep: At this time point, the bottle tip is aligned with the glas rim
+   *           but the bottle is only a little bit inclined. The bottle tip is
+   *           still a bit above the glas rim.
+   * - t_up:   The bottle tip is aligned exactly with the glas rim, and the
+   *           bottle has been tilted so that the contents of it run into the
+   *           glas.
+   * - t_down: Like t_prep
+   * - t_put:  Bottle placed on support
+   * - t_end:  Hand retracted.
+   * - t_afterTime: All tasks are deactivated.
+   *
+   * t_start   t_prep        t_up        t_down    t_put   t_end   t_afterTime
+   *    |         |            |            |         |       |           |
+   *  ----------------------------------------------------------------------> time
+   *
+   * Pouring with right hand: polar theta is 90 degrees
+   * Pouring with left hand: polar theta is -90 degrees
+   */
+  tropic::TCS_sptr createTrajectory(double t_start, double t_end) const
+  {
+    const double duration = t_end - t_start;
+    const double t_prep = t_start + 0.2 * duration;
+    const double t_up = t_start + 0.45 * duration;
+    const double t_down = t_start + 0.7 * duration;
+    const double t_put = t_start + 0.9 * duration;
+    const double afterTime = 0.5;
+    const double thetaTilt = M_PI_2;
+
+    // How much do hands go away from each other once pouring finished. We move it into
+    // the direction of the bottle bottom.
+    const double d_separate = (tiltAngle>=0.0) ? -0.25 : 0.25;
+    const double heightAboveGlas = 0.08;
+
+    auto a1 = std::make_shared<tropic::ActivationSet>();
+
+    // Hand position with respect to bottle. We move the bottle tip over the
+    // glas tip, keep it a little bit (while the bottle tilts), and then
+    // move bottle and glas sideways apart.
+    a1->addActivation(t_start, true, 0.5, taskRelPos);
+    a1->addActivation(t_down, false, 0.5, taskRelPos);
+    a1->addActivation(t_down, true, 0.5, taskRelSupport);
+    a1->addActivation(t_put+0*afterTime, false, 0.5, taskRelSupport);
+
+    // At the time point t_prep, we keep a bit distance between bottle and glas
+    // so that they don't collide. On the way of tilting the bottle up, we align
+    // the opening frames.
+    a1->add(t_prep, 0.6 * d_separate, 0.0, 0.0, 7, taskRelPos + " 1");
+    a1->add(t_prep + 0.5*(t_up-t_prep), 0.0, 0.0, 0.0, 7, taskRelPos + " 1");
+    a1->add(t_prep, heightAboveGlas, 0.0, 0.0, 7, taskRelPos + " 2");
+
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_up, 0.0, 0.0, 0.0, taskRelPos));
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_up + 0.5*(t_down-t_up), 0.0, 0.0,
+                                                         heightAboveGlas, taskRelPos, 1));
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_down, 0.0, d_separate, heightAboveGlas, taskRelPos, 7));
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_put, 0.0, 0.0, 0.0, taskRelSupport));
+
+    // Orientations
+    a1->addActivation(t_start, true, 0.5, taskBottleOri);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskBottleOri);
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_prep, tiltAngle*(RCS_DEG2RAD(30.0)/M_PI), thetaTilt, taskBottleOri, 1));
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_up, tiltAngle*(DEFAULT_TILT_ANGLE /M_PI), thetaTilt, taskBottleOri));
+    a1->add(std::make_shared<tropic::PolarConstraint>(t_put, tiltAngle*(RCS_DEG2RAD(1.0)/M_PI), thetaTilt, taskBottleOri));
+
+    if (glasInHand)
+    {
+      a1->addActivation(t_start, true, 0.5, taskGlasOri);
+      a1->addActivation(t_put, false, 0.5, taskGlasOri);
+      a1->addActivation(t_start, true, 0.5, taskGlasPosX);
+      a1->addActivation(t_put, false, 0.5, taskGlasPosX);
+      a1->addActivation(t_start, true, 0.5, taskGlasPosZ);
+      a1->addActivation(t_put, false, 0.5, taskGlasPosZ);
+    }
+
+    // Release hand from bottle
+    const double releaseDistance = 0.15;
+    const double releaseUp = -0.05;
+    a1->addActivation(t_put, true, 0.5, taskObjHandPos);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskObjHandPos);
+    a1->add(t_end, releaseDistance, 0.0, 0.0, 7, taskObjHandPos + " 0");
+    a1->add(t_end, releaseUp, 0.0, 0.0, 7, taskObjHandPos + " 2");
+
+    a1->add(std::make_shared<tropic::ConnectBodyConstraint>(t_put, bottleBodyName, selectedSupport));
+
+    // Deactivate object collisions when released, and re-activate once the hand has been retracted.
+    if (this->isBottleCollidable)
+    {
+      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_put, bottleBodyName, false));
+      a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, bottleBodyName, true));
+    }
+
+    // Open fingers. The fingers are not affected by any null space gradient,
+    // therefore ther angles don't change without activation. We use this
+    // to activate them only for the opening phase.
+    if (!fingersOpenAngles.empty())
+    {
+      a1->addActivation(t_put - 0.5 * T_FINGERMOVE, true, 0.5, taskFingers);
+      a1->addActivation(t_end, false, 0.5, taskFingers);
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_put + 0.5 * T_FINGERMOVE, fingersOpenAngles, taskFingers));
+    }
+
+    // Particles pouring
+    for (const auto& particle : particlesToPour)
+    {
+      std::shared_ptr<tropic::ConnectBodyConstraint> cbc(new tropic::ConnectBodyConstraint(t_up, particle, glas));
+      cbc->setConnectTransform(HTr_identity());
+      a1->add(cbc);
+    }
+
+    return a1;
+  }
+
+  std::string getActionCommand() const
+  {
+    return ActionPour::getActionCommand() + " putPlace " + selectedSupport;
+  }
+
+  static double actionCost(const ActionScene& domain,
+                           const RcsGraph* graph,
+                           const std::string& bottleBottom,
+                           const std::string& selectedSupport,
+                           const std::string& nearTo,
+                           const std::string& farFrom)
+  {
+    double cost = 0.0;
+    double termCount = 0.0;
+
+    const RcsBody* putLocation = RcsGraph_getBodyByName(graph, selectedSupport.c_str());
+    RCHECK_MSG(putLocation, "'%s' unknown", selectedSupport.c_str());
+
+    if (!nearTo.empty())
+    {
+      auto ntts = domain.getSceneEntities(nearTo);
+      double sumD = 0.0;
+      for (const auto& ntt : ntts)
+      {
+        sumD += Vec3d_distance(putLocation->A_BI.org, ntt->body(graph)->A_BI.org);
+      }
+      cost += sumD / (1.0 + sumD);
+      termCount += 1.0;
+    }
+
+    if (!farFrom.empty())
+    {
+      auto ntts = domain.getSceneEntities(farFrom);
+      double sumD = 0.0;
+      for (const auto& ntt : ntts)
+      {
+        sumD += Vec3d_distance(putLocation->A_BI.org, ntt->body(graph)->A_BI.org);
+      }
+      cost += 1.0 / (1.0 + sumD);
+      termCount += 1.0;
+    }
+
+    if (termCount == 0.0)
+    {
+      const RcsBody* stackBdy = RcsGraph_getBodyByName(graph, bottleBottom.c_str());
+      double d = Vec3d_distance(putLocation->A_BI.org, stackBdy->A_BI.org);
+      cost += d / (1.0 + d);
+      termCount += 1.0;
+    }
+
+    return cost/termCount;
+  }
+
+  double actionCost(const ActionScene& domain, const RcsGraph* graph) const
+  {
+    return actionCost(domain, graph, bottleBottom, selectedSupport, nearTo, farFrom);
+  }
+
+  static std::vector<std::string> findSupportCandidates(const ActionScene& domain,
+                                                        const RcsGraph* graph,
+                                                        const std::string& graspingHandName,
+                                                        const std::string& objectToPourFrom,
+                                                        const std::string& objToPourInto,
+                                                        const std::string& nearTo,
+                                                        const std::string& farFrom)
+  {
+    // We search through all the scene's Supportables
+    AffordanceEntity tmp;
+    tmp.affordances = getAffordances<Supportable>(&domain);
+    std::vector<std::tuple<Affordance*, Affordance*>> aMap;
+    aMap = match<Supportable, Stackable>(&tmp, domain.getAffordanceEntity(objectToPourFrom));
+    tmp.affordances.clear();
+
+    const Manipulator* graspingHand = domain.getManipulator(graspingHandName);
+    std::vector<std::tuple<const Affordance*, const Affordance*, double>> sortMap;
+
+    for (auto& pair : aMap)
+    {
+      const Supportable* supportable = dynamic_cast<const Supportable*>(std::get<0>(pair));
+      const Affordance* stackable = std::get<1>(pair);
+      const RcsBody* supportBdy = supportable->getFrame(graph);
+      const RcsBody* stackBdy = stackable->getFrame(graph);
+
+      // The Supportable can possibly be a child of the Stackable, leading to put the object on a
+      // child of itself. This creates trouble which we resolve in the following.
+      bool eraseMe = RcsBody_isChild(graph, supportBdy, stackBdy);
+
+      if (eraseMe)
+      {
+        continue;
+      }
+
+      // Eliminate support candidates that are out of reach
+      bool canReach = graspingHand->canReachTo(&domain, graph, supportBdy->A_BI.org);
+      if (!canReach)
+      {
+        RLOG_CPP(0, "Place " << supportable->frame << " - out of reach");
+        continue;
+      }
+
+      // Erase supportables that are occupied with a child
+      bool foundCollideable = false;
+
+      // \todo: Make better geometric check here
+      if ((supportable->extentsX == 0.0) && (supportable->extentsY == 0.0))
+      {
+        // Traverse children of support frame and look for collideable entities
+        RcsBody* child = RCSBODY_BY_ID(graph, supportBdy->firstChildId);
+        while (child)
+        {
+          const AffordanceEntity* childNTT = domain.getAffordanceEntity(child->name);
+          if (childNTT && childNTT->isCollideable(graph))
+          {
+            foundCollideable = true;
+            break;
+          }
+          child = RCSBODY_BY_ID(graph, child->nextId);
+        }
+      }
+
+      if (foundCollideable)
+      {
+        continue;
+      }
+
+      // \todo: objectToPourFrom is a bit different from its stackable affordance. But this might not be a real issue.
+      double cost = actionCost(domain, graph, objectToPourFrom,  supportBdy->name, nearTo, farFrom);// Vec3d_distance(supportBdy->A_BI.org, stackBdy->A_BI.org);
+      sortMap.push_back(std::make_tuple(supportable, stackable, cost));
+    }
+
+
+    // There's already something on all supportables
+    if (sortMap.empty())
+    {
+      throw ActionException(ActionException::ParamNotFound,
+                            "I can't put the " + objectToPourFrom + " on the surface. There is already something on it.",
+                            "Put the object somewhere else, or remove the blocking object.",
+                            std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+    }
+
+
+    // Sort with lambda compare function, lower cost at the beginning
+    RLOG(0, "Sorting sortMap");
+    std::sort(sortMap.begin(), sortMap.end(),
+              [](std::tuple<const Affordance*, const Affordance*, double>& a,
+                 std::tuple<const Affordance*, const Affordance*, double>& b)
+    {
+      return std::get<2>(a) < std::get<2>(b);
+    });
+
+    std::vector<std::string> supportCandidates;
+
+    for (const auto& entry : sortMap)
+    {
+      const Affordance* supportable = std::get<0>(entry);
+      supportCandidates.push_back(supportable->frame);
+    }
+
+    return supportCandidates;
+  }
+
+  double getDefaultDuration() const
+  {
+    return 25.0;
+  }
+
+protected:
+
+  std::vector<std::string> supports;
+  std::string selectedSupport;   // Support frame auto-determined
+  std::string taskRelSupport;
+  std::string bottleBottom;
+  std::string putPlace;   // Support frame given by user's argument
+
+  // For retract
+  std::string handGraspFrame, bottleGraspFrame, taskObjHandPos;
+  std::string bottleBodyName;  // Name of top-level RcsBody of the bottle entiry. For kinematic connect and collision dieable / enable
+  bool isBottleCollidable;
+
+  // For opening fingers
+  std::vector<double> fingersOpenAngles;
+  std::string fingerJoints, taskFingers;
+
+  // For near / far
+  std::string nearTo, farFrom;
+};
+
+REGISTER_ACTION(ActionPourPut, "pour_put");
 
 }   // namespace aff
