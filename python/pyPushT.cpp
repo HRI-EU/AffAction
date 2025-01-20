@@ -48,6 +48,8 @@ namespace py = pybind11;
 #include <X11/Xlib.h>
 #endif
 
+#include <iostream>
+
 RCS_INSTALL_ERRORHANDLERS
 
 
