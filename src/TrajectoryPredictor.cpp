@@ -408,6 +408,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     //   - Collision check
     if (ikRes!=0)
     {
+      resMsg.developer += " at t=" + std::to_string(iter * dt) + " from " + std::to_string(nSteps*dt);
       result.feedbackMsg = resMsg;
       result.success = false;
     }
@@ -991,6 +992,34 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
   MatNd* qd_old = MatNd_clone(graph->q_dot);
   MatNd_addSelf(graph->q, dq_des);
   RcsGraph_setState(graph, NULL, qdot);
+
+
+#if 0
+  // Output the joints that lead to scaling the time
+  REXEC(1)
+  {
+    RCSGRAPH_FOREACH_JOINT(graph)
+    {
+      if (JNT->constrained)
+      {
+        continue;
+      }
+
+      const double q_dot = fabs(graph->q_dot->ele[JNT->jointIndex]);
+      const double sLim = JNT->speedLimit;
+      const double toDeg = RcsJoint_isRotation(JNT) ? 180.0/M_PI : 1.0;
+
+      if (q_dot>0.5*sLim)
+        RMSG("[%5.3f]: Joint \"%s\": speed=%5.6f %s  "
+             "limit=%5.6f)", q_dot/sLim, JNT->name, toDeg*fabs(q_dot),
+             RcsJoint_isRotation(JNT) ? "deg" : "m", toDeg*sLim);
+    }
+  }
+#endif
+
+
+
+
 
   // We perform the check after the forward kinematics to consider the
   // pose after the IK step.
