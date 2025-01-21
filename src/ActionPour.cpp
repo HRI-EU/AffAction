@@ -835,8 +835,34 @@ public:
     // ActionPour::getNumSolutions()
     if (!putPlace.empty())
     {
-      this->supports.push_back(putPlace);
+      // If putPlace is an affordance enitity, we extract its supportables
+      auto ntts = domain.getAffordanceEntities(putPlace);
+      if (!ntts.empty())
+      {
+        for (const auto& ntt : ntts)
+        {
+          std::vector<Supportable*> places = getAffordances<Supportable>(ntt);
+          for (const auto& p : places)
+          {
+            this->supports.push_back(p->frame);
+          }
+        }
+      }
+      else
+      {
+        // Search for supportables in the scene with this name
+        std::vector<Affordance*> places = getAffordances<Supportable>(&domain);
+        for (const auto& p : places)
+        {
+          if (p->frame==putPlace && dynamic_cast<Supportable*>(p))
+          {
+            this->supports.push_back(p->frame);
+            break;
+          }
+        }
+      }
     }
+    // No put place given - we extract it from the parameters given
     else
     {
       this->supports = findSupportCandidates(domain, graph, usedManipulators[0], objToPourFrom, objToPourInto, nearTo, farFrom);
@@ -922,10 +948,11 @@ public:
       return false;
     }
 
-    this->taskRelSupport = bottle + "-" + selectedSupport + "-XYZ";
+    this->taskRelSupport = bottleBottom + "-" + selectedSupport + "-XYZ";
 
-    RLOG_CPP(0, "Initializing solution " << solutionRank << " with supportable "
+    RLOG_CPP(5, "Initializing solution " << solutionRank << " with supportable "
              << selectedSupport << " and angle " << RCS_RAD2DEG(tiltAngle));
+
     return true;
   }
 
@@ -944,7 +971,6 @@ public:
               "controlVariable=\"XYZ\" " + "effector=\"" +
               bottleGraspFrame + "\" " + "refBdy=\"" + handGraspFrame + "\" />";
     tasks.push_back(xmlTask);
-
 
     // Fingers
     xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
@@ -999,7 +1025,7 @@ public:
     a1->addActivation(t_start, true, 0.5, taskRelPos);
     a1->addActivation(t_down, false, 0.5, taskRelPos);
     a1->addActivation(t_down, true, 0.5, taskRelSupport);
-    a1->addActivation(t_put+0*afterTime, false, 0.5, taskRelSupport);
+    a1->addActivation(t_put, false, 0.5, taskRelSupport);
 
     // At the time point t_prep, we keep a bit distance between bottle and glas
     // so that they don't collide. On the way of tilting the bottle up, we align
@@ -1195,7 +1221,7 @@ public:
       }
 
       // \todo: objectToPourFrom is a bit different from its stackable affordance. But this might not be a real issue.
-      double cost = actionCost(domain, graph, objectToPourFrom,  supportBdy->name, nearTo, farFrom);// Vec3d_distance(supportBdy->A_BI.org, stackBdy->A_BI.org);
+      double cost = actionCost(domain, graph, objectToPourFrom,  supportBdy->name, nearTo, farFrom);
       sortMap.push_back(std::make_tuple(supportable, stackable, cost));
     }
 

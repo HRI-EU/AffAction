@@ -49,39 +49,43 @@ public:
               const RcsGraph* graph,
               std::vector<std::string> params);
 
-  ActionScrew(const ActionScene& domain,
-              const RcsGraph* graph,
-              const std::string& objectToScrew,
-              const std::string& screwingHand);
+  void init(const ActionScene& domain,
+            const RcsGraph* graph,
+            const std::string& objectToScrew,
+            const std::string& screwingHand);
 
   virtual ~ActionScrew();
   std::unique_ptr<ActionBase> clone() const override;
 
   tropic::TCS_sptr createTrajectory(double t_start, double t_end) const override;
-  double getDurationHint() const;
-  std::string explain() const;
+  double getDefaultDuration() const override;
   std::vector<std::string> getManipulators() const override;
+  std::string getActionCommand() const override;
+
 
 protected:
 
   std::vector<std::string> createTasksXML() const override;
 
-  std::string bottle;
+  std::string bottleEntity;   // For CollisionConstraint
+  std::string bottleScrewable;
   std::string hand;
+  std::string twistGraspFrame;
 
   std::string taskRelXYZ;
   std::string taskRelPolar;
+  std::string taskRelInclination;
   std::string taskRelABC;
   std::string taskBottleX;
   std::string taskBottleY;
   std::string taskBottleZ;
   std::string taskBottlePolar;
+  std::string taskBottleInclination;
   std::string taskFingers;
-
-  std::string explanation;
 
   std::vector<std::string> usedManipulators;
   std::string fingerJnts;
+  std::vector<double> fingersOpen, fingersClosed;
 };
 
 }   // namespace aff

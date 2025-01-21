@@ -32,17 +32,20 @@
 
 #include "ActionScrew.h"
 #include "ActionFactory.h"
+
 #include <ActivationSet.h>
 #include <PositionConstraint.h>
 #include <PolarConstraint.h>
 #include <EulerConstraint.h>
 #include <VectorConstraint.h>
+#include <CollisionModelConstraint.h>
 
 #include <TaskFactory.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
 #include <Rcs_macros.h>
 
+#define T_FINGERMOVE  (2.0)
 
 
 namespace aff
@@ -51,17 +54,17 @@ REGISTER_ACTION(ActionScrew, "screw");
 
 ActionScrew::ActionScrew(const ActionScene& scene,
                          const RcsGraph* graph,
-                         std::vector<std::string> params) :
-  ActionScrew(scene, graph,
-              params[0],
-              params.size()>1 ? params[1] : std::string())
+                         std::vector<std::string> params)
 {
+  parseParams(params);
+  std::string screwingHand = params.size() > 1 ? params[1] : std::string();
+  init(scene, graph, params[0], screwingHand);
 }
 
-ActionScrew::ActionScrew(const ActionScene& scene,
-                         const RcsGraph* graph,
-                         const std::string& objectToScrew,
-                         const std::string& screwingHandName)
+void ActionScrew::init(const ActionScene& scene,
+                       const RcsGraph* graph,
+                       const std::string& objectToScrew,
+                       const std::string& screwingHandName)
 {
   std::vector<const AffordanceEntity*> nttsToScrew = scene.getAffordanceEntities(objectToScrew);
 
@@ -75,6 +78,7 @@ ActionScrew::ActionScrew(const ActionScene& scene,
 
   // We take the first one \todo(MG): Make generic.
   const AffordanceEntity* screwAff = nttsToScrew[0];
+  this->bottleEntity = screwAff->bdyName;
 
   auto screwables = getAffordances<Twistable>(screwAff);
 
@@ -90,14 +94,14 @@ ActionScrew::ActionScrew(const ActionScene& scene,
 
   // We make a local copy of the body strings, since they might be resolved
   // into different names when being a GenericBody
-  this->bottle = screwables[0]->frame;
+  this->bottleScrewable = screwables[0]->frame;
 
   // We go through the following look-ups to resolve the names of possible
   // generic bodies.
-  const RcsBody* bottleCap = RcsGraph_getBodyByName(graph, bottle.c_str());
+  const RcsBody* bottleCap = RcsGraph_getBodyByName(graph, bottleScrewable.c_str());
   RCHECK(bottleCap);
 
-  this->bottle = std::string(bottleCap->name);
+  this->bottleScrewable = std::string(bottleCap->name);
 
 
   const Manipulator* screwingHand = NULL;
@@ -132,7 +136,18 @@ ActionScrew::ActionScrew(const ActionScene& scene,
   else
   {
     // The bottle object must be in a hand
-    std::vector<const Manipulator*> freeHands = scene.getFreeManipulators(graph);
+    std::vector<const Manipulator*> allManipulators = scene.getFreeManipulators(graph);
+
+    // We only consider hands (not head etc.)
+    std::vector<const Manipulator*> freeHands;
+    for (const auto& m : allManipulators)
+    {
+      if (m->isOfType("hand"))
+      {
+        freeHands.push_back(m);
+      }
+
+    }
 
     if (freeHands.empty())
     {
@@ -167,14 +182,33 @@ ActionScrew::ActionScrew(const ActionScene& scene,
   this->hand = screwingHand->name;
   usedManipulators.push_back(this->hand);
 
+  for (const auto& capability : screwingHand->capabilities)
+  {
+    if (dynamic_cast<const TwistgraspCapability*>(capability))
+    {
+      this->twistGraspFrame = capability->frame;
+      break;
+    }
+  }
+
+  if (twistGraspFrame.empty())
+  {
+    throw ActionException(ActionException::ParamNotFound,
+                          "Grasping hand cannot twist",
+                          "Make sure manipulator has TwistgraspCapability",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
+
   // Task naming
-  this->taskRelXYZ = bottle + "-" + hand + "-XYZ";
-  this->taskRelPolar = bottle + "-" + hand + "-POLAR";
-  this->taskRelABC = bottle + "-" + hand + "-ABC";
-  this->taskBottlePolar = bottle + "-" + "-POLAR";
-  this->taskBottleX = bottle + "-" + "-X";
-  this->taskBottleY = bottle + "-" + "-Y";
-  this->taskBottleZ = bottle + "-" + "-Z";
+  this->taskRelXYZ = bottleScrewable + "-" + hand + "-XYZ";
+  this->taskRelPolar = bottleScrewable + "-" + hand + "-POLAR";
+  this->taskRelInclination = bottleScrewable + "-" + hand + "-Inclination";
+  this->taskRelABC = bottleScrewable + "-" + hand + "-ABC";
+  this->taskBottlePolar = bottleScrewable + "-" + "-POLAR";
+  this->taskBottleInclination = bottleScrewable + "-" + "-Inclination";
+  this->taskBottleX = bottleScrewable + "-" + "-X";
+  this->taskBottleY = bottleScrewable + "-" + "-Y";
+  this->taskBottleZ = bottleScrewable + "-" + "-Z";
   this->taskFingers = "Fingers";
 
   // this->fingerJnts = screwingHand->getFingerJointsString();
@@ -185,7 +219,24 @@ ActionScrew::ActionScrew(const ActionScene& scene,
     fingerJnts += " ";
   }
 
-  explanation = "I'm screwing the " + screwAff->name;
+  fingersOpen = screwingHand->getFingerAnglesFromModelState(graph, "open_fingers");
+  fingersClosed = screwingHand->getFingerAnglesFromModelState(graph, "close_fingers");
+
+  if (screwingHand->fingerJoints.size() != fingersOpen.size())
+  {
+    throw ActionException(ActionException::ParamInvalid,
+                          "Screwing hand fingers open mismatch: ",
+                          "Finger joints: " + std::to_string(screwingHand->fingerJoints.size()) + " != finger angles " + std::to_string(fingersOpen.size()),
+                          "Graph xml file: " + std::string(graph->cfgFile) + " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
+
+  if (screwingHand->fingerJoints.size() != fingersClosed.size())
+  {
+    throw ActionException(ActionException::ParamInvalid,
+                          "Screwing hand fingers open mismatch: ",
+                          "Finger joints: " + std::to_string(screwingHand->fingerJoints.size()) + " != finger angles " + std::to_string(fingersClosed.size()),
+                          "Graph xml file: " + std::string(graph->cfgFile) + " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
 }
 
 ActionScrew::~ActionScrew()
@@ -199,34 +250,58 @@ std::vector<std::string> ActionScrew::createTasksXML() const
   // taskRelXYZ: XYZ-task with effector=hand and refBdy=bottle
   std::string xmlTask;
   xmlTask = "<Task name=\"" + taskRelXYZ + "\" " + "controlVariable=\"XYZ\" " +
-            "effector=\"" + hand + "\" " + "refBdy=\"" + bottle + "\" />";
+            "effector=\"" + twistGraspFrame + "\" " + "refBdy=\"" + bottleScrewable + "\" />";
   tasks.push_back(xmlTask);
 
   // Same for orientations
   xmlTask = "<Task name=\"" + taskRelABC + "\" " + "controlVariable=\"ABC\" " +
-            "effector=\"" + hand + "\" " + "refBdy=\"" + bottle + "\" />";
+            "effector=\"" + hand + "\" " + "refBdy=\"" + bottleScrewable + "\" />";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskRelPolar + "\" " + "controlVariable=\"POLAR\" " +
-            "effector=\"" + hand + "\" " + "refBdy=\"" + bottle + "\" />";
+            "effector=\"" + hand + "\" " + "refBdy=\"" + bottleScrewable + "\" />";
   tasks.push_back(xmlTask);
 
+  xmlTask = "<Task name=\"" + taskRelInclination + "\" " + "controlVariable=\"Inclination\" " +
+            "effector=\"" + hand + "\" " + "refBdy=\"" + bottleScrewable + "\" />";
+  tasks.push_back(xmlTask);
+
+  // Bottle orientation for bi-manual case
   xmlTask = "<Task name=\"" + taskBottlePolar + "\" " + "controlVariable=\"POLAR\" " +
-            "effector=\"" + bottle + "\" />";
+            "effector=\"" + bottleScrewable + "\" />";
+  tasks.push_back(xmlTask);
+
+  xmlTask = "<Task name=\"" + taskBottleInclination + "\" " + "controlVariable=\"Inclination\" " +
+            "effector=\"" + bottleScrewable + "\" >";
+  xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+  xmlTask += "min=\"" + std::to_string(RCS_DEG2RAD(-30.0)) + "\" ";
+  xmlTask += "max=\"" + std::to_string(RCS_DEG2RAD(30.0)) + "\" ";
+  xmlTask += "dxScaling=\"0.01\" slowDownRatio=\"0.5\" />\n";
+  xmlTask += "</Task>";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskBottleZ + "\" " + "controlVariable=\"Z\" " +
-            "effector=\"" + bottle + "\" />";
+            "effector=\"" + bottleScrewable + "\" >";
+  xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+  xmlTask += "min=\"" + std::to_string(0.0) + "\" max=\"" + std::to_string(0.05) + "\" dxScaling=\"0.1\" slowDownRatio=\"0.5\" />\n";
+  xmlTask += "</Task>";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskBottleX + "\" " + "controlVariable=\"X\" " +
-            "effector=\"" + bottle + "\" " + "refBdy=\"" + "adapter_shoulder" + "\" />";
+            "effector=\"" + bottleScrewable + "\" " + "refBdy=\"" + "adapter_shoulder" + "\" >";
+  xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+  xmlTask += "min=\"" + std::to_string(-0.05) + "\" max=\"" + std::to_string(0.05) + "\" dxScaling=\"0.1\" slowDownRatio=\"0.5\" />\n";
+  xmlTask += "</Task>";
   tasks.push_back(xmlTask);
 
   xmlTask = "<Task name=\"" + taskBottleY + "\" " + "controlVariable=\"Y\" " +
-            "effector=\"" + bottle + "\" " + "refBdy=\"" + "adapter_shoulder" + "\" />";
+            "effector=\"" + bottleScrewable + "\" " + "refBdy=\"" + "adapter_shoulder" + "\" >";
+  xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+  xmlTask += "min=\"" + std::to_string(-0.05) + "\" max=\"" + std::to_string(0.05) + "\" dxScaling=\"0.1\" slowDownRatio=\"0.5\" />\n";
+  xmlTask += "</Task>";
   tasks.push_back(xmlTask);
 
+  // Fingers open-close task
   xmlTask = "<Task name=\"" + taskFingers + "\" "  "controlVariable=\"Joints\" " +
             "jnts=\"" + this->fingerJnts + "\" />";
   tasks.push_back(xmlTask);
@@ -257,16 +332,18 @@ std::vector<std::string> ActionScrew::createTasksXML() const
  */
 tropic::TCS_sptr ActionScrew::createTrajectory(double t_start, double t_end) const
 {
-  const double afterTime = 2.0;
+  const double afterTime = 0.5;
   const double duration = t_end - t_start;
-  const double t_preshape = t_start + 0.2 * duration;
-  const double t_handalign = t_start + 0.3 * duration;
-  const double t_fwd1 = t_start + 0.4 * duration;
-  const double t_bwd1 = t_start + 0.5 * duration;
-  const double t_fwd2 = t_start + 0.6 * duration;
-  const double t_bwd2 = t_start + 0.7 * duration;
-  const double t_fwd3 = t_start + 0.8 * duration;
-  const double heightAboveBottle = 0.25;
+  const double t_preshape = t_start + 0.3 * duration;
+  const double t_handalign = t_start + 0.4 * duration;
+  const double t_fwd1 = t_start + 0.5 * duration;
+  const double t_bwd1 = t_start + 0.6 * duration;
+  const double t_fwd2 = t_start + 0.7 * duration;
+  const double t_bwd2 = t_start + 0.8 * duration;
+  const double t_fwd3 = t_start + 0.9 * duration;
+
+  const double heightAboveBottle = 0.02;
+  const double screwAmplitude = 0.8 * M_PI_2;
 
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
@@ -278,14 +355,22 @@ tropic::TCS_sptr ActionScrew::createTrajectory(double t_start, double t_end) con
   a1->addActivation(t_end+afterTime, false, 0.5, taskRelXYZ);
 
   a1->addActivation(t_start, true, 0.5, taskRelPolar);
-  a1->addActivation(t_handalign, false, 0.5, taskRelPolar);
+  //a1->addActivation(t_preshape, false, 0.5, taskRelPolar);
+  a1->addActivation(t_start + 0.3*duration, false, 0.5, taskRelPolar);
 
-  a1->addActivation(t_handalign, true, 0.5, taskRelABC);
-  a1->addActivation(t_end + 0*afterTime, false, 0.5, taskRelABC);
+  a1->addActivation(t_start + 0.3*duration, true, 0.5, taskRelABC);
+  //a1->addActivation(t_preshape, true, 0.5, taskRelABC);
+  a1->addActivation(t_fwd3, false, 0.5, taskRelABC);
+
+  a1->addActivation(t_fwd3, true, 0.5, taskRelInclination);
+  //a1->addActivation(t_fwd3 + 0.25*(t_end-t_fwd3), false, 0.5, taskRelPolar);
+  a1->addActivation(t_end+afterTime, false, 0.5, taskRelInclination);
 
   // This keeps the bottle axis fixed (upright).
-  a1->addActivation(t_start, true, 0.5, taskBottlePolar);
-  a1->addActivation(t_end + afterTime, false, 0.5, taskBottlePolar);
+  //a1->addActivation(t_start, true, 0.5, taskBottlePolar);
+  //a1->addActivation(t_end + afterTime, false, 0.5, taskBottlePolar);
+  a1->addActivation(t_start, true, 0.5, taskBottleInclination);
+  a1->addActivation(t_end + afterTime, false, 0.5, taskBottleInclination);
 
   a1->addActivation(t_start, true, 0.5, taskBottleZ);
   a1->addActivation(t_end + afterTime, false, 0.5, taskBottleZ);
@@ -293,23 +378,40 @@ tropic::TCS_sptr ActionScrew::createTrajectory(double t_start, double t_end) con
   a1->addActivation(t_start, true, 0.5, taskBottleX);
   a1->addActivation(t_end + afterTime, false, 0.5, taskBottleX);
 
-  //a1->addActivation(t_start, true, 0.5, taskBottleY);
-  //a1->addActivation(t_end + afterTime, false, 0.5, taskBottleY);
+  a1->addActivation(t_fwd3, true, 0.5, taskBottleY);
+  a1->addActivation(t_end + afterTime, false, 0.5, taskBottleY);
 
   // At the time point t_prep, we keep a bit distance between bottle and glas
   // so that they don't collide. On the way of tilting the bottle up, we align
   // the opening frames.
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_preshape, 0.0, 0.0, heightAboveBottle, taskRelXYZ));
-  a1->add(std::make_shared<tropic::PolarConstraint>(t_handalign, 0 * M_PI, 0.0, taskRelPolar));
+  //a1->add(std::make_shared<tropic::PositionConstraint>(t_preshape, 0.0, 0.0, heightAboveBottle, taskRelXYZ, 7));
+  a1->add(t_preshape, 0.0, 0.0, 0.0, 7, taskRelXYZ + " 0");
+  a1->add(t_preshape, 0.0, 0.0, 0.0, 7, taskRelXYZ + " 1");
+  a1->add(t_preshape, heightAboveBottle, 0.0, 0.0, 1, taskRelXYZ + " 2");
 
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_handalign, 0.0, 0.0, 0.2, taskRelXYZ));
-  //a1->add(std::make_shared<tropic::EulerConstraint>(t_handalign, 0.0, 0.0, 0.0, taskRelABC));
 
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd1, 0.0, 0.0, 1.8*M_PI_2, taskRelABC));
+
+  a1->add(std::make_shared<tropic::PolarConstraint>(t_preshape, 0.0, 0.0, taskRelPolar));
+
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_handalign, 0.0, 0.0, 0.0, taskRelXYZ));
+
+  // This constraint aligns the orientation with the bottle. Since we don't know the relative
+  // pose, the speeds might be high
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_handalign, 0.0, 0.0, 0.0, taskRelABC));
+
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd1, 0.0, 0.0, screwAmplitude, taskRelABC));
   a1->add(std::make_shared<tropic::EulerConstraint>(t_bwd1, 0.0, 0.0, 0.0, taskRelABC));
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd2, 0.0, 0.0, 1.8 * M_PI_2, taskRelABC));
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd2, 0.0, 0.0, screwAmplitude, taskRelABC));
   a1->add(std::make_shared<tropic::EulerConstraint>(t_bwd2, 0.0, 0.0, 0.0, taskRelABC));
-  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd3, 0.0, 0.0, 1.8 * M_PI_2, taskRelABC));
+  a1->add(std::make_shared<tropic::EulerConstraint>(t_fwd3, 0.0, 0.0, screwAmplitude, taskRelABC));
+
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_fwd3, 0.0, 0.0, 0.0, taskRelXYZ));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_end, 0.0, 0.0, 2.0*heightAboveBottle, taskRelXYZ));
+
+  // Incline hand wrt bottle at the end of the retract
+  std::vector<double> relInc;
+  relInc.push_back(RCS_DEG2RAD(50.0));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_end, relInc, taskRelInclination));
 
   //std::vector<double> ypos;
   //ypos.push_back(-0.0);
@@ -321,40 +423,40 @@ tropic::TCS_sptr ActionScrew::createTrajectory(double t_start, double t_end) con
 
 
   ///////Fingers////////////
-  const double fingersClosedCap = 0.8;
-  const double fingersOpen = 0.01;
-  std::vector<double> threeFingersOpen(3, fingersOpen);
-  std::vector<double> threeFingersClosed(3, fingersClosedCap);
-
   a1->addActivation(t_start, true, 0.5, taskFingers);
   a1->addActivation(t_end + afterTime, false, 0.5, taskFingers);
 
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_preshape, threeFingersOpen, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_handalign, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd1, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd1 + 0.5, threeFingersOpen, taskFingers));
+  RLOG_CPP(0, "FingersOpen: " << fingersOpen[0]);
+  RLOG_CPP(0, "FingersClosed: " << fingersClosed[0]);
 
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd1 - 0.5, threeFingersOpen, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd1, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd2, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd2 + 0.5, threeFingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_preshape, fingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_handalign - 1.0*T_FINGERMOVE, fingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_handalign, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd1, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd1 + 1.0 * T_FINGERMOVE, fingersOpen, taskFingers));
 
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd2 - 0.5, threeFingersOpen, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd2, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd3, threeFingersClosed, taskFingers));
-  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd3 + 0.5, threeFingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd1 - 1.0 * T_FINGERMOVE, fingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd1, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd2, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd2 + 1.0 * T_FINGERMOVE, fingersOpen, taskFingers));
+
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd2 - 1.0 * T_FINGERMOVE, fingersOpen, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_bwd2, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd3, fingersClosed, taskFingers));
+  a1->add(std::make_shared<tropic::VectorConstraint>(t_fwd3 + 1.0 * T_FINGERMOVE, fingersOpen, taskFingers));
+
+  // Deactivate object collisions when in preshape
+  a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_preshape, bottleEntity, false));
+
+  // Reactivate object collisions when finished
+  a1->add(std::make_shared<tropic::CollisionModelConstraint>(t_end, bottleEntity, true));
 
   return a1;
 }
 
-double ActionScrew::getDurationHint() const
+double ActionScrew::getDefaultDuration() const
 {
-  return 35.0;
-}
-
-std::string ActionScrew::explain() const
-{
-  return explanation;
+  return 80.0;
 }
 
 std::vector<std::string> ActionScrew::getManipulators() const
@@ -365,6 +467,18 @@ std::vector<std::string> ActionScrew::getManipulators() const
 std::unique_ptr<ActionBase> ActionScrew::clone() const
 {
   return std::make_unique<ActionScrew>(*this);
+}
+
+std::string ActionScrew::getActionCommand() const
+{
+  std::string str = "screw " + bottleEntity;
+
+  if (getDuration() != getDefaultDuration())
+  {
+    str += " duration " + std::to_string(getDuration());
+  }
+
+  return str;
 }
 
 }   // namespace aff

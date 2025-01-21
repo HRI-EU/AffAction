@@ -33,7 +33,6 @@
 #include "ActionGet.h"
 #include "ActionFactory.h"
 #include "TrajectoryPredictor.h"
-#include "CollisionModelConstraint.h"
 #include "StringParserTools.hpp"
 
 #include <ActivationSet.h>
@@ -42,6 +41,7 @@
 #include <EulerConstraint.h>
 #include <ConnectBodyConstraint.h>
 #include <VectorConstraint.h>
+#include <CollisionModelConstraint.h>
 
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
