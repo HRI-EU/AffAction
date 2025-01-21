@@ -50,6 +50,7 @@
   <Manipulator body="hand_left_robot" types="hand ROBOTIQ-2F140" >
     <Joints names="finger_joint_left" />
     <PowergraspCapability frame="hand_left_pincergrasp" />
+    <TwistgraspCapability frame="hand_left_pincergrasp" />
     <FingerpushCapability frame="hand_left_point" />
   </Manipulator>
 

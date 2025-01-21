@@ -54,7 +54,7 @@
   <AffordanceModel body="bottle_of" type="bottle">
     <Stackable frame="bottle_of"/>
     <Pourable frame="tip_bottle_of"/>
-    <TwistGraspable frame="tip_bottle_of"/>
+    <Twistable frame="tip_bottle_of"/>
     <PowerGraspable frame="grip_bottle_of" />
     <PointPokable frame="tip_bottle_of"/>
     <Containable frame="tip_bottle_of" max_volume="0.5">

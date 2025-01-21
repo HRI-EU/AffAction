@@ -60,6 +60,7 @@
     <PowergraspCapability frame="hand_right_palmgrasp" />
     <PalmgraspCapability frame="hand_right_palmgrasp" />
     <PincergraspCapability frame="hand_right_pincergrasp" />
+    <TwistgraspCapability frame="hand_right_pincergrasp" />
     <FingerpushCapability frame="hand_right_point" />
   </Manipulator>
 

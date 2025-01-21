@@ -96,6 +96,16 @@ get apple_1 hand_right    // Gets the apple_1 with the right hand.
 ```
 
 
+### The "get_and_hold" action
+
+Same as the "get" action, but the object is not lifted, but kept in place.
+
+
+### The Release" action
+
+For a grasped object, just opens the hand and retracts it. It complements the "get_and_hold" action.
+
+
 ### The "put" action
 
 Action to put an entity on another one. 
@@ -104,7 +114,7 @@ Action to put an entity on another one.
 put(<object-to-put> 
     <target (optional)> 
     <"frame" target_frame (optional)>
-    <"near" neart_entity (optional)>
+    <"near" near_entity (optional)>
     <"far" far-entity (optional)>
     <"distance" near-far-distance (optional)>
     <"putAligned" (optional)>
@@ -138,6 +148,14 @@ put lemon near orange                // Puts a lemon near the orange
 ```
 
 
+### The "put_aligned" action
+
+This is a convenience action that is the same as "put object_1 object_2 putAligned". The
+object entitie's x-axes are aligned. The angle between them can be set with the parameter
+alignAngleZ (See action "put"). This action is useful if the vertilcal orientation when 
+putting down matters, for instance when stacking rectangular blocks.
+
+
 ### The "magic_get" and "magic_put" actions
 
 These are convenience actions for testing. They follow the same syntax as the get and put actions, 
@@ -159,6 +177,27 @@ pour(<object to pour from>,<object to pour into>)
 
 There is also some logic included concerning fill levels and transitioning, which needs
 to be reconsidered.
+
+
+### The "pour_put" action
+
+Same as the "pour" action, but the object will be put down after pouring:
+
+```bash
+pour_put(<object-to-pour_from> 
+         <object_to_pour_into> 
+         <"frame" target_frame (optional)>
+         <"near" near_entity (optional, for putting)>
+         <"far" far-entity (optional, for putting)>
+         <"putPlace" entity or supportable to put on (optional)>
+```
+
+In case none of the optional arguments is given, the object from which is poured will be
+put on the Supportable that is closest to the object at the beginning of the action. If
+putPlace is given, the object will be put exactly on the putPlace. It can be an entity (in
+this case, all supportables are considered), or a Supportable. If near and / or far is given,
+the object will be placed same as described in the put action.
+
 
 ### The "pose" action
 
@@ -212,25 +251,44 @@ shake(<object-to-shake>
       <"number_of_shakes" integer_number (optional, default is 3)> 
 ```
 
-Points at an object or agent. Anything that is specified as a type is being considered.
-If the entity to point at is a HumanAgent, the pointing will be directed towards the
-agent's head. The hand that points will be selected automatically, except if a second
-argument is passed. This will be interpreted as the manipulator that is to point.
+Shakes the object a given number of times. The object must be held in the robot's hand.
 
-### The "double_get" action
-double_get (<object1, object2>)
 
-### The "double_put" action
-double_put(<object1>, <object2>, (target1), (target2))
+### The "weigh" action
 
-### The "gaze" action
-gaze(<object to look at>)
+```bash
+weigh(<object-to-shake>)
+```
 
-### The "open_door" action
-open_door(<door-object>)
+Same as shake action, but without shaking.
 
-### The "close_door" action
-close_door (<door-object>)
+
+### The "inspect_top" action
+
+```bash
+inspect_top(<object-to-inspect>)
+```
+
+Holds the object's grasping hand in front of the head so that the hand's power grasp 
+axis points to the head.
+
+
+### The "wipe" action
+
+The wipe action wipes the Stackable affordance of object-to-wipe_with three times on the
+Supportable affordance of the object-to-be-wiped. The object-to-wipe_with must be held in
+a robot's hand. The object-to-be-wiped can, but does not need to be held in the robot's hand.
+
+```bash
+wipe(<object-to-wipe_with> 
+     <object-to-be-wiped> 
+```
+
+For instance:
+
+```bash
+wipe sponge table // Wipes the table with the sponge.
+```
 
 
 ### The "load" action
