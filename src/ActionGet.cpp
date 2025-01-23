@@ -479,7 +479,7 @@ bool ActionGet::initialize(const ActionScene& domain,
   else if (dynamic_cast<BallGraspable*>(winningAff))
   {
     BallGraspable* bg = dynamic_cast<BallGraspable*>(winningAff);
-    handOpen = std::vector<double>(hand->getNumFingers(), fingersHalfClosed);
+    handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);//fingersHalfClosed);
     handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*bg->radius);
     graspType = GraspType::BallGrasp;
   }
