@@ -496,22 +496,23 @@ bool ExampleActionsECS::initAlgo()
     gazeC->addSceneToAttend(*getScene(), getGraph());
     addComponent(gazeC);
   }
-  
-  if (usersGazeComponentEnabled){
+
+  if (usersGazeComponentEnabled)
+  {
     // Retrieve all agents from the scene
     std::vector<const Agent*> agents = getScene()->getAgents<Agent>();
 
     // Iterate over all agents and add the GazeComponent to all agents except the robot called "Johnnie"
     for (const auto& agent : agents)
     {
-      if (agent->name != "Johnnie") 
+      if (agent->name != "Johnnie")
       {
-          // Create a new GazeComponent for the agent
-          // The GazeComponent tracks the agent's gazing objects using the following parameters:
-          // - parent: Reference to the entity managing events (here, 'entity')
-          // - agentName: Name of the agent
-          // - gazingBody: The part of the agent used for gaze tracking (e.g., "Head_Elisabeth")
-          // - dirIdx: Index indicating gaze direction (default: 1 for the y-axis)
+        // Create a new GazeComponent for the agent
+        // The GazeComponent tracks the agent's gazing objects using the following parameters:
+        // - parent: Reference to the entity managing events (here, 'entity')
+        // - agentName: Name of the agent
+        // - gazingBody: The part of the agent used for gaze tracking (e.g., "Head_Elisabeth")
+        // - dirIdx: Index indicating gaze direction (default: 1 for the y-axis)
         GazeComponent* gC = new GazeComponent(&entity, agent->name, "Head_"+agent->name, 1);
 
         // Add current scene and graph to the GazeComponent
@@ -523,7 +524,7 @@ bool ExampleActionsECS::initAlgo()
         // Add the GazeComponent to the entity
         addComponent(gC);
       }
-      
+
     }
   }
 
@@ -638,7 +639,7 @@ bool ExampleActionsECS::initAlgo()
     virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getCurrentGraph()),
                                                     virtualCameraWidth, virtualCameraHeight);
   }
-    // Add the SceneTransformationDataRecorder
+  // Add the SceneTransformationDataRecorder
   if (sceneTransformationDataRecorderEnabled)
   {
     double timeRecording = 30.0;
@@ -840,13 +841,22 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('f', [this](char k)
   {
-    RLOG(0, "Test occlusions");
-    nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
-                                                     getGraph());
-    RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
+    {
+      RLOG(0, "Test objects in camera");
+      std::vector<std::string> objectNames = {"bottle_of_cola", "bottle_of_coke_zero", "bottle_of_fanta"};
+      nlohmann::json json = getObjectsInCamera(objectNames, "camera_0", getScene(), getGraph(), false);
+      RLOG_CPP(0, "getObjectsInCamera():\n" << json.dump(4));
+    }
 
-    json = getOccludedObjectsForAgent("Daniel", getScene(), getGraph());
-    RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
+    {
+      RLOG(0, "Test occlusions");
+      nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
+                                                       getGraph());
+      RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
+
+      json = getOccludedObjectsForAgent("Daniel", getScene(), getGraph());
+      RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
+    }
 
   }, "Test occlusions");
 
@@ -1380,6 +1390,15 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       {
         actionResults.push_back(errMsg);
       }
+    }
+
+    if (actionResults.empty())
+    {
+      ActionResult errMsg;
+      errMsg.error = "ERROR";
+      errMsg.reason = "Could not find any solution path.";
+      errMsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+      actionResults.push_back(errMsg);
     }
 
     ex->getEntity().publish("ActionResult", false, 0.0, actionResults);
@@ -1997,101 +2016,105 @@ std::string ExampleActionsECS::getComponentArguments() const
 
 nlohmann::json ExampleActionsECS::getUsersGazeData() const
 {
-    nlohmann::json gazeDataJson = nlohmann::json::array();  // Create an empty JSON array
-    // Loop through all gaze components
-    for (const auto gC: gazeComponents){
-        nlohmann::json userGazeDataJson;
-        userGazeDataJson["agent_name"] = gC->getAgentName(); // Add the agent name to the JSON 
- 
-        const std::deque<GazeDataPoint>* gazeData = gC->getGazeData();
-        // Create a JSON array for gaze data points of the current user
-        nlohmann::json dataJson = nlohmann::json::array();
+  nlohmann::json gazeDataJson = nlohmann::json::array();  // Create an empty JSON array
+  // Loop through all gaze components
+  for (const auto gC: gazeComponents)
+  {
+    nlohmann::json userGazeDataJson;
+    userGazeDataJson["agent_name"] = gC->getAgentName(); // Add the agent name to the JSON
 
-        // Iteterate over the gaze data deque
-        for(const auto& dataPoint : *gazeData){
-            nlohmann::json dataPointJson;
-            dataPointJson["time"] = dataPoint.time; // Add the time of the data point to the JSON 
-            dataPointJson["gaze_velocity"] = dataPoint.gazeVel; // Add the head velocity to the JSON 
+    const std::deque<GazeDataPoint>* gazeData = gC->getGazeData();
+    // Create a JSON array for gaze data points of the current user
+    nlohmann::json dataJson = nlohmann::json::array();
 
-            // Create a JSON array for objects and their associated data
-            nlohmann::json objectsJson = nlohmann::json::array();
-            for (size_t i = 0; i < dataPoint.objectNames.size(); ++i) {
-                nlohmann::json objectJson;
-                objectJson["name"] = dataPoint.objectNames[i]; // Object name
-                objectJson["angle_diff"] = dataPoint.angleDiffs[i]; // Angular difference
-                objectJson["distance"] = dataPoint.distances[i]; // Distance to the object
-                objectJson["angle_diffXY"] = dataPoint.angleDiffsXY[i]; // Angular difference in XY plane
-                objectJson["angle_diffXZ"] = dataPoint.angleDiffsXZ[i]; // Angular difference in XZ plane
-                objectsJson.push_back(objectJson);
-            }
-            dataPointJson["objects"] = objectsJson; // Add the objects array to the data point JSON
-            dataJson.push_back(dataPointJson); // Add the data point JSON to the array
-        }
-        userGazeDataJson["gaze_data"] = dataJson; // Add the data array to the user JSON
-        gazeDataJson.push_back(userGazeDataJson); // Add user JSON to the main JSON array
+    // Iteterate over the gaze data deque
+    for (const auto& dataPoint : *gazeData)
+    {
+      nlohmann::json dataPointJson;
+      dataPointJson["time"] = dataPoint.time; // Add the time of the data point to the JSON
+      dataPointJson["gaze_velocity"] = dataPoint.gazeVel; // Add the head velocity to the JSON
+
+      // Create a JSON array for objects and their associated data
+      nlohmann::json objectsJson = nlohmann::json::array();
+      for (size_t i = 0; i < dataPoint.objectNames.size(); ++i)
+      {
+        nlohmann::json objectJson;
+        objectJson["name"] = dataPoint.objectNames[i]; // Object name
+        objectJson["angle_diff"] = dataPoint.angleDiffs[i]; // Angular difference
+        objectJson["distance"] = dataPoint.distances[i]; // Distance to the object
+        objectJson["angle_diffXY"] = dataPoint.angleDiffsXY[i]; // Angular difference in XY plane
+        objectJson["angle_diffXZ"] = dataPoint.angleDiffsXZ[i]; // Angular difference in XZ plane
+        objectsJson.push_back(objectJson);
+      }
+      dataPointJson["objects"] = objectsJson; // Add the objects array to the data point JSON
+      dataJson.push_back(dataPointJson); // Add the data point JSON to the array
     }
+    userGazeDataJson["gaze_data"] = dataJson; // Add the data array to the user JSON
+    gazeDataJson.push_back(userGazeDataJson); // Add user JSON to the main JSON array
+  }
 
-    return gazeDataJson;  // Return the JSON array of all gaze data points for all users
+  return gazeDataJson;  // Return the JSON array of all gaze data points for all users
 }
 
 //---------------------------- SceneTransformationDataRecorder component ------------------------------------------------ //
-nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, double end_time) const{
-    nlohmann::json recordedTransformationsJson = nlohmann::json::array();  // Create an empty JSON array
-    const std::deque<TransformationRecord> recordedTransformations = sceneTransformationDataRecorder->getRecordedTransformations();
+nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, double end_time) const
+{
+  nlohmann::json recordedTransformationsJson = nlohmann::json::array();  // Create an empty JSON array
+  const std::deque<TransformationRecord> recordedTransformations = sceneTransformationDataRecorder->getRecordedTransformations();
 
 
 
-    // Iterate through the recorded transformations in the deque
-    for (const auto& record : recordedTransformations)
+  // Iterate through the recorded transformations in the deque
+  for (const auto& record : recordedTransformations)
+  {
+    // Only process records within the specified time range
+    if (record.time >= start_time && record.time <= end_time)
     {
-        // Only process records within the specified time range
-        if (record.time >= start_time && record.time <= end_time)
+      // Create a JSON object for the current record
+      nlohmann::json recordJson;
+      recordJson["time"] = record.time;
+
+      // Create an array of transformations for this record
+      nlohmann::json transformationsJson = nlohmann::json::array();
+
+      for (const auto& transformation : record.transformations)
+      {
+        nlohmann::json transformationJson;
+        transformationJson["parent"] = transformation.parent;
+        transformationJson["child"] = transformation.child;
+
+        // Store the relative transformation matrix
+        nlohmann::json relativeTransformationJson;
+        for (int i = 0; i < 3; ++i)
         {
-            // Create a JSON object for the current record
-            nlohmann::json recordJson;
-            recordJson["time"] = record.time;
-
-            // Create an array of transformations for this record
-            nlohmann::json transformationsJson = nlohmann::json::array();
-
-            for (const auto& transformation : record.transformations)
-            {
-                nlohmann::json transformationJson;
-                transformationJson["parent"] = transformation.parent;
-                transformationJson["child"] = transformation.child;
-
-                // Store the relative transformation matrix
-                nlohmann::json relativeTransformationJson;
-                for (int i = 0; i < 3; ++i)
-                {
-                    relativeTransformationJson["position"].push_back(transformation.relativeTransformation.org[i]);
-                }
-
-                // Store the rotation matrix as a 3x3 array
-                nlohmann::json rotationJson = nlohmann::json::array();
-                for (int i = 0; i < 3; ++i)
-                {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        rotationJson.push_back(transformation.relativeTransformation.rot[i][j]);
-                    }
-                }
-                relativeTransformationJson["rotation"] = rotationJson;
-
-                // Add the transformation JSON to the list of transformations
-                transformationJson["relative_transformation"] = relativeTransformationJson;
-                transformationsJson.push_back(transformationJson);
-            }
-
-            // Add the transformations array to the record JSON object
-            recordJson["transformations"] = transformationsJson;
-
-            // Add this record to the final JSON array
-            recordedTransformationsJson.push_back(recordJson);
+          relativeTransformationJson["position"].push_back(transformation.relativeTransformation.org[i]);
         }
-    }
 
-    return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
+        // Store the rotation matrix as a 3x3 array
+        nlohmann::json rotationJson = nlohmann::json::array();
+        for (int i = 0; i < 3; ++i)
+        {
+          for (int j = 0; j < 3; ++j)
+          {
+            rotationJson.push_back(transformation.relativeTransformation.rot[i][j]);
+          }
+        }
+        relativeTransformationJson["rotation"] = rotationJson;
+
+        // Add the transformation JSON to the list of transformations
+        transformationJson["relative_transformation"] = relativeTransformationJson;
+        transformationsJson.push_back(transformationJson);
+      }
+
+      // Add the transformations array to the record JSON object
+      recordJson["transformations"] = transformationsJson;
+
+      // Add this record to the final JSON array
+      recordedTransformationsJson.push_back(recordJson);
+    }
+  }
+
+  return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
 
 }
 
