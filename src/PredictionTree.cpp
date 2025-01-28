@@ -1050,16 +1050,16 @@ static void expand(ActionScene& scene,
   {
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
     newDuration -= std::fmod(newDuration, dt);
-    RLOG(1, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
+    RLOG(5, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
 
     if (newDuration<duration)
     {
       action->setDuration(newDuration);
-      RLOG(0, "newDuration is %f", newDuration);
+      RLOG(5, "newDuration is %f", newDuration);
     }
     else
     {
-      RLOG(0, "newDuration unchanged: %f", duration);
+      RLOG(5, "newDuration unchanged: %f", duration);
     }
 
   }
