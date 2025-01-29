@@ -29,11 +29,13 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
 
-  <ActionSequence name="video1" text="get bottle_of_cola; put bottle_of_cola near bottle_of_fanta; get apple; put apple glass_red; get glass_red; put glass_red near glass_blue;  get glass_red; put glass_red glass_blue; get glass_blue; put glass_blue box_of_cereal; poke box_of_cereal; pose default; pose watchit_eye; pose watchit_point" />
-  
+  <ActionSequence name="video1" text="get bottle_of_cola; put bottle_of_cola near bottle_of_fanta; get apple; put apple glass_red; get glass_red; put glass_red pringles_green; get pringles_green; put pringles_green pringles_blue; poke pringles_blue; pose watchit_eye; pose watchit_point; pose default" />
+
   <ActionSequence name="video2" text="get bottle_of_cola; put bottle_of_cola near bottle_of_fanta; get apple; put apple glass_red; get glass_red; put glass_red pringles_green; get pringles_green; put pringles_green box_of_cereal; poke box_of_cereal; pose watchit_eye; pose watchit_point; pose default" />
   
-  <ActionSequence name="video3" text="get bottle_of_cola + get glass_red; pour_put bottle_of_cola glass_red; put glass_red table; pose default" />
+  <ActionSequence name="video3" text="get bottle_of_cola + get glass_red; pour_put bottle_of_cola glass_red; put glass_red table frame table_grid_0_1; pose default" />
+  
+  <ActionSequence name="video4" text="get bottle_of_cola; get glass_red + inspect_front bottle_of_cola; put bottle_of_cola pringles_green; pose default; get bottle_of_fanta; pour_put bottle_of_fanta glass_red; put glass_red table frame table_grid_0_1; pose default" />
 
   <ActionSequence name="1" text="get bottle_of_cola;pour bottle_of_cola glass_red;put bottle_of_cola;get glass_red;pass glass_red Felix" />
   <ActionSequence name="2" text="get bottle_of_cola;pour bottle_of_cola glass_blue;put bottle_of_cola far glass_blue near box_of_cereal;get glass_blue;put glass_blue near Johnnie;get glass_blue;put glass_blue near Felix" />
@@ -110,11 +112,11 @@
   <Group prev="table" name="5" color="GREEN" rigid_body_joints="0.3 0.3 0 0 0 0" >
     <xi:include href="g_iphone5.xml"/>
   </Group>
--->
 	
   <Group prev="table" name="_cereal" color="WHITE" rigid_body_joints="0.03 0.375 0 0 0 0" >
     <xi:include href="../scene/g_cereal_box.xml"/>
   </Group>
+-->
 	
   <Group prev="table_grid_1_3" rigid_body_joints="true" >
     <xi:include href="../scene/g_apple.xml"/>
@@ -127,6 +129,10 @@
 		-->
 		
   <Group prev="table_grid_1_6" name="_green" color="GREEN" rigid_body_joints="true" >
+    <xi:include href="../scene/g_pringles_can.xml"/>
+  </Group>
+		
+  <Group prev="table_grid_1_7" name="_blue" color="BLUE" rigid_body_joints="true" >
     <xi:include href="../scene/g_pringles_can.xml"/>
   </Group>
 		
