@@ -30,6 +30,15 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 *******************************************************************************/
+#include <QTimer>
+#include <QApplication>
+#include <QMetaObject>
+#include <QThread>
+#include <QDebug>
+
+#ifdef slots
+#  undef slots
+#endif
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -60,13 +69,16 @@ namespace py = pybind11;
 
 #include <SegFaultHandler.h>
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #include <X11/Xlib.h>
 #endif
 
 #include <chrono>
 #include <vector>
 #include <tuple>
+#include <locale.h>
+
+
 
 RCS_INSTALL_ERRORHANDLERS
 
@@ -144,7 +156,7 @@ PYBIND11_MODULE(pyAffaction, m)
   py::class_<aff::ExampleActionsECS>(m, "LlmSim")
   .def(py::init<>([]()
   {
-#if !defined(_MSC_VER)// Avoid crashes when running remotely.
+#if !defined(_MSC_VER) && !defined(__APPLE__)// Avoid crashes when running remotely.
     static bool xInitialized = false;
     if (!xInitialized)
     {
@@ -187,6 +199,65 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return success;
   }, "Initializes algorithm, guis and graphics")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool debug=false) -> bool
+  {
+    // Release the GIL for the function's duration
+    pybind11::gil_scoped_release release_gil;
+
+    bool success = ex.initAlgo();
+
+    if (debug)
+    {
+      success = ex.initGraphics() && success;
+      ex.getEntity().publish("Render");
+      ex.getEntity().process();
+    }
+
+    int argc=0;
+    char** argv = nullptr;
+    QApplication app(argc, argv);
+    std::setlocale(LC_ALL, "C");
+    QApplication::setQuitOnLastWindowClosed(false);
+
+    std::thread t(&aff::ExampleActionsECS::start, &ex);
+    t.detach();
+
+    QTimer* timer = new QTimer(&app);  // or any parent
+    QObject::connect(timer, &QTimer::timeout, [&]()
+    {
+      ex.updateUI();
+    });
+    timer->start(16);  // ~60fps
+
+    return app.exec();
+
+  }, "Initializes algorithm, guis and graphics")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("quitBlocking", [](aff::ExampleActionsECS& ex) -> bool
+  {
+    ex.stop();
+
+    // This can be done in a standard std::thread, pthread, or any non-Qt thread
+    QMetaObject::invokeMethod(qApp, []()
+    {
+      qDebug() << "Quitting from thread:" << QThread::currentThread();
+      QCoreApplication::quit();
+    }, Qt::QueuedConnection);
+
+    return true;
+
+  }, "Stops example")
+
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if the agent can see all objects or a json in the form:

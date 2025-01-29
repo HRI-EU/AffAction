@@ -73,6 +73,10 @@
 #include <GraphNode.h>
 #include <PhysicsNode.h>
 
+#include <QApplication>
+#include <QMetaObject>
+#include <QThread>
+
 #include <fstream>
 #include <iostream>
 #include <thread>
@@ -243,6 +247,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   eyeIkEnabled = true;
   speedUp = 1;
   loopCount = 0;
+  blockingMainThread = false;
   maxNumThreads = 0;
 
   pause = false;
@@ -724,8 +729,8 @@ bool ExampleActionsECS::initGraphics()
     return true;
   }
 
-  bool viewerStartsWithStartEvent = true;
-  viewer = new GraphicsWindow(&entity, viewerStartsWithStartEvent);
+  //viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::SyncWithRenderEvent);
+  viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::Threaded);
   addComponent(viewer);
 
   // Add a physics node if physics is enabled
@@ -880,7 +885,15 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('e', [this](char k)
   {
+    if (blockingMainThread)
+    {
+      auto ew = new aff::EventWidget(&entity);
+      ew->show();
+    }
+    else
+    {
     new aff::EventGui(&entity);
+    }
   }, "Launch event gui");
 
   viewer->setKeyCallback('k', [this](char k)
@@ -916,13 +929,27 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Launching ControllerGui");
     controller->toXML("onPressedButtonO.xml");
+
+    if (blockingMainThread)
+    {
+      auto w = new Rcs::ControllerWidgetBase(controller.get(),
+                                             (MatNd*) trajC->getActivationPtr(),
+                                             (MatNd*) trajC->getActivationPtr(),
+                                             (MatNd*) trajC->getTaskCommandPtr(),
+                                             (const MatNd*) trajC->getTaskCommandPtr(),
+                                             NULL,
+                                             true);
+      w->show();
+    }
+    else
+    {
     new Rcs::ControllerGui(controller.get(),
                            (MatNd*) trajC->getActivationPtr(),
                            (MatNd*) trajC->getTaskCommandPtr(),
                            (const MatNd*) trajC->getTaskCommandPtr(),
                            NULL,
                            true);
-
+    }
   }, "Launch ControllerGui (passive)");
 
   viewer->setKeyCallback('d', [this](char k)
@@ -1023,9 +1050,16 @@ bool ExampleActionsECS::initGraphics()
       entity.publish("PlanDFSEE", textCmd);
     }
 
-
-
   }, "Get body under mouse");
+
+  if (!getRobotEnabled())
+  {
+    viewer->setKeyCallback('L', [this](char k)
+    {
+      entity.publish("ActionSequence", std::string("reset"));
+    }, "Reset scene (without robot components only)");
+
+  }
 
   viewer->setKeyCallback('a', [this](char k)
   {
@@ -1129,7 +1163,7 @@ bool ExampleActionsECS::initGraphics()
 
 bool ExampleActionsECS::initGuis()
 {
-  if (valgrind)
+  if (valgrind || blockingMainThread)
   {
     return true;
   }
@@ -1255,6 +1289,17 @@ void ExampleActionsECS::onQuit()
 {
   entity.publish("Stop");
   runLoop = false;
+
+  if (blockingMainThread)
+  {
+    // This can be done in a standard std::thread, pthread, or any non-Qt thread
+    QMetaObject::invokeMethod(qApp, []()
+    {
+      qDebug() << "Quitting from thread:" << QThread::currentThread();
+      QCoreApplication::quit();
+    }, Qt::QueuedConnection);
+  }
+
 }
 
 /*******************************************************************************
@@ -2118,6 +2163,12 @@ nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, 
 
 }
 
+void ExampleActionsECS::updateUI()
+{
+  RLOG(1, "Update UI");
+  getViewer()->frame();
+  //handleKeys();
+}
 
 /*******************************************************************************
  *

@@ -40,10 +40,13 @@
 #include <Rcs_cmdLine.h>
 #include <Rcs_typedef.h>
 #include <Rcs_timer.h>
+#include <ExampleGui.h>
 
 #include <SegFaultHandler.h>
 
-#if !defined(_MSC_VER)
+#include <QApplication>
+
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #include <X11/Xlib.h>
 #endif
 
@@ -78,7 +81,7 @@ void quit(int /*sig*/)
 //   bin/TestLLMSim -dir config/xml/Affaction/unittest/ -f g_scenario_unittest_multiple_agents.xml
 static int testLLMSim(int argc, char** argv)
 {
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__APPLE__)
   // Avoid crashes when running remotely.
   XInitThreads();
 #endif
@@ -301,6 +304,17 @@ static int testStringParsing()
   return 0;
 }
 
+static int testExampleGui(int argc, char** argv)
+{
+  QApplication app(argc, argv);
+  std::setlocale(LC_ALL, "C");
+  Rcs::ExampleWidget* mainWindow = new Rcs::ExampleWidget(argc, argv, "Threaded");
+  mainWindow->show();
+
+  // Now run the Qt event loop on the main thread
+  return app.exec();
+}
+
 int main(int argc, char** argv)
 {
   // Ctrl-C callback handler
@@ -327,6 +341,10 @@ int main(int argc, char** argv)
 
     case 3:
       res = testPTU(argc, argv);
+      break;
+
+    case 4:
+      res = testExampleGui(argc, argv);
       break;
 
     default:

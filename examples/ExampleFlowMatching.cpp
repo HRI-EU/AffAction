@@ -479,7 +479,7 @@ bool ExampleFlowMatching::initGraphics()
   }
 
   // Create GraphicsWindow
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, true, true);
+  viewer = std::make_unique<aff::GraphicsWindow>(&entity, aff::GraphicsWindow::SyncMode::RenderEvent);
   viewer->setTitle("ExampleFlowMatching");
   viewer->setCameraTransform(q_cam[0], q_cam[1], q_cam[2], q_cam[3], q_cam[4], q_cam[5]);
 

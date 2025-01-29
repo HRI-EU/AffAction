@@ -106,14 +106,14 @@ class GraphicsWindow : public ComponentBase, public Rcs::Viewer
 {
 public:
 
+  enum class SyncMode { Threaded,     // frame() called in concurrent thread
+                        RenderEvent,  // frame() called in "Render" event
+                        External      // frame() not called at all, do it yourself
+                      };
+
   /*! \brief Constructs a GraphicsWindow class.
    *
    * \param[in] parent     Entity class responsible for event subscriptions
-   * \param[in] startWithStartEvent Starts the viewer thread with the "Start"
-   *                                event. If false, the thread starts right
-   *                                after construction. This is sometimes a bit
-   *                                more helpful, since it allows to see what's
-   *                                going on during initialization.
    * \param[in] syncWithEventLoop   If true, the viewer's frame call (where all
    *                                the rendering takes place) is triggered
    *                                by the "Render" event, and is not called
@@ -122,8 +122,7 @@ public:
    *                                aliasing. Usually only needed for old
    *                                graphics cards.
    */
-  GraphicsWindow(EntityBase* parent, bool startWithStartEvent=false,
-                 bool syncWithEventLoop=false, bool simpleGraphics=false);
+  GraphicsWindow(EntityBase* parent, SyncMode syncMode=SyncMode::Threaded, bool simpleGraphics=false);
 
   /*! \brief Unsubscribes and deletes all previously allocated memory.
    *         Running hreads will be stopped, and all viewer nodes will be
@@ -184,11 +183,12 @@ public:
     */
   virtual void start();
 
+  virtual void frame();
+
 protected:
 
-  virtual void frame();
   virtual void stop();
-  virtual void subscribeAll(bool startWithStartEvent);
+  // virtual void subscribeAll(bool startWithStartEvent);
   virtual void handleKeys();
   virtual void print();
 
@@ -222,7 +222,6 @@ protected:
   std::map<char, std::function<void(char)>> keyCallbacks;
   std::vector<std::string> hudText;
   mutable pthread_mutex_t frameMtx;
-  bool synWithEventLoop;
 
 private:
 

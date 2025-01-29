@@ -80,6 +80,7 @@ public:
   virtual void run();
   virtual void step();
   virtual std::string help();
+  virtual void updateUI();
 
   virtual void startThreaded();
 
@@ -143,7 +144,7 @@ public:
   * \return JSON object containing the gaze data from all the agents.
   */
   nlohmann::json getUsersGazeData() const;
-   
+
   nlohmann::json getRecordedTransformations(double start_time, double end_time) const;
   void loadTransformationDataFromFile(const std::string& filename) const;
   void startPlaybackTransformationData() const;
@@ -162,6 +163,7 @@ protected:
   bool zigzag, singleThreaded;
   unsigned int loopCount;
   std::atomic<bool> processingAction;
+  bool blockingMainThread;
 
   GraphicsWindow* viewer;
   ActionComponent* actionC;
@@ -217,16 +219,16 @@ protected:
   RcsGraph* graphToInitializeWith;
 
   /*! \brief List of gaze components.
-  * 
+  *
   * This vector contains pointers to instances of GazeComponent,
   * each of which is responsible for tracking the gaze of a specific agent.
-  * 
+  *
   */
   std::vector<GazeComponent*> gazeComponents;
-  SceneTransformationDataRecorder* sceneTransformationDataRecorder; 
-  SceneTransformationDataPlayer * sceneTransformationDataPlayer;
+  SceneTransformationDataRecorder* sceneTransformationDataRecorder;
+  SceneTransformationDataPlayer* sceneTransformationDataPlayer;
 
-  
+
 
 
 };

@@ -84,7 +84,9 @@ int getKeyValuePair(std::vector<std::string>& params, const std::string& key, T&
     return -3;  // Fail if trying to assign a floating-point string to an integer type
   }
 
-  std::stringstream stream(strValue);
+  std::stringstream stream;
+  stream.imbue(std::locale::classic());
+  stream << strValue;
   stream >> value;
 
   // Check if the stream conversion succeeded and if there are no remaining characters
