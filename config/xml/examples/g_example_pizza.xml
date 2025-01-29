@@ -115,7 +115,7 @@
     <joint_state joint="gpz" position="0.971" />
   </model_state>
 
-  <xi:include href="g_modelstates.xml"/>
-  <xi:include href="g_collisionmodel.xml"/>
+  <xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+  <xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/>
 
 </Graph>

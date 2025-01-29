@@ -694,7 +694,7 @@
 
 
 
-  <xi:include href="g_modelstates.xml"/>
-  <xi:include href="g_collisionmodel.xml"/>
+  <xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+  <xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/>
 
 </Graph>

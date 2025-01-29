@@ -27,7 +27,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
   <!-- The glass mesh has a diameter of 8.8cm. The real glass is just 8.4cm. -->
   <Body name="glass_1"  color="GREEN">
         <Shape type="MESH" meshFile="object_models/glass_1/glass_1.stl" scale="1" transform="0 0 0 0 0 0"/>
@@ -161,6 +161,9 @@
     <FingerpushCapability frame="hand_left_finger_tip_3" />
     </Manipulator>
 
+
+  <xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+  <xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/>
 
 
 </Graph>
