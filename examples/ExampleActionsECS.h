@@ -136,7 +136,7 @@ public:
   bool unittest, verbose, turbo;
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool hasBeenStopped;
-
+  bool blockingMainThread;
 
 
   /*! \brief Retrieves the gaze data in JSON format.
@@ -163,7 +163,6 @@ protected:
   bool zigzag, singleThreaded;
   unsigned int loopCount;
   std::atomic<bool> processingAction;
-  bool blockingMainThread;
 
   GraphicsWindow* viewer;
   ActionComponent* actionC;

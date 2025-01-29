@@ -73,10 +73,6 @@
 #include <GraphNode.h>
 #include <PhysicsNode.h>
 
-#include <QApplication>
-#include <QMetaObject>
-#include <QThread>
-
 #include <fstream>
 #include <iostream>
 #include <thread>
@@ -362,6 +358,8 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-enableUsersGazeComponent", &usersGazeComponentEnabled, "Start with users gaze component");
   parser->getArgument("-enableSceneTransformationsDataRecorder", &sceneTransformationDataRecorderEnabled, "Enable recording of scene transformations");
   parser->getArgument("-enableSceneTransformationPlayer", &sceneTransformationDataPlayerEnabled, "Enable playing of scene transformations");
+  parser->getArgument("-blockingMainThread", &blockingMainThread, "Let the UIs run in the main thread (blocking)");
+  
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
@@ -730,9 +728,11 @@ bool ExampleActionsECS::initGraphics()
   }
 
   //viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::SyncWithRenderEvent);
-  viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::Threaded);
+  
+  auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
+  viewer = new GraphicsWindow(&entity, syncMode);
   addComponent(viewer);
-
+  
   // Add a physics node if physics is enabled
   auto sims = getComponents<PhysicsComponent>(components);
   if (!sims.empty())
@@ -1289,17 +1289,6 @@ void ExampleActionsECS::onQuit()
 {
   entity.publish("Stop");
   runLoop = false;
-
-  if (blockingMainThread)
-  {
-    // This can be done in a standard std::thread, pthread, or any non-Qt thread
-    QMetaObject::invokeMethod(qApp, []()
-    {
-      qDebug() << "Quitting from thread:" << QThread::currentThread();
-      QCoreApplication::quit();
-    }, Qt::QueuedConnection);
-  }
-
 }
 
 /*******************************************************************************
@@ -2167,7 +2156,7 @@ void ExampleActionsECS::updateUI()
 {
   RLOG(1, "Update UI");
   getViewer()->frame();
-  //handleKeys();
+  handleKeys();
 }
 
 /*******************************************************************************

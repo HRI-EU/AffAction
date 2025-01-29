@@ -388,4 +388,10 @@ The project is composed of three parts:
     parametrization, for instance by naming objects that don't exist.
 
 
+## Licenses of included external files
+
+This repository includes a few files from other open-source projects in the sub-directory external:
+- json.hpp is from the nlohmann/json project (https://github.com/nlohmann/json) and licensed under a [MIT License](https://github.com/nlohmann/json/blob/develop/LICENSE.MIT). 
+- pybind11_json.hpp is from the pybind project (https://github.com/pybind) and licensed under a [BSD-3-Clause License](https://github.com/pybind/pybind11_json/blob/master/LICENSE).
+- zmq.hpp is from the cppzmq project (https://github.com/zeromq/cppzmq) and licensed under a [MIT License](https://github.com/zeromq/cppzmq/blob/master/LICENSE).
 
