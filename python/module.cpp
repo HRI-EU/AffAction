@@ -209,6 +209,7 @@ PYBIND11_MODULE(pyAffaction, m)
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
 
+    ex.blockingMainThread = true;
     bool success = ex.initAlgo();
 
     if (debug)
