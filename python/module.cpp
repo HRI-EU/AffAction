@@ -204,7 +204,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool debug=false) -> bool
+  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool debug=false) -> int
   {
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
@@ -212,18 +212,18 @@ PYBIND11_MODULE(pyAffaction, m)
     ex.blockingMainThread = true;
     bool success = ex.initAlgo();
 
+    int argc = 1;
+    char* argv[] = { (char*)"AppName" };
+    QApplication app(argc, argv);
+
+    std::setlocale(LC_ALL, "C");
+    QApplication::setQuitOnLastWindowClosed(false);
+
     if (debug)
     {
       success = ex.initGraphics() && success;
-      ex.getEntity().publish("Render");
-      ex.getEntity().process();
+      success = ex.initGuis() && success;
     }
-
-    int argc=0;
-    char** argv = nullptr;
-    QApplication app(argc, argv);
-    std::setlocale(LC_ALL, "C");
-    QApplication::setQuitOnLastWindowClosed(false);
 
     std::thread t(&aff::ExampleActionsECS::start, &ex);
     t.detach();
@@ -250,7 +250,7 @@ PYBIND11_MODULE(pyAffaction, m)
     // This can be done in a standard std::thread, pthread, or any non-Qt thread
     QMetaObject::invokeMethod(qApp, []()
     {
-      qDebug() << "Quitting from thread:" << QThread::currentThread();
+      RLOG_CPP(1, "Quitting from thread:" << QThread::currentThread());
       QCoreApplication::quit();
     }, Qt::QueuedConnection);
 

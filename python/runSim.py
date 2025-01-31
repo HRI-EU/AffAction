@@ -41,6 +41,43 @@ import logging
 import time
 from pathlib import Path
 
+welcome_banner = r"""   
+     _       __     __                             __      
+    | |     / /__  / /________  ____ ___  ___     / /_____ 
+    | | /| / / _ \/ / ___/ __ \/ __ `__ \/ _ \   / __/ __ \
+    | |/ |/ /  __/ / /__/ /_/ / / / / / /  __/  / /_/ /_/ /
+    |__/|__/\___/_/\___/\____/_/ /_/ /_/\___/   \__/\____/ 
+                                                           
+                     ___    ________           __  _           
+        ____  __  __/   |  / __/ __/___ ______/ /_(_)___  ____ 
+       / __ \/ / / / /| | / /_/ /_/ __ `/ ___/ __/ / __ \/ __ \
+      / /_/ / /_/ / ___ |/ __/ __/ /_/ / /__/ /_/ / /_/ / / / /
+     / .___/\__, /_/  |_/_/ /_/  \__,_/\___/\__/_/\____/_/ /_/ 
+    /_/    /____/                                              
+
+"""
+
+exit_banner = r"""   
+      ________                __           ____          
+     /_  __/ /_  ____ _____  / /_______   / __/___  _____
+      / / / __ \/ __ `/ __ \/ //_/ ___/  / /_/ __ \/ ___/
+     / / / / / / /_/ / / / / ,< (__  )  / __/ /_/ / /    
+    /_/ /_/ /_/\__,_/_/ /_/_/|_/____/  /_/  \____/_/     
+                                                     
+                  _            
+      __  _______(_)___  ____ _
+     / / / / ___/ / __ \/ __ `/
+    / /_/ (__  ) / / / / /_/ / 
+    \__,_/____/_/_/ /_/\__, /  
+                      /____/   
+                     ___    ________           __  _           
+        ____  __  __/   |  / __/ __/___ ______/ /_(_)___  ____ 
+       / __ \/ / / / /| | / /_/ /_/ __ `/ ___/ __/ / __ \/ __ \
+      / /_/ / /_/ / ___ |/ __/ __/ /_/ / /__/ /_/ / /_/ / / / /
+     / .___/\__, /_/  |_/_/ /_/  \__,_/\___/\__/_/\____/_/ /_/ 
+    /_/    /____/                                              
+"""
+
 
 # Global Constants
 SMILE_WS_PATH = Path("build")
@@ -64,8 +101,9 @@ addResourcePath(str(CFG_DIR))
         
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    level=logging.WARNING,
+    format='[%(name)s: %(filename)s: %(lineno)d: %(message)s'
+
 )
 logger = logging.getLogger(__name__)
 
@@ -169,6 +207,7 @@ def interactive_console_thread(sim_manager: SimulatorManager):
     console = code.InteractiveConsole(locals=local_vars)
 
     try:
+        #console.interact()
         console.interact(banner=banner, exitmsg="Goodbye!")
     finally:
         logger.info("Interactive console has been terminated.")
@@ -183,6 +222,7 @@ def main():
     Main entry point for the script. Sets up the simulator, starts an interactive
     console in a thread, and launches the simulator GUI in the main thread.
     """
+    print(welcome_banner)
     logger.info(f"VIRTUAL_ENV: {os.environ.get('VIRTUAL_ENV')}")
     logger.info(f"PATH: {os.environ.get('PATH')}")
     logger.info(f"CFG_DIR: {CFG_DIR}")
@@ -213,6 +253,8 @@ def main():
     sim_manager.cleanup()
 
     logger.info("Script execution completed.")
+    print(exit_banner)
+
 
 
 if __name__ == '__main__':

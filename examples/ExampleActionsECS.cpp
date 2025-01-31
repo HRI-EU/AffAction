@@ -307,7 +307,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
   Rcs_removeResourcePath(configDirectory.c_str());
   RcsGraph_destroy(graphToInitializeWith);
-  RLOG_CPP(0, "Done deleting ExampleActionsECS");
+  RLOG_CPP(5, "Done deleting ExampleActionsECS");
 }
 
 bool ExampleActionsECS::initParameters()
@@ -359,7 +359,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-enableSceneTransformationsDataRecorder", &sceneTransformationDataRecorderEnabled, "Enable recording of scene transformations");
   parser->getArgument("-enableSceneTransformationPlayer", &sceneTransformationDataPlayerEnabled, "Enable playing of scene transformations");
   parser->getArgument("-blockingMainThread", &blockingMainThread, "Let the UIs run in the main thread (blocking)");
-  
+
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
@@ -728,11 +728,11 @@ bool ExampleActionsECS::initGraphics()
   }
 
   //viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::SyncWithRenderEvent);
-  
+
   auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
   viewer = new GraphicsWindow(&entity, syncMode);
   addComponent(viewer);
-  
+
   // Add a physics node if physics is enabled
   auto sims = getComponents<PhysicsComponent>(components);
   if (!sims.empty())
@@ -892,7 +892,7 @@ bool ExampleActionsECS::initGraphics()
     }
     else
     {
-    new aff::EventGui(&entity);
+      new aff::EventGui(&entity);
     }
   }, "Launch event gui");
 
@@ -943,12 +943,12 @@ bool ExampleActionsECS::initGraphics()
     }
     else
     {
-    new Rcs::ControllerGui(controller.get(),
-                           (MatNd*) trajC->getActivationPtr(),
-                           (MatNd*) trajC->getTaskCommandPtr(),
-                           (const MatNd*) trajC->getTaskCommandPtr(),
-                           NULL,
-                           true);
+      new Rcs::ControllerGui(controller.get(),
+                             (MatNd*) trajC->getActivationPtr(),
+                             (MatNd*) trajC->getTaskCommandPtr(),
+                             (const MatNd*) trajC->getTaskCommandPtr(),
+                             NULL,
+                             true);
     }
   }, "Launch ControllerGui (passive)");
 
@@ -1163,7 +1163,7 @@ bool ExampleActionsECS::initGraphics()
 
 bool ExampleActionsECS::initGuis()
 {
-  if (valgrind || blockingMainThread)
+  if (valgrind)
   {
     return true;
   }
@@ -1171,14 +1171,22 @@ bool ExampleActionsECS::initGuis()
   // Gui for manually triggering events with basic data types.
   if (withEventGui)
   {
-    new aff::EventGui(&entity);
+    if (blockingMainThread)
+    {
+      EventWidget* w = new EventWidget(&entity);
+      w->show();
+    }
+    else
+    {
+      new aff::EventGui(&entity);
+    }
   }
 
-  if (!noTextGui)
-  {
-    textGui = new aff::TextEditComponent(&entity);
-    addComponent(textGui);
-  }
+  // if (!noTextGui)
+  // {
+  //   textGui = new aff::TextEditComponent(&entity);
+  //   addComponent(textGui);
+  // }
 
   return true;
 }
