@@ -1138,6 +1138,12 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
   .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
   .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // GazeDisambiguation
+  //////////////////////////////////////////////////////////////////////////////
+  .def_readwrite("sceneTransformationDataRecorderEnabled", &aff::ExampleActionsECS::sceneTransformationDataRecorderEnabled)
+  .def_readwrite("sceneTransformationDataPlayerEnabled", &aff::ExampleActionsECS::sceneTransformationDataPlayerEnabled)
   ;
 
 
