@@ -2157,14 +2157,22 @@ nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, 
   }
 
   return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
-
 }
 
 void ExampleActionsECS::updateUI()
 {
-  RLOG(1, "Update UI");
   getViewer()->frame();
   handleKeys();
+}
+
+void ExampleActionsECS::setSyncMode(std::string syncMode)
+{
+  ExampleBase::setSyncMode(syncMode);
+  
+  if (syncMode=="External")
+  {
+    blockingMainThread = true;
+  }
 }
 
 /*******************************************************************************

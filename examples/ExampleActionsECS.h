@@ -81,7 +81,7 @@ public:
   virtual void step();
   virtual std::string help();
   virtual void updateUI();
-
+  virtual void setSyncMode(std::string syncMode);
   virtual void startThreaded();
 
   // Accessors
