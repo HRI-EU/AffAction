@@ -420,6 +420,9 @@ ENDIF()
 ADD_EXECUTABLE(TreeTest examples/TreeTest.cpp)
 TARGET_LINK_LIBRARIES(TreeTest RcsCore)
 
+ADD_EXECUTABLE(RunPTU examples/RunPTU.cpp)
+TARGET_LINK_LIBRARIES(RunPTU AffAction zmq)
+
 
 IF (WIN32 AND AFFACTION_WITH_MQTT)
   ADD_EXECUTABLE(MqttTest examples/MqttTest.cpp)

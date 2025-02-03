@@ -80,7 +80,7 @@ static int testLLMSim_blocking(int argc, char** argv)
 {
   auto ex = std::make_shared<aff::ExampleActionsECS>();
   ex->blockingMainThread = true;
-  
+
   if (!ex->init(argc, argv))
   {
     RLOG(0, "Failed in initialize example");
@@ -113,13 +113,13 @@ static int testLLMSim_blocking(int argc, char** argv)
   timer->start(25);  // 40 fps
 
   app.exec();
-  
+
   RLOG(0, "Stopping example");
   ex->stop();
   RLOG(0, "Joining example thread");
   t.join();
   RLOG(0, "Deleting example");
-  
+
   return 0;
 }
 

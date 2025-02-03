@@ -39,6 +39,8 @@
 #include "Rcs_graph.h"
 #include "Rcs_filters.h"
 
+#include <memory>
+
 
 namespace aff
 {
