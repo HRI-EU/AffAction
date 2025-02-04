@@ -52,7 +52,7 @@ static void quit(int)
   runLoop = false;
 }
 
-static void networkRecvThreadFunc(zmq::context_t& context, int recvPort)
+static void networkRecvCommandsThreadFunc(zmq::context_t& context, int recvPort)
 {
   // Set up the socket for receiving motor commands
   zmq::socket_t recv_socket(context, zmq::socket_type::sub);
@@ -159,11 +159,11 @@ static void networkRecvThreadFunc(zmq::context_t& context, int recvPort)
     loopCount++;
   }
 
-  //networkThreadRunning = false;
   RLOG(0, "Quitting network thread");
 }
 
-static void networkSendThreadFunc(zmq::context_t& context, int sendPort)
+static void networkSendSensorsThreadFunc(const aff::PW70VelocityComponent& pw70,
+                                         zmq::context_t& context, int sendPort)
 {
 
   // Set up the socket for sending joint angles
@@ -194,11 +194,31 @@ static void networkSendThreadFunc(zmq::context_t& context, int sendPort)
     throw;  // Rethrow after logging the error
   }
 
-  size_t loopCount = 0;
+  double time_stamp_prev = 0.0;
 
   while (runLoop)
   {
-    std::string serialized_data;
+    // We make this a 100Hz poll so that we don't interfere with the 50Hz CAN communication.
+    Timer_waitDT(0.01);
+
+    double pan_position, tilt_position, pan_velocity, tilt_velocity, time_stamp;
+    pw70.getSensorData(pan_position, tilt_position, pan_velocity, tilt_velocity, time_stamp);
+
+    if (time_stamp == time_stamp_prev)
+    {
+      continue;
+    }
+
+    time_stamp_prev = time_stamp;
+
+    nlohmann::json sensorJson;
+    sensorJson["pan_position"] = pan_position;
+    sensorJson["tilt_position"] = tilt_position;
+    sensorJson["pan_velocity"] = pan_velocity;
+    sensorJson["tilt_velocity"] = tilt_velocity;
+    sensorJson["time_stamp"] = time_stamp;
+
+    std::string serialized_data = sensorJson.dump();
     zmq::message_t message(serialized_data.size());
     memcpy(message.data(), serialized_data.c_str(), serialized_data.size());
     auto result = send_socket.send(message, zmq::send_flags::none);
@@ -211,12 +231,8 @@ static void networkSendThreadFunc(zmq::context_t& context, int sendPort)
       RLOG_CPP(2, "Message sent successfully: " << serialized_data);
     }
 
-
-    Timer_waitDT(0.005);
-    loopCount++;
   }
 
-  //networkThreadRunning = false;
   RLOG(0, "Quitting network thread");
 }
 
@@ -224,41 +240,52 @@ static void networkSendThreadFunc(zmq::context_t& context, int sendPort)
 int main(int argc, char** argv)
 {
   Timer_setZero();
-  signal(SIGINT, quit);   // Ctrl-C stops threads
 
   int mode = 0;
+  int sensorSenderPort = 5555;
+  int commandReceiverPort = 5556;
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Test mode (default is %d)", mode);
-  bool sensingOnly = argP.hasArgument("-sensingOnly", "No commands written");
 
   aff::EntityBase entity;
 
+  // Start the driver before sending out the first sensor data
+  aff::PW70VelocityComponent pw70(&entity, 0, 1);
+  pw70.onStart();   // Returns only after initialization is finished
 
   // Configure zmq networking
   RLOG_CPP(0, "ZMQ_VERSION: " << ZMQ_VERSION << " ZMQ_MAKE_VERSION(4, 3, 2) " << ZMQ_MAKE_VERSION(4, 3, 2));
   RLOG_CPP(0, "ZMQ_VERSION 4.7.0: " << ZMQ_MAKE_VERSION(4, 7, 0));
   zmq::context_t context(1);
 
-  auto sendThread = std::thread(networkSendThreadFunc, std::ref(context), 5555);
-  auto recvThread = std::thread(networkRecvThreadFunc, std::ref(context), 5556);
+  auto sendThread = std::thread(networkSendSensorsThreadFunc, std::cref(pw70), std::ref(context), sensorSenderPort);
+  //auto recvThread = std::thread(networkRecvCommandsThreadFunc, std::ref(context), commandReceiverPort);
+
+  // Ctrl-C sets runLoop to false. We do this after initialization so that
+  // we can use Ctrl-C during startup
+  signal(SIGINT, quit);
+
+
+
+
 
   RPAUSE();
+
+
+  pw70.onStop();
+
+
   runLoop = false;
 
   RLOG_CPP(0, "Joining network threads");
 
-  recvThread.join();
-  RLOG_CPP(0, "Receiver thread joined");
+  //recvThread.join();
+  //RLOG_CPP(0, "Receiver thread joined");
 
   sendThread.join();
   RLOG_CPP(0, "Sender thread joined");
 
-  // aff::PW70VelocityComponent pw70(&entity, 0, 1);
-
-  // pw70.onStart();
-
-  // pw70.onStop();
 
   RLOG_CPP(0, "Thanks for running the PTU with this fine velocity controller");
 

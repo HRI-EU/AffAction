@@ -63,6 +63,8 @@ public:
   void onStart();
   void onMovePosition(double pan_in_radians, double tilt_in_radians);
   void onUpdateGraph(RcsGraph* graph);
+  void getSensorData(double& pan_position, double& tilt_position,
+                     double& pan_velocity, double& tilt_velocity, double& time_stamp) const;
 
   // Disallow copying and assigning
   PW70Component(const PW70Component&) = delete;
@@ -73,7 +75,7 @@ protected:
   bool setControlFrequency(int freq);
 
   std::unique_ptr<PW70CANInterface> pw70;
-  std::mutex panTiltUpdateMtx;
+  mutable std::mutex panTiltUpdateMtx;
 
   double current_pan_position, current_tilt_position;
   double current_pan_velocity, current_tilt_velocity;
