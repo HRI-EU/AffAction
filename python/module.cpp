@@ -1144,6 +1144,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def_readwrite("sceneTransformationDataRecorderEnabled", &aff::ExampleActionsECS::sceneTransformationDataRecorderEnabled)
   .def_readwrite("sceneTransformationDataPlayerEnabled", &aff::ExampleActionsECS::sceneTransformationDataPlayerEnabled)
+  .def_readwrite("usersGazeComponentEnabled", &aff::ExampleActionsECS::usersGazeComponentEnabled)
   ;
 
 
