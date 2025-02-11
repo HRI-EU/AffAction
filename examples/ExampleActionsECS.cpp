@@ -757,7 +757,7 @@ bool ExampleActionsECS::initGraphics()
   const RcsBody* camera_body = RcsGraph_getBodyByName(getCurrentGraph(), "default_camera_view");
   if (camera_body)
   {
-    RLOG(1, "Setting initial view based on body 'initial_camera_view'.");
+    RLOG(5, "Setting initial view based on body 'initial_camera_view'.");
     HTr_to6DVector(q_cam, &camera_body->A_BI);
   }
 

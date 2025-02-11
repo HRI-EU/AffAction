@@ -80,11 +80,14 @@ exit_banner = r"""
 
 
 # Global Constants
-SMILE_WS_PATH = Path("build")
+#SMILE_WS_PATH = Path("build")
+SMILE_WS_PATH = Path("install")
 CFG_ROOT_DIR = SMILE_WS_PATH / "config"
-CFG_DIR = CFG_ROOT_DIR / "xml" / "examples"
+#CFG_DIR = CFG_ROOT_DIR / "xml" / "examples"
+CFG_DIR = CFG_ROOT_DIR / "xml" / "AffAction" / "xml" / "examples"
 
 # Local package imports
+sys.path.append(str(SMILE_WS_PATH / "bin"))
 sys.path.append(str(SMILE_WS_PATH / "lib"))
 sys.path.append(str(SMILE_WS_PATH / "lib" / "Release"))
 sys.path.append(str(SMILE_WS_PATH / "bin" / "Release"))

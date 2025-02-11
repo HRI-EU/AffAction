@@ -60,7 +60,7 @@ INSTALL(
   DIRECTORY config/data
             config/textures
             config/xml
-  DESTINATION ${CONFIG_INSTALL_DIR}/xml/AffAction
+  DESTINATION ${CONFIG_INSTALL_DIR} #/xml/AffAction
   )
 
 # Install xml files

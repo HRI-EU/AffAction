@@ -182,6 +182,15 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
   {
     goalFilt.setTarget(gazePtDes->A_BI.org);
   }
+  else
+  {
+    // We set a gaze point 1m in front of the head so that the agent looks straight forward.
+    const RcsBody* screen = RcsGraph_getBodyByName(desired, ActionEyeGaze::getScreenName().c_str());
+    RCHECK(screen);
+    double gazePt[3];
+    Vec3d_add(gazePt, screen->A_BI.org,Vec3d_ex());   // 1 m in front of screen
+    goalFilt.setTarget(gazePt);
+  }
 
   goalFilt.iterate();
   goalFilt.getPosition(x_des->ele);
