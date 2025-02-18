@@ -107,7 +107,7 @@ public:
     {
       socket = std::make_unique<zmq::socket_t>(context, ZMQ_SUB);
 
-#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
       socket->setsockopt(ZMQ_RCVTIMEO, 3000); // Timeout in milliseconds
       socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
 #else

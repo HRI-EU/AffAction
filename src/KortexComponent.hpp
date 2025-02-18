@@ -354,7 +354,11 @@ private:
 
       // Set socket option to subscribe to all messages (ZMQ_SUBSCRIBE with an empty filter)
       RLOG_CPP(0, "Setting ZMQ_SUBSCRIBE option");
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
       recv_socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+#else
+      recv_socket.set(zmq::sockopt::subscribe, "");
+#endif
 
       RLOG_CPP(0, "recv_socket successfully set up");
     }
@@ -411,7 +415,11 @@ private:
     {
       // Check for motor commands (non-blocking)
       zmq::pollitem_t items[] = {{recv_socket, 0, ZMQ_POLLIN, 0}};
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
       zmq::poll(items, 1, 0); // Poll with a 0 timeout (non-blocking)
+#else
+      zmq::poll(items, 1, std::chrono::milliseconds(0));
+#endif
       if (items[0].revents & ZMQ_POLLIN)
       {
         receive_joint_angles(recv_socket);
