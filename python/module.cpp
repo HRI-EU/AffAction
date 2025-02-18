@@ -1019,13 +1019,19 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("addRespeaker", [](aff::ExampleActionsECS& ex, bool listenWitHandRaisedOnly)
   {
-    // Adds a component to listen to the Respeaker ROS nose, and to acquire the
+    // Adds a component to listen to the Respeaker ROS node, and to acquire the
     // sound directions, ASR etc.
     ex.addComponentArgument("-respeaker");
     if (listenWitHandRaisedOnly)
     {
       ex.addComponentArgument("-respeaker_listenWithRaisedHandOnly");
     }
+  })
+  .def("addRespeaker_usb", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to listen to the Respeaker direction signal directly
+    // from the USB port.
+    ex.addComponentArgument("-respeaker_usb");
   })
   .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex,
                             const std::string& connection,

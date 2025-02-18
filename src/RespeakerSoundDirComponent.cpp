@@ -34,20 +34,56 @@
 
 #if defined (AFFACTION_WITH_RESPEAKER)
 #include "RespeakerSoundDirComponent.hpp"
+#endif
 
+#include <Rcs_macros.h>
 
 
 namespace aff
 {
 
-RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase(parent), threadRunning(false)
+#if defined (AFFACTION_WITH_RESPEAKER)
+void RespeakerUSBComponent::usbThreadFunc()
 {
-#if 0 // defined(_WIN32)
-  rinterface = new RespeakerInterfaceWin();
+  auto rinterface = std::make_unique<RespeakerInterface>();
+
+  // Give device some time to reinitialize
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  std::cout << "Respeaker version: " << (int)rinterface->version() << "\n";
+
+  while (threadRunning)
+  {
+#if 0
+    int angle;
+    bool isSpeaking;
+
+    bool success = rinterface->angle_in_degrees(angle, isSpeaking);
+
+    if (success)
+    {
+      RLOG(0, "angle = %d, isSpeaking = %s", angle, isSpeaking ? "true" : "false");
+    }
+    else
+    {
+      RLOG(0, "Error in angle_in_degrees");
+    }
 #else
-  rinterface = new RespeakerInterfaceLinux();
+    int angle = rinterface->angle_in_degrees();
+    RLOG(0, "angle = %d", angle);
 #endif
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+}
+#else
+void RespeakerUSBComponent::usbThreadFunc()
+{
+}
+#endif
+
+RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase(parent), threadRunning(false)
+{
   subscribe("Start", &RespeakerUSBComponent::startUSBThread);
   subscribe("Stop", &RespeakerUSBComponent::stopUSBThread);
 }
@@ -55,7 +91,6 @@ RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase
 RespeakerUSBComponent::~RespeakerUSBComponent()
 {
   stopUSBThread();
-  delete rinterface;
 }
 
 void RespeakerUSBComponent::startUSBThread()
@@ -90,66 +125,4 @@ void RespeakerUSBComponent::stopUSBThread()
   RLOG(0, "Thread joined, stopUSBThread completed");
 }
 
-void RespeakerUSBComponent::usbThreadFunc()
-{
-  // Give device some time to reinitialize
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-
-  std::cout << "Respeaker version: " << (int)rinterface->version() << "\n";
-
-  while (threadRunning)
-  {
-#if 0
-    int angle;
-    bool isSpeaking;
-
-    bool success = rinterface->angle_in_degrees(angle, isSpeaking);
-
-    if (success)
-    {
-      RLOG(0, "angle = %d, isSpeaking = %s", angle, isSpeaking ? "true" : "false");
-    }
-    else
-    {
-      RLOG(0, "Error in angle_in_degrees");
-    }
-#else
-    int angle = rinterface->angle_in_degrees();
-    RLOG(0, "angle = %d", angle);
-#endif
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-}
-
 } // namespace aff
-
-
-#else
-
-#include <Rcs_macros.h>
-
-
-namespace aff
-{
-
-RespeakerUSBComponent::RespeakerUSBComponent(EntityBase* parent) : ComponentBase(parent)
-{
-  RFATAL("Respeaker has no USB support compiled in");
-}
-
-RespeakerUSBComponent::~RespeakerUSBComponent()
-{
-}
-
-
-
-void RespeakerUSBComponent::startUSBThread() {}
-void RespeakerUSBComponent::stopUSBThread() {}
-void RespeakerUSBComponent::usbThreadFunc() {}
-
-
-} // namespace aff
-
-
-#endif   // AFFACTION_WITH_RESPEAKER
