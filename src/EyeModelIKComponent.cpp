@@ -89,7 +89,8 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   a_des(nullptr), x_des(nullptr), dx_des(nullptr), dH(nullptr), dq_des(nullptr),
   panJointName("ptu_pan_joint"), tiltJointName("ptu_tilt_joint"),
   goalFilt(0.1, 1.0, parent->getDt(), 3),
-  eStop(false), alpha(0.05), lambda(1.0e-8), t_gesture(-1.0)
+  eStop(false), alpha(0.05), lambda(1.0e-8), t_gesture(-1.0),
+  gazeMode(GazeMode::HeadEyeApproximate)
 {
   this->controller = new Rcs::ControllerBase(RcsGraph_clone(graph));
   controller->setGraphOwnership(true);
@@ -112,8 +113,10 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   this->dq_des = MatNd_create(controller->getGraph()->dof, 1);
 
   MatNd_setElementsTo(a_des, 1.0);
-  MatNd_set(a_des, 1, 0, 0.0);   // Deactivate pan dof
-  MatNd_set(a_des, 2, 0, 0.0);   // Deactivate tilt dof
+  MatNd_set(a_des, 1, 0, 0.0);   // Deactivate right eye ball direction
+  MatNd_set(a_des, 2, 0, 0.0);   // Deactivate left eye ball direction
+  setPanJointActivation(false);   // Deactivate pan dof
+  setTiltJointActivation(false);  // Deactivate tilt dof
 
   REXEC(1)
   {
@@ -136,14 +139,25 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   Vec3d_add(gazePt, screen->A_BI.org, screen->A_BI.rot[2]);   // 1 m in front of screen
   goalFilt.init(gazePt);
 
+  // Initialize head gestures
+  HeadNod* nod = new HeadNod("yes", 3.0, jointIds);
+  nod->setAmplitude(RCS_DEG2RAD(6.0));
+  headGestures.push_back(std::unique_ptr<HeadNod>(nod));
+
+  HeadShake* shake = new HeadShake("no", 3.0, jointIds);
+  shake->setAmplitude(RCS_DEG2RAD(18.0));
+  headGestures.push_back(std::unique_ptr<HeadShake>(shake));
+
+  // Event subscriptions
   subscribe("PostUpdateGraph", &EyeModelIKComponent::onComputeIK);
   subscribe("InitFromState", &EyeModelIKComponent::onInitFromState);
   subscribe("EmergencyStop", &EyeModelIKComponent::onEmergencyStop);
   subscribe("EmergencyRecover", &EyeModelIKComponent::onEmergencyRecover);
-  subscribe("Render", &EyeModelIKComponent::onRender);
   subscribe("SetGazeTarget", &EyeModelIKComponent::onSetGazeTarget);
   subscribe("SetPupilWeight", &EyeModelIKComponent::onSetPupilWeight);
   subscribe("StartGesture", &EyeModelIKComponent::onStartGesture);
+  subscribe("GestureThreeRepetitions", &EyeModelIKComponent::onGestureThreeRepetitions);
+  //subscribe("Render", &EyeModelIKComponent::onRender);
 }
 
 EyeModelIKComponent::~EyeModelIKComponent()
@@ -165,17 +179,35 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
     return;
   }
 
-  if (headGestures.empty())
+  switch (this->gazeMode)
   {
-    HeadNod* nod = new HeadNod("yes", 3.0, jointIds);
-    nod->setAmplitude(RCS_DEG2RAD(6.0));
-    headGestures.push_back(std::unique_ptr<HeadNod>(nod));
+    case GazeMode::HeadEyeApproximate:
+    case GazeMode::HeadEyePrecise:
+      computeIK_headEye(desired, current);
+      break;
 
-    HeadShake* shake = new HeadShake("no", 3.0, jointIds);
-    shake->setAmplitude(RCS_DEG2RAD(18.0));
-    headGestures.push_back(std::unique_ptr<HeadShake>(shake));
+    case GazeMode::PupilDirection:
+      computeIK_gazeDir(desired, current);
+      break;
+
+    default:
+      RFATAL("Unknown gaze mode");
   }
 
+}
+
+void EyeModelIKComponent::computeIK_gazeDir(RcsGraph* desired, RcsGraph* current)
+{
+  MatNd_setElementsTo(a_des, 1.0);
+  MatNd_set(a_des, 0, 0, 0.0);   // Deactivate gaze point constraint
+  MatNd_set(a_des, 1, 0, 1.0);   // Activate right eye ball direction
+  MatNd_set(a_des, 2, 0, 1.0);   // Activate left eye ball direction
+  setPanJointActivation(false);   // Deactivate pan dof
+  setTiltJointActivation(false);   // Deactivate tilt dof
+}
+
+void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current)
+{
   // Update gaze target
   const RcsBody* gazePtDes = RcsGraph_getBodyByName(desired, gazeTargetBody.c_str());
   if (gazePtDes)
@@ -196,25 +228,24 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
   goalFilt.getPosition(x_des->ele);
 
   // Gesture generation - variant 1 (of 2)
-  // {
-  //   a_des->ele[1] = 0.0;
-  //   a_des->ele[2] = 0.0;
-  //   for (const auto& g : headGestures)
-  //   {
-  //     std::vector<double> panTilt = g->stepPrecise(controller, a_des, desired, getEntity()->getDt());
+  if (gazeMode==GazeMode::HeadEyePrecise)
+  {
+    setPanJointActivation(false);
+    setTiltJointActivation(false);
+    for (const auto& g : headGestures)
+    {
+      std::vector<double> panTilt = g->stepPrecise(controller, a_des, desired, getEntity()->getDt());
 
-  //     if (!panTilt.empty())
-  //     {
-  //       x_des->ele[3] = panTilt[0];
-  //       x_des->ele[4] = panTilt[1];
-  //       a_des->ele[1] = 1.0;
-  //       a_des->ele[2] = 1.0;
-  //       RLOG(0, "Gesture = %.2f %.2f", RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]));
-  //     }
-  //   }
-  // }
-
-
+      if (!panTilt.empty())
+      {
+        x_des->ele[7] = panTilt[0];
+        x_des->ele[8] = panTilt[1];
+        a_des->ele[3] = 1.0;
+        a_des->ele[4] = 1.0;
+        RLOG(0, "Gesture = %.2f %.2f", RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]));
+      }
+    }
+  }
 
   // Inverse kinematics. The vector x_des is all zero.
   controller->computeDX(dx_des, x_des);
@@ -239,9 +270,12 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
   }
 
   // Gesture generation - variant 2 (of 2)
-  for (const auto& g : headGestures)
+  if (gazeMode==GazeMode::HeadEyeApproximate)
   {
-    g->step(controller->getGraph(), desired, getEntity()->getDt());
+    for (const auto& g : headGestures)
+    {
+      g->step(controller->getGraph(), desired, getEntity()->getDt());
+    }
   }
 
 }
@@ -266,18 +300,28 @@ void EyeModelIKComponent::onInitFromState(const RcsGraph* target)
 
 void EyeModelIKComponent::onRender()
 {
-  //getEntity()->publish<std::string, const RcsGraph*>("RenderGraph", "Eye", controller->getGraph());
+  getEntity()->publish<std::string, const RcsGraph*>("RenderGraph", "Eye", controller->getGraph());
 }
 
 void EyeModelIKComponent::onSetGazeTarget(std::string bdyName)
 {
-  gazeTargetBody = bdyName;
+  this->gazeTargetBody = bdyName;
+
+  MatNd_setElementsTo(this->a_des, 1.0);
+  MatNd_set(this->a_des, 1, 0, 0.0);   // Deactivate right eye ball direction
+  MatNd_set(this->a_des, 2, 0, 0.0);   // Deactivate left eye ball direction
+  MatNd_set(this->a_des, 3, 0, 0.0);   // Deactivate pan dof
+  MatNd_set(this->a_des, 4, 0, 0.0);   // Deactivate tilt dof
 }
 
 std::vector<std::string> EyeModelIKComponent::createTasksXML() const
 {
   std::vector<std::string> tasks;
   tasks.push_back("<Task name=\"GazePoint\" effector=\"" + ActionEyeGaze::getGazePointName() + "\" controlVariable=\"XYZ\" />");
+
+  tasks.push_back("<Task name=\"RightEyeBallDir\" effector=\"RightEyeBall\" controlVariable=\"POLAR\" />");
+  tasks.push_back("<Task name=\"LeftEyeBallDir\" effector=\"LeftEyeBall\" controlVariable=\"POLAR\" />");
+
   tasks.push_back("<Task name=\"Pan\" jnt=\"" + panJointName + "\" controlVariable=\"Joint\" />");
   tasks.push_back("<Task name=\"Tilt\" jnt=\"" + tiltJointName + "\" controlVariable=\"Joint\" />");
 
@@ -303,6 +347,11 @@ void EyeModelIKComponent::onSetPupilWeight(double weight)
   setPupilSpeedWeight(controller->getGraph(), weight);
 }
 
+void EyeModelIKComponent::onGestureThreeRepetitions(std::string gestureName, double gestureAmplitude)
+{
+  onStartGesture(gestureName, gestureAmplitude, 3);
+}
+
 void EyeModelIKComponent::onStartGesture(std::string gestureName, double gestureAmplitude, int numTurns)
 {
   for (auto& g : headGestures)
@@ -319,12 +368,12 @@ void EyeModelIKComponent::onStartGesture(std::string gestureName, double gesture
 
 void EyeModelIKComponent::setPanJointActivation(bool enable)
 {
-  MatNd_set(a_des, 1, 0, enable ? 1.0 : 0.0);
+  MatNd_set(a_des, 3, 0, enable ? 1.0 : 0.0);
 }
 
 void EyeModelIKComponent::setTiltJointActivation(bool enable)
 {
-  MatNd_set(a_des, 2, 0, enable ? 1.0 : 0.0);
+  MatNd_set(a_des, 4, 0, enable ? 1.0 : 0.0);
 }
 
 // 0: Neck only, 1: pupils only

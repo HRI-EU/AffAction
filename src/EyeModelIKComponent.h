@@ -48,6 +48,11 @@ class EyeModelIKComponent : public ComponentBase
 {
 public:
 
+  enum class GazeMode { HeadEyeApproximate,  // Coordinated head-eye with Jacobian approximation
+                        HeadEyePrecise,      // Coordinated head-eye with task constraints
+                        PupilDirection       // Individual pupil's gaze direction
+                      };
+
   EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph);
   virtual ~EyeModelIKComponent();
 
@@ -65,10 +70,15 @@ private:
   void onRender();
   void onSetGazeTarget(std::string bdyName);
   void onStartGesture(std::string gestureName, double amplitude, int numTurns);
+  void onGestureThreeRepetitions(std::string gestureName, double gestureAmplitude);
   void onSetPupilWeight(double weight);
 
   void setPanJointActivation(bool enable);
   void setTiltJointActivation(bool enable);
+
+  void computeIK_headEye(RcsGraph* desired, RcsGraph* current);
+  void computeIK_gazeDir(RcsGraph* desired, RcsGraph* current);
+
 
   std::vector<std::string> createTasksXML() const;
   std::vector<int> jointIds;
@@ -89,6 +99,7 @@ private:
   double alpha;
   double lambda;
   double t_gesture;
+  GazeMode gazeMode;
 
   std::vector<std::unique_ptr<HeadGesture>> headGestures;
 
