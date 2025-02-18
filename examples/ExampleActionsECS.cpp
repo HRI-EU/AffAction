@@ -540,7 +540,7 @@ bool ExampleActionsECS::initAlgo()
     }
     else
     {
-      RLOG(1, "Eye model enabled, but not existent int he graph - skipping eye IK");
+      RLOG(1, "Eye model enabled, but not existent in the graph - skipping eye IK");
       eyeIkEnabled = false;
     }
   }
@@ -2168,7 +2168,7 @@ void ExampleActionsECS::updateUI()
 void ExampleActionsECS::setSyncMode(std::string syncMode)
 {
   ExampleBase::setSyncMode(syncMode);
-  
+
   if (syncMode=="External")
   {
     blockingMainThread = true;
