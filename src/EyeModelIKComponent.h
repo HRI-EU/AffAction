@@ -71,13 +71,17 @@ private:
   void onGestureThreeRepetitions(std::string gestureName, double gestureAmplitude);
   void onSetPupilWeight(double weight);
   void onEyeDirCommand(std::string sixValues);
+  void onGazeFromString(std::string jsonString);
 
-  void setPanJointActivation(bool enable);
-  void setTiltJointActivation(bool enable);
-
+  bool setTaskActivation(const std::string& taskName, bool enable);
   void computeIK_headEye(RcsGraph* desired, RcsGraph* current);
   void computeIK_gazeDir(RcsGraph* desired, RcsGraph* current);
 
+  const RcsBody* rightPupil() const;
+  const RcsBody* leftPupil() const;
+  const RcsBody* rightEyeBall() const;
+  const RcsBody* leftEyeBall() const;
+  const RcsBody* screen() const;
 
   std::vector<std::string> createTasksXML() const;
   std::vector<int> jointIds;

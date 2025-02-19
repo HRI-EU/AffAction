@@ -2600,4 +2600,39 @@ public:
 
 RCS_REGISTER_EXAMPLE(ExampleJacoGen3, "Actions", "Jaco Gen3 test");
 
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleGazeWebsocket : public ExampleActionsECS
+{
+public:
+
+  ExampleGazeWebsocket(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start python program to send websocket gaze command: python smile_websocket.py");
+  }
+
+  virtual ~ExampleGazeWebsocket()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    componentArgs = "-websocket  -websocket_eventToPublish SetGazeFromString";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start python program to send websocket gaze command: python smile_websocket.py\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleGazeWebsocket, "Actions", "Gaze with websocket");
+
 }   // namespace aff

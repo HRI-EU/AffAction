@@ -414,11 +414,17 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
 
   if (dryRun)
   {
-    argP.hasArgument("-websocket", "Start with websocket connection on port 35000");
+    argP.hasArgument("-websocket", "Start with websocket connection");
+    argP.hasArgument("-websocket_port", "Websocket port (default: 35000)");
+    argP.hasArgument("-websocket_eventToPublish", "Name of published event (default: ActionSequence)");
   }
   else if (getKey(argvStrVec, "-websocket"))
   {
-    components.push_back(new WebsocketActionComponent(&entity));
+    int port = 35000;
+    std::string eventToPublish = "ActionSequence";
+    getKeyValuePair(argvStrVec, "-websocket_port", port);
+    getKeyValuePair(argvStrVec, "-websocket_eventToPublish", eventToPublish);
+    components.push_back(new WebsocketActionComponent(&entity, port, eventToPublish));
   }
 
   // The debug graphics will be handled in initGraphics.
