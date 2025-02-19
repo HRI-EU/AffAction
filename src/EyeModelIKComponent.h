@@ -57,8 +57,6 @@ public:
   virtual ~EyeModelIKComponent();
 
   static bool hasEyeModel(const RcsGraph* graph);
-  void setPanJointName(const std::string& name);
-  void setTiltJointName(const std::string& name);
   bool setPupilSpeedWeight(RcsGraph* graph, double weight);
 
 private:
@@ -72,6 +70,7 @@ private:
   void onStartGesture(std::string gestureName, double amplitude, int numTurns);
   void onGestureThreeRepetitions(std::string gestureName, double gestureAmplitude);
   void onSetPupilWeight(double weight);
+  void onEyeDirCommand(std::string sixValues);
 
   void setPanJointActivation(bool enable);
   void setTiltJointActivation(bool enable);
@@ -91,9 +90,8 @@ private:
   MatNd* dH;
   MatNd* dq_des;
   std::string gazeTargetBody;
-  std::string panJointName;   // default: "ptu_pan_joint"
-  std::string tiltJointName;  // default: "ptu_tilt_joint"
   Rcs::RampFilterND goalFilt;
+  double leftEyeDirCommand[3], rightEyeDirCommand[3];
 
   bool eStop;
   double alpha;

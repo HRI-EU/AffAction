@@ -38,8 +38,26 @@
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
 #include <Rcs_body.h>
+#include <Rcs_utils.h>
+#include <Rcs_utilsCPP.h>
 
 #include <unordered_set>
+
+
+
+static const std::string taskNamePan             = "Pan";
+static const std::string taskNameTilt            = "Tilt";
+static const std::string taskNameLeftEyeBallDir  = "LeftEyeBallDir";
+static const std::string taskNameRightEyeBallDir = "RightEyeBallDir";
+static const std::string taskNameGazePointLeft   = "GazeL";
+static const std::string taskNameGazePointRight  = "GazeR";
+
+static const std::string panJointName            = "ptu_pan_joint";
+static const std::string tiltJointName           = "ptu_tilt_joint";
+
+static const std::string rightEyeBallName        = "RightEyeBall";
+static const std::string leftEyeBallName         = "LeftEyeBall";
+
 
 
 
@@ -87,7 +105,6 @@ namespace aff
 EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph) :
   ComponentBase(parent), controller(nullptr), ikSolver(nullptr),
   a_des(nullptr), x_des(nullptr), dx_des(nullptr), dH(nullptr), dq_des(nullptr),
-  panJointName("ptu_pan_joint"), tiltJointName("ptu_tilt_joint"),
   goalFilt(0.1, 1.0, parent->getDt(), 3),
   eStop(false), alpha(0.05), lambda(1.0e-8), t_gesture(-1.0),
   gazeMode(GazeMode::HeadEyeApproximate)
@@ -113,8 +130,8 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   this->dq_des = MatNd_create(controller->getGraph()->dof, 1);
 
   MatNd_setElementsTo(a_des, 1.0);
-  MatNd_set(a_des, 1, 0, 0.0);   // Deactivate right eye ball direction
-  MatNd_set(a_des, 2, 0, 0.0);   // Deactivate left eye ball direction
+  MatNd_set(a_des, 1, 0, 0.0);    // Deactivate right eye ball direction
+  MatNd_set(a_des, 2, 0, 0.0);    // Deactivate left eye ball direction
   setPanJointActivation(false);   // Deactivate pan dof
   setTiltJointActivation(false);  // Deactivate tilt dof
 
@@ -132,12 +149,21 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   bdyNames.push_back(ActionEyeGaze::getLeftPupilName());
   this->jointIds = getEyeModelJoints(graph, bdyNames);
 
-  // Initialize gaze point comliant with the gaze
+  // Initialize gaze point consistent with the gaze
   const RcsBody* screen = RcsGraph_getBodyByName(graph, ActionEyeGaze::getScreenName().c_str());
   RCHECK(screen);
   double gazePt[3];
   Vec3d_add(gazePt, screen->A_BI.org, screen->A_BI.rot[2]);   // 1 m in front of screen
   goalFilt.init(gazePt);
+
+  // Inititlize desired eye ball direction (for PupilDirection mode). The x-axis
+  // points forward.
+  const RcsBody* rightEyeBall = RcsGraph_getBodyByName(graph, rightEyeBallName.c_str());
+  RCHECK(rightEyeBall);
+  const RcsBody* leftEyeBall = RcsGraph_getBodyByName(graph, leftEyeBallName.c_str());
+  RCHECK(leftEyeBall);
+  Vec3d_copy(rightEyeDirCommand, rightEyeBall->A_BI.rot[0]);
+  Vec3d_copy(leftEyeDirCommand, leftEyeBall->A_BI.rot[0]);
 
   // Initialize head gestures
   HeadNod* nod = new HeadNod("yes", 3.0, jointIds);
@@ -157,7 +183,16 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   subscribe("SetPupilWeight", &EyeModelIKComponent::onSetPupilWeight);
   subscribe("StartGesture", &EyeModelIKComponent::onStartGesture);
   subscribe("GestureThreeRepetitions", &EyeModelIKComponent::onGestureThreeRepetitions);
+  subscribe("SetEyeBallDirection", &EyeModelIKComponent::onEyeDirCommand);
   //subscribe("Render", &EyeModelIKComponent::onRender);
+
+  // Generic checks
+  RCHECK(controller->getTaskArrayIndex(taskNamePan.c_str())!=-1);
+  RCHECK(controller->getTaskArrayIndex(taskNameTilt.c_str())!=-1);
+  RCHECK(controller->getTaskArrayIndex(taskNameLeftEyeBallDir.c_str())!=-1);
+  RCHECK(controller->getTaskArrayIndex(taskNameRightEyeBallDir.c_str())!=-1);
+  RCHECK(controller->getTaskIndex(taskNameGazePointLeft.c_str())!=-1);
+  RCHECK(controller->getTaskIndex(taskNameGazePointRight.c_str())!=-1);
 }
 
 EyeModelIKComponent::~EyeModelIKComponent()
@@ -198,12 +233,53 @@ void EyeModelIKComponent::onComputeIK(RcsGraph* desired, RcsGraph* current)
 
 void EyeModelIKComponent::computeIK_gazeDir(RcsGraph* desired, RcsGraph* current)
 {
+  // Keep consistent with gaze Diretion
+  goalFilt.iterate();
+
   MatNd_setElementsTo(a_des, 1.0);
   MatNd_set(a_des, 0, 0, 0.0);   // Deactivate gaze point constraint
   MatNd_set(a_des, 1, 0, 1.0);   // Activate right eye ball direction
   MatNd_set(a_des, 2, 0, 1.0);   // Activate left eye ball direction
-  setPanJointActivation(false);   // Deactivate pan dof
-  setTiltJointActivation(false);   // Deactivate tilt dof
+  setPanJointActivation(true);   // Deactivate pan dof
+  setTiltJointActivation(true);  // Deactivate tilt dof
+
+  const int gazeLIdx = controller->getTaskIndex(taskNameGazePointLeft.c_str());
+  const int gazeRIdx = controller->getTaskIndex(taskNameGazePointRight.c_str());
+  MatNd_set(a_des, gazeLIdx, 0, 0.0);
+  MatNd_set(a_des, gazeRIdx, 0, 0.0);
+
+  const int leftEyeIdx = controller->getTaskArrayIndex(taskNameLeftEyeBallDir.c_str());
+  const int rightEyeIdx = controller->getTaskArrayIndex(taskNameRightEyeBallDir.c_str());
+
+  Vec3d_getPolarAngles(&this->x_des->ele[leftEyeIdx], leftEyeDirCommand);
+  Vec3d_getPolarAngles(&this->x_des->ele[rightEyeIdx], rightEyeDirCommand);
+  RLOG(0, "Left eye dir: %f %f %f", leftEyeDirCommand[0], leftEyeDirCommand[1], leftEyeDirCommand[2]);
+  RLOG(0, "Left polar angles: %f %f",
+       RCS_RAD2DEG(this->x_des->ele[leftEyeIdx]),
+       RCS_RAD2DEG(this->x_des->ele[leftEyeIdx+1]));
+
+  // Inverse kinematics. The vector x_des is all zero.
+  controller->computeDX(dx_des, x_des);
+  controller->computeJointlimitGradient(dH);
+  MatNd_constMulSelf(dH, this->alpha);
+  ikSolver->solveRightInverse(dq_des, dx_des, dH, a_des, lambda);
+  RcsGraph_limitJointSpeeds(controller->getGraph(), dq_des,
+                            getEntity()->getDt(), RcsStateFull);
+  MatNd_addSelf(controller->getGraph()->q, dq_des);
+
+  // Forward kinematics including velocities
+  MatNd_constMulSelf(dq_des, 1.0 / getEntity()->getDt());
+  RcsGraph_setState(controller->getGraph(), NULL, dq_des);
+
+  // Apply all eye dof coordinates to constrained gaze dof in target graph
+  for (const auto& j : jointIds)
+  {
+    desired->joints[j].constrained = true;
+    desired->joints[j].weightMetric = controller->getGraph()->joints[j].weightMetric;
+    const unsigned int jidx = controller->getGraph()->joints[j].jointIndex;
+    desired->q->ele[jidx] = controller->getGraph()->q->ele[jidx];
+  }
+
 }
 
 void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current)
@@ -227,22 +303,28 @@ void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current
   goalFilt.iterate();
   goalFilt.getPosition(x_des->ele);
 
+  MatNd_setElementsTo(this->a_des, 1.0);
+  MatNd_set(this->a_des, 1, 0, 0.0);   // Deactivate right eye ball direction
+  MatNd_set(this->a_des, 2, 0, 0.0);   // Deactivate left eye ball direction
+  setPanJointActivation(false);
+  setTiltJointActivation(false);
+
   // Gesture generation - variant 1 (of 2)
   if (gazeMode==GazeMode::HeadEyePrecise)
   {
-    setPanJointActivation(false);
-    setTiltJointActivation(false);
     for (const auto& g : headGestures)
     {
       std::vector<double> panTilt = g->stepPrecise(controller, a_des, desired, getEntity()->getDt());
 
       if (!panTilt.empty())
       {
-        x_des->ele[7] = panTilt[0];
-        x_des->ele[8] = panTilt[1];
-        a_des->ele[3] = 1.0;
-        a_des->ele[4] = 1.0;
-        RLOG(0, "Gesture = %.2f %.2f", RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]));
+        const int panIdx = controller->getTaskArrayIndex(taskNamePan.c_str());
+        const int tiltIdx = controller->getTaskArrayIndex(taskNameTilt.c_str());
+        x_des->ele[panIdx] = panTilt[0];
+        x_des->ele[tiltIdx] = panTilt[1];
+        setPanJointActivation(true);
+        setTiltJointActivation(true);
+        //RLOG(0, "Gesture = %.2f %.2f", RCS_RAD2DEG(panTilt[0]), RCS_RAD2DEG(panTilt[1]));
       }
     }
   }
@@ -305,41 +387,71 @@ void EyeModelIKComponent::onRender()
 
 void EyeModelIKComponent::onSetGazeTarget(std::string bdyName)
 {
+  this->gazeMode = GazeMode::HeadEyeApproximate;
   this->gazeTargetBody = bdyName;
-
-  MatNd_setElementsTo(this->a_des, 1.0);
-  MatNd_set(this->a_des, 1, 0, 0.0);   // Deactivate right eye ball direction
-  MatNd_set(this->a_des, 2, 0, 0.0);   // Deactivate left eye ball direction
-  MatNd_set(this->a_des, 3, 0, 0.0);   // Deactivate pan dof
-  MatNd_set(this->a_des, 4, 0, 0.0);   // Deactivate tilt dof
 }
+
+void EyeModelIKComponent::onEyeDirCommand(std::string sixValues)
+{
+  this->gazeMode = GazeMode::PupilDirection;
+
+  std::vector<std::string> values = Rcs::String_split(sixValues, " ");
+  RCHECK(values.size()==6);
+
+  for (int i=0; i<3; ++i)
+  {
+    leftEyeDirCommand[i] = String_toDouble_l(values[i].c_str());
+    rightEyeDirCommand[i] = String_toDouble_l(values[i+3].c_str());
+  }
+
+  Vec3d_normalizeSelf(leftEyeDirCommand);
+  Vec3d_normalizeSelf(rightEyeDirCommand);
+
+  const RcsBody* rightPupil = RcsGraph_getBodyByName(controller->getGraph(), ActionEyeGaze::getRightPupilName().c_str());
+  const RcsBody* leftPupil = RcsGraph_getBodyByName(controller->getGraph(), ActionEyeGaze::getLeftPupilName().c_str());
+  RCHECK(rightPupil);
+  RCHECK(leftPupil);
+
+  double rightPt[3], leftPt[3], midPt[3];
+  Vec3d_add(rightPt, rightPupil->A_BI.org, rightEyeDirCommand);
+  Vec3d_add(leftPt, leftPupil->A_BI.org, leftEyeDirCommand);
+  Vec3d_addAndConstMul(midPt, rightPt, leftPt, 0.5);
+
+  goalFilt.setTarget(midPt);
+}
+
+/*
+
+GazePoint         XYZ
+RightEyeBallDir   POLAR
+LeftEyeBallDir    POLAR
+Pan               Joint
+Tilt              Joint
+LeftPupil         Z
+LeftPupil         POLAR
+LeftGazePoint     XYZ
+RightPupil        Z
+RightPupil        POLAR
+RightGazePoint    XYZ
+
+ */
 
 std::vector<std::string> EyeModelIKComponent::createTasksXML() const
 {
   std::vector<std::string> tasks;
   tasks.push_back("<Task name=\"GazePoint\" effector=\"" + ActionEyeGaze::getGazePointName() + "\" controlVariable=\"XYZ\" />");
 
-  tasks.push_back("<Task name=\"RightEyeBallDir\" effector=\"RightEyeBall\" controlVariable=\"POLAR\" />");
-  tasks.push_back("<Task name=\"LeftEyeBallDir\" effector=\"LeftEyeBall\" controlVariable=\"POLAR\" />");
+  tasks.push_back("<Task name=\"" + taskNameRightEyeBallDir + "\" effector=\"" + rightEyeBallName + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />");
+  tasks.push_back("<Task name=\"" + taskNameLeftEyeBallDir + "\" effector=\"" + leftEyeBallName + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />");
 
-  tasks.push_back("<Task name=\"Pan\" jnt=\"" + panJointName + "\" controlVariable=\"Joint\" />");
-  tasks.push_back("<Task name=\"Tilt\" jnt=\"" + tiltJointName + "\" controlVariable=\"Joint\" />");
+  tasks.push_back("<Task name=\"" + taskNamePan + "\" jnt=\"" + panJointName + "\" controlVariable=\"Joint\" />");
+  tasks.push_back("<Task name=\"" + taskNameTilt + "\" jnt=\"" + tiltJointName + "\" controlVariable=\"Joint\" />");
 
   auto eyeTasks = ActionEyeGaze::createEyeTasksXML();
   tasks.insert(tasks.end(), eyeTasks.begin(), eyeTasks.end());
 
 
   return tasks;
-}
-
-void EyeModelIKComponent::setPanJointName(const std::string& name)
-{
-  panJointName = name;
-}
-
-void EyeModelIKComponent::setTiltJointName(const std::string& name)
-{
-  tiltJointName = name;
 }
 
 void EyeModelIKComponent::onSetPupilWeight(double weight)
@@ -390,13 +502,13 @@ bool EyeModelIKComponent::setPupilSpeedWeight(RcsGraph* graph, double weight)
 
   if (!pan)
   {
-    RLOG_CPP(1, "Joint with name \"ptu_pan_joint\" not found - skipping setting weight");
+    RLOG_CPP(1, "Joint with name \"" << panJointName << "\" not found - skipping setting weight");
     return false;
   }
 
   if (!tilt)
   {
-    RLOG_CPP(1, "Joint with name \"ptu_tilt_joint\" not found - skipping setting weight");
+    RLOG_CPP(1, "Joint with name \"" << tiltJointName << "\" not found - skipping setting weight");
     return false;
   }
 
