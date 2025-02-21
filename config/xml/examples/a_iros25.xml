@@ -1,0 +1,64 @@
+<Action name="high_pose" >
+
+<Task name="j2s7s300_joint_1_right" controlVariable="Joint" jnt="j2s7s300_joint_1_right" active="true" />
+<Task name="j2s7s300_joint_2_right" controlVariable="Joint" jnt="j2s7s300_joint_2_right" active="true" />
+<Task name="j2s7s300_joint_3_right" controlVariable="Joint" jnt="j2s7s300_joint_3_right" active="true" />
+<Task name="j2s7s300_joint_4_right" controlVariable="Joint" jnt="j2s7s300_joint_4_right" active="true" />
+<Task name="j2s7s300_joint_5_right" controlVariable="Joint" jnt="j2s7s300_joint_5_right" active="true" />
+<Task name="j2s7s300_joint_6_right" controlVariable="Joint" jnt="j2s7s300_joint_6_right" active="true" />
+<Task name="j2s7s300_joint_7_right" controlVariable="Joint" jnt="j2s7s300_joint_7_right" active="true" />
+<Task name="j2s7s300_joint_1_left" controlVariable="Joint" jnt="j2s7s300_joint_1_left" active="true" />
+<Task name="j2s7s300_joint_2_left" controlVariable="Joint" jnt="j2s7s300_joint_2_left" active="true" />
+<Task name="j2s7s300_joint_3_left" controlVariable="Joint" jnt="j2s7s300_joint_3_left" active="true" />
+<Task name="j2s7s300_joint_4_left" controlVariable="Joint" jnt="j2s7s300_joint_4_left" active="true" />
+<Task name="j2s7s300_joint_5_left" controlVariable="Joint" jnt="j2s7s300_joint_5_left" active="true" />
+<Task name="j2s7s300_joint_6_left" controlVariable="Joint" jnt="j2s7s300_joint_6_left" active="true" />
+<Task name="j2s7s300_joint_7_left" controlVariable="Joint" jnt="j2s7s300_joint_7_left" active="true" />
+
+
+<ConstraintSet type="ActivationSet" >
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_1_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_1_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_2_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_2_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_3_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_3_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_4_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_4_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_5_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_5_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_6_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_6_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_7_right" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_7_right" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_1_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_1_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_2_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_2_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_3_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_3_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_4_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_4_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_5_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_5_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_6_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_6_left" />
+  <Activation t="0.05" switchesOn="true" horizon="0.5" trajectory="j2s7s300_joint_7_left" />
+  <Activation t="4.53" switchesOn="false" horizon="0.5" trajectory="j2s7s300_joint_7_left" />
+  <Constraint t="4.03" pos="0.562226" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_1_right 0" id="169"  />
+  <Constraint t="4.03" pos="3.66519" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_2_right 0" id="170"  />
+  <Constraint t="4.03" pos="-2.46714" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_3_right 0" id="171"  />
+  <Constraint t="4.03" pos="1.39626" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_4_right 0" id="172"  />
+  <Constraint t="4.03" pos="0.329971" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_5_right 0" id="173"  />
+  <Constraint t="4.03" pos="3.47445" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_6_right 0" id="174"  />
+  <Constraint t="4.03" pos="-1.39626" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_7_right 0" id="175"  />
+  <Constraint t="4.03" pos="-0.562234" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_1_left 0" id="176"  />
+  <Constraint t="4.03" pos="2.61799" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_2_left 0" id="177"  />
+  <Constraint t="4.03" pos="2.46712" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_3_left 0" id="178"  />
+  <Constraint t="4.03" pos="4.88692" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_4_left 0" id="179"  />
+  <Constraint t="4.03" pos="-0.32989" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_5_left 0" id="180"  />
+  <Constraint t="4.03" pos="2.80874" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_6_left 0" id="181"  />
+  <Constraint t="4.03" pos="1.39626" vel="0" acc="0" flag="7" trajectory="j2s7s300_joint_7_left 0" id="182"  />
+</ConstraintSet>
+
+</Action>

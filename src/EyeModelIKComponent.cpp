@@ -42,6 +42,7 @@
 #include <Rcs_body.h>
 #include <Rcs_utils.h>
 #include <Rcs_utilsCPP.h>
+#include <COSNode.h>
 
 #include <unordered_set>
 
@@ -63,6 +64,7 @@ static const std::string rightEyeBallName        = "RightEyeBall";
 static const std::string leftEyeBallName         = "LeftEyeBall";
 
 
+static HTr cosTrf;
 
 
 static std::vector<int> getJointIndexBackwardRecursion(const RcsGraph* graph, const std::string& bdyName)
@@ -173,7 +175,7 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   subscribe("GestureThreeRepetitions", &EyeModelIKComponent::onGestureThreeRepetitions);
   subscribe("SetEyeBallDirection", &EyeModelIKComponent::onEyeDirCommand);
   subscribe("SetGazeFromString", &EyeModelIKComponent::onGazeFromString);
-  //subscribe("Render", &EyeModelIKComponent::onRender);
+  subscribe("Render", &EyeModelIKComponent::onRender);
 
   // Generic checks
   RCHECK(controller->getTask(taskNamePan));
@@ -367,7 +369,20 @@ void EyeModelIKComponent::onInitFromState(const RcsGraph* target)
 
 void EyeModelIKComponent::onRender()
 {
-  getEntity()->publish<std::string, const RcsGraph*>("RenderGraph", "Eye", controller->getGraph());
+  //getEntity()->publish<std::string, const RcsGraph*>("RenderGraph", "Eye", controller->getGraph());
+  static size_t count = 0;
+
+  count++;
+
+  if (count==300)
+  {
+    HTr_setIdentity(&cosTrf);
+    cosTrf.org[2] = 2.0;
+    osg::ref_ptr<Rcs::COSNode> cn = new Rcs::COSNode(0.5);
+    cn->makeDynamic(cosTrf.org, cosTrf.rot);
+    getEntity()->publish("AddNode", static_cast<osg::ref_ptr<osg::Node>>(cn));
+  }
+
 }
 
 void EyeModelIKComponent::onSetGazeTarget(std::string bdyName)
@@ -483,6 +498,7 @@ void EyeModelIKComponent::onGazeFromString(std::string jsonString)
       double A_BI[3][3];
       Quat_toRotationMatrix(A_BI, headQuat.data());
       Mat3d_printCommentDigits("A_BI", A_BI, 5);
+      Mat3d_copy(cosTrf.rot, A_BI);
       const int taskIdx = controller->getTaskArrayIndex(taskNameHeadOri.c_str());
       Vec3d_getPolarAngles(&this->x_des->ele[taskIdx], A_BI[0]);
       this->gazeMode = GazeMode::PupilDirection;
