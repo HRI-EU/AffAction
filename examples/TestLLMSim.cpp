@@ -32,7 +32,6 @@
 *******************************************************************************/
 
 #include <ExampleActionsECS.h>
-//#include <LandmarkZmqComponent.h>
 #include <HardwareComponent.h>
 #include <StringParserTools.hpp>
 #include <Rcs_macros.h>

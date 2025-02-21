@@ -43,21 +43,6 @@ IF (WIN32)
 ENDIF()
 
 ################################################################################
-# Macro to copy dlls into bin directory
-################################################################################
-#IF (NOT COMMAND COPY_DLL)
-#MACRO(COPY_DLL libname)
-#IF (WIN32)
-#  ADD_CUSTOM_COMMAND(
-#      TARGET ${libname} POST_BUILD
-#      COMMAND ${CMAKE_COMMAND} -E copy
-#      ${LIBRARY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/${libname}.dll
-#      ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/${libname}.dll)
-#ENDIF(WIN32)
-#ENDMACRO()
-#ENDIF(NOT COMMAND COPY_DLL)
-
-################################################################################
 # Check if project is stand-alone or inside tree with dependencies
 ################################################################################
 SET(STANDALONE_PROJECT OFF)
@@ -65,8 +50,6 @@ IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   PROJECT(AffAction)
   SET(OpenGL_GL_PREFERENCE GLVND) # Removes warning OpenGL_GL_PREFERENCE has not been set to "GLVND" or "LEGACY"
   SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-#  SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-#  SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
   SET(RCS_CONFIG_DIR "$ENV{SIT}/Libraries/Rcs/1.0/config")
   LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
   LIST(APPEND CMAKE_PREFIX_PATH $ENV{SIT}/Libraries/Rcs/1.0/share/cmake/Rcs)
@@ -322,12 +305,7 @@ IF (AFFACTION_WITH_PCAN_BASIC)
   IF(TARGET PCAN-Basic::PCAN-Basic)
     TARGET_LINK_LIBRARIES(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
     TARGET_COMPILE_DEFINITIONS(AffAction PRIVATE -DAFFACTION_WITH_PCAN_BASIC)
-    MESSAGE("PCAN_BASIC_DLLS: ${PCAN_BASIC_DLLS}")
-#    ADD_CUSTOM_COMMAND(
-#      TARGET AffAction POST_BUILD
-#      COMMAND ${CMAKE_COMMAND} -E copy
-#      ${PCAN_BASIC_DLLS}
-#      ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE})
+    MESSAGE(STATUS "Linking AffAction with PCAN_BASIC_DLLS: ${PCAN_BASIC_DLLS}")
   ENDIF()
 ENDIF(AFFACTION_WITH_PCAN_BASIC)
 
@@ -376,12 +354,12 @@ ENDIF()
 
 IF(AFFACTION_WITH_OPTIM)
   IF(TARGET RcsOptim)
-    MESSAGE(STATUS "Building AffAction with optimization support")
+    MESSAGE(STATUS "Compiling AffAction with optimization support")
     #LIST(APPEND ActionBase src/OptimizationSet.cpp)
     TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DSMILEACTIONS_WITH_OPTIM)
     TARGET_LINK_LIBRARIES(AffAction PRIVATE RcsOptim)
   ELSE()
-    MESSAGE(STATUS "Building AffAction without optimization support")
+    MESSAGE(STATUS "Compiling AffAction without optimization support")
   ENDIF()
 
 ENDIF()
@@ -459,7 +437,7 @@ INSTALL(TARGETS AffAction EXPORT AffActionExport
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/AffAction)
 
-INSTALL(TARGETS TestLLMSim TestAffordance 
+INSTALL(TARGETS TestLLMSim TestAffordance ExampleRunnerAff
         RUNTIME DESTINATION bin 
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/AffAction)
@@ -482,11 +460,6 @@ ENDIF(WIN32)
 # Mark for export
 ###############################################################################
 #SMILEACTIONS_ADD_EXPORT_LIBRARY(SmileActions)
-
-###############################################################################
-# copy the .dll file to the same folder as the executable
-###############################################################################
-#COPY_DLL(AffAction)
 
 INCLUDE(CopyOrLinkConfig)
 RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}/config)
