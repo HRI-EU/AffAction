@@ -252,6 +252,7 @@ void ActionGet::init(const ActionScene& domain,
   else
   {
     Vec3d_copy(castFrom, objBdy->A_BI.org);   // Body origin in case no AABB can be determined.
+    castFrom[2] += 1.0e-8;
   }
 
   const RcsBody* surfaceBdy = RcsBody_closestRigidBodyInDirection(graph, castFrom, Vec3d_ez(), surfPt, &dMin);

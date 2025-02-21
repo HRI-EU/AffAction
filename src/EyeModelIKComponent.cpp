@@ -175,7 +175,7 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   subscribe("GestureThreeRepetitions", &EyeModelIKComponent::onGestureThreeRepetitions);
   subscribe("SetEyeBallDirection", &EyeModelIKComponent::onEyeDirCommand);
   subscribe("SetGazeFromString", &EyeModelIKComponent::onGazeFromString);
-  subscribe("Render", &EyeModelIKComponent::onRender);
+  //subscribe("Render", &EyeModelIKComponent::onRender);
 
   // Generic checks
   RCHECK(controller->getTask(taskNamePan));
