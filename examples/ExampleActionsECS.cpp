@@ -46,6 +46,8 @@
 #include <EventGui.h>
 #include <ConstraintFactory.h>
 #include <ActivationSet.h>
+#include <PositionConstraint.h>
+#include <VectorConstraint.h>
 
 #include <ForceDragger.h>
 #include <ExampleFactory.h>
@@ -2634,5 +2636,157 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleGazeWebsocket, "Actions", "Gaze with websocket");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+class ExamplePlayBackViapoints : public ExampleActionsECS
+{
+public:
+
+  ExamplePlayBackViapoints(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start python program to send websocket gaze command: python smile_websocket.py");
+  }
+
+  virtual ~ExamplePlayBackViapoints()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_iros25.xml";
+    //componentArgs = "-websocket  -websocket_eventToPublish SetGazeFromString";
+    return true;
+  }
+
+  virtual bool initGraphics()
+  {
+    bool success = ExampleActionsECS::initGraphics();
+    if (!success)
+    {
+      return false;
+    }
+
+    viewer->setKeyCallback('F', [this](char k)
+    {
+      RLOG(0, "Creating action file");
+      bool success = createActionFile();
+
+      if (!success)
+      {
+        RLOG(0, "Failed to create action file");
+      }
+      else
+      {
+        //entity.publish("ActionSequence", std::string("load action_iros.xml"));
+        entity.publish("PlanDFSEE", std::string("load action_iros.xml"));
+      }
+
+    }, "apply via point policy");
+
+    return success;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start python program to send websocket gaze command: python smile_websocket.py\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+  bool createActionFile(std::string inputFile="test_robot_traj.txt", std::string actionFile="action_iros.xml")
+  {
+    // Read data file
+    MatNd* trj = MatNd_createFromFile(inputFile.c_str());
+
+    if (!trj)
+    {
+      RLOG_CPP(1, "Failed to read input file: '" << inputFile << "'");
+      return false;
+    }
+
+    REXEC(1)
+    {
+      MatNd_printCommentDigits(inputFile.c_str(), trj, 5);
+    }
+
+    std::ofstream fd;
+    fd.open(actionFile.c_str());
+
+    if (!fd.good())
+    {
+      RLOG_CPP(1, "Failed to open file " << actionFile);
+      return false;
+    }
+
+    // Open set's xml description. The class name is polymorphic
+    fd << "<Action name='iros25' >" << std::endl << std::endl;
+
+    // Here come the tasks
+    std::string tasks;
+    tasks += "  <Task name='hand_right' controlVariable='XYZ' effector='hand_right_pincergrasp' refBdy='table' active='true' />\n";
+    tasks += "  <Task name='hand_left'  controlVariable='XYZ' effector='hand_left_pincergrasp'  refBdy='table' active='true' />\n";
+    tasks += "  <Task name='fingers_left'  controlVariable='Joints' jnts='j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left' />\n";
+    tasks += "  <Task name='fingers_right' controlVariable='Joints' jnts='j2s7s300_joint_finger_1_right j2s7s300_joint_finger_2_right j2s7s300_joint_finger_3_right' />\n";
+    fd << tasks << std::endl;
+
+    double t_final = MatNd_get(trj, trj->m-1, 0) + 2.0;
+
+    std::unique_ptr<tropic::ActivationSet> a = std::make_unique<tropic::ActivationSet>();
+    a->addActivation(0.05, true, 0.5, "hand_left");
+    a->addActivation(0.05, true, 0.5, "hand_right");
+    a->addActivation(0.05, true, 0.5, "fingers_left");
+    a->addActivation(0.05, true, 0.5, "fingers_right");
+    a->addActivation(t_final, false, 0.5, "hand_left");
+    a->addActivation(t_final, false, 0.5, "hand_right");
+    a->addActivation(t_final, false, 0.5, "fingers_left");
+    a->addActivation(t_final, false, 0.5, "fingers_right");
+
+    for (size_t i = 0; i < trj->m; ++i)
+    {
+      const double* row = MatNd_getRowPtr(trj, i);
+      int flag = 7;
+      //if (i > 0 && i < trj->m - 1)
+      //{
+      //  flag = 1;
+      //}
+
+      tropic::PositionConstraint* p = new tropic::PositionConstraint(row[0]+1.0, row[1], row[2], row[3], "hand_left", flag);
+      a->add(std::shared_ptr<tropic::PositionConstraint>(p));
+
+      if (row[4] < 0.5)  // Close fingers
+      {
+        std::vector<double> fingerAngles {0.6, 0.6, 0.6};
+        tropic::VectorConstraint* v = new tropic::VectorConstraint(row[0] + 1.0, fingerAngles, "fingers_left");
+        a->add(std::shared_ptr<tropic::VectorConstraint>(v));
+      }
+      else
+      {
+        std::vector<double> fingerAngles {0.01, 0.01, 0.01};
+        tropic::VectorConstraint* v = new tropic::VectorConstraint(row[0] + 1.0, fingerAngles, "fingers_left");
+        a->add(std::shared_ptr<tropic::VectorConstraint>(v));
+      }
+    }
+
+    a->toXML(fd, 2);
+    fd << std::endl;
+
+    // Close set's xml description
+    fd << "</Action>" << std::endl;
+
+    fd.close();
+
+    MatNd_destroy(trj);
+
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExamplePlayBackViapoints, "Actions", "Via point action");
 
 }   // namespace aff
