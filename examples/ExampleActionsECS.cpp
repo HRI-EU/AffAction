@@ -2649,7 +2649,6 @@ public:
 
   ExamplePlayBackViapoints(int argc, char** argv) : ExampleActionsECS(argc, argv)
   {
-    RMSG("Start python program to send websocket gaze command: python smile_websocket.py");
   }
 
   virtual ~ExamplePlayBackViapoints()
@@ -2660,6 +2659,8 @@ public:
   {
     bool res = ExampleActionsECS::parseArgs(parser);
     parser->getArgument("-debug", &debug, "Debug mode: no limits and checks");
+    parser->getArgument("-inputFile", &inputFile, "Input file name (default: %s)", inputFile.c_str());
+    parser->getArgument("-outputFile", &outputFile, "Output file name (default: %s)", outputFile.c_str());
 
     if (debug)
     {
@@ -2702,11 +2703,11 @@ public:
       {
         if (debug)
         {
-          entity.publish("ActionSequence", std::string("load action_iros.xml; pose default_up"));
+          entity.publish("ActionSequence", std::string("load action_iros.xml; pose default_top"));
         }
         else
         {
-          entity.publish("PlanDFSEE", std::string("load action_iros.xml; pose default_up"));
+          entity.publish("PlanDFSEE", std::string("load action_iros.xml; pose default_top"));
         }
       }
 
@@ -2717,7 +2718,7 @@ public:
 
   std::string help()
   {
-    std::string str = "Start python program to send websocket gaze command: python smile_websocket.py\n\n";
+    std::string str = "Push 'F' key to generate action from file 'test_robot_traj.txt' in the build folder\n\n";
     str += ExampleActionsECS::help();
     return str;
   }
@@ -2757,7 +2758,13 @@ public:
     tasks += "  <Task name='fingers_left'  controlVariable='Joints' jnts='j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left' />\n";
     fd << tasks << std::endl;
 
-    double t_final = MatNd_get(trj, trj->m-1, 0) + 2.0;
+    const double initialTimeoffset = 0.0;
+    const double finalTimeOffset = 0.0;
+
+    // Open fingers: 0.01, close fingers: 0.6
+    std::vector<double> fingersClosed = std::vector<double>(3, 0.6);
+    std::vector<double> fingersOpen = std::vector<double>(3, 0.01);
+    double t_final = MatNd_get(trj, trj->m-1, 0) + initialTimeoffset + finalTimeOffset;
 
     std::unique_ptr<tropic::ActivationSet> a = std::make_unique<tropic::ActivationSet>();
     a->addActivation(0.05, true, 0.5, "hand_left");
@@ -2767,29 +2774,15 @@ public:
     a->addActivation(0.05, true, 0.5, "hand_left_ori");
     a->addActivation(t_final, false, 0.5, "hand_left_ori");
 
-    a->add(std::make_shared<tropic::PolarConstraint>(10.0, 0.9*M_PI, 0.0, "hand_left_ori"));
+    a->add(std::make_shared<tropic::PolarConstraint>(5.0, 0.9*M_PI, 0.0, "hand_left_ori"));
 
+    // Go through all rows of the input file
     for (size_t i = 0; i < trj->m; ++i)
     {
       const double* row = MatNd_getRowPtr(trj, i);
-      int flag = 7;
-      //if (i > 0 && i < trj->m - 1)
-      //{
-      //  flag = 1;
-      //}
-
-      a->add(std::make_shared<tropic::PositionConstraint>(row[0]+1.0, row[1], row[2], row[3], "hand_left", flag));
-
-      if (row[4] < 0.5)  // Open fingers
-      {
-        std::vector<double> fingerAngles {0.01, 0.01, 0.01};
-        a->add(std::make_shared<tropic::VectorConstraint>(row[0] + 1.0, fingerAngles, "fingers_left"));
-      }
-      else
-      {
-        std::vector<double> fingerAngles {0.6, 0.6, 0.6};
-        a->add(std::make_shared<tropic::VectorConstraint>(row[0] + 1.0, fingerAngles, "fingers_left"));
-      }
+      const std::vector<double>& fingerAngles = (row[4] < 0.5) ? fingersOpen : fingersClosed;
+      a->add(std::make_shared<tropic::PositionConstraint>(row[0]+initialTimeoffset, row[1], row[2], row[3], "hand_left"));
+      a->add(std::make_shared<tropic::VectorConstraint>(row[0] + initialTimeoffset, fingerAngles, "fingers_left"));
     }
 
     a->toXML(fd, 2);
