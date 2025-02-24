@@ -449,7 +449,12 @@ static bool parseTransform(const nlohmann::json& jsonData, const std::string& he
   vit = headerIt->find("rotation");
   if (vit != headerIt->end())
   {
-    auto xIt = vit->find("x");
+    auto xIt = vit->find("w");
+    if (xIt != vit->end())
+    {
+      quat_.push_back(*xIt);
+    }
+    xIt = vit->find("x");
     if (xIt != vit->end())
     {
       quat_.push_back(*xIt);
@@ -460,11 +465,6 @@ static bool parseTransform(const nlohmann::json& jsonData, const std::string& he
       quat_.push_back(*xIt);
     }
     xIt = vit->find("z");
-    if (xIt != vit->end())
-    {
-      quat_.push_back(*xIt);
-    }
-    xIt = vit->find("w");
     if (xIt != vit->end())
     {
       quat_.push_back(*xIt);
