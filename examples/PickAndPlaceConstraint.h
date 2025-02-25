@@ -36,6 +36,17 @@
 #include "GraphConstraint.h"
 
 
+/*!
+ *  At time t, the following happens:
+ *  - If a rigid body is a child of the given gripper, it will be attached to
+ *    the closest rigid body in the graph.
+ *  - If the given gripper has no child, the closest rigid body with non-zero
+ *    weight will be attached to the gripper.
+ *
+ *  It is currently not distinguished if in the second case, the rigid body
+ *  is part of the gripper's kinematic chain.
+ */
+
 namespace tropic
 {
 
