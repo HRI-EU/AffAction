@@ -272,6 +272,7 @@ src/RespeakerSoundDirComponent.cpp
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
 examples/ExampleFlowMatching.cpp
+examples/ExampleViapoints.cpp
 src/JacoShmComponent.cpp
 )
 

@@ -293,88 +293,6 @@ static int testExampleGui(int argc, char** argv)
   return app.exec();
 }
 
-#include <ActivationSet.h>
-#include <PositionConstraint.h>
-#include <VectorConstraint.h>
-static int createActionIROS(int argc, char** argv)
-{
-  // Read data file
-  MatNd* trj = MatNd_createFromFile("test_robot_traj.txt");
-  RCHECK(trj);
-  MatNd_printCommentDigits("trj", trj, 5);
-
-  std::string fileName = "action_iros.xml";
-  std::ofstream fd;
-  fd.open(fileName.c_str());
-
-  if (!fd.good())
-  {
-    RLOG_CPP(1, "Failed to open file " << fileName);
-    return false;
-  }
-
-  // Open set's xml description. The class name is polymorphic
-  fd << "<Action name='iros25' >" << std::endl << std::endl;
-
-  // Here come the tasks
-  std::string tasks;
-  tasks += "  <Task name='hand_right' controlVariable='XYZ' effector='hand_right_pincergrasp' refBdy='table' active='true' />\n";
-  tasks += "  <Task name='hand_left'  controlVariable='XYZ' effector='hand_left_pincergrasp'  refBdy='table' active='true' />\n";
-  tasks += "  <Task name='fingers_left'  controlVariable='Joints' jnts='j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left' />\n";
-  tasks += "  <Task name='fingers_right' controlVariable='Joints' jnts='j2s7s300_joint_finger_1_right j2s7s300_joint_finger_2_right j2s7s300_joint_finger_3_right' />\n";
-  fd << tasks << std::endl;
-
-  double t_final = MatNd_get(trj, trj->m-1, 0) + 2.0;
-
-  std::unique_ptr<tropic::ActivationSet> a = std::make_unique<tropic::ActivationSet>();
-  a->addActivation(0.05, true, 0.5, "hand_left");
-  a->addActivation(0.05, true, 0.5, "hand_right");
-  a->addActivation(0.05, true, 0.5, "fingers_left");
-  a->addActivation(0.05, true, 0.5, "fingers_right");
-  a->addActivation(t_final, false, 0.5, "hand_left");
-  a->addActivation(t_final, false, 0.5, "hand_right");
-  a->addActivation(t_final, false, 0.5, "fingers_left");
-  a->addActivation(t_final, false, 0.5, "fingers_right");
-
-  for (size_t i = 0; i < trj->m; ++i)
-  {
-    const double* row = MatNd_getRowPtr(trj, i);
-    int flag = 7;
-    //if (i > 0 && i < trj->m - 1)
-    //{
-    //  flag = 1;
-    //}
-
-    tropic::PositionConstraint* p = new tropic::PositionConstraint(row[0]+1.0, row[1], row[2], row[3], "hand_left", flag);
-    a->add(std::shared_ptr<tropic::PositionConstraint>(p));
-
-    if (row[4] < 0.5)  // Close fingers
-    {
-      std::vector<double> fingerAngles {0.6, 0.6, 0.6};
-      tropic::VectorConstraint* v = new tropic::VectorConstraint(row[0] + 1.0, fingerAngles, "fingers_left");
-      a->add(std::shared_ptr<tropic::VectorConstraint>(v));
-    }
-    else
-    {
-      std::vector<double> fingerAngles {0.01, 0.01, 0.01};
-      tropic::VectorConstraint* v = new tropic::VectorConstraint(row[0] + 1.0, fingerAngles, "fingers_left");
-      a->add(std::shared_ptr<tropic::VectorConstraint>(v));
-    }
-  }
-
-  a->toXML(fd, 2);
-  fd << std::endl;
-
-  // Close set's xml description
-  fd << "</Action>" << std::endl;
-
-  fd.close();
-
-  MatNd_destroy(trj);
-
-  return 0;
-}
-
 int main(int argc, char** argv)
 {
   // Ctrl-C callback handler
@@ -409,10 +327,6 @@ int main(int argc, char** argv)
 
     case 5:
       res = testLLMSim_blocking(argc, argv);
-      break;
-
-    case 6:
-      res = createActionIROS(argc, argv);
       break;
 
     default:

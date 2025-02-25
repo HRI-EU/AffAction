@@ -31,7 +31,7 @@
 	</Group>
 
 	<!-- The model of the table. -->
-	<Body color="PEARLWHITE" name="table" physics="kinematic" prev="aruco_base" rigid_body_joints="0 0 1.1 0 0 0">
+	<Body color="PEARLWHITE" name="table" physics="kinematic" prev="aruco_base" mass="0" rigid_body_joints="0 0 1.1 0 0 0">
 		<Shape distance="true" extents="0.8 1.2 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" type="BOX"/>
 		<Shape scale="0.2" type="FRAME"/>
 	</Body>
@@ -48,16 +48,16 @@
 	</Group>
 
 	<!-- Bowls -->
-	<Group prev="table" name="_1" color="RED" rigid_body_joints="-0.2 0.5 0 0 0 0" >
+	<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="-0.2 0.5 0 0 0 0" >
 		<xi:include href="../scene/g_bowl.xml"/>
 	</Group>
-	<Group prev="table" name="_2" color="RED" rigid_body_joints="-0.2 0.3 0 0 0 0" >
+	<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="-0.2 0.3 0 0 0 0" >
 		<xi:include href="../scene/g_bowl.xml"/>
 	</Group>
-	<Group prev="table" name="_3" color="RED" rigid_body_joints="-0.2 0.1 0 0 0 0" >
+	<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="-0.2 0.1 0 0 0 0" >
 		<xi:include href="../scene/g_bowl.xml"/>
 	</Group>
-	<Group prev="table" name="_4" color="RED" rigid_body_joints="-0.2 -0.1 0 0 0 0" >
+	<Group prev="table" name="bowl_4" color="RED" rigid_body_joints="-0.2 -0.1 0 0 0 0" >
 		<xi:include href="../scene/g_bowl.xml"/>
 	</Group>
 
