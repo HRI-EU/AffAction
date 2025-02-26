@@ -105,7 +105,6 @@
 	  <joint_state joint="fr3_joint7_left" position="0" />
   </model_state>
 
-
 	<BroadPhase DistanceThreshold="0.001">
 		<Tree root="upperarm_left"/>
 		<Tree root="upperarm_right"/>

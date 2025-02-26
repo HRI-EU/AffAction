@@ -53,9 +53,6 @@
 #include <algorithm>
 
 
-// #define fingersOpen   (0.01)
-// #define fingersHalfClosed (0.7)
-// #define fingersClosed (0.7)   // Powergrasp for bottle etc
 #define t_fingerMove  (2.0)
 #define DEFAULT_LIFTHEIGHT (0.12)
 #define DEFAULT_PREGRASPDIST (0.2)
@@ -611,10 +608,14 @@ tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const
   if ((!handOpen.empty()) && (!handClosed.empty()))
   {
     a1->addActivation(t_start, true, 0.5, taskFingers);
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp-0.5*t_fingerMove, handOpen, taskFingers));
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp+0.5*t_fingerMove, handClosed, taskFingers));
-    RLOG(0, "t=%f: handOpen=%f", t_grasp-0.5*t_fingerMove, handOpen[0]);
-    RLOG(0, "t=%f: handClosed=%f", t_grasp+0.5*t_fingerMove, handClosed[0]);
+    const double t_fingerClose = t_grasp+0.0*t_fingerMove;
+    const double t_fingerOpen = 0.5*(t_start + t_fingerClose);
+    a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerOpen, handOpen, taskFingers));
+    a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerClose, handClosed, taskFingers));
+    // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp-0.5*t_fingerMove, handOpen, taskFingers));
+    // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp+0.5*t_fingerMove, handClosed, taskFingers));
+    RLOG(0, "t=%f: handOpen=%f", t_fingerOpen, handOpen[0]);
+    RLOG(0, "t=%f: handClosed=%f", t_fingerClose, handClosed[0]);
   }
 
   if (isObjCollidable)

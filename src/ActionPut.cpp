@@ -51,9 +51,7 @@
 
 
 
-#define fingersOpen   (0.01)
-#define fingersClosed (0.7)
-#define t_fingerMove  (2.0)
+#define t_fingerMove  (1.0+2.0)
 
 #define IS_NEAR_THRESHOLD  (0.4)
 #define DEFAULT_ABOVE_DIST (0.2)
@@ -696,7 +694,8 @@ bool ActionPut::initialize(const ActionScene& domain,
       fingerJoints += " ";
     }
 
-    handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+    //handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+    handOpen = graspingHand->getFingerAnglesFromModelState(graph, "open_fingers");
   }
 
   // Task naming
@@ -1290,7 +1289,8 @@ public:
         fingerJoints += " ";
       }
 
-      handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+      //handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+      handOpen = graspingHand->getFingerAnglesFromModelState(graph, "open_fingers");
     }
 
     auto ntt = domain.getAffordanceEntities(objName);
