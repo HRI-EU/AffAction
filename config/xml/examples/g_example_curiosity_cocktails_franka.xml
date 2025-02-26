@@ -81,21 +81,20 @@
 
 
   <model_state model="default" time_stamp="0">
-    <joint_state joint="ptu_tilt_joint" position="15" />
-    <joint_state joint="fr3_joint1_right" position="-118.814324" />
-    <joint_state joint="fr3_joint2_right" position="97.897959" />
-    <joint_state joint="fr3_joint3_right" position="110.223058" />
-    <joint_state joint="fr3_joint4_right" position="-128" />
-    <joint_state joint="fr3_joint5_right" position="20" />
-    <joint_state joint="fr3_joint6_right" position="146.505495" />
-    <joint_state joint="fr3_joint7_right" position="44.392771" />
-    <joint_state joint="fr3_joint1_left" position="-59.657825" />
-    <joint_state joint="fr3_joint2_left" position="-86.853061" />
-    <joint_state joint="fr3_joint3_left" position="85.285714" />
-    <joint_state joint="fr3_joint4_left" position="-115" />
-    <joint_state joint="fr3_joint5_left" position="12" />
-    <joint_state joint="fr3_joint6_left" position="143.494505" />
-    <joint_state joint="fr3_joint7_left" position="37.409639" />
+	  <joint_state joint="fr3_joint1_right" position="-126.917123" />
+	  <joint_state joint="fr3_joint2_right" position="67.190175" />
+	  <joint_state joint="fr3_joint3_right" position="90.638773" />
+	  <joint_state joint="fr3_joint4_right" position="-141.381136" />
+	  <joint_state joint="fr3_joint5_right" position="-2.885356" />
+	  <joint_state joint="fr3_joint6_right" position="225.039572" />
+	  <joint_state joint="fr3_joint7_right" position="69.771376" />
+	  <joint_state joint="fr3_joint1_left" position="-53.081019" />
+	  <joint_state joint="fr3_joint2_left" position="-66.488588" />
+	  <joint_state joint="fr3_joint3_left" position="89.733546" />
+	  <joint_state joint="fr3_joint4_left" position="-141.36514" />
+	  <joint_state joint="fr3_joint5_left" position="3.517767" />
+	  <joint_state joint="fr3_joint6_left" position="225.071047" />
+	  <joint_state joint="fr3_joint7_left" position="19.125991" />
   </model_state>
 
   
