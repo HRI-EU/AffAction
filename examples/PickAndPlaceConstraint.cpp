@@ -229,8 +229,12 @@ double PickAndPlaceConstraint::compute(double dt)
         HTr_transform(&child->A_BI, A_PI, &attachToTrf);
       }
 
-      bool success = RcsBody_attachToBodyId(graph, childId, parentId);
-      RCHECK(success);   // False for child->id == -1
+      if (childId != -1)
+      {
+        bool success = RcsBody_attachToBodyId(graph, childId, parentId);
+        RCHECK(success);   // False for child->id == -1
+      }
+
       this->active = false;
       HTr_copy(&child->A_BI, &tmp);
     }

@@ -63,6 +63,7 @@ public:
     parser->getArgument("-debug", &debug, "Debug mode: no limits and checks");
     parser->getArgument("-inputFile", &inputFile, "Input file name (default: %s)", inputFile.c_str());
     parser->getArgument("-outputFile", &outputFile, "Output file name (default: %s)", outputFile.c_str());
+    parser->getArgument("-pickAndPlace", &pickAndPlace, "With piack and place constraint (default: false)");
 
     if (debug)
     {
@@ -80,6 +81,7 @@ public:
     inputFile = "test_robot_traj.txt";
     outputFile = "action_iros.xml";
     debug = false;
+    pickAndPlace = false;
     zigzag = true;
     return true;
   }
@@ -95,7 +97,7 @@ public:
     viewer->setKeyCallback('F', [this](char k)
     {
       RLOG(0, "Creating action file");
-      bool success = createActionFile(inputFile, outputFile);
+      bool success = createActionFile(inputFile, outputFile, pickAndPlace);
 
       if (!success)
       {
@@ -103,11 +105,11 @@ public:
       }
       else
       {
-        if (debug)
-        {
-          entity.publish("ActionSequence", std::string("load action_iros.xml; pose default_top"));
-        }
-        else
+        // if (debug)
+        // {
+        //   entity.publish("ActionSequence", std::string("load action_iros.xml; pose default_top"));
+        // }
+        // else
         {
           entity.publish("PlanDFSEE", std::string("load action_iros.xml; pose default_top"));
         }
@@ -125,7 +127,7 @@ public:
     return str;
   }
 
-  static bool createActionFile(std::string inFile, std::string outFile)
+  static bool createActionFile(std::string inFile, std::string outFile, bool pickAndPlace)
   {
     std::ofstream fd;
     fd.open(outFile.c_str());
@@ -187,7 +189,7 @@ public:
       const bool releasing = (grip<=0.5) && (prevGrip>0.5);
       const bool getting = (grip>=0.5) && (prevGrip<0.5);
 
-      if (releasing || getting)
+      if (pickAndPlace && (releasing || getting))
       {
         a->add(std::make_shared<tropic::PickAndPlaceConstraint>(t, "hand_left_pincergrasp"));
       }
@@ -209,6 +211,7 @@ public:
 private:
 
   bool debug;
+  bool pickAndPlace;
   std::string inputFile, outputFile;
 };
 
