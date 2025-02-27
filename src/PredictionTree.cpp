@@ -53,6 +53,8 @@
 #define TURBO_DURATION_SCALER (1.2)
 static double defaultTurboDurationScale = TURBO_DURATION_SCALER;
 
+// No action is shorter than this
+#define MINIMUM_ACTION_DURATION (3.0)
 
 
 namespace aff
@@ -1049,8 +1051,8 @@ static void expand(ActionScene& scene,
   if (action->turboMode())
   {
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
-    newDuration = std::max(newDuration, 3.0);   // At least 3 seconds ...
     newDuration -= std::fmod(newDuration, dt);
+    newDuration = std::max(newDuration, MINIMUM_ACTION_DURATION);   // Make sure minimum duration is kept
     RLOG(5, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
 
     if (newDuration<duration)

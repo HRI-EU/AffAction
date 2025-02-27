@@ -80,27 +80,27 @@
   </Group>
 
   <model_state model="default" time_stamp="0">
-    <joint_state joint="fr3_link0_right_rigidBodyJnt0" position="-0.1" />
-    <joint_state joint="fr3_link0_right_rigidBodyJnt1" position="-0.02" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt0" position="-0.15" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt1" position="-0.05" />
     <joint_state joint="fr3_link0_right_rigidBodyJnt3" position="100" />
     <joint_state joint="fr3_link0_right_rigidBodyJnt4" position="30" />
     <joint_state joint="fr3_link0_right_rigidBodyJnt5" position="-90" />
-    <joint_state joint="fr3_joint1_right" position="-50" />
-    <joint_state joint="fr3_joint2_right" position="50" />
+    <joint_state joint="fr3_joint1_right" position="-80" />
+    <joint_state joint="fr3_joint2_right" position="70" />
     <joint_state joint="fr3_joint3_right" position="120" />
-    <joint_state joint="fr3_joint4_right" position="-130" />
-    <joint_state joint="fr3_joint6_right" position="180" />
+    <joint_state joint="fr3_joint4_right" position="-140" />
+    <joint_state joint="fr3_joint6_right" position="160" />
     <joint_state joint="fr3_joint7_right" position="70" />
-    <joint_state joint="fr3_link0_left_rigidBodyJnt0" position="-0.1" />
-    <joint_state joint="fr3_link0_left_rigidBodyJnt1" position="0.02" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt0" position="-0.15" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt1" position="0.05" />
     <joint_state joint="fr3_link0_left_rigidBodyJnt3" position="-100" />
     <joint_state joint="fr3_link0_left_rigidBodyJnt4" position="30" />
     <joint_state joint="fr3_link0_left_rigidBodyJnt5" position="-90" />
-    <joint_state joint="fr3_joint1_left" position="50" />
-    <joint_state joint="fr3_joint2_left" position="-50" />
+    <joint_state joint="fr3_joint1_left" position="80" />
+    <joint_state joint="fr3_joint2_left" position="-70" />
     <joint_state joint="fr3_joint3_left" position="60" />
-    <joint_state joint="fr3_joint4_left" position="-130" />
-    <joint_state joint="fr3_joint6_left" position="180" />
+    <joint_state joint="fr3_joint4_left" position="-140" />
+    <joint_state joint="fr3_joint6_left" position="160" />
     <joint_state joint="fr3_joint7_left" position="20" />
   </model_state>
 
