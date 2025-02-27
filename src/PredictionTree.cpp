@@ -1049,6 +1049,7 @@ static void expand(ActionScene& scene,
   if (action->turboMode())
   {
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
+    newDuration = std::max(newDuration, 3.0);   // At least 3 seconds ...
     newDuration -= std::fmod(newDuration, dt);
     RLOG(5, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
 

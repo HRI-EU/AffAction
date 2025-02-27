@@ -27,7 +27,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default2" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
 	<ActionSequence name="1" text="get glass_green; shake glass_green" />
 	<ActionSequence name="2" text="get glass_green; inspect glass_green" />
@@ -79,22 +79,46 @@
     <xi:include href="g_human_agent.xml"/>
   </Group>
 
-
   <model_state model="default" time_stamp="0">
-	  <joint_state joint="fr3_joint1_right" position="-126.917123" />
-	  <joint_state joint="fr3_joint2_right" position="67.190175" />
-	  <joint_state joint="fr3_joint3_right" position="90.638773" />
-	  <joint_state joint="fr3_joint4_right" position="-141.381136" />
-	  <joint_state joint="fr3_joint5_right" position="-2.885356" />
-	  <joint_state joint="fr3_joint6_right" position="225.039572" />
-	  <joint_state joint="fr3_joint7_right" position="69.771376" />
-	  <joint_state joint="fr3_joint1_left" position="-53.081019" />
-	  <joint_state joint="fr3_joint2_left" position="-66.488588" />
-	  <joint_state joint="fr3_joint3_left" position="89.733546" />
-	  <joint_state joint="fr3_joint4_left" position="-141.36514" />
-	  <joint_state joint="fr3_joint5_left" position="3.517767" />
-	  <joint_state joint="fr3_joint6_left" position="225.071047" />
-	  <joint_state joint="fr3_joint7_left" position="19.125991" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt0" position="-0.1" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt1" position="-0.02" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt3" position="100" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt4" position="30" />
+    <joint_state joint="fr3_link0_right_rigidBodyJnt5" position="-90" />
+    <joint_state joint="fr3_joint1_right" position="-50" />
+    <joint_state joint="fr3_joint2_right" position="50" />
+    <joint_state joint="fr3_joint3_right" position="120" />
+    <joint_state joint="fr3_joint4_right" position="-130" />
+    <joint_state joint="fr3_joint6_right" position="180" />
+    <joint_state joint="fr3_joint7_right" position="70" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt0" position="-0.1" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt1" position="0.02" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt3" position="-100" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt4" position="30" />
+    <joint_state joint="fr3_link0_left_rigidBodyJnt5" position="-90" />
+    <joint_state joint="fr3_joint1_left" position="50" />
+    <joint_state joint="fr3_joint2_left" position="-50" />
+    <joint_state joint="fr3_joint3_left" position="60" />
+    <joint_state joint="fr3_joint4_left" position="-130" />
+    <joint_state joint="fr3_joint6_left" position="180" />
+    <joint_state joint="fr3_joint7_left" position="20" />
+  </model_state>
+
+  <model_state model="default3" time_stamp="0">
+    <joint_state joint="fr3_joint1_right" position="-126.917123" />
+    <joint_state joint="fr3_joint2_right" position="67.190175" />
+    <joint_state joint="fr3_joint3_right" position="90.638773" />
+    <joint_state joint="fr3_joint4_right" position="-141.381136" />
+    <joint_state joint="fr3_joint5_right" position="-2.885356" />
+    <joint_state joint="fr3_joint6_right" position="225.039572" />
+    <joint_state joint="fr3_joint7_right" position="69.771376" />
+    <joint_state joint="fr3_joint1_left" position="-53.081019" />
+    <joint_state joint="fr3_joint2_left" position="-66.488588" />
+    <joint_state joint="fr3_joint3_left" position="89.733546" />
+    <joint_state joint="fr3_joint4_left" position="-141.36514" />
+    <joint_state joint="fr3_joint5_left" position="3.517767" />
+    <joint_state joint="fr3_joint6_left" position="225.071047" />
+    <joint_state joint="fr3_joint7_left" position="19.125991" />
   </model_state>
 
   <model_state model="default2" time_stamp="0">

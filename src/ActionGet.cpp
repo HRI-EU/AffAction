@@ -614,8 +614,8 @@ tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const
     a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerClose, handClosed, taskFingers));
     // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp-0.5*t_fingerMove, handOpen, taskFingers));
     // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp+0.5*t_fingerMove, handClosed, taskFingers));
-    RLOG(0, "t=%f: handOpen=%f", t_fingerOpen, handOpen[0]);
-    RLOG(0, "t=%f: handClosed=%f", t_fingerClose, handClosed[0]);
+    // RLOG(0, "t=%f: handOpen=%f", t_fingerOpen, handOpen[0]);
+    // RLOG(0, "t=%f: handClosed=%f", t_fingerClose, handClosed[0]);
   }
 
   if (isObjCollidable)
