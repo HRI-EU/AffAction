@@ -249,7 +249,7 @@ void ActionGet::init(const ActionScene& domain,
   else
   {
     Vec3d_copy(castFrom, objBdy->A_BI.org);   // Body origin in case no AABB can be determined.
-    castFrom[2] += 1.0e-8;
+    castFrom[2] += 1.0e-3;
   }
 
   const RcsBody* surfaceBdy = RcsBody_closestRigidBodyInDirection(graph, castFrom, Vec3d_ez(), surfPt, &dMin);
@@ -608,14 +608,10 @@ tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const
   if ((!handOpen.empty()) && (!handClosed.empty()))
   {
     a1->addActivation(t_start, true, 0.5, taskFingers);
-    const double t_fingerClose = t_grasp+0.0*t_fingerMove;
+    const double t_fingerClose = t_grasp;
     const double t_fingerOpen = 0.5*(t_start + t_fingerClose);
     a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerOpen, handOpen, taskFingers));
     a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerClose, handClosed, taskFingers));
-    // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp-0.5*t_fingerMove, handOpen, taskFingers));
-    // a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp+0.5*t_fingerMove, handClosed, taskFingers));
-    // RLOG(0, "t=%f: handOpen=%f", t_fingerOpen, handOpen[0]);
-    // RLOG(0, "t=%f: handClosed=%f", t_fingerClose, handClosed[0]);
   }
 
   if (isObjCollidable)

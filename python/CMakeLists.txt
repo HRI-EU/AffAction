@@ -96,7 +96,7 @@ ENDIF()
 IF(UNIX)
   INSTALL(TARGETS pyAffaction pyPushT
           RUNTIME DESTINATION bin 
-          LIBRARY DESTINATION bin
+          LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib/AffAction)
 ELSE()
   INSTALL(TARGETS pyAffaction pyPushT

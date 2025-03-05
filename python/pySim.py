@@ -47,6 +47,7 @@ sim.unittest = False
 sim.speedUp = 3
 sim.noLimits = False
 sim.verbose = False
-sim.xmlFileName = "g_group_6.xml"
+sim.xmlFileName = "g_iros25.xml"
+sim.addComponentArgument("-physics Bullet")
 sim.init(True)
 sim.run()

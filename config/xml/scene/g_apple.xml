@@ -41,7 +41,7 @@
 
     <AffordanceModel body="apple" types="apple">
         <Stackable frame="apple" />
-        <BallGraspable frame="apple_center" radius="0.03"/>
+        <BallGraspable frame="apple_center" radius="0.02"/>
     </AffordanceModel>
 
 </Graph>

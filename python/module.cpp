@@ -50,6 +50,7 @@ namespace py = pybind11;
 
 #include <LandmarkBase.h>
 #include <ExampleActionsECS.h>
+#include <ExampleViapoints.h>
 #include <ActionFactory.h>
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
@@ -1187,6 +1188,28 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("sceneTransformationDataRecorderEnabled", &aff::ExampleActionsECS::sceneTransformationDataRecorderEnabled)
   .def_readwrite("sceneTransformationDataPlayerEnabled", &aff::ExampleActionsECS::sceneTransformationDataPlayerEnabled)
   .def_readwrite("usersGazeComponentEnabled", &aff::ExampleActionsECS::usersGazeComponentEnabled)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // viaPoint action
+  //////////////////////////////////////////////////////////////////////////////
+  .def("createViaPointAction", [](aff::ExampleActionsECS& ex, std::string inputFile)
+  {
+    RLOG(0, "Creating action file");
+
+    const bool pickAndPlace = false;
+    bool success = aff::ExamplePlayBackViapoints::createActionFile(inputFile, "action_iros.xml", pickAndPlace);
+
+    if (!success)
+    {
+      RLOG(0, "Failed to create action file");
+    }
+    else
+    {
+      ex.getEntity().publish("PlanDFSEE", std::string("load action_iros.xml; pose default_top"));
+    }
+
+  },
+  py::arg("inputFile") = "test_robot_traj.txt")
   ;
 
 
