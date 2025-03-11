@@ -209,6 +209,7 @@ public:
     subscribe("ToggleRecording", &SampleRecorder::toggleRecording);
     subscribe("Save", &SampleRecorder::save);
     subscribe("TogglePixelGui", &SampleRecorder::toggle);
+    createDirectory("training_data");
   }
 
   void update(const std::vector<double>& controls)
@@ -307,7 +308,8 @@ public:
     if (!tmp.empty())
     {
       //saveThread(tmp);
-      std::thread t(saveThread, std::move(tmp), getCurrentTimeString());
+      std::string saveDir = std::string("training_data/") + getCurrentTimeString();
+      std::thread t(saveThread, std::move(tmp), saveDir);
       t.detach();
     }
     else
