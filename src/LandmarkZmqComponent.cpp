@@ -280,11 +280,61 @@ void LandmarkZmqComponent::zmqThreadFunc()
 
     if (!frozen)
     {
-      RLOG_CPP(5, "Parsing reply json");
+      /*
+      reply json:
+
+      {
+          "header": {
+              "frame_id": "",
+              "seq": 1769,
+              "timestamp": 1741691273.738978
+          },
+          "data": {
+              "aruco": {
+                  "aruco_10": [
+                      {
+                          "id": 10,
+                          "orientation": {
+                              "w": 0.1829875629933815,
+                              "x": 0.028557308472796805,
+                              "y": 0.8989100483042847,
+                              "z": 0.39706517976287165
+                          },
+                          "position": {
+                              "x": -5.260215610158375,
+                              "y": 1.28047442505508,
+                              "z": 16.066453031456977
+                          },
+                          "reprojection_error": 0.15712533543963342,
+                      }
+                  ],
+                  "aruco_3": [
+                      {
+                          "id": 3,
+                          "orientation": {
+                              "w": 0.022150579825356786,
+                              "x": 0.6953875885958379,
+                              "y": 0.49476124675710376,
+                              "z": 0.5207271475039713
+                          },
+                          "position": {
+                              "x": -5.878074040926496,
+                              "y": 1.6805983774038338,
+                              "z": 13.107461503432832
+                          },
+                          "reprojection_error": 0.13311420570088922,
+                      }
+                  ]
+              }
+          }
+      }
+
+       */
+      RLOG_CPP(5, "Parsing reply json: " << reply_str);
       nlohmann::json json = nlohmann::json::parse(reply_str);
       RLOG_CPP(5, "setJsonInput");
       setJsonInput(json);
-      RLOG_CPP(5, "done setJsonInput");
+      RLOG_CPP(5, "done setJsonInput: " << json.dump(4));
     }
 
     // Timing statistics

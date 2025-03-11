@@ -238,6 +238,7 @@ src/LandmarkBase.cpp
 src/ConcurrentExecutor.cpp
 src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
+src/YoloTracker.cpp
 src/VirtualCamera.cpp
 src/StringParserTools.cpp
 src/HeadGesture.cpp
