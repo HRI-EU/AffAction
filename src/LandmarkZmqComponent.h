@@ -68,7 +68,7 @@ private:
   void onToggleJsonLogging();
   void onEstimateCameraPose(int numFrames);
   void fromFileThreadFunc(const std::string& fileName);
-  void zmqThreadFunc();
+  void zmqThreadFunc(const std::string& connection);
   void startZmqThread();
   void stopZmqThread();
 

@@ -109,7 +109,7 @@ namespace aff
 LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, std::string connection):
   ComponentBase(parent), LandmarkBase(graph),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
-  readDataFromFile(false), socketTimeoutInMsec(3000), frameRate(0.0), logging(false)
+  readDataFromFile(false), socketTimeoutInMsec(8000), frameRate(0.0), logging(false)
 {
   readDataFromFile = File_exists(connection.c_str());
 
@@ -220,15 +220,15 @@ void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
   threadFunctionCompleted = true;
 }
 
-void LandmarkZmqComponent::zmqThreadFunc()
+void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
 {
   RLOG(5, "zmqThreadFunc()");
   threadFunctionCompleted = false;
   zmq::context_t context;
   zmq::socket_t socket(context, ZMQ_REQ);
 
-  RLOG(5, "Connecting to tcp://localhost:5555");
-  socket.connect("tcp://localhost:5555");
+  RLOG_CPP(5, "Connecting to " << connection);
+  socket.connect(connection);
 
   // set receive timeout to 3 seconds
   int timeout_ms = this->socketTimeoutInMsec;
@@ -366,7 +366,7 @@ void LandmarkZmqComponent::startZmqThread()
   }
   else
   {
-    zmqThread = std::thread(&LandmarkZmqComponent::zmqThreadFunc, this);
+    zmqThread = std::thread(&LandmarkZmqComponent::zmqThreadFunc, this, connectionStr);
   }
 
   // Ideally, we should join it in the onStop() function. For some reasons,
