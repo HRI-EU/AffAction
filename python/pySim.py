@@ -35,11 +35,11 @@ import sys
 if platform.system() == "Linux":
     sys.path.append("lib")
 elif platform.system() == "Windows":
-    sys.path.append("bin")
+    sys.path.append("bin/Release")
 
 from pyAffaction import *
 
-setLogLevel(-1)
+setLogLevel(0)
 
 sim = LlmSim()
 sim.noTextGui = True
@@ -48,6 +48,7 @@ sim.speedUp = 3
 sim.noLimits = False
 sim.verbose = False
 sim.xmlFileName = "g_iros25.xml"
-sim.addComponentArgument("-physics Bullet")
+#sim.addComponentArgument("-physics Bullet")
+sim.addComponentArgument("-landmarks_zmq -yolo_tracking")
 sim.init(True)
 sim.run()

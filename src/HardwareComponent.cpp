@@ -159,11 +159,16 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     }
 #endif
 
+    if (getKey(argsVec, "-yolo_tracking"))
+    {
+      lmc->addYoloTracker();
+    }
+
     if (getKey(argsVec, "-face_tracking"))
     {
       std::string faceBdyName = "face";
       getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
-      auto ft = lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
+      lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
     }
 
     if (getKey(argsVec, "-aruco_tracking"))
@@ -186,7 +191,6 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     // Initialize all tracker camera transforms from the xml file
     lmc->setCameraTransform(&cam->A_BI);
-
   }
 
   return ret;

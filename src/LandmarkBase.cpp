@@ -35,6 +35,7 @@
 #include "ArucoTracker.h"
 #include "AzureSkeletonTracker.h"
 #include "FaceTracker.h"
+#include "YoloTracker.h"
 #include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
@@ -76,6 +77,15 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
 
   std::string cameraFrame = json["header"]["frame_id"];
 
+  // Extract the camera matrix
+  auto camera_matrix = json["header"]["camera_matrix"].get<std::vector<std::vector<double>>>();
+  double K[3][3];
+  for (size_t i = 0; i < 3; ++i)
+    for (size_t j = 0; j < 3; ++j)
+    {
+      K[i][j] = camera_matrix[i][j];
+    }
+
   for (auto& entry : json["data"].items())
   {
     NLOG_CPP(1, entry.key());
@@ -84,6 +94,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
     {
       if (entry.key() == tracker->getRequestKeyword())
       {
+        tracker->setCameraMatrix(K);
         tracker->parse(entry.value(), time, cameraFrame);
       }
     }
@@ -190,6 +201,13 @@ TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::s
   tracker->setCameraName(camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));
 
+  return tracker;
+}
+
+TrackerBase* LandmarkBase::addYoloTracker()
+{
+  YoloTracker* tracker = new YoloTracker();
+  addTracker(std::unique_ptr<YoloTracker>(tracker));
   return tracker;
 }
 

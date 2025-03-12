@@ -55,6 +55,7 @@ public:
   virtual std::string getRequestKeyword() const = 0;
   virtual void parse(const nlohmann::json& json, double time, const std::string& cameraFrame) = 0;
   virtual void update(ActionScene* scene, RcsGraph* graph) = 0;
+  virtual void setCameraMatrix(double K[3][3]);
   virtual void setCameraTransform(const HTr* A_camI) = 0;
   virtual void setCurrentTime(double time);
   virtual void setFrozen(bool frozen);
@@ -64,6 +65,7 @@ public:
 
 protected:
 
+  double camera_matrix[3][3];
   double currentTime;
   bool frozen;
 };

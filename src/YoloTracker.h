@@ -54,7 +54,7 @@ class YoloTracker : public TrackerBase
 {
 public:
 
-  YoloTracker(const std::string& nameOfFaceBody);
+  YoloTracker();
   virtual ~YoloTracker();
 
   // Inherited methods
@@ -68,10 +68,25 @@ public:
 
 private:
 
+  struct YoloDetection
+  {
+    int class_id;
+    std::string class_name;
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    double confidence;
+    double I_ray[3];
+    int frame_index; // if you need to keep track of which frame
+  };
+
   YoloTracker(const YoloTracker& other) = delete;
+  static std::string YoloTracker::YoloDetectionsToString(const std::vector<YoloDetection>& detections);
 
   HTr A_camI;
-  std::mutex landmarksMtx;
+  std::mutex updateMtx;
+  std::vector<YoloDetection> yoloDetections;
 };
 
 }   // namespace aff

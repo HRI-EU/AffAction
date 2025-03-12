@@ -32,7 +32,9 @@
 *******************************************************************************/
 
 #include "TrackerBase.h"
+
 #include <Rcs_macros.h>
+#include <Rcs_Mat3d.h>
 
 #include <chrono>
 
@@ -76,6 +78,11 @@ void TrackerBase::setFrozen(bool freeze)
 bool TrackerBase::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   return false;
+}
+
+void TrackerBase::setCameraMatrix(double K[3][3])
+{
+  Mat3d_copy(this->camera_matrix, K);
 }
 
 }   // namespace
