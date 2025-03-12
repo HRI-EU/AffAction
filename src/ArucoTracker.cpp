@@ -596,7 +596,7 @@ static std::vector<double> parsePose(const nlohmann::json& json)
 void ArucoTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
 {
   std::map<std::string,std::vector<double>> localArucoMap;
-  //RLOG_CPP(1, "Received :" << json.dump());
+  RLOG_CPP(1, "Received 'aruco':" << json.dump(2));
 
   for (auto& entry : json.items())
   {

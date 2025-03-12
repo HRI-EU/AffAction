@@ -85,4 +85,22 @@ void TrackerBase::setCameraMatrix(double K[3][3])
   Mat3d_copy(this->camera_matrix, K);
 }
 
+void TrackerBase::setCameraMatrix(const std::vector<std::vector<double>>& K)
+{
+  if (K.empty())
+  {
+    return;
+  }
+
+  for (size_t i = 0; i < 3; ++i)
+  {
+    for (size_t j = 0; j < 3; ++j)
+    {
+      this->camera_matrix[i][j] = K[i][j];
+    }
+  }
+}
+
+
+
 }   // namespace

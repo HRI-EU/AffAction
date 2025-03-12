@@ -222,7 +222,7 @@ void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
 
 void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
 {
-  RLOG(5, "zmqThreadFunc()");
+  RLOG_CPP(5, "Starting zmqThreadFunc(): " << connection);
   threadFunctionCompleted = false;
   zmq::context_t context;
   zmq::socket_t socket(context, ZMQ_REQ);
@@ -272,7 +272,7 @@ void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
     {
       RLOG(0, "Didn't receive message within timeout - quitting thread function");
       timedOut = true;
-      socket.disconnect("tcp://localhost:5555");
+      socket.disconnect(connection);
       socket.close();
       threadFunctionCompleted = true;
       return;

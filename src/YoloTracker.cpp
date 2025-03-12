@@ -93,7 +93,7 @@ std::string YoloTracker::getRequestKeyword() const
 
 void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std::string& cameraFrame)
 {
-  RLOG_CPP(1, "YOLO:" << std::endl << jsonString.dump(4));
+  RLOG_CPP(1, "Received 'yolo':" << jsonString.dump(2));
   std::vector<YoloDetection> detections;
 
   try
