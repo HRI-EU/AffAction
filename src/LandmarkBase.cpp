@@ -62,9 +62,16 @@ void LandmarkBase::addTracker(std::unique_ptr<TrackerBase> tracker)
   trackers.push_back(std::move(tracker));
 }
 
-void LandmarkBase::setJsonInput(const nlohmann::json& json)
+void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
 {
-  double time;
+  if (!json_data.contains("header"))
+  {
+    RLOG(1, "No 'header' found in json - returning");
+    return;
+  }
+
+  double time = 0.0;
+  const nlohmann::json& json_header = json_data["header"];
 
   if (syncInputJsonWithWallclockTime)
   {
@@ -72,30 +79,41 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
   }
   else
   {
-    time = json["header"]["timestamp"];
+    time = json_header["timestamp"];
   }
 
-  std::string cameraFrame = json["header"]["frame_id"];
+  std::string cameraFrame = json_header["frame_id"];
 
   // Extract the camera matrix
-  auto camera_matrix = json["header"]["camera_matrix"].get<std::vector<std::vector<double>>>();
   double K[3][3];
-  for (size_t i = 0; i < 3; ++i)
-    for (size_t j = 0; j < 3; ++j)
-    {
-      K[i][j] = camera_matrix[i][j];
-    }
+  std::vector<std::vector<double>> camera_matrix;
 
-  for (auto& entry : json["data"].items())
+  if (json_header.contains("camera_matrix"))
   {
-    NLOG_CPP(1, entry.key());
-
-    for (const auto& tracker : trackers)
+    try
     {
-      if (entry.key() == tracker->getRequestKeyword())
+      camera_matrix = json_data["header"]["camera_matrix"].get<std::vector<std::vector<double>>>();
+    }
+    catch (const std::exception& e)
+    {
+      RLOG_CPP(1, "Error parsing camera_matrix: " << e.what());
+    }
+  }
+
+  // Delegate parsing of data to added trackers
+  if (json_data.contains("data"))
+  {
+    for (auto& entry : json_data["data"].items())
+    {
+      NLOG_CPP(1, entry.key());
+
+      for (const auto& tracker : trackers)
       {
-        tracker->setCameraMatrix(K);
-        tracker->parse(entry.value(), time, cameraFrame);
+        if (entry.key() == tracker->getRequestKeyword())
+        {
+          tracker->setCameraMatrix(camera_matrix);
+          tracker->parse(entry.value(), time, cameraFrame);
+        }
       }
     }
   }
