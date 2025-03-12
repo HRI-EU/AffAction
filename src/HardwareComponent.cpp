@@ -122,13 +122,14 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
                                               const RcsGraph* graph,
                                               const ActionScene* scene,
                                               std::string extraArgs,
-                                              bool zmq_true_ros_false=true)
+                                              bool zmq_true_ros_false=true,
+                                              const std::string& suffix="")
 {
   auto argsVec = Rcs::String_split(extraArgs, " ");
   std::string connection = "tcp://localhost:5555";
   std::string landmarksCamera = "camera_0";
-  getKeyValuePair<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
-  getKeyValuePair<std::string>(argsVec, "-landmarks_connection", connection);
+  getKeyValuePair<std::string>(argsVec, "-landmarks_camera"+suffix, landmarksCamera);
+  getKeyValuePair<std::string>(argsVec, "-landmarks_connection"+suffix, connection);
   RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
   if (!cam)
   {
@@ -159,30 +160,30 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     }
 #endif
 
-    if (getKey(argsVec, "-yolo_tracking"))
+    if (getKey(argsVec, "-yolo_tracking" + suffix))
     {
       lmc->addYoloTracker();
     }
 
-    if (getKey(argsVec, "-face_tracking"))
+    if (getKey(argsVec, "-face_tracking" + suffix))
     {
       std::string faceBdyName = "face";
-      getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
+      getKeyValuePair<std::string>(argsVec, "-face_bodyName" + suffix, faceBdyName);
       lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
     }
 
-    if (getKey(argsVec, "-aruco_tracking"))
+    if (getKey(argsVec, "-aruco_tracking" + suffix))
     {
       std::string arucoBaseBdyName = "aruco_base";
-      getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
+      getKeyValuePair<std::string>(argsVec, "-aruco_base" + suffix, arucoBaseBdyName);
       lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
     }
 
-    if (getKey(argsVec, "-skeleton_tracking"))
+    if (getKey(argsVec, "-skeleton_tracking" + suffix))
     {
       RLOG(0, "Enabling Azure skeleton tracker");
       double r_agent = DBL_MAX;
-      getKeyValuePair<double>(argsVec, "-skeleton_radius", r_agent);
+      getKeyValuePair<double>(argsVec, "-skeleton_radius" + suffix, r_agent);
 
       // Add skeleton tracker and ALL agents in the scene
       int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent);
@@ -440,13 +441,34 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
     argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
+    argP.addDescription("-yolo_tracking", "For '-landmarks_zmq': Start with Yolo tracking");
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, ""));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq2"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "2"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq3"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "3"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq4"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "4"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq5"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "5"));
   }
 
   if (dryRun)
