@@ -82,7 +82,7 @@ private:
   };
 
   YoloTracker(const YoloTracker& other) = delete;
-  static std::string YoloTracker::YoloDetectionsToString(const std::vector<YoloDetection>& detections);
+  static std::string YoloDetectionsToString(const std::vector<YoloDetection>& detections);
 
   HTr A_camI;
   std::mutex updateMtx;

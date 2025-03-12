@@ -234,7 +234,7 @@ void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
   int timeout_ms = this->socketTimeoutInMsec;
 
   RLOG(5, "Setting socket timeout");
-#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
   socket.setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(int));
 #else
   socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
