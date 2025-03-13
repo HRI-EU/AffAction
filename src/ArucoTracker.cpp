@@ -353,7 +353,7 @@ void ArucoCalibrator::updateCalibration(RcsGraph* graph,
     {
       HTr A_BC;
       HTr_transpose(&A_BC, &SHAPE->A_CB);
-      RLOG(1, "Scaling with %f", SHAPE->extents[0]/default_marker_length);
+      RLOG(0, "Scaling with %f", SHAPE->extents[0]/default_marker_length);
       Vec3d_constMulSelf(A_MC.org, SHAPE->extents[0]/default_marker_length);
       HTr_transformSelf(&A_MC, &A_BC);
       break;
@@ -596,7 +596,7 @@ static std::vector<double> parsePose(const nlohmann::json& json)
 void ArucoTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
 {
   std::map<std::string,std::vector<double>> localArucoMap;
-  RLOG_CPP(1, "Received 'aruco':" << json.dump(2));
+  RLOG_CPP(2, "Received 'aruco':" << json.dump(2));
 
   for (auto& entry : json.items())
   {
@@ -647,6 +647,7 @@ void ArucoTracker::setCameraTransform(const HTr* A_camI)
          x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
   }
 
+  HTr_printComment("ARUCO: Setting camera transform to:", A_camI);
   std::lock_guard<std::mutex> lock(arucoMapMtx);
   HTr_copy(&A_CI, A_camI);
 }

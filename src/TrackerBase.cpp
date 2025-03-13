@@ -44,6 +44,7 @@ namespace aff
 
 TrackerBase::TrackerBase() : currentTime(0.0), frozen(false)
 {
+  Mat3d_setZero(camera_matrix);
 }
 
 void TrackerBase::setCurrentTime(double time)

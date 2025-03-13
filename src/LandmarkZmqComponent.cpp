@@ -109,7 +109,7 @@ namespace aff
 LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, std::string connection):
   ComponentBase(parent), LandmarkBase(graph),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
-  readDataFromFile(false), socketTimeoutInMsec(8000), frameRate(0.0), logging(false)
+  readDataFromFile(false), socketTimeoutInMsec(20000), frameRate(0.0), logging(false)
 {
   readDataFromFile = File_exists(connection.c_str());
 

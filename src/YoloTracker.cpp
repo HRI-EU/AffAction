@@ -36,10 +36,12 @@
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>
+#include <Rcs_body.h>
 
 #include <cstdio>
 #include <iostream>
 #include <sstream>
+#include <map>
 
 
 // Function to compute the 3D ray direction from a pixel
@@ -93,7 +95,7 @@ std::string YoloTracker::getRequestKeyword() const
 
 void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std::string& cameraFrame)
 {
-  RLOG_CPP(1, "Received 'yolo':" << jsonString.dump(2));
+  RLOG_CPP(2, "Received 'yolo':" << jsonString.dump(2));
   std::vector<YoloDetection> detections;
 
   try
@@ -103,16 +105,14 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
     {
       const auto& detectionJson = it.value(); // The object under "yolo_x"
 
-      YoloDetection det;
-      det.class_id = detectionJson.value("class_id", -1);
-      det.class_name = detectionJson.value("class_name", "unknown");
-      det.confidence = detectionJson.value("confidence", 0.0);
-      det.frame_index = detectionJson.value("frame_index", 0);
-      Vec3d_setZero(det.I_ray);
-
       // Extract bounding box if it exists
       if (detectionJson.contains("bounding_box") && detectionJson["bounding_box"].is_object())
       {
+        YoloDetection det;
+        det.class_id = detectionJson.value("class_id", -1);
+        det.class_name = detectionJson.value("class_name", "unknown");
+        det.confidence = detectionJson.value("confidence", 0.0);
+
         const auto& bboxJson = detectionJson["bounding_box"];
         det.x1 = bboxJson.value("x1", 0);
         det.y1 = bboxJson.value("y1", 0);
@@ -127,9 +127,11 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
         bool ray_success = pixel_to_ray(center_pixel_u, center_pixel_v, camera_matrix, C_ray);
         if (ray_success)
         {
-          RLOG(1, "Ray in cam: %f %f %f", C_ray[0], C_ray[1], C_ray[2]);
+          RLOG(2, "Ray in cam: %f %f %f", C_ray[0], C_ray[1], C_ray[2]);
           Vec3d_transRotate(det.I_ray, A_camI.rot, C_ray);
+          Vec3d_copy(det.C_ray, C_ray);
           RLOG(1, "Ray in world: %f %f %f", I_ray[0], I_ray[1], I_ray[2]);
+          detections.push_back(det);
         }
         else
         {
@@ -138,8 +140,6 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
 
       }
 
-      // Store the parsed detection in the vector
-      detections.push_back(det);
     }
   }
   catch (const nlohmann::json::exception& e)
@@ -159,15 +159,67 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
   RLOG_CPP(2, "YoloTracker::update()");
   std::vector<YoloDetection> detections;
 
+  // Z points outwards from lens
+  const RcsBody* cam = RcsGraph_getBodyByName(graph, "camera_0");
+  RCHECK(cam);
+  setCameraTransform(&cam->A_BI);
+
+  // Thread-safe copying of detections from zmq thread
   {
     std::lock_guard<std::mutex> lock(updateMtx);
     detections = this->yoloDetections;
+  }
+
+  // Add RcsBody name to each detection.
+  // Convention: Name is <yolo-category>_<detected_index>. If this name does not exist in the graph, it will be ignored
+  // This algorithm looks a bit complex, but we do not enforce any ordering in the incoming json with respect to the names and indices.
+  std::map<std::string,int> class_counts;
+  for (auto& detection : detections)
+  {
+    auto it = class_counts.find(detection.class_name);
+    if (it==class_counts.end())
+    {
+      class_counts[detection.class_name] = 0;
+      it = class_counts.find(detection.class_name);
+      RCHECK(it!=class_counts.end());
+    }
+    else
+    {
+      it->second++;
+    }
+
+    detection.yoloBdyName = it->first + "_" + std::to_string(it->second+1);
+  }
+
+
+  for (const auto& detection : detections)
+  {
+    RcsBody* yoloBody = RcsGraph_getBodyByName(graph, detection.yoloBdyName.c_str());
+
+    if (RcsBody_numJoints(graph, yoloBody)<3)   // nullptr or not enough dof
+    {
+      RLOG_CPP(1, "Could not find or found invalid " << detection.yoloBdyName);
+      continue;
+    }
+
+    RLOG_CPP(1, "Found " << detection.yoloBdyName);
+
+    // Compute intersection
+    const double height = 1.1;
+
+    // org_z + s*dir_z = height => s = (height - org_z)/dir_z => intersect = org + s*dir
+    const double* org = cam->A_BI.org;
+    const double* dir = detection.I_ray;
+    const double s = (height - org[2])/dir[2];
+    double* pt = RcsBody_getStatePtr(graph, yoloBody);
+    Vec3d_constMulAndAdd(pt, org, dir, s);
   }
 
 }
 
 void YoloTracker::setCameraTransform(const HTr* A_CI)
 {
+  //HTr_printComment("YOLO: Setting camera transform to:", A_CI);
   HTr_copy(&A_camI, A_CI);
 }
 
@@ -180,11 +232,11 @@ std::string YoloTracker::YoloDetectionsToString(const std::vector<YoloTracker::Y
 
   for (const auto& d : detections)
   {
-    oss << "Frame: " << d.frame_index << " | Class: " << d.class_name
-        << " (ID: " << d.class_id << ")\n"
+    oss << "Class: " << d.class_name << " (ID: " << d.class_id << ")\n"
         << "  Bounding Box: [" << d.x1 << ", " << d.y1
         << "] -> [" << d.x2 << ", " << d.y2 << "]\n"
         << "  Confidence: " << d.confidence * 100 << "%\n"
+        << "  Ray [in camera]: " << d.C_ray[0] << " " << d.C_ray[1] << " " << d.C_ray[2] << "\n"
         << "  Ray [in world]: " << d.I_ray[0] << " " << d.I_ray[1] << " " << d.I_ray[2] << "\n"
         << "----------------------------------------------------\n";
   }

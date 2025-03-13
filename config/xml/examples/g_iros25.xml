@@ -5,14 +5,14 @@
 	
 	<!-- The aruco_base corresponds to the RCS_world, i.e. the origin of RCS. -->
 	<Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
-		<Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31000000000000005 0 1.1001 0 0 0" type="FRAME"/>
+		<Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="0.31 0 1.1 0 0 0" type="FRAME"/>
 		<Shape scale="0.5" type="FRAME"/>
 	</Body>
 	<AffordanceModel body="aruco_base" instance_id="world" name="world" types="static">
     </AffordanceModel>
 	
 	<!-- The model for a simple camera. -->
-	<Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.7519792907893106 -0.028835324789067498 2.1308399121941934 -177.67458097346784 47.765735249370294 87.51428466028239">
+	<Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.214 -0.111 1.683  165.454 34.823 105.134">
 		<Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
 		<Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
 		<Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
@@ -37,15 +37,15 @@
 	</Body>
 
 	<!-- Apples -->
-	<Group name="_1" prev="table" rigid_body_joints="0 0 0 0 0 0" >
+	<Group name="_1" prev="aruco_base" rigid_body_joints="0 0 0 0 0 0" >
 		<xi:include href="../scene/g_apple.xml"/>
 	</Group>
-	<Group name="_2" prev="table" rigid_body_joints="0 0.2 0 0 0 0" >
+	<Group name="_2" prev="aruco_base" rigid_body_joints="0 0.2 0 0 0 0" >
 		<xi:include href="../scene/g_apple.xml"/>
 	</Group>
-	<Group name="_3" prev="table" rigid_body_joints="0 0.4 0 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
-	</Group>
+	<!-- <Group name="_3" prev="table" rigid_body_joints="0 0.4 0 0 0 0" > -->
+	<!-- 	<xi:include href="../scene/g_apple.xml"/> -->
+	<!-- </Group> -->
 
 	<!-- Bowls -->
 	<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="-0.2 0.5 0 0 0 0" >

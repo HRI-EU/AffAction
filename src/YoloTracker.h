@@ -70,6 +70,15 @@ private:
 
   struct YoloDetection
   {
+    YoloDetection() : class_id(0), x1(0), y1(0), x2(0), y2(0), confidence(0.0)
+    {
+      for (int i=0; i<3; ++i)
+      {
+        C_ray[i] = 0.0;
+        C_ray[i] = 0.0;
+      }
+    }
+
     int class_id;
     std::string class_name;
     int x1;
@@ -77,8 +86,9 @@ private:
     int x2;
     int y2;
     double confidence;
+    double C_ray[3];
     double I_ray[3];
-    int frame_index; // if you need to keep track of which frame
+    std::string yoloBdyName;
   };
 
   YoloTracker(const YoloTracker& other) = delete;
