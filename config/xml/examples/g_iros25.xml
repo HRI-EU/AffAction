@@ -12,7 +12,7 @@
     </AffordanceModel>
 	
 	<!-- The model for a simple camera. -->
-	<Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.214 -0.111 1.683  165.454 34.823 105.134">
+	<Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.455 0.013 1.489  -176.115 44.382 81.795" color="LIGHTGRAY" >
 		<Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
 		<Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
 		<Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
@@ -45,6 +45,20 @@
 	</Group>
 	<Group name="_3" prev="table" rigid_body_joints="0 0.4 -1 0 0 0" >
 		<xi:include href="../scene/g_apple.xml"/>
+	</Group>
+	<Group name="_4" prev="table" rigid_body_joints="0 0.6 -1 0 0 0" >
+		<xi:include href="../scene/g_apple.xml"/>
+	</Group>
+	<Group name="_5" prev="table" rigid_body_joints="0 0.8 -1 0 0 0" >
+		<xi:include href="../scene/g_apple.xml"/>
+	</Group>
+
+	<!-- Oranges -->
+	<Group name="_1" prev="table" rigid_body_joints="0.1 0 -1 0 0 0" >
+	  <xi:include href="../scene/g_orange.xml"/>
+	</Group>
+	<Group name="_2" prev="table" rigid_body_joints="0.1 0.2 -1 0 0 0" >
+	  <xi:include href="../scene/g_orange.xml"/>
 	</Group>
 
 	<!-- Bowls -->
