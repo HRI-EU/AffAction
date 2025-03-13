@@ -44,6 +44,35 @@
 #include <map>
 
 
+static std::vector<double> computePixelRayIntersection3D(const RcsGraph* graph, const RcsBody* yoloBody,
+                                                         const HTr* A_CI, const double I_ray[3])
+{
+  const RcsBody* yoloParent = RCSBODY_BY_ID(graph, yoloBody->parentId);
+  const HTr* A_PI = yoloParent ? &yoloParent->A_BI : HTr_identity();
+
+  // A_CP: parent to camera frame
+  HTr A_CP;
+  HTr_invTransform(&A_CP, A_PI, A_CI);
+
+  // P_ray: pixel ray in parent coordinates
+  double P_ray[3];
+  Vec3d_rotate(P_ray, MAT3D_CAST A_PI->rot, I_ray);
+
+  // Compute intersection
+  const double height = 0.0;
+
+  // org_z + s*dir_z = height => s = (height - org_z)/dir_z => intersect = org + s*dir
+  const double* org = A_CP.org;
+  const double* dir = P_ray;
+  const double s = (height - org[2])/dir[2];
+
+  double pt[3];
+  //double* pt = RcsBody_getStatePtr(graph, yoloBody);
+  Vec3d_constMulAndAdd(pt, org, dir, s);
+
+  return std::vector<double>(pt, pt+3);
+}
+
 // Function to compute the 3D ray direction from a pixel
 static bool pixel_to_ray(double u, double v, double K[3][3], double ray_[3])
 {
@@ -144,10 +173,9 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
   }
   catch (const nlohmann::json::exception& e)
   {
-    std::cerr << "JSON Parsing Error: " << e.what() << std::endl;
+    RLOG_CPP(0, "JSON Parsing Error: " << e.what());
   }
 
-  RLOG_CPP(1, "Num detections: " << detections.size());
   RLOG_CPP(1, YoloDetectionsToString(detections));
 
   std::lock_guard<std::mutex> lock(updateMtx);
@@ -155,6 +183,63 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
 }
 
 void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
+{
+  RLOG_CPP(2, "YoloTracker::update()");
+  std::vector<YoloDetection> detections;
+
+  // Z points outwards from lens
+  const RcsBody* cam = RcsGraph_getBodyByName(graph, "camera_0");
+  RCHECK(cam);
+  setCameraTransform(&cam->A_BI);
+
+  // Thread-safe copying of detections from zmq thread
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    detections = this->yoloDetections;
+  }
+
+  // Add RcsBody name to each detection.
+  // Convention: Name is <yolo-category>_<detected_index>. If this name does not exist in the graph, it will be ignored
+  // This algorithm looks a bit complex, but we do not enforce any ordering in the incoming json with respect to the names and indices.
+  std::map<std::string,int> class_counts;
+  for (auto& detection : detections)
+  {
+    auto it = class_counts.find(detection.class_name);
+    if (it==class_counts.end())
+    {
+      class_counts[detection.class_name] = 0;
+      it = class_counts.find(detection.class_name);
+      RCHECK(it!=class_counts.end());
+    }
+    else
+    {
+      it->second++;
+    }
+
+    detection.yoloBdyName = it->first + "_" + std::to_string(it->second+1);
+  }
+
+
+  for (const auto& detection : detections)
+  {
+    RcsBody* yoloBody = RcsGraph_getBodyByName(graph, detection.yoloBdyName.c_str());
+
+    if (RcsBody_numJoints(graph, yoloBody)<3)   // nullptr or not enough dof
+    {
+      RLOG_CPP(1, "Could not find or found invalid " << detection.yoloBdyName);
+      continue;
+    }
+
+    RLOG_CPP(1, "Found " << detection.yoloBdyName);
+
+    std::vector<double> pt = computePixelRayIntersection3D(graph, yoloBody, &cam->A_BI, detection.I_ray);
+    double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
+    Vec3d_copy(q_rbj, pt.data());
+  }
+
+}
+
+void YoloTracker::update_hor(ActionScene* scene, RcsGraph* graph)
 {
   RLOG_CPP(2, "YoloTracker::update()");
   std::vector<YoloDetection> detections;

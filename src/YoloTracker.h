@@ -60,6 +60,7 @@ public:
   // Inherited methods
   std::string getRequestKeyword() const;
   void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
+  void update_hor(ActionScene* scene, RcsGraph* graph);
   void update(ActionScene* scene, RcsGraph* graph);
   void setCameraTransform(const HTr* A_CI);
 

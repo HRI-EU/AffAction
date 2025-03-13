@@ -37,15 +37,15 @@
 	</Body>
 
 	<!-- Apples -->
-	<Group name="_1" prev="aruco_base" rigid_body_joints="0 0 0 0 0 0" >
+	<Group name="_1" prev="table" rigid_body_joints="0 0 -1 0 0 0" >
 		<xi:include href="../scene/g_apple.xml"/>
 	</Group>
-	<Group name="_2" prev="aruco_base" rigid_body_joints="0 0.2 0 0 0 0" >
+	<Group name="_2" prev="table" rigid_body_joints="0 0.2 -1 0 0 0" >
 		<xi:include href="../scene/g_apple.xml"/>
 	</Group>
-	<!-- <Group name="_3" prev="table" rigid_body_joints="0 0.4 0 0 0 0" > -->
-	<!-- 	<xi:include href="../scene/g_apple.xml"/> -->
-	<!-- </Group> -->
+	<Group name="_3" prev="table" rigid_body_joints="0 0.4 -1 0 0 0" >
+		<xi:include href="../scene/g_apple.xml"/>
+	</Group>
 
 	<!-- Bowls -->
 	<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="-0.2 0.5 0 0 0 0" >
