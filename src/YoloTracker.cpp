@@ -184,8 +184,10 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
 
 void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
 {
-  RLOG_CPP(2, "YoloTracker::update()");
-  std::vector<YoloDetection> detections;
+  if (frozen)
+  {
+    return;
+  }
 
   // Z points outwards from lens
   const RcsBody* cam = RcsGraph_getBodyByName(graph, "camera_0");
@@ -193,6 +195,7 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
   setCameraTransform(&cam->A_BI);
 
   // Thread-safe copying of detections from zmq thread
+  std::vector<YoloDetection> detections;
   {
     std::lock_guard<std::mutex> lock(updateMtx);
     detections = this->yoloDetections;
