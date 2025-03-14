@@ -85,7 +85,6 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
   std::string cameraFrame = json_header["frame_id"];
 
   // Extract the camera matrix
-  double K[3][3];
   std::vector<std::vector<double>> camera_matrix;
 
   if (json_header.contains("camera_matrix"))
@@ -222,9 +221,9 @@ TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::s
   return tracker;
 }
 
-TrackerBase* LandmarkBase::addYoloTracker()
+TrackerBase* LandmarkBase::addYoloTracker(const std::string& camera)
 {
-  YoloTracker* tracker = new YoloTracker();
+  YoloTracker* tracker = new YoloTracker(camera);
   addTracker(std::unique_ptr<YoloTracker>(tracker));
   return tracker;
 }

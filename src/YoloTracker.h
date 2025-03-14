@@ -37,6 +37,7 @@
 #include "TrackerBase.h"
 
 #include <mutex>
+#include <utility>
 
 
 namespace aff
@@ -135,13 +136,12 @@ class YoloTracker : public TrackerBase
 {
 public:
 
-  YoloTracker();
+  YoloTracker(const std::string& cameraName);
   virtual ~YoloTracker();
 
   // Inherited methods
   std::string getRequestKeyword() const;
   void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
-  void update_hor(ActionScene* scene, RcsGraph* graph);
   void update(ActionScene* scene, RcsGraph* graph);
   void setCameraTransform(const HTr* A_CI);
 
@@ -152,15 +152,6 @@ private:
 
   struct YoloDetection
   {
-    YoloDetection() : class_id(0), x1(0), y1(0), x2(0), y2(0), confidence(0.0)
-    {
-      for (int i=0; i<3; ++i)
-      {
-        C_ray[i] = 0.0;
-        C_ray[i] = 0.0;
-      }
-    }
-
     int class_id;
     std::string class_name;
     int x1;
@@ -168,17 +159,16 @@ private:
     int x2;
     int y2;
     double confidence;
-    double C_ray[3];
-    double I_ray[3];
     std::string yoloBdyName;
   };
 
   YoloTracker(const YoloTracker& other) = delete;
   static std::string YoloDetectionsToString(const std::vector<YoloDetection>& detections);
 
-  HTr A_camI;
   std::mutex updateMtx;
   std::vector<YoloDetection> yoloDetections;
+  bool newYoloUpdate;
+  std::pair<std::string, int> cameraNamedId;
 };
 
 }   // namespace aff

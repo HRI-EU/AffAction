@@ -162,7 +162,9 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-yolo_tracking" + suffix))
     {
-      lmc->addYoloTracker();
+      std::string yoloCam = "camera_0";
+      getKeyValuePair<std::string>(argsVec, "-yolo_camera" + suffix, yoloCam);
+      lmc->addYoloTracker(yoloCam);
     }
 
     if (getKey(argsVec, "-face_tracking" + suffix))
@@ -442,6 +444,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
     argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
     argP.addDescription("-yolo_tracking", "For '-landmarks_zmq': Start with Yolo tracking");
+    argP.addDescription("-yolo_camera", "For '-landmarks_zmq': Name of camera body");
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
