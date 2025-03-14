@@ -47,22 +47,15 @@
 
 static RcsBody* getBody(const RcsGraph* graph, std::pair<std::string,int>& bdyIdPair)
 {
-  RcsBody* bdy = nullptr;
-  int& bdyId = bdyIdPair.second;
-  std::string bdyName = bdyIdPair.first;
-
-  if ((bdyId == -1) || (std::string(graph->bodies[bdyId].name) != bdyName))
+  if ((bdyIdPair.second==-1) || (bdyIdPair.first!=graph->bodies[bdyIdPair.second].name))
   {
-    bdy = RcsGraph_getBodyByName(graph, bdyName.c_str());
-    RCHECK_MSG(bdy, "Body %s with id %d", bdyName.c_str(), bdyId);
-    bdyId = bdy->id;
-  }
-  else
-  {
-    bdy = &graph->bodies[bdyId];
+    RcsBody* bdy = RcsGraph_getBodyByName(graph, bdyIdPair.first.c_str());
+    bdyIdPair.second = bdy ? bdy->id : -1;
+    return bdy;
   }
 
-  return bdy;
+
+  return &graph->bodies[bdyIdPair.second];
 }
 
 static void computePixelRayIntersection3D(const RcsGraph* graph, const RcsBody* yoloBody,
@@ -147,11 +140,18 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
   try
   {
     // Iterate over each key ("yolo_1", "yolo_2", etc.)
+    // "yolo_1":          # it.key()
+    // {                  # it.value() = detectJson
+    //   "bounding_box": {"x1": 237, "x2": 288, "y1": 124, "y2": 180},
+    //   "class_id": 47,
+    //   "class_name": "apple",
+    //   "confidence": 0.87,
+    //   "frame_index": 0
+    // },
     for (auto it = jsonString.begin(); it != jsonString.end(); ++it)
     {
-      const auto& detectionJson = it.value(); // The object under "yolo_x"
+      const auto& detectionJson = it.value();
 
-      // Extract bounding box if it exists
       if (detectionJson.contains("bounding_box") && detectionJson["bounding_box"].is_object())
       {
         YoloDetection det;
@@ -164,6 +164,7 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
         det.y1 = bboxJson.value("y1", 0);
         det.x2 = bboxJson.value("x2", 0);
         det.y2 = bboxJson.value("y2", 0);
+        detections.push_back(det);
       }
 
     }
@@ -215,6 +216,7 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
 
   // Z points outwards from lens
   RcsBody* cam = getBody(graph, cameraNamedId);
+  RCHECK_MSG(cam, "Body %s with id %d", cameraNamedId.first.c_str(), cameraNamedId.second);
 
   // Go through detections and assign 3d coordinates
   for (const auto& detection : detections)
