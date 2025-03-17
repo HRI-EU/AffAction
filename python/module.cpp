@@ -1235,7 +1235,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::move(lm);
   }))
   .def("addArucoTracker", &aff::LandmarkBase::addArucoTracker)
-  .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r) -> int
+  .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r, std::string camera) -> int
   {
     aff::ExampleActionsECS* sim = sim_.cast<aff::ExampleActionsECS*>();
     if (!sim->getScene())
@@ -1259,7 +1259,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return 0;
     }
 
-    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents);
+    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents, camera);
     lm.addTracker(std::unique_ptr<aff::AzureSkeletonTracker>(tracker));
     tracker->addAgents(sim->getScene());
     tracker->setSkeletonDefaultPositionRadius(r);
@@ -1282,11 +1282,11 @@ PYBIND11_MODULE(pyAffaction, m)
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     lm.enableDebugGraphics(sim->getViewer());
   })
-  .def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
-  {
-    const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
-    lm.setCameraTransform(&cam->A_BI);
-  })
+  //.def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
+  //{
+  //  const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
+  //  lm.setCameraTransform(&cam->A_BI);
+  //})
   .def("getAffordanceFrame", [](aff::LandmarkBase& lm, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
   {
     nlohmann::json data;

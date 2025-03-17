@@ -141,12 +141,8 @@ public:
 
   // Inherited methods
   std::string getRequestKeyword() const;
-  void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
   void update(ActionScene* scene, RcsGraph* graph);
-  void setCameraTransform(const HTr* A_CI);
-
-
-
 
 private:
 
@@ -164,11 +160,13 @@ private:
 
   YoloTracker(const YoloTracker& other) = delete;
   static std::string YoloDetectionsToString(const std::vector<YoloDetection>& detections);
+  void setCameraMatrix(double K[3][3]);
+  void setCameraMatrix(const std::vector<std::vector<double>>& camera_matrix);
 
   std::mutex updateMtx;
   std::vector<YoloDetection> yoloDetections;
   bool newYoloUpdate;
-  std::pair<std::string, int> cameraNamedId;
+  double camera_matrix[3][3];
 };
 
 }   // namespace aff

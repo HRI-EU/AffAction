@@ -510,8 +510,8 @@ void Skeleton::setAlphaRecursive(osg::Node* node, double newAlpha)
 /*******************************************************************************
  *
  *******************************************************************************/
-AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons) :
-  newAzureUpdate(false), defaultPosRadius(DBL_MAX)
+AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons, const std::string& camera) :
+  TrackerBase(camera), newAzureUpdate(false), defaultPosRadius(DBL_MAX)
 {
   HTr_setIdentity(&A_CI);
   for (size_t i=0; i<numSkeletons; ++i)
@@ -531,6 +531,11 @@ std::string AzureSkeletonTracker::getRequestKeyword() const
 
 void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    this->A_CI = getCameraTransform(graph);
+  }
+
   updateSkeletons(graph);
   updateAgents(scene, graph);
   newAzureUpdate = false;
@@ -690,11 +695,17 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
 
 }
 
-void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
+void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
+  HTr A_camI;
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    A_camI = this->A_CI;
+  }
+
   std::map<int, std::vector<HTr>> markerMap;
 
-  for (auto& entry : json.items())
+  for (auto& entry : jsonData.items())
   {
     RCHECK(entry.value().size()==NUM_FRAMES);
 
@@ -744,7 +755,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     for (auto& marker : markers)
     {
       HTr tmp = marker;
-      HTr_transform(&marker, &A_CI, &tmp);
+      HTr_transform(&marker, &A_camI, &tmp);
     }
 
     REXEC(5)
@@ -888,11 +899,6 @@ bool AzureSkeletonTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph
   }
 
   return true;
-}
-
-void AzureSkeletonTracker::setCameraTransform(const HTr* A_camI)
-{
-  HTr_copy(&A_CI, A_camI);
 }
 
 void AzureSkeletonTracker::setSkeletonDefaultPosition(size_t skeletonIdx, double x, double y, double z)

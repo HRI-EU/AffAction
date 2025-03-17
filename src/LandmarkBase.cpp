@@ -82,23 +82,6 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
     time = json_header["timestamp"];
   }
 
-  std::string cameraFrame = json_header["frame_id"];
-
-  // Extract the camera matrix
-  std::vector<std::vector<double>> camera_matrix;
-
-  if (json_header.contains("camera_matrix"))
-  {
-    try
-    {
-      camera_matrix = json_data["header"]["camera_matrix"].get<std::vector<std::vector<double>>>();
-    }
-    catch (const std::exception& e)
-    {
-      RLOG_CPP(1, "Error parsing camera_matrix: " << e.what());
-    }
-  }
-
   // Delegate parsing of data to added trackers
   if (json_data.contains("data"))
   {
@@ -110,45 +93,28 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
       {
         if (entry.key() == tracker->getRequestKeyword())
         {
-          tracker->setCameraMatrix(camera_matrix);
-          tracker->parse(entry.value(), time, cameraFrame);
+          tracker->parse(json_header, entry.value(), time);
         }
       }
     }
   }
 }
 
-void LandmarkBase::setCameraTransform(const HTr* A_camI)
-{
-  double x[6];
-  HTr_to6DVector(x, A_camI);
-  RLOG(0, "Callback: Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
-       x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
-  for (const auto& tracker : trackers)
-  {
-    tracker->setCameraTransform(A_camI);
-  }
-}
-
 void LandmarkBase::addArucoTracker(const std::string& camera, const std::string& baseMarker)
 {
   auto tracker = new ArucoTracker(camera, baseMarker);
-  tracker->addCalibrationFinishedCallback([this](const HTr* A_CI) -> void
-  {
-    setCameraTransform(A_CI);
-  });
   addTracker(std::unique_ptr<ArucoTracker>(tracker));
   RLOG(0, "Added ArucoTracker");
 }
 
-TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
+TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons, const std::string& camera)
 {
-  auto tracker = new AzureSkeletonTracker(numSkeletons);
+  auto tracker = new AzureSkeletonTracker(numSkeletons, camera);
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   return tracker;
 }
 
-int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r)
+int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r, const std::string& camera)
 {
   if (!scene)
   {
@@ -171,7 +137,7 @@ int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r
     return 0;
   }
 
-  auto tracker = new AzureSkeletonTracker(numHumanAgents);
+  auto tracker = new AzureSkeletonTracker(numHumanAgents, camera);
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
@@ -214,8 +180,7 @@ TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::s
     return nullptr;
   }
 
-  FaceTracker* tracker = new FaceTracker(faceBodyName);
-  tracker->setCameraName(camera);
+  FaceTracker* tracker = new FaceTracker(faceBodyName, camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));
 
   return tracker;

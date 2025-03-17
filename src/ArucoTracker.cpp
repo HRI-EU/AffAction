@@ -265,11 +265,10 @@ public:
                          std::string bdyName,
                          std::vector<std::string> markerShapeNames);
 
-  void updateCameraTransform(RcsGraph* graph);
+  void updateCameraTransform(RcsGraph* graph, const HTr* A_CI);
 
   void startCalibration(size_t numFrames);
   void stopCalibration();
-  void registerCallback(std::function<void(const HTr*)> callback);
   std::string getBaseMarkerName() const;
   std::string getCameraName() const;
   bool isCalibrating() const;
@@ -281,7 +280,6 @@ private:
   int updateCameraPoseFromAruco;
   double tmc;
   size_t numCalibrationSteps;
-  std::vector<std::function<void(const HTr*)>> cameraCalibrationFinishedCb;
 };
 
 ArucoCalibrator::ArucoCalibrator(const std::string& cameraBodyName_,
@@ -307,11 +305,6 @@ std::string ArucoCalibrator::getBaseMarkerName() const
 std::string ArucoCalibrator::getCameraName() const
 {
   return cameraBodyName;
-}
-
-void ArucoCalibrator::registerCallback(std::function<void(const HTr*)> callback)
-{
-  cameraCalibrationFinishedCb.push_back(callback);
 }
 
 // Process aruco frames. Called from control loop (100Hz or so)
@@ -376,17 +369,8 @@ void ArucoCalibrator::updateCalibration(RcsGraph* graph,
 
   if (updateCameraPoseFromAruco>numCalibrationSteps)
   {
-    RLOG(0, "Calibration finished");
-    double x[6];
-    HTr_to6DVector(x, &A_ArucoCam);
-    RLOG(0, "Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
-         x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
     updateCameraPoseFromAruco = -1;
-    for (auto& cb : cameraCalibrationFinishedCb)
-    {
-      cb(&A_ArucoCam);
-    }
-    updateCameraTransform(graph);
+    updateCameraTransform(graph, &A_ArucoCam);
   }
 
 }
@@ -401,14 +385,20 @@ bool ArucoCalibrator::isCalibrating() const
   return false;
 }
 
-void ArucoCalibrator::updateCameraTransform(RcsGraph* graph)
+void ArucoCalibrator::updateCameraTransform(RcsGraph* graph, const HTr* A_AC)
 {
+  RLOG(0, "Calibration finished");
+  double x[6];
+  HTr_to6DVector(x, A_AC);
+  RLOG(0, "Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
+       x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
+
   const RcsBody* cam = RcsGraph_getBodyByName(graph, cameraBodyName.c_str());
   RCHECK_MSG(cam && cam->rigid_body_joints, "%s", cameraBodyName.c_str());
   const RcsJoint* camJnt = RCSJOINT_BY_ID(graph, cam->jntId);
   RCHECK(camJnt);
   double* q_cam = &graph->q->ele[camJnt->jointIndex];
-  HTr_to6DVector(q_cam, &A_ArucoCam);
+  HTr_to6DVector(q_cam, A_AC);
 
   RLOG(1, "[%d] Setting camera pose to %.3f %.3f %.3f %.3f %.3f %.3f",
        updateCameraPoseFromAruco, q_cam[0], q_cam[1], q_cam[2],
@@ -433,10 +423,9 @@ void ArucoCalibrator::stopCalibration()
 /*******************************************************************************
   ArucoTracker class implementation
  *******************************************************************************/
-ArucoTracker::ArucoTracker(const std::string& cameraBodyName, const std::string& baseMarkerBdyName) : newArucoUpdate(false)
+ArucoTracker::ArucoTracker(const std::string& camera, const std::string& baseMarkerBdyName) : TrackerBase(camera), newArucoUpdate(false)
 {
-  calibration = std::make_unique<ArucoCalibrator>(cameraBodyName, baseMarkerBdyName);
-  HTr_setIdentity(&A_CI);
+  calibration = std::make_unique<ArucoCalibrator>(camera, baseMarkerBdyName);
 }
 
 ArucoTracker::~ArucoTracker()
@@ -452,14 +441,15 @@ std::string ArucoTracker::getRequestKeyword() const
 void ArucoTracker::update(ActionScene* scene, RcsGraph* graph)
 {
   // Just the camera transform and the arucoMap can be written from different threads. We protect them here.
-  HTr A_camI;
+  //HTr A_camI;
   bool newupdate = false;
   std::map<std::string, std::vector<double>> localArucoMap;
   if (!frozen)
   {
     std::lock_guard<std::mutex> lock(arucoMapMtx);
     localArucoMap = this->arucoMap;
-    HTr_copy(&A_camI, &this->A_CI);
+    //HTr_copy(&A_camI, &this->A_CI);
+    //A_camI = getCameraTransform(graph);
     newupdate = this->newArucoUpdate;
     if (this->newArucoUpdate)
     {
@@ -472,6 +462,8 @@ void ArucoTracker::update(ActionScene* scene, RcsGraph* graph)
   // transforms of objects that are held in any hand.
   if (newupdate)
   {
+    HTr A_camI = getCameraTransform(graph);
+
     RCSGRAPH_FOREACH_BODY(graph)
     {
       // We only add entries that correspond to valid rigid bodies that have at least one marker.
@@ -593,12 +585,12 @@ static std::vector<double> parsePose(const nlohmann::json& json)
  }
 
  */
-void ArucoTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
+void ArucoTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
   std::map<std::string,std::vector<double>> localArucoMap;
-  RLOG_CPP(2, "Received 'aruco':" << json.dump(2));
+  RLOG_CPP(2, "Received 'aruco':" << jsonData.dump(2));
 
-  for (auto& entry : json.items())
+  for (auto& entry : jsonData.items())
   {
     if (entry.value().size() != 1)
     {
@@ -635,26 +627,6 @@ void ArucoTracker::parse(const nlohmann::json& json, double time, const std::str
   std::lock_guard<std::mutex> lock(arucoMapMtx);
   arucoMap = localArucoMap;
   newArucoUpdate = true;
-}
-
-void ArucoTracker::setCameraTransform(const HTr* A_camI)
-{
-  REXEC(0)
-  {
-    double x[6];
-    HTr_to6DVector(x, A_camI);
-    RLOG(0, "ArucoTracker::Callback: Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
-         x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
-  }
-
-  HTr_printComment("ARUCO: Setting camera transform to:", A_camI);
-  std::lock_guard<std::mutex> lock(arucoMapMtx);
-  HTr_copy(&A_CI, A_camI);
-}
-
-void ArucoTracker::addCalibrationFinishedCallback(std::function<void(const HTr*)> callback)
-{
-  calibration->registerCallback(callback);
 }
 
 std::string ArucoTracker::getBaseMarkerName() const

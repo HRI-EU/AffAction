@@ -54,11 +54,11 @@ public:
   void setJsonInput(const nlohmann::json& json);
 
   void addTracker(std::unique_ptr<TrackerBase> tracker);
-  void setCameraTransform(const HTr* A_CI);
+  //void setCameraTransform(const HTr* A_CI);
   void addArucoTracker(const std::string& camera="camera",
                        const std::string& baseMarker="aruco_base");
-  TrackerBase* addSkeletonTracker(size_t numSkeletons);
-  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius);
+  TrackerBase* addSkeletonTracker(size_t numSkeletons, const std::string& camera);
+  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius, const std::string& camera);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 
@@ -67,7 +67,6 @@ public:
 
   void startCalibration(const std::string& camera, size_t numFrames);
   bool isCalibrating(const std::string& camera) const;
-  //void setScenePtr(RcsGraph* graph, ActionScene* scene);
 
   void onFreezePerception(bool freeze);
   bool isFrozen() const;

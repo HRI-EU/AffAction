@@ -45,19 +45,6 @@
 
 
 
-static RcsBody* getBody(const RcsGraph* graph, std::pair<std::string,int>& bdyIdPair)
-{
-  if ((bdyIdPair.second==-1) || (bdyIdPair.first!=graph->bodies[bdyIdPair.second].name))
-  {
-    RcsBody* bdy = RcsGraph_getBodyByName(graph, bdyIdPair.first.c_str());
-    bdyIdPair.second = bdy ? bdy->id : -1;
-    return bdy;
-  }
-
-
-  return &graph->bodies[bdyIdPair.second];
-}
-
 static void computePixelRayIntersection3D(const RcsGraph* graph, const RcsBody* yoloBody,
                                           const HTr* A_CI, const double I_ray[3],
                                           double intersect_pt[3])
@@ -119,8 +106,9 @@ static bool pixel_to_ray(double u, double v, double K[3][3], double ray_[3])
 namespace aff
 {
 
-YoloTracker::YoloTracker(const std::string& cameraName) : newYoloUpdate(false), cameraNamedId(cameraName, -1)
+YoloTracker::YoloTracker(const std::string& cameraName) : TrackerBase(cameraName), newYoloUpdate(false)
 {
+  Mat3d_setZero(camera_matrix);
 }
 
 YoloTracker::~YoloTracker()
@@ -132,9 +120,24 @@ std::string YoloTracker::getRequestKeyword() const
   return "yolo";
 }
 
-void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std::string& cameraFrame)
+void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
-  RLOG_CPP(2, "Received 'yolo':" << jsonString.dump(2));
+  // Extract the camera matrix
+  if (jsonHeader.contains("camera_matrix"))
+  {
+    try
+    {
+      std::vector<std::vector<double>> camera_matrix = jsonHeader["camera_matrix"].get<std::vector<std::vector<double>>>();
+      setCameraMatrix(camera_matrix);
+    }
+    catch (const std::exception& e)
+    {
+      RLOG_CPP(1, "Error parsing camera_matrix: " << e.what());
+    }
+  }
+
+
+  RLOG_CPP(2, "Received 'yolo':" << jsonData.dump(2));
   std::vector<YoloDetection> detections;
 
   try
@@ -148,7 +151,7 @@ void YoloTracker::parse(const nlohmann::json& jsonString, double time, const std
     //   "confidence": 0.87,
     //   "frame_index": 0
     // },
-    for (auto it = jsonString.begin(); it != jsonString.end(); ++it)
+    for (auto it = jsonData.begin(); it != jsonData.end(); ++it)
     {
       const auto& detectionJson = it.value();
 
@@ -215,7 +218,7 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
   }
 
   // Z points outwards from lens
-  RcsBody* cam = getBody(graph, cameraNamedId);
+  RcsBody* cam = TrackerBase::getBody(graph, cameraNamedId);
   RCHECK_MSG(cam, "Body %s with id %d", cameraNamedId.first.c_str(), cameraNamedId.second);
 
   // Go through detections and assign 3d coordinates
@@ -250,8 +253,25 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
 
 }
 
-void YoloTracker::setCameraTransform(const HTr* A_CI)
+void YoloTracker::setCameraMatrix(double K[3][3])
 {
+  Mat3d_copy(this->camera_matrix, K);
+}
+
+void YoloTracker::setCameraMatrix(const std::vector<std::vector<double>>& K)
+{
+  if (K.empty())
+  {
+    return;
+  }
+
+  for (size_t i = 0; i < 3; ++i)
+  {
+    for (size_t j = 0; j < 3; ++j)
+    {
+      this->camera_matrix[i][j] = K[i][j];
+    }
+  }
 }
 
 std::string YoloTracker::YoloDetectionsToString(const std::vector<YoloTracker::YoloDetection>& detections)

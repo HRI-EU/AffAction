@@ -256,7 +256,7 @@ static void getRigidBodyDofs(HTr* T_BP,
   Mat3d_copy(T_BP->rot, A_BP);
 }
 
-ArucoMultiCamTracker::ArucoMultiCamTracker() : newArucoUpdate(false)
+ArucoMultiCamTracker::ArucoMultiCamTracker() : TrackerBase(""), newArucoUpdate(false)
 {
 }
 

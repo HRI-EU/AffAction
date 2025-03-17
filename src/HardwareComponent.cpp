@@ -162,9 +162,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-yolo_tracking" + suffix))
     {
-      std::string yoloCam = "camera_0";
-      getKeyValuePair<std::string>(argsVec, "-yolo_camera" + suffix, yoloCam);
-      lmc->addYoloTracker(yoloCam);
+      lmc->addYoloTracker(landmarksCamera);
     }
 
     if (getKey(argsVec, "-face_tracking" + suffix))
@@ -188,12 +186,12 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       getKeyValuePair<double>(argsVec, "-skeleton_radius" + suffix, r_agent);
 
       // Add skeleton tracker and ALL agents in the scene
-      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent);
+      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent, landmarksCamera);
       RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
     }
 
     // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
+    //lmc->setCameraTransform(&cam->A_BI);
   }
 
   return ret;
@@ -444,7 +442,6 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
     argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
     argP.addDescription("-yolo_tracking", "For '-landmarks_zmq': Start with Yolo tracking");
-    argP.addDescription("-yolo_camera", "For '-landmarks_zmq': Name of camera body");
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");

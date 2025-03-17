@@ -128,36 +128,11 @@ public:
    * JSON, transforms them as needed, and stores them in the ArucoTracker's
    * internal map for later use in updating the RcsGraph.
    *
-   * \param[in] json JSON object with position and orientation for each marker.
+   * \param[in] header JSON object with camera parameters etc.
+   * \param[in] data JSON object with position and orientation for each marker.
    * \param[in] time Timestamp of the received data, used for marker updates.
-   * \param[in] cameraFrame Frame identifier for the camera's coordinate system.
    */
-  void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
-
-  /*!
-   * \brief Sets the camera's transformation relative to the world frame.
-   *
-   * This method updates the camera's transformation (position and orientation)
-   * in the world frame, enabling accurate alignment of detected markers with
-   * the physical camera setup. This is essential for interpreting marker
-   * positions accurately in world coordinates.
-   *
-   * \param[in] A_CI Transformation matrix of the camera in world coordinates.
-   */
-  void setCameraTransform(const HTr* A_CI);
-
-  /*!
-   * \brief Registers a callback function to be triggered upon completion of
-   *        camera calibration.
-   *
-   * Adds a user-defined callback to the list of functions executed when the
-   * calibration process finishes. This allows external components to respond
-   * to calibration completion and adjust configurations or settings as needed.
-   *
-   * \param[in] callback Function to be called with the final calibrated
-   *                     camera transform.
-   */
-  void addCalibrationFinishedCallback(std::function<void(const HTr*)> callback);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
 
   /*!
    * \brief Gets the name of the base marker body used for calibration.
@@ -220,7 +195,6 @@ private:
 
   std::map<std::string, ArucoTracker::MarkerBodyData> markerMap;
 
-  HTr A_CI;         // Transform from world frame into camera frame
   bool newArucoUpdate;
   std::mutex arucoMapMtx;
 
