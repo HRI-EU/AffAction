@@ -6,6 +6,7 @@
 	<!-- The aruco_base corresponds to the RCS_world, i.e. the origin of RCS. -->
 	<Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
 		<Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="0.31 0 1.1 0 0 0" type="FRAME"/>
+		<Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0.31 0 1.1 0 0 0" textureFile="textures/4x4marker_1.jpg" />
 		<Shape scale="0.5" type="FRAME"/>
 	</Body>
 	<AffordanceModel body="aruco_base" instance_id="world" name="world" types="static">
