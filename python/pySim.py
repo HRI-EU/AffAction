@@ -48,8 +48,8 @@ sim.speedUp = 3
 sim.noLimits = False
 sim.verbose = False
 sim.xmlFileName = "g_iros25.xml"
-#sim.addComponentArgument("-physics Bullet")
-sim.addComponentArgument("-landmarks_zmq -yolo_tracking -landmarks_connection tcp://localhost:5556")
-sim.addComponentArgument("-landmarks_zmq2 -aruco_tracking2 -landmarks_connection2 tcp://localhost:5555")
+sim.addComponentArgument("-physics Bullet -physics_config config/physics/physics.xml")
+#sim.addComponentArgument("-landmarks_zmq -yolo_tracking -landmarks_connection tcp://localhost:5556")
+#sim.addComponentArgument("-landmarks_zmq2 -aruco_tracking2 -landmarks_connection2 tcp://localhost:5555")
 sim.init(True)
 sim.run()

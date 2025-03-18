@@ -67,6 +67,7 @@ PhysicsComponent::PhysicsComponent(EntityBase* parent,
   subscribe("PostUpdateGraph", &PhysicsComponent::onPostUpdateGraph);
   subscribe("ResetRigidBodies", &PhysicsComponent::onResetRigidBodies);
   subscribe("FreezePerception", &PhysicsComponent::onFreezePerception);
+  subscribe("Print", &PhysicsComponent::onPrint);
 }
 
 PhysicsComponent::~PhysicsComponent()
@@ -178,6 +179,11 @@ void PhysicsComponent::onResetRigidBodies()
 void PhysicsComponent::onFreezePerception(bool freeze)
 {
   this->perceptionFrozen = freeze;
+}
+
+void PhysicsComponent::onPrint()
+{
+  sim->print();
 }
 
 }   // namespace aff

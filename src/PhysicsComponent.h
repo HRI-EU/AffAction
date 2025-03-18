@@ -111,6 +111,7 @@ private:
   void onEnableCommands();
   void onResetRigidBodies();
   void onFreezePerception(bool freeze);
+  void onPrint();
 
   double dtSim, tStart;
   bool enableCommands;
