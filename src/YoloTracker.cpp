@@ -81,6 +81,10 @@ static bool pixel_to_ray(double u, double v, double K[3][3], double ray_[3])
   if (det==0.0)
   {
     RLOG(1, "Camera intrinsic matrix is not invertible");
+    REXEC(1)
+    {
+      Mat3d_printCommentDigits("Camera matrix", K, 8);
+    }
     return false;
   }
 
@@ -134,6 +138,10 @@ void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     {
       RLOG_CPP(1, "Error parsing camera_matrix: " << e.what());
     }
+  }
+  else
+  {
+    RLOG_CPP(1, "No camera_matrix in json header" << jsonHeader.dump(2));
   }
 
 
