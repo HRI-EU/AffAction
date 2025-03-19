@@ -1,0 +1,328 @@
+<?xml version="1.0" ?>
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default_top" resourcePath="${SIT}/Data/RobotMeshes/1.0/data">
+
+	<Body name="default_camera_view" rigid_body_joints="2.360706 1.077978 2.469972   8.450 -20.542 -155.590"/>
+	
+	<!-- The aruco_base corresponds to the RCS_world, i.e. the origin of RCS. -->
+	<Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+		<Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31000000000000005 0 1.1001 0 0 0" type="FRAME"/>
+		<Shape scale="0.5" type="FRAME"/>
+	</Body>
+	<AffordanceModel body="aruco_base" instance_id="world" name="world" types="static">
+    </AffordanceModel>
+	
+	<!-- The model for a simple camera. -->
+	<Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.7519792907893106 -0.028835324789067498 2.1308399121941934 -177.67458097346784 47.765735249370294 87.51428466028239">
+		<Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
+		<Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
+		<Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
+		<Shape graphics="true" scale="0.2" type="FRAME"/>
+	</Body>
+	<AffordanceModel body="camera_0" instance_id="camera_0" name="camera_0" types="camera camera.n.01 static">
+		<Supportable frame="camera_0"/>
+	</AffordanceModel>
+	<Body color="PEWTER" name="floor" physics="kinematic" prev="aruco_base">
+		<Shape distance="true" extents="4 4 0.02" graphics="true" physics="false" transform="0 0 -0.01 0 0 0" type="BOX"/>
+	</Body>
+
+	<!-- The model of the robot. -->
+	<Group prev="aruco_base" transform="-0.65 0 0.3512 0 0 0">
+		<xi:include href="../TwoArmJaco7/g_robo.xml" />
+	</Group>
+
+	<!-- The model of the table. -->
+	<Body color="PEARLWHITE" name="table" physics="kinematic" prev="aruco_base" mass="0" rigid_body_joints="-0.1 0.2 1.2 0 0 0" friction="1.0 0.1 0.1"  restitution="0.0"  damping="5.0"  angular_damping="2.0">
+		<Shape distance="false" extents="0.8 1.2 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" type="BOX"/>
+		<Shape scale="0.2" type="FRAME"/>
+
+
+		<!-- Walls around the table -->
+        <!-- Front wall -->
+        <!-- <Shape type="BOX" distance="false" extents="0.8 0.03 0.05" graphics="true" physics="true" transform="0 0.615 0.015 135 0 0"/> -->
+        <!-- Back wall -->
+        <!-- <Shape type="BOX" distance="false" extents="0.8 0.03 0.05" graphics="true" physics="true" transform="0 -0.615 0.015 45 0 0"/> -->
+        <!-- Left wall -->
+        <!-- <Shape type="BOX" distance="false" extents="0.05 1.2 0.03" graphics="true" physics="true" transform="-0.415 0 0.015 0 45 0"/> -->
+        <!-- Right wall -->
+		 <!-- <Shape type="BOX" distance="false" extents="0.05 1.2 0.03" graphics="true" physics="true" transform="0.415 0 0.015 0 135 0"/> --> <!-- <Shape type="BOX" distance="false" extents="0.05 1.2 0.03" graphics="true" physics="true" transform="0.415 0 0.015 0 135 0"/> -->
+    </Body>   
+	<!-- <Group prev="table" name="bumps" color="0 0 0 0" rigid_body_joints="0.0 0.0 0 0 0 0" >
+		<Body name="bumps" physics="kinematic" transform="0 0 0 0 0 0" graphics="false"> -->
+	<!-- <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 -0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 -0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 -0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 -0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 -0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 0.0333 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 0.1000 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 0.1667 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 0.2333 -0.0 0 0 0" color="0 0 0 0"/>
+
+   
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.4000 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.3389 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2778 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.2167 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.1556 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0944 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="-0.0333 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0278 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.0889 0.3000 -0.0 0 0 0" color="0 0 0 0"/>
+    <Shape type="SPHERE" distance="false" radius="0.01" graphics="true" physics="true" transform="0.1500 0.3000 -0.0 0 0 0" color="0 0 0 0"/> -->
+	<!-- </Body>
+	</Group> -->
+
+	<!-- Apples -->
+	<Group name="_1" prev="table" rigid_body_joints="0.03 0.33 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_7" prev="table" rigid_body_joints="-0.03 0.33 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_8" prev="table" rigid_body_joints="0.0 0.38 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_9" prev="table" rigid_body_joints="0.0 0.35 0.12 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_13" prev="table" rigid_body_joints="0.0 0.34 0.18 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+
+	<Group name="_10" prev="table" rigid_body_joints="0.02 -0.33 0.1 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+
+	<Group name="_11" prev="table" rigid_body_joints="-0.02 -0.33 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_12" prev="table" rigid_body_joints="0.0 -0.38 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+
+<!-- 
+	<Group name="_2" prev="table" rigid_body_joints="0.18 -0.02 0 0 0 0" >
+		<xi:include href="../scene/g_apple_with_bumps.xml"/>
+	</Group> -->
+
+
+	<Group name="_3" prev="table" rigid_body_joints="-0.2 0.1 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_4" prev="table" rigid_body_joints="-0.20 -0.2 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<!-- <Group name="_5" prev="table" rigid_body_joints="0.05 -0.2 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group> -->
+
+	<Group name="_6" prev="table" rigid_body_joints="-0.0 0.0 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+	<Group name="_20" prev="table" rigid_body_joints="0.05 -0.15 0 0 0 0" >
+		<xi:include href="g_apple_with_bumps.xml"/>
+	</Group>
+
+
+
+
+	<!-- <Group name="_6" prev="table" rigid_body_joints="-.2 0.15 0 0 0 0" >
+		<xi:include href="../scene/g_apple_with_bumps.xml"/>
+	</Group> -->
+
+	<!-- <Group name="_6" prev="table" rigid_body_joints="-0.0 -0.15 0 0 0 0" >
+		<xi:include href="../scene/g_apple_with_bumps.xml"/>
+	</Group> -->
+
+	<!-- Bowls -->
+<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="0.0 0.35 0 0 0 0">
+  <Body name="bowl_1" physics="kinematic" transform="0 0 0 0 0 0">
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.08" graphics="true" physics="true" transform="-0.0 -0.08 0.04 0 0 0"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="-0.06381 0.03486 0.07 0 0 60"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="0.06381 0.03486 0.07 0 0 -60"/>
+  </Body>
+</Group>
+
+<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="0.21 0.0 0 0 0 -90" >
+		<Body name="bowl_2" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform="0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
+<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="0.0 -0.35 0 0 0 180" >
+		<Body name="bowl_3" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform=".0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
+
+	<model_state model="default_top" time_stamp="0">
+	  <joint_state joint="ptu_tilt_joint" position="-0.023687" />
+	  <joint_state joint="LeftEyeThY" position="0.0228" />
+	  <joint_state joint="LeftEyeThZ" position="-3.305036" />
+	  <joint_state joint="LeftPupilX" position="0.039065" />
+	  <joint_state joint="LeftPupilThY" position="-0.022837" />
+	  <joint_state joint="LeftPupilThZ" position="3.305036" />
+	  <joint_state joint="GazeXL" position="1.040731" />
+	  <joint_state joint="RightEyeThY" position="0.0228" />
+	  <joint_state joint="RightEyeThZ" position="3.305036" />
+	  <joint_state joint="RightPupilX" position="0.039065" />
+	  <joint_state joint="RightPupilThY" position="-0.022839" />
+	  <joint_state joint="RightPupilThZ" position="-3.305036" />
+	  <joint_state joint="GazeXR" position="1.040731" />
+	  <joint_state joint="j2s7s300_joint_1_right" position="20" />
+	  <joint_state joint="j2s7s300_joint_2_right" position="280" />
+	  <joint_state joint="j2s7s300_joint_3_right" position="-90" />
+	  <joint_state joint="j2s7s300_joint_4_right" position="70" />
+	  <joint_state joint="j2s7s300_joint_6_right" position="200" />
+	  <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+	  <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+	  <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+	  <joint_state joint="j2s7s300_joint_1_left" position="44.79912" />
+	  <joint_state joint="j2s7s300_joint_2_left" position="151.950242" />
+	  <joint_state joint="j2s7s300_joint_3_left" position="62.128341" />
+	  <joint_state joint="j2s7s300_joint_4_left" position="296.22989" />
+	  <joint_state joint="j2s7s300_joint_5_left" position="68.273199" />
+	  <joint_state joint="j2s7s300_joint_6_left" position="266.321631" />
+	  <joint_state joint="j2s7s300_joint_finger_1_left" position="10" />
+	  <joint_state joint="j2s7s300_joint_finger_2_left" position="10" />
+	  <joint_state joint="j2s7s300_joint_finger_3_left" position="10" />
+	</model_state>
+
+	<model_state model="default" time_stamp="0">
+	  <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+	  <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+	  <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+	  <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+	  <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+	  <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+	  <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+	  <joint_state joint="j2s7s300_joint_finger_1_right" position="10"/>
+	  <joint_state joint="j2s7s300_joint_finger_2_right" position="10"/>
+	  <joint_state joint="j2s7s300_joint_finger_3_right" position="10"/>
+	  <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+	  <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+	  <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+	  <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+	  <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+	  <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+	  <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+	  <joint_state joint="j2s7s300_joint_finger_1_left" position="10"/>
+	  <joint_state joint="j2s7s300_joint_finger_2_left" position="10"/>
+	  <joint_state joint="j2s7s300_joint_finger_3_left" position="10"/>
+	</model_state>
+
+	<xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+	<xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/>
+
+</Graph>
