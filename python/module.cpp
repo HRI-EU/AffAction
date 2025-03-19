@@ -1192,6 +1192,24 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // viaPoint action
   //////////////////////////////////////////////////////////////////////////////
+  .def("createActionFile", [](aff::ExampleActionsECS& ex, std::string inputFile)
+  {
+    RLOG(0, "Creating action file");
+
+    const bool pickAndPlace = false;
+    bool success = aff::ExamplePlayBackViapoints::createActionFile(inputFile, "action_iros.xml", pickAndPlace);
+
+    if (!success)
+    {
+      RLOG(0, "Failed to create action file");
+    }
+    else
+    {
+      RLOG(0, "Successfully created action file");
+    }
+
+  },
+  py::arg("inputFile") = "test_robot_traj.txt")
   .def("createViaPointAction", [](aff::ExampleActionsECS& ex, std::string inputFile)
   {
     RLOG(0, "Creating action file");

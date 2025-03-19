@@ -185,8 +185,6 @@ void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     RLOG_CPP(0, "JSON Parsing Error: " << e.what());
   }
 
-  RLOG_CPP(1, YoloDetectionsToString(detections));
-
   std::lock_guard<std::mutex> lock(updateMtx);
   this->yoloDetections = detections;
   this->newYoloUpdate = true;
@@ -212,6 +210,8 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
     this->yoloDetections.clear();
     this->newYoloUpdate = false;
   }
+
+  RLOG_CPP(1, YoloDetectionsToString(detections));
 
   // Add RcsBody name to each detection.
   // Convention: Name is <yolo-category>_<detected_index>. If this name does
@@ -242,7 +242,9 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
 
     // Compute camera ray in world coordinates
     const int center_pixel_u = (detection.x1 + detection.x2) / 2;
-    const int center_pixel_v = detection.y1;
+    //const int center_pixel_v = detection.y1;
+    //const int center_pixel_v = (detection.y1 + detection.y2) / 2;
+    const int center_pixel_v = detection.y2;
     double C_ray[3];
     const bool ray_success = pixel_to_ray(center_pixel_u, center_pixel_v, camera_matrix, C_ray);
     if (ray_success)
@@ -251,6 +253,7 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
       double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
       Vec3d_transRotate(I_ray, cam->A_BI.rot, C_ray);
       computePixelRayIntersection3D(graph, yoloBody, &cam->A_BI, I_ray, q_rbj);
+      RLOG(1, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
     }
     else
     {
