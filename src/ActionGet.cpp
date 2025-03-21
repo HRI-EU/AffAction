@@ -483,6 +483,9 @@ bool ActionGet::initialize(const ActionScene& domain,
     handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
     handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*bg->radius);
     graspType = GraspType::BallGrasp;
+    const double* pt = bg->getFrame(graph)->A_BI.org;
+    I_graspPoint = std::vector<double>(pt, pt+3);
+    RLOG(0, "I_graspPoint = %f %f %f", I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]);
   }
   else if (dynamic_cast<TwistGraspable*>(winningAff))   // This is true for Twistables as well
   {
@@ -738,9 +741,9 @@ ActionGet::createTrajectoryBallGrasp(double t_start,
   const double t_there = t_start + 0.6*(t_grasp-t_start);
   a1->addActivation(t_start, true, 0.5, taskObjHandPos);
   a1->addActivation(t_grasp, false, 0.5, taskObjHandPos);
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, 0.0, 0.0, 0.5*preGraspDist, taskObjHandPos, 1));
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_there, 0.0, 0.0, 0.0, taskObjHandPos));
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_grasp, 0.0, 0.0, 0.0, taskObjHandPos));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]+0.5*preGraspDist, taskObjHandPos, 1));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_there, I_graspPoint.data(), taskObjHandPos));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_grasp, I_graspPoint.data(), taskObjHandPos));
 
   // Hand orientation with respect to object for the approach motion
   a1->addActivation(t_start, true, 0.5, taskHandObjOri);
@@ -948,9 +951,11 @@ std::vector<std::string> ActionGet::createTasksXML() const
       graspType == GraspType::TopGrasp)
   {
     // Relative to the object
+    //xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
+    //          "controlVariable=\"XYZ\" effector=\"" + capabilityFrame +
+    //          "\" " + "refBdy=\"" + affordanceFrame + "\" />";
     xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
-              "controlVariable=\"XYZ\" effector=\"" + capabilityFrame +
-              "\" " + "refBdy=\"" + affordanceFrame + "\" />";
+              "controlVariable=\"XYZ\" effector=\"" + capabilityFrame + "\" />";
   }
   else if (graspType == GraspType::RimGrasp)
   {
