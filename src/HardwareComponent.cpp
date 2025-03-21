@@ -262,6 +262,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     argP.addDescription("-jacoShm7r", "Start with Jaco7 Shm right");
     argP.addDescription("-jacoShm7l", "Start with Jaco7 Shm left");
+    argP.addDescription("-jacoShm6", "Start with Jaco6 Shm (right)");
   }
   else
   {
@@ -274,6 +275,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoShm7l"))
     {
       ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_left);
+      components.push_back(c);
+    }
+
+    if (getKey(argvStrVec, "-jacoShm6"))
+    {
+      ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco6);
       components.push_back(c);
     }
   }

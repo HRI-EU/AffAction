@@ -71,6 +71,18 @@ JacoShmComponent::JacoShmComponent(const RcsGraph* graph, JacoType roboType) :
   // Joints naming convention
   switch (this->jType)
   {
+    case Jaco6:
+      jntNames.push_back("j2n6s300_joint_1");
+      jntNames.push_back("j2n6s300_joint_2");
+      jntNames.push_back("j2n6s300_joint_3");
+      jntNames.push_back("j2n6s300_joint_4");
+      jntNames.push_back("j2n6s300_joint_5");
+      jntNames.push_back("j2n6s300_joint_6");
+      jntNames.push_back("j2s7s300_joint_finger_1");
+      jntNames.push_back("j2s7s300_joint_finger_2");
+      jntNames.push_back("j2s7s300_joint_finger_3");
+      break;
+
     case Jaco7_right:
       jntNames.push_back("j2s7s300_joint_1_right");
       jntNames.push_back("j2s7s300_joint_2_right");
@@ -114,6 +126,13 @@ JacoShmComponent::JacoShmComponent(const RcsGraph* graph, JacoType roboType) :
 
   switch (this->jType)
   {
+    case Jaco6:
+      jntMap["j2n6s300_joint_1"].limitlessJoint = true;
+      jntMap["j2n6s300_joint_4"].limitlessJoint = true;
+      jntMap["j2n6s300_joint_5"].limitlessJoint = true;
+      jntMap["j2n6s300_joint_6"].limitlessJoint = true;
+      break;
+
     case Jaco7_right:
       jntMap["j2s7s300_joint_1_right"].limitlessJoint = true;
       jntMap["j2s7s300_joint_3_right"].limitlessJoint = true;
@@ -134,7 +153,7 @@ JacoShmComponent::JacoShmComponent(const RcsGraph* graph, JacoType roboType) :
 
 
   // Initialize joint indices
-  int nFound = 0, nExpected = 10;
+  size_t nFound = 0;
   RCSGRAPH_TRAVERSE_JOINTS(graph)
   {
     std::map<std::string,JointData>::iterator it = jntMap.find(JNT->name);
@@ -145,7 +164,7 @@ JacoShmComponent::JacoShmComponent(const RcsGraph* graph, JacoType roboType) :
     }
   }
 
-  RCHECK(nFound==nExpected);
+  RCHECK(nFound==jntNames.size());
 }
 
 JacoShmComponent::~JacoShmComponent()
@@ -168,6 +187,7 @@ void JacoShmComponent::updateSensors(RcsGraph* graph)
 
   switch (this->jType)
   {
+    case Jaco6:
     case Jaco7_right:
     {
       currPos = data.right.currPos;
@@ -284,6 +304,13 @@ void JacoShmComponent::setCommand(const MatNd* q_des)
   // Write comand to shared memory
   switch (this->jType)
   {
+    case Jaco6:
+      q_cmd.insert(q_cmd.begin() + 6, 0.0);   // zero-value to 7-th (non-existing) joint
+      shm->lock();
+      VecNd_copy(shm->data->right.desPos, q_cmd.data(), q_cmd.size());
+      shm->unlock();
+      break;
+
     case Jaco7_right:
       shm->lock();
       VecNd_copy(shm->data->right.desPos, q_cmd.data(), q_cmd.size());
