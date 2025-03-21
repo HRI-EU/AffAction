@@ -34,47 +34,47 @@
   
 	<Body name="table_grid" prev="table" transform="-0.1 0 0.041 0 0 0" />
 
-	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 -0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0" />
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 
 
 	
 	<Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 
 
 
 	<Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
 	</Body>
 
 
