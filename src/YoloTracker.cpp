@@ -240,6 +240,13 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
       continue;
     }
 
+    // Ignore the held-in-hand objects
+    const bool heldInHand = RcsBody_isArticulated(graph, yoloBody);
+    if (heldInHand)
+    {
+      continue;
+    }
+
     // Compute camera ray in world coordinates
     const int center_pixel_u = (detection.x1 + detection.x2) / 2;
     //const int center_pixel_v = detection.y1;
@@ -253,7 +260,18 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
       double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
       Vec3d_transRotate(I_ray, cam->A_BI.rot, C_ray);
       computePixelRayIntersection3D(graph, yoloBody, &cam->A_BI, I_ray, q_rbj);
-      RLOG(1, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
+
+      double lb[3], ub[3];
+      bool hasAABB = RcsGraph_computeBodyAABB(graph, yoloBody->id, -1, lb, ub, NULL);
+
+      if (hasAABB)
+      {
+        double z_offset = yoloBody->A_BI.org[2] - lb[2];
+        q_rbj[2] += z_offset;
+        RLOG(2, "Compensating z for %f (%f %f)", z_offset, yoloBody->A_BI.org[2], lb[2]);
+      }
+
+      RLOG(2, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
     }
     else
     {
