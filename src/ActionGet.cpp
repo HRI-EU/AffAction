@@ -608,10 +608,20 @@ tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const
   if ((!handOpen.empty()) && (!handClosed.empty()))
   {
     a1->addActivation(t_start, true, 0.5, taskFingers);
-    const double t_fingerClose = t_grasp;
-    const double t_fingerOpen = 0.5*(t_start + t_fingerClose);
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerOpen, handOpen, taskFingers));
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerClose, handClosed, taskFingers));
+
+    if (graspType == GraspType::BallGrasp)
+    {
+      const double t_there = t_start + 0.6*(t_grasp-t_start);
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_there, handOpen, taskFingers));
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp, handClosed, taskFingers));
+    }
+    else
+    {
+      const double t_fingerOpen = 0.5*(t_start + t_grasp);
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerOpen, handOpen, taskFingers));
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp, handClosed, taskFingers));
+    }
+
   }
 
   if (isObjCollidable)
@@ -724,10 +734,12 @@ ActionGet::createTrajectoryBallGrasp(double t_start,
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
   // Hand position with respect to object
-  const double t_pregrasp = t_start + 0.5*(t_grasp-t_start);
+  const double t_pregrasp = t_start + 0.4*(t_grasp-t_start);
+  const double t_there = t_start + 0.6*(t_grasp-t_start);
   a1->addActivation(t_start, true, 0.5, taskObjHandPos);
   a1->addActivation(t_grasp, false, 0.5, taskObjHandPos);
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, 0.0, 0.0, preGraspDist, taskObjHandPos));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, 0.0, 0.0, 0.5*preGraspDist, taskObjHandPos, 1));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_there, 0.0, 0.0, 0.0, taskObjHandPos));
   a1->add(std::make_shared<tropic::PositionConstraint>(t_grasp, 0.0, 0.0, 0.0, taskObjHandPos));
 
   // Hand orientation with respect to object for the approach motion
