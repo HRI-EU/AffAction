@@ -39,19 +39,19 @@
 
 	<!-- Apples -->
 	<Group name="_1" prev="table" rigid_body_joints="0 0 -1 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
+		<xi:include href="g_apple.xml"/>
 	</Group>
 	<Group name="_2" prev="table" rigid_body_joints="0 0.2 -1 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
+		<xi:include href="g_apple.xml"/>
 	</Group>
 	<Group name="_3" prev="table" rigid_body_joints="0 0.4 -1 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
+		<xi:include href="g_apple.xml"/>
 	</Group>
 	<Group name="_4" prev="table" rigid_body_joints="0 0.6 -1 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
+		<xi:include href="g_apple.xml"/>
 	</Group>
 	<Group name="_5" prev="table" rigid_body_joints="0 0.8 -1 0 0 0" >
-		<xi:include href="../scene/g_apple.xml"/>
+		<xi:include href="g_apple.xml"/>
 	</Group>
 
 	<!-- Oranges -->

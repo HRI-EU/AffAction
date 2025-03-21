@@ -10,7 +10,7 @@
   </Body>
   
   
-  <Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.586 0.237 1.732  -176.550 64.050 82.598" color="LIGHTGRAY" >
+  <Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.572 0.227 1.776  -178.662 61.740 83.685" color="LIGHTGRAY" >
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="false" type="BOX"/>
     <Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
