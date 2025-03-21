@@ -7,7 +7,12 @@
        36° per second for joints 1,2,3 and 48° per second for joints 4,5,6.
   -->
 
-  <Body name="jaco_mount_link" transform="0 0 0.049 0 0 0" >
+  <Body name="jaco_mount_plate" >
+    <Shape type="BOX" extents="0.2 0.15 0.02" distance="false" physics="false" graphics="true" color="BLACK_RUBBER" transform="0 0 0.01 0 0 0" />
+    <Shape type="FRAME" scale="0.3" />
+  </Body>
+
+  <Body name="jaco_mount_link" prev="jaco_mount_plate" transform="0 0 0.049 0 0 0" >
     <Shape type="BOX" extents="0.04 0.04 0.07" distance="false" physics="false" graphics="true" />
   </Body>
 

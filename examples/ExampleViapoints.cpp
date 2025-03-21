@@ -74,6 +74,7 @@ bool ExamplePlayBackViapoints::parseArgs(Rcs::CmdLineParser* parser)
 bool ExamplePlayBackViapoints::initParameters()
 {
   ExampleActionsECS::initParameters();
+  configDirectory = "config/xml/CCDP";
   xmlFileName = "g_iros25.xml";
   inputFile = "test_robot_traj.txt";
   outputFile = "action_iros.xml";

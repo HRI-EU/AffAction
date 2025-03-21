@@ -441,15 +441,12 @@ std::string ArucoTracker::getRequestKeyword() const
 void ArucoTracker::update(ActionScene* scene, RcsGraph* graph)
 {
   // Just the camera transform and the arucoMap can be written from different threads. We protect them here.
-  //HTr A_camI;
   bool newupdate = false;
   std::map<std::string, std::vector<double>> localArucoMap;
   if (!frozen)
   {
     std::lock_guard<std::mutex> lock(arucoMapMtx);
     localArucoMap = this->arucoMap;
-    //HTr_copy(&A_camI, &this->A_CI);
-    //A_camI = getCameraTransform(graph);
     newupdate = this->newArucoUpdate;
     if (this->newArucoUpdate)
     {
