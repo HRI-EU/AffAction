@@ -30,7 +30,7 @@
 <Graph>
 
     <Body name="apple" color="GREEN" physics="dynamic" mass="0.5" >
-        <Shape type="SPHERE" radius="0.04" graphics="true" distance="true"
+        <Shape type="SPHERE" radius="0.04" graphics="true" distance="false"
                transform="0 0 0.0 0 0 0"/>
         <Shape type="FRAME" scale="0.1" graphics="true" />
     </Body>

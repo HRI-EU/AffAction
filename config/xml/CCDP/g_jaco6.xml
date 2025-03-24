@@ -4,13 +4,13 @@
   <Body name="default_camera_view" rigid_body_joints="-1.998433 -1.690323 2.355891   -11.362 18.636 42.816"/>
   
   <Body name="aruco_base"  color="PEWTER" rigid_body_joints="true">
-    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="0.31 0.31 1.1 0 0 0" type="FRAME"/>
-    <Shape type="BOX" extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true" transform="0.31 0.31 1.1 0 0 0" textureFile="textures/4x4marker_1.jpg" />
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="-0.31 0.19 1.1 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true" transform="-0.31 0.19 1.1 0 0 0" textureFile="textures/4x4marker_1.jpg" />
     <Shape scale="0.5" type="FRAME"/>
   </Body>
   
   
-  <Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.572 0.227 1.776  -178.662 61.740 83.685" color="LIGHTGRAY" >
+  <Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.231 0.883 1.656  125.459 13.478 165.568" color="LIGHTGRAY" >
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="false" type="BOX"/>
     <Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
@@ -27,11 +27,11 @@
   </Body>
 
   
-  <Group prev="table" transform="0.32 0.5 0 0 0 -90">
+  <Group prev="table" transform="-0.325 0 0 0 0 90" was_transform="0.32 0.5 0 0 0 -90">
     <xi:include href="../SingleJaco6/kinova_ulw2_6dof.xml" />
   </Group>
 
-  
+  <!--
 	<Body name="table_grid" prev="table" transform="-0.1 0 0.041 0 0 0" />
 
 	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 -0 0 0 0">
@@ -97,7 +97,7 @@
 		<Supportable frame="table_grid_2_6"/>
 		<Supportable frame="table_grid_2_7"/>
 	</AffordanceModel>
-
+-->
 
   <Body name="hand" prev="hand_base" >
     <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
@@ -121,22 +121,26 @@
   </Manipulator>
 
 
+  <Agent body="table" types="robot" name="Johnnie" >
+    <Component manipulator="hand" />
+  </Agent>
+
 
   
   <!-- Apples -->
-  <Group name="_1" prev="table" rigid_body_joints="0 -0.15 0.04 0 0 0" >
+  <Group name="_1" prev="table" rigid_body_joints="0 -0.15 -10.04 0 0 0" >
     <xi:include href="g_apple.xml"/>
   </Group>
-  <Group name="_2" prev="table" rigid_body_joints="0 0 0.04 0 0 0" >
+  <Group name="_2" prev="table" rigid_body_joints="0 0 -10.04 0 0 0" >
     <xi:include href="g_apple.xml"/>
   </Group>
-  <Group name="_3" prev="table" rigid_body_joints="0 0.15 0.04  0 0 0" >
+  <Group name="_3" prev="table" rigid_body_joints="0 0.15 -10.04  0 0 0" >
     <xi:include href="g_apple.xml"/>
   </Group>
-  <Group name="_4" prev="table" rigid_body_joints="0 0.3 0.04  0 0 0" >
+  <Group name="_4" prev="table" rigid_body_joints="0 0.3 -10.04  0 0 0" >
     <xi:include href="g_apple.xml"/>
   </Group>
-  <Group name="_5" prev="table" rigid_body_joints="0 0.4 0.04  0 0 0" >
+  <Group name="_5" prev="table" rigid_body_joints="0 0.4 -10.04  0 0 0" >
     <xi:include href="g_apple.xml"/>
   </Group>
 
@@ -161,6 +165,32 @@
   <Group prev="table" name="bowl_4" color="RED" rigid_body_joints="-0.2 -0.1 0 0 0 0" >
     <xi:include href="../scene/g_bowl.xml"/>
   </Group> -->
+
+
+
+
+<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="0.0 0.35 0 0 0 0">
+  <Body name="bowl_1" physics="kinematic" transform="0 0 0 0 0 0">
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.08" graphics="true" physics="true" transform="-0.0 -0.08 0.04 0 0 0"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="-0.06381 0.03486 0.07 0 0 60"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="0.06381 0.03486 0.07 0 0 -60"/>
+  </Body>
+</Group>
+
+<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="0.21 0.0 0 0 0 -90" >
+		<Body name="bowl_2" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform="0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
+<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="0.0 -0.35 0 0 0 180" >
+		<Body name="bowl_3" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform=".0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
 
 
   <model_state model="InitialPose" time_stamp="">

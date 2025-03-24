@@ -150,33 +150,33 @@ bool ExamplePlayBackViapoints::createActionFile(std::string inFile, std::string 
 
   // Here come the tasks
   std::string tasks;
-  tasks += "  <Task name='hand_left' controlVariable='XYZ' effector='hand_left_pincergrasp' refBdy='table' />\n";
-  tasks += "  <Task name='hand_left_ori' controlVariable='POLAR' effector='hand_left_pincergrasp' refBdy='table' axisDirection='X' />\n";
-  tasks += "  <Task name='fingers_left' controlVariable='Joints' jnts='j2s7s300_joint_finger_1_left j2s7s300_joint_finger_2_left j2s7s300_joint_finger_3_left' />\n";
+  tasks += "  <Task name='hand' controlVariable='XYZ' effector='hand_pincergrasp' refBdy='table' />\n";
+  tasks += "  <Task name='hand_ori' controlVariable='POLAR' effector='hand_pincergrasp' refBdy='table' axisDirection='X' />\n";
+  tasks += "  <Task name='fingers' controlVariable='Joints' jnts='j2s7s300_joint_finger_1 j2s7s300_joint_finger_2 j2s7s300_joint_finger_3' />\n";
   fd << tasks << std::endl;
 
   // Open fingers: 0.01, close fingers: 0.6
   const double t_final = MatNd_get(trj, trj->m - 1, 0);
-  std::vector<double> fingersClosed = std::vector<double>(3, 0.6);
-  std::vector<double> fingersOpen = std::vector<double>(3, 0.01);
+  std::vector<double> fingersClosed = std::vector<double>(3, 0.8);
+  std::vector<double> fingersOpen = std::vector<double>(3, 0.1);
 
   std::unique_ptr<tropic::ActivationSet> a = std::make_unique<tropic::ActivationSet>();
-  a->addActivation(0.05, true, 0.5, "hand_left");
-  a->addActivation(t_final, false, 0.5, "hand_left");
-  a->addActivation(0.05, true, 0.5, "fingers_left");
-  a->addActivation(t_final, false, 0.5, "fingers_left");
-  a->addActivation(0.05, true, 0.5, "hand_left_ori");
-  a->addActivation(t_final, false, 0.5, "hand_left_ori");
+  a->addActivation(0.05, true, 0.5, "hand");
+  a->addActivation(t_final, false, 0.5, "hand");
+  a->addActivation(0.05, true, 0.5, "fingers");
+  a->addActivation(t_final, false, 0.5, "fingers");
+  a->addActivation(0.05, true, 0.5, "hand_ori");
+  a->addActivation(t_final, false, 0.5, "hand_ori");
 
-  a->add(std::make_shared<tropic::PolarConstraint>(5.0, 0.9 * M_PI, 0.0, "hand_left_ori"));
+  a->add(std::make_shared<tropic::PolarConstraint>(5.0, 1.0 * M_PI, 0.0, "hand_ori"));
 
   // Go through all rows of the input file
   for (size_t i = 0; i < trj->m; ++i)
   {
     const double* row = MatNd_getRowPtr(trj, i);
     const std::vector<double>& fingerAngles = (row[4] < 0.5) ? fingersOpen : fingersClosed;
-    a->add(std::make_shared<tropic::PositionConstraint>(row[0], row[1], row[2], row[3], "hand_left"));
-    a->add(std::make_shared<tropic::VectorConstraint>(row[0], fingerAngles, "fingers_left"));
+    a->add(std::make_shared<tropic::PositionConstraint>(row[0], row[1], row[2], row[3], "hand"));
+    a->add(std::make_shared<tropic::VectorConstraint>(row[0], fingerAngles, "fingers"));
   }
 
   for (size_t i = 1; i < trj->m; ++i)
@@ -189,7 +189,7 @@ bool ExamplePlayBackViapoints::createActionFile(std::string inFile, std::string 
 
     if (pickAndPlace && (releasing || getting))
     {
-      a->add(std::make_shared<tropic::PickAndPlaceConstraint>(t, "hand_left_pincergrasp"));
+      a->add(std::make_shared<tropic::PickAndPlaceConstraint>(t, "hand_pincergrasp"));
     }
 
   }
