@@ -260,8 +260,16 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
     {
       RcsBody* yoloBody = RcsGraph_getBodyByName(graph, it->yoloBdyName.c_str());
       double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
-      RCHECK_MSG(q_rbj, "Body not found or issues with dof: '%s'", it->yoloBdyName.c_str());
-      Vec3d_set(q_rbj, 0.0, 0.0, -10.0);
+
+      if (q_rbj)
+      {
+        Vec3d_set(q_rbj, 0.0, 0.0, -10.0);
+      }
+      else
+      {
+        RLOG(1, "Body not found or issues with dof: '%s'", it->yoloBdyName.c_str());
+      }
+
       yoloDetections.erase(it);
     }
     else
