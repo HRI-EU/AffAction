@@ -143,6 +143,8 @@ public:
   std::string getRequestKeyword() const;
   void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
   void update(ActionScene* scene, RcsGraph* graph);
+  void setMaxAge(double age);
+  double getMaxAge() const;
 
 private:
 
@@ -155,7 +157,12 @@ private:
     int x2;
     int y2;
     double confidence;
+    double lastUpdate;
     std::string yoloBdyName;
+
+    YoloDetection();
+    double distance(const YoloDetection& other) const;
+    YoloDetection& findClosest(std::vector<YoloDetection>& yoloDetections) const;
   };
 
   YoloTracker(const YoloTracker& other) = delete;
@@ -166,6 +173,7 @@ private:
   std::mutex updateMtx;
   std::vector<YoloDetection> yoloDetections;
   bool newYoloUpdate;
+  double maxAge;
   double camera_matrix[3][3];
 };
 

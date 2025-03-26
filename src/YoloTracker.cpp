@@ -110,7 +110,7 @@ static bool pixel_to_ray(double u, double v, double K[3][3], double ray_[3])
 namespace aff
 {
 
-YoloTracker::YoloTracker(const std::string& cameraName) : TrackerBase(cameraName), newYoloUpdate(false)
+YoloTracker::YoloTracker(const std::string& cameraName) : TrackerBase(cameraName), newYoloUpdate(false), maxAge(2.0)
 {
   Mat3d_setZero(camera_matrix);
 }
@@ -146,7 +146,8 @@ void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
 
   RLOG_CPP(2, "Received 'yolo':" << jsonData.dump(2));
-  std::vector<YoloDetection> detections;
+  std::lock_guard<std::mutex> lock(updateMtx);
+  this->newYoloUpdate = true;
 
   try
   {
@@ -159,25 +160,40 @@ void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     //   "confidence": 0.87,
     //   "frame_index": 0
     // },
+    size_t new_data_count = 0;
     for (auto it = jsonData.begin(); it != jsonData.end(); ++it)
     {
       const auto& detectionJson = it.value();
 
-      if (detectionJson.contains("bounding_box") && detectionJson["bounding_box"].is_object())
+      if (!detectionJson.contains("bounding_box") ||
+          !detectionJson["bounding_box"].is_object())
       {
-        YoloDetection det;
-        det.class_id = detectionJson.value("class_id", -1);
-        det.class_name = detectionJson.value("class_name", "unknown");
-        det.confidence = detectionJson.value("confidence", 0.0);
-
-        const auto& bboxJson = detectionJson["bounding_box"];
-        det.x1 = bboxJson.value("x1", 0);
-        det.y1 = bboxJson.value("y1", 0);
-        det.x2 = bboxJson.value("x2", 0);
-        det.y2 = bboxJson.value("y2", 0);
-        detections.push_back(det);
+        continue;
       }
 
+      YoloDetection det;
+      det.lastUpdate = time;
+      det.class_id = detectionJson.value("class_id", -1);
+      det.class_name = detectionJson.value("class_name", "unknown");
+      det.confidence = detectionJson.value("confidence", 0.0);
+
+      const auto& bboxJson = detectionJson["bounding_box"];
+      det.x1 = bboxJson.value("x1", 0);
+      det.y1 = bboxJson.value("y1", 0);
+      det.x2 = bboxJson.value("x2", 0);
+      det.y2 = bboxJson.value("y2", 0);
+
+      if (new_data_count >= yoloDetections.size())
+      {
+        yoloDetections.push_back(det);
+      }
+      else
+      {
+        YoloDetection& closest = det.findClosest(yoloDetections);
+        closest = det;
+      }
+
+      new_data_count++;
     }
   }
   catch (const nlohmann::json::exception& e)
@@ -185,9 +201,6 @@ void YoloTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     RLOG_CPP(0, "JSON Parsing Error: " << e.what());
   }
 
-  std::lock_guard<std::mutex> lock(updateMtx);
-  this->yoloDetections = detections;
-  this->newYoloUpdate = true;
 }
 
 void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
@@ -197,40 +210,57 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
     return;
   }
 
-  // Thread-safe copying of detections from zmq thread
-  std::vector<YoloDetection> detections;
-  {
-    std::lock_guard<std::mutex> lock(updateMtx);
-    if (!this->newYoloUpdate)
-    {
-      return;
-    }
+  const double t = getWallclockTime();
 
-    detections = this->yoloDetections;
-    this->yoloDetections.clear();
-    this->newYoloUpdate = false;
-  }
-
-  RLOG_CPP(1, YoloDetectionsToString(detections));
+  std::lock_guard<std::mutex> lock(updateMtx);
 
   // Add RcsBody name to each detection.
   // Convention: Name is <yolo-category>_<detected_index>. If this name does
   // not exist in the graph, it will be ignored. This algorithmdoes not assume
   // any ordering in the incoming json with respect to the names and indices.
   std::map<std::string, int> class_counts;
-  for (auto& detection : detections)
+  for (auto& detection : yoloDetections)
   {
     // Increment the count for this class and get the new count
     int& count = class_counts[detection.class_name];
     detection.yoloBdyName = detection.class_name + "_" + std::to_string(++count);
   }
 
+  // Update the detections by deleting the old ones. We do it in every time step
+  // so that we don't depend on any percepts.
+  for (auto it = yoloDetections.begin(); it != yoloDetections.end();)
+  {
+    if (t - it->lastUpdate > getMaxAge())
+    {
+      RcsBody* yoloBody = RcsGraph_getBodyByName(graph, it->yoloBdyName.c_str());
+      double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
+      RCHECK_MSG(q_rbj, "Body not found or issues with dof: '%s'", it->yoloBdyName.c_str());
+      Vec3d_set(q_rbj, 0.0, 0.0, -10.0);
+      yoloDetections.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  // Update coordinates only after new percept has been received
+  if (!this->newYoloUpdate)
+  {
+    return;
+  }
+
+  this->newYoloUpdate = false;
+
+
+  RLOG_CPP(1, YoloDetectionsToString(yoloDetections));
+
   // Z points outwards from lens
   RcsBody* cam = TrackerBase::getBody(graph, cameraNamedId);
   RCHECK_MSG(cam, "Body %s with id %d", cameraNamedId.first.c_str(), cameraNamedId.second);
 
   // Go through detections and assign 3d coordinates
-  for (const auto& detection : detections)
+  for (const auto& detection : yoloDetections)
   {
     RcsBody* yoloBody = RcsGraph_getBodyByName(graph, detection.yoloBdyName.c_str());
 
@@ -247,37 +277,34 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
       continue;
     }
 
-    // Compute camera ray in world coordinates
+    // Compute camera ray in world coordinates. Coordinate y2 is the
+    // lower edge of the bounding box.
     const int center_pixel_u = (detection.x1 + detection.x2) / 2;
-    //const int center_pixel_v = detection.y1;
-    //const int center_pixel_v = (detection.y1 + detection.y2) / 2;
     const int center_pixel_v = detection.y2;
     double C_ray[3];
     const bool ray_success = pixel_to_ray(center_pixel_u, center_pixel_v, camera_matrix, C_ray);
-    if (ray_success)
-    {
-      double I_ray[3];
-      double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
-      Vec3d_transRotate(I_ray, cam->A_BI.rot, C_ray);
-      computePixelRayIntersection3D(graph, yoloBody, &cam->A_BI, I_ray, q_rbj);
-
-      double lb[3], ub[3];
-      bool hasAABB = RcsGraph_computeBodyAABB(graph, yoloBody->id, -1, lb, ub, NULL);
-
-      if (hasAABB)
-      {
-        double z_offset = yoloBody->A_BI.org[2] - lb[2];
-        q_rbj[2] += z_offset;
-        RLOG(2, "Compensating z for %f (%f %f)", z_offset, yoloBody->A_BI.org[2], lb[2]);
-      }
-
-      RLOG(2, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
-    }
-    else
+    if (!ray_success)
     {
       RLOG(1, "Could not compute ray");
+      continue;
     }
 
+    double I_ray[3];
+    double* q_rbj = RcsBody_getStatePtr(graph, yoloBody);
+    Vec3d_transRotate(I_ray, cam->A_BI.rot, C_ray);
+    computePixelRayIntersection3D(graph, yoloBody, &cam->A_BI, I_ray, q_rbj);
+
+    double lb[3], ub[3];
+    bool hasAABB = RcsGraph_computeBodyAABB(graph, yoloBody->id, -1, lb, ub, NULL);
+
+    if (hasAABB)
+    {
+      double z_offset = yoloBody->A_BI.org[2] - lb[2];
+      q_rbj[2] += z_offset;
+      RLOG(2, "Compensating z for %f (%f %f)", z_offset, yoloBody->A_BI.org[2], lb[2]);
+    }
+
+    RLOG(2, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
   }
 
 }
@@ -322,6 +349,63 @@ std::string YoloTracker::YoloDetectionsToString(const std::vector<YoloTracker::Y
   return oss.str();
 }
 
+void YoloTracker::setMaxAge(double age)
+{
+  this->maxAge = age;
+}
+
+double YoloTracker::getMaxAge() const
+{
+  return this->maxAge;
+}
+
+YoloTracker::YoloDetection::YoloDetection() : class_id(-1), x1(0), y1(0), x2(0), y2(0), confidence(0.0), lastUpdate(0.0)
+{
+}
+
+// Distance is sum of squared edge distances
+double YoloTracker::YoloDetection::distance(const YoloTracker::YoloDetection& other) const
+{
+  int dx, dy, dist = 0;
+
+  dx = x1 - other.x1;
+  dy = y1 - other.y1;
+  dist += dx * dx + dy * dy;
+
+  dx = x2 - other.x2;
+  dy = y1 - other.y1;
+  dist += dx * dx + dy * dy;
+
+  dx = x2 - other.x2;
+  dy = y2 - other.y2;
+  dist += dx * dx + dy * dy;
+
+  dx = x1 - other.x1;
+  dy = y2 - other.y2;
+  dist += dx * dx + dy * dy;
+
+  return dist;
+}
+
+YoloTracker::YoloDetection& YoloTracker::YoloDetection::findClosest(std::vector<YoloTracker::YoloDetection>& yoloDetections) const
+{
+  RCHECK(!yoloDetections.empty());
+
+  int dMin = distance(yoloDetections[0]);
+  size_t index_min = 0;
+
+  for (size_t i = 1; i < yoloDetections.size(); ++i)
+  {
+    double di = distance(yoloDetections[i]);
+    if (di < dMin)
+    {
+      dMin = di;
+      index_min = i;
+    }
+  }
+
+  return yoloDetections[index_min];
+}
 
 
 
