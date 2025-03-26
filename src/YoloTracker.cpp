@@ -106,6 +106,32 @@ static bool pixel_to_ray(double u, double v, double K[3][3], double ray_[3])
   return true;
 }
 
+static double computeLengthToRayPoint(const int pixel2[2],
+                                      const double intersect_pt[3],
+                                      double K[3][3])
+{
+  double ray2[3];
+  if (!pixel_to_ray(pixel2[0], pixel2[1], K, ray2))
+  {
+    return -1.0;
+  }
+
+  // Scale ray so it lies at the same Z-depth as intersect_pt
+  double scale = intersect_pt[2] / ray2[2];
+  double point2[3] =
+  {
+    scale* ray2[0],
+    scale* ray2[1],
+    scale* ray2[2]
+  };
+
+  // Euclidean distance between known point and reconstructed 3D point
+  double dx = point2[0] - intersect_pt[0];
+  double dy = point2[1] - intersect_pt[1];
+  double dz = point2[2] - intersect_pt[2];
+
+  return std::sqrt(dx*dx + dy*dy + dz*dz);
+}
 
 namespace aff
 {
@@ -305,6 +331,16 @@ void YoloTracker::update(ActionScene* scene, RcsGraph* graph)
     }
 
     RLOG(2, "q_rbj: %f %f %f", q_rbj[0], q_rbj[1], q_rbj[2]);
+
+
+
+    // int up_pixel[2];
+    // up_pixel[0] = center_pixel_u;
+    // up_pixel[1] = detection.y1;
+    // double diameter = computeLengthToRayPoint(up_pixel, C_ray, camera_matrix);
+    // RLOG(0, "Yolo[%s] diameter: %.1f mm", yoloBody->name, 1000.0*diameter);
+
+
   }
 
 }
