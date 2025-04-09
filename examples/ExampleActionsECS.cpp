@@ -1993,6 +1993,8 @@ void ExampleActionsECS::onClearTrajectory()
   explanation[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
   explanation[0].actionCommand = actionStack.empty() ? std::string() : actionStack[0];
   entity.publish("ActionResult", false, 0.0, explanation);
+
+  actionStack.clear();
 }
 
 void ExampleActionsECS::onSetPupilSpeedWeight(double weight)

@@ -905,6 +905,12 @@ PYBIND11_MODULE(pyAffaction, m)
     for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
     {
       const aff::ActionResult& fb = ex.lastActionResult[i];
+
+      if (fb.error=="Actions interrupted")
+      {
+        return "INTERRUPT";
+      }
+
       fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
 
       if (fbLine!=fbLinePrev)
