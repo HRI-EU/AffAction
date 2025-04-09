@@ -517,6 +517,14 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Call tts event
+  //////////////////////////////////////////////////////////////////////////////
+  .def("speak", [](aff::ExampleActionsECS& ex, std::string text)
+  {
+    ex.getEntity().publish("Speak", text);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns the entire scene in a URDF format
   //////////////////////////////////////////////////////////////////////////////
   .def("get_state_urdf", [](aff::ExampleActionsECS& ex) -> std::string
@@ -862,6 +870,12 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
+    if (ex.isProcessingAction())
+    {
+      RLOG_CPP(0, "Skipped " + sequenceCommand + ": AÍ am already doing something else");
+      return;
+    }
+
     ex.setProcessingAction(true);
     ex.getEntity().publish("FreezePerception", true);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);

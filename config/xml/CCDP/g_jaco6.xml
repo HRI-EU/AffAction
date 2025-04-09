@@ -27,7 +27,7 @@
   </Body>
 
   
-  <Group prev="table" transform="-0.325 0 0 0 0 90" was_transform="0.32 0.5 0 0 0 -90">
+  <Group prev="table" transform="-0.375 0.05 0 0 0 90" was_transform="0.32 0.5 0 0 0 -90">
     <xi:include href="../SingleJaco6/kinova_ulw2_6dof.xml" />
   </Group>
 
@@ -169,7 +169,7 @@
 
 
 
-<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="0.0 0.35 0 0 0 0">
+<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="0.0 0.5 0 0 0 0">
   <Body name="bowl_1" physics="kinematic" transform="0 0 0 0 0 0">
     <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.08" graphics="true" physics="true" transform="-0.0 -0.08 0.04 0 0 0"/>
     <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="-0.06381 0.03486 0.07 0 0 60"/>
@@ -177,14 +177,14 @@
   </Body>
 </Group>
 
-<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="0.21 0.0 0 0 0 -90" >
+<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="0.21 0.15 0 0 0 -90" >
 		<Body name="bowl_2" physics="kinematic" transform="0 0 0 0 0 0">
 			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform="0 -0.06972 0.04 0 0 0"/>
 			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
 			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
 	  	</Body>
 </Group>
-<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="0.0 -0.35 0 0 0 180" >
+<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="0.0 -0.2 0 0 0 180" >
 		<Body name="bowl_3" physics="kinematic" transform="0 0 0 0 0 0">
 			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform=".0 -0.06972 0.04 0 0 0"/>
 			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
