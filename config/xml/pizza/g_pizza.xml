@@ -395,7 +395,7 @@
     -->
 
 
-    <!-- apple -->
+    <!-- apple
     <Body name="apple" prev="pizza_dough_top" rigid_body_joints="true" color="GREEN" physics="dynamic" mass="0.5" >
         <Shape type="SPHERE" radius="0.04" graphics="true" distance="false"
                transform="0 0 0.04 0 0 0"/>
@@ -410,5 +410,5 @@
         <Stackable frame="apple" />
         <BallGraspable frame="apple_center" radius="0.03"/>
     </AffordanceModel>
-    
+    -->
 </Graph>
