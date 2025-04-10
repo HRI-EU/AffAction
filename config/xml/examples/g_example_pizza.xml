@@ -80,6 +80,11 @@
     <xi:include href="../pizza/g_pizza.xml"/>
   </Group>
 
+  <!--  Agent models -->
+  <Group prev="aruco_base" name="Felix" color="RED" transform="0 -1 0.5 0 0 -90" >
+    <xi:include href="g_human_agent.xml"/>
+  </Group>
+  
   <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
   <model_state model="default" time_stamp="0">
     <joint_state joint="j2s7s300_joint_1_right" position="20"/>
