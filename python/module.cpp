@@ -444,50 +444,6 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.getEntity().publish("Render");
   })
-  //////////////////////////////////////////////////////////////////////////////
-  // Sets the gaze target body for the eye gaze model. This only takes effect
-  // if the class has been initialized with the eyeIkEnabled flag set to true.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("setGazeTarget", [](aff::ExampleActionsECS& ex, std::string targetBody) -> std::string
-  {
-    std::vector<const aff::AffordanceEntity*> ntts = ex.getScene()->getAffordanceEntities(targetBody);
-
-    if (!ntts.empty())
-    {
-      if (ntts.size() != 1)
-      {
-        RLOG_CPP(1, "Found several object with the name " << targetBody << " - taking first one.");
-      }
-
-      targetBody = ntts[0]->bdyName;
-    }
-    else
-    {
-      const aff::Agent* agent = ex.getScene()->getAgent(targetBody);
-
-      if (agent)
-      {
-        // From here on, we have a valid agent. We look at its (first) head
-        auto m = agent->getManipulatorsOfType(ex.getScene(), "head");
-
-        if (m.empty())
-        {
-          RLOG_CPP(1, "Agent " << targetBody << " has no head to look at. Looking at body.");
-          targetBody = agent->bdyName;
-        }
-        else
-        {
-          targetBody = m[0]->bdyName;
-        }
-
-      }
-
-    }
-
-    ex.getEntity().publish("SetGazeTarget", targetBody);
-
-    return targetBody;
-  })
   .def("process", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().process();
@@ -974,6 +930,64 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     return aff::PredictionTree::getTurboDurationScaler();
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the gaze target body for the eye gaze model. This only takes effect
+  // if the class has been initialized with the eyeIkEnabled flag set to true.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setGazeTarget", [](aff::ExampleActionsECS& ex, std::string targetBody) -> std::string
+  {
+    std::vector<const aff::AffordanceEntity*> ntts = ex.getScene()->getAffordanceEntities(targetBody);
+
+    if (!ntts.empty())
+    {
+      if (ntts.size() != 1)
+      {
+        RLOG_CPP(1, "Found several object with the name " << targetBody << " - taking first one.");
+      }
+
+      targetBody = ntts[0]->bdyName;
+    }
+    else
+    {
+      const aff::Agent* agent = ex.getScene()->getAgent(targetBody);
+
+      if (agent)
+      {
+        // From here on, we have a valid agent. We look at its (first) head
+        auto m = agent->getManipulatorsOfType(ex.getScene(), "head");
+
+        if (m.empty())
+        {
+          RLOG_CPP(1, "Agent " << targetBody << " has no head to look at. Looking at body.");
+          targetBody = agent->bdyName;
+        }
+        else
+        {
+          targetBody = m[0]->bdyName;
+        }
+
+      }
+
+    }
+
+    ex.getEntity().publish("SetGazeTarget", targetBody);
+
+    return targetBody;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Head gestures: "yes", "no"
+  // "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
+  // "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setHeadGesture", [](aff::ExampleActionsECS& ex, std::string gestureName, double gestureAmplitude, int numTurns)
+  {
+    ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
+  },
+  py::arg("gestureName"),
+  py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
+  py::arg("numTurns") = 3)
 
   //////////////////////////////////////////////////////////////////////////////
   // Gaze model methods: 0: Neck only, 1: pupils only.
