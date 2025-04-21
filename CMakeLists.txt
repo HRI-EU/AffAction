@@ -260,6 +260,7 @@ src/ActionComponent.cpp
 src/HardwareComponent.cpp
 src/WebsocketActionComponent.cpp
 src/LandmarkZmqComponent.cpp
+src/ZmqRouterComponent.cpp
 src/FaceGestureComponent.cpp
 src/GazeComponent.cpp
 src/CameraViewComponent.cpp
