@@ -43,13 +43,10 @@
 #include <Rcs_typedef.h>
 
 
-
 namespace aff
 {
 
-
-LandmarkBase::LandmarkBase(RcsGraph* graph) :
-  graphPtr(graph), frozen(false), syncInputJsonWithWallclockTime(false)
+LandmarkBase::LandmarkBase() : frozen(false), syncInputJsonWithWallclockTime(false)
 {
 }
 
@@ -193,6 +190,20 @@ TrackerBase* LandmarkBase::addYoloTracker(const std::string& camera)
   return tracker;
 }
 
+void LandmarkBase::estimateCameraPose(int numFrames)
+{
+  for (auto& t : trackers)
+  {
+    ArucoTracker* at = dynamic_cast<ArucoTracker*>(t.get());
+
+    if (at)
+    {
+      RLOG(0, "Calibrating Aruco camera");
+      at->calibrate(numFrames);
+    }
+  }
+}
+
 void LandmarkBase::startCalibration(const std::string& camera, size_t numFrames)
 {
   for (auto& tracker : trackers)
@@ -264,21 +275,21 @@ bool LandmarkBase::getSyncInputWithWallclock() const
   return syncInputJsonWithWallclockTime;
 }
 
-const RcsGraph* LandmarkBase::getGraph() const
-{
-  return this->graphPtr;
-}
+// const RcsGraph* LandmarkBase::getGraph() const
+// {
+//   return this->graphPtr;
+// }
 
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
 {
   return this->trackers;
 }
 
-void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer)
+void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   for (auto& tracker : getTrackers())
   {
-    bool success = tracker->initDebugGraphics(viewer, getGraph());
+    bool success = tracker->initDebugGraphics(viewer, graph);
     if (!success)
     {
       RLOG_CPP(1, "Failed to add tracker for '" << tracker->getRequestKeyword() <<"'");

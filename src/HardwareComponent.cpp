@@ -36,6 +36,7 @@
 #include "PhysicsComponent.h"
 #include "WebsocketActionComponent.h"
 #include "LandmarkZmqComponent.h"
+#include "ZmqRouterComponent.h"
 #include "CameraViewComponent.h"
 #include "FaceGestureComponent.h"
 #include "PW70Component.h"
@@ -118,11 +119,18 @@ static void initROS(double rosDt)
 #endif
 }
 
+enum class LandmarkParentClass
+{
+  LandmarkZmqComponent,
+  LandmarkROSComponent,
+  ZmqRouterComponent
+};
+
 static ComponentBase* createLandmarkComponent(EntityBase& entity,
                                               const RcsGraph* graph,
                                               const ActionScene* scene,
                                               std::string extraArgs,
-                                              bool zmq_true_ros_false=true,
+                                              LandmarkParentClass parentClass,
                                               const std::string& suffix="")
 {
   auto argsVec = Rcs::String_split(extraArgs, " ");
@@ -143,15 +151,22 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
   {
     LandmarkBase* lmc = nullptr;
 
-    if (zmq_true_ros_false)
+    if (parentClass==LandmarkParentClass::LandmarkZmqComponent)
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, (RcsGraph*)graph, connection);
+      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, connection);
+      lmc = lmcz;
+      ret = lmcz;
+    }
+    else if (parentClass==LandmarkParentClass::ZmqRouterComponent)
+    {
+      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
     }
 #if defined USE_ROS
-    else
+    else if (parentClass==LandmarkParentClass::LandmarkROSComponent)
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
       LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity, (RcsGraph*)graph);
@@ -190,8 +205,6 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
     }
 
-    // Initialize all tracker camera transforms from the xml file
-    //lmc->setCameraTransform(&cam->A_BI);
   }
 
   return ret;
@@ -444,6 +457,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   {
     argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:5555");
     argP.addDescription("-landmarks_zmq", "Start with ZMQ landmarks component");
+    argP.addDescription("-landmarks_router", "Start with ZMQ landmarks router-dealer network component");
     argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
@@ -455,27 +469,37 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, ""));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, ""));
+  }
+  else if (getKey(argvStrVec, "-landmarks_router"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::ZmqRouterComponent, ""));
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq2"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "2"));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "2"));
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq3"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "3"));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "3"));
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq4"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "4"));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "4"));
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq5"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, true, "5"));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "5"));
   }
 
   if (dryRun)
@@ -553,7 +577,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   else if (getKey(argvStrVec, "-landmarks_ros"))
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, false));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkROSComponent));
   }
 
   if (dryRun)

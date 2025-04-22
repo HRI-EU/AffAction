@@ -47,7 +47,7 @@ class LandmarkBase
 {
 public:
 
-  LandmarkBase(RcsGraph* graph);
+  LandmarkBase();
 
   virtual ~LandmarkBase();
 
@@ -67,6 +67,7 @@ public:
 
   void startCalibration(const std::string& camera, size_t numFrames);
   bool isCalibrating(const std::string& camera) const;
+  void estimateCameraPose(int numFrames);
 
   void onFreezePerception(bool freeze);
   bool isFrozen() const;
@@ -74,12 +75,12 @@ public:
   void setSyncInputWithWallclock(bool freeze);
   bool getSyncInputWithWallclock() const;
 
-  const RcsGraph* getGraph() const;
+
   virtual void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
 
   // Graphics debug
-  void createDebugGraphics(Rcs::Viewer* viewer);
+  void createDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
   void enableDebugGraphics(bool enable);
 
   template<typename T>
@@ -104,7 +105,6 @@ protected:
   virtual double getCurrentTime() const;
 
   std::vector<std::unique_ptr<TrackerBase>> trackers;
-  RcsGraph* graphPtr;
   bool frozen;
   bool syncInputJsonWithWallclockTime;
 };

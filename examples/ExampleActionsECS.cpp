@@ -1154,7 +1154,7 @@ bool ExampleActionsECS::initGraphics()
   for (auto& c : lmbs)
   {
     RLOG_CPP(0, "Adding debug graphics to LandmarkComponent");
-    c->createDebugGraphics(viewer);
+    c->createDebugGraphics(viewer, getGraph());
   }
 
 

@@ -35,6 +35,7 @@
 #define AFF_ZMQROUTERCOMPONENT_H
 
 #include "ComponentBase.h"
+#include "LandmarkBase.h"
 
 #include <thread>
 
@@ -42,7 +43,7 @@
 namespace aff
 {
 
-class ZmqRouterComponent : public ComponentBase
+class ZmqRouterComponent : public ComponentBase, public LandmarkBase
 {
 public:
 
@@ -66,4 +67,3 @@ private:
 } // namespace
 
 #endif // AFF_ZMQROUTERCOMPONENT_H
-

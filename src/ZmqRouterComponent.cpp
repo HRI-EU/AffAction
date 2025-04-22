@@ -34,11 +34,11 @@
 // ──────────────────────────────────────────────────────────────
 // router.cpp – central coordinator
 //
-// • ROUTER socket ← receives messages / heart‑beats from workers
-// • Tracks liveness per worker (ID ➜ last‑seen time)
-// • Sends a JSON “do_work” command to every *alive* worker
+// - ROUTER socket ← receives messages / heart‑beats from workers
+// - Tracks liveness per worker (ID ➜ last‑seen time)
+// - Sends a JSON “do_work” command to every *alive* worker
 //   every COMMAND_INTERVAL_MS milliseconds
-// • Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
+// - Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
 //
 // Build:  g++ router.cpp -I/Users/mgienger/Software/AttentiveSupport/src/Smile/src/AffAction/external -I/opt/homebrew/include -std=c++17 \
 //           -L/opt/homebrew/Cellar/zeromq/4.3.5_1/lib -lzmq -o router
@@ -65,7 +65,7 @@ using json  = nlohmann::json;
 constexpr int  POLL_TIMEOUT_MS      = 100;   // main‑loop poll period
 constexpr int  HEARTBEAT_LIVENESS   = 6000;  // ms without heartbeat → drop worker
 constexpr int  COMMAND_INTERVAL_MS  = 50;    // broadcast command every n ms
-constexpr char ROUTER_ENDPOINT[]    = "tcp://*:5555";
+constexpr char ROUTER_ENDPOINT[]    = "tcp://*:5566";
 // ──────────────────────────────────────────────────────────────
 
 // log with wall‑clock timestamp
@@ -78,10 +78,17 @@ inline void log(const std::string& msg)
 }
 
 ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connection):
-  ComponentBase(parent), connectionStr(connection), threadRunning(false), threadFunctionCompleted(false)
+  ComponentBase(parent), LandmarkBase(),
+  connectionStr(connection), threadRunning(false), threadFunctionCompleted(false)
 {
+  connectionStr = "tcp://*:5566";
   subscribe("Start", &ZmqRouterComponent::startZmqThread);
   subscribe("Stop", &ZmqRouterComponent::stopZmqThread);
+
+  subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
+  subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
+  subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
+  subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
 }
 
 ZmqRouterComponent::~ZmqRouterComponent()
@@ -151,8 +158,8 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   router.set(zmq::sockopt::router_mandatory, 1); // detect overflow instead of silent drop
   router.set(zmq::sockopt::sndtimeo, 0);         // non‑blocking sends
 
-  router.bind(ROUTER_ENDPOINT);
-  log(std::string("ROUTER bound to ") + ROUTER_ENDPOINT);
+  log(std::string("ROUTER bound to ") + connection);
+  router.bind(connection);
 
   // State: worker‑id  → last‑heartbeat‑time
   std::unordered_map<std::string, Clock::time_point> workers;
@@ -178,7 +185,10 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         // Part 1: identity frame
         auto idRes = router.recv(identity, zmq::recv_flags::dontwait);
-        if (!idRes) break;                       // queue empty → done
+        if (!idRes)
+        {
+          break;  // queue empty → done
+        }
 
         // Part 2: empty delimiter (REQ/ROUTER convention)
         auto emptyRes = router.recv(empty, zmq::recv_flags::dontwait);
@@ -269,7 +279,10 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         log("[DROP] worker " + it->first + " timed‑out");
         it = workers.erase(it);
       }
-      else ++it;
+      else
+      {
+        ++it;
+      }
     }
   }
 }

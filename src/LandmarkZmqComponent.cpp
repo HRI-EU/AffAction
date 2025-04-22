@@ -106,8 +106,8 @@ namespace aff
 {
 
 
-LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, std::string connection):
-  ComponentBase(parent), LandmarkBase(graph),
+LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, std::string connection):
+  ComponentBase(parent), LandmarkBase(),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
   readDataFromFile(false), socketTimeoutInMsec(20000), frameRate(0.0), logging(false)
 {
@@ -115,10 +115,11 @@ LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, 
 
   subscribe("Start", &LandmarkZmqComponent::startZmqThread);
   subscribe("Stop", &LandmarkZmqComponent::stopZmqThread);
-  subscribe("UpdateScene", &LandmarkZmqComponent::onUpdateScene);
-  subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
-  subscribe("EstimateCameraPose", &LandmarkZmqComponent::onEstimateCameraPose);
   subscribe("ToggleJsonLogging", &LandmarkZmqComponent::onToggleJsonLogging);
+
+  subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
+  subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
+  subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
   subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
 }
 
@@ -154,20 +155,6 @@ double LandmarkZmqComponent::getCurrentTime() const
 {
   //RLOG(1, "DERIVED");
   return readDataFromFile ? 0.0 : LandmarkBase::getCurrentTime();
-}
-
-void LandmarkZmqComponent::onEstimateCameraPose(int numFrames)
-{
-  for (auto& t : trackers)
-  {
-    ArucoTracker* at = dynamic_cast<ArucoTracker*>(t.get());
-
-    if (at)
-    {
-      RLOG(0, "Calibrating Aruco camera");
-      at->calibrate(numFrames);
-    }
-  }
 }
 
 void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)

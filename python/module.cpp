@@ -1109,6 +1109,47 @@ PYBIND11_MODULE(pyAffaction, m)
   py::arg("withSkeletonTracking") = false,
   py::arg("skeleton_radius") = DBL_MAX
       )
+  .def("addLandmarkRouter", [](aff::ExampleActionsECS& ex,
+                               const std::string& connection,
+                               const std::string& camera_name,
+                               bool withFaceTracking,
+                               const std::string& face_name,
+                               bool withArucoTracking,
+                               const std::string& base_marker,
+                               bool withSkeletonTracking,
+                               double skeleton_radius)
+  {
+    ex.addComponentArgument("-landmarks_router");
+    ex.addComponentArgument("-landmarks_connection" + connection);
+    ex.addComponentArgument("-landmarks_camera" + camera_name);
+
+    if (withFaceTracking)
+    {
+      ex.addComponentArgument("-face_tracking");
+      ex.addComponentArgument("-face_bodyName" + face_name);
+    }
+
+    if (withArucoTracking)
+    {
+      ex.addComponentArgument("-aruco_tracking");
+      ex.addComponentArgument("-aruco_base" + base_marker);
+    }
+
+    if (withSkeletonTracking)
+    {
+      ex.addComponentArgument("-skeleton_tracking");
+      ex.addComponentArgument("-skeleton_radius" + std::to_string(skeleton_radius));
+    }
+  },
+  py::arg("connection") = "tcp://localhost:5566",
+  py::arg("camera_name") = "camera_0",
+  py::arg("withFaceTracking") = false,
+  py::arg("face_name") = "face",
+  py::arg("withArucoTracking") = false,
+  py::arg("base_marker") = "aruco_base",
+  py::arg("withSkeletonTracking") = false,
+  py::arg("skeleton_radius") = DBL_MAX
+      )
   .def("addPTU", [](aff::ExampleActionsECS& ex)
   {
     // Adds a component to connect to the PTU action server ROS node, and to being
@@ -1279,7 +1320,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RLOG_CPP(1, sim->help());
-    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase(sim->getGraph()));
+    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
 
     sim->getEntity().subscribe("UpdateScene", &aff::LandmarkBase::onUpdateScene, lm.get());
     sim->getEntity().subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
