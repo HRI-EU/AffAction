@@ -1265,6 +1265,87 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("usersGazeComponentEnabled", &aff::ExampleActionsECS::usersGazeComponentEnabled)
 
   //////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////
+  .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n) -> std::string
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+    int counter = 0;
+    auto sub = std::make_shared<ES::ScopedSubscription>();
+    std::string faceName;
+
+    auto renderCb = [&, sub, n](std::string id, std::string data) mutable
+    {
+      std::lock_guard<std::mutex> lk(mtx);
+      //std::cerr << ".";
+      RMSG_CPP("id: " << id << " data: " << data);
+
+      if (id=="face_recog")
+      {
+        // Parse the JSON
+        nlohmann::json j = nlohmann::json::parse(data);
+
+        // Check existence and type of "face_recog"
+        if (j.contains("data") &&
+            j["data"].contains("face_recog") &&
+            j["data"]["face_recog"].is_array())
+        {
+          counter++;
+          const auto& faces = j["data"]["face_recog"];
+          std::cout << counter << "Number of recognized faces: " << faces.size() << std::endl;
+
+
+          if (!faces.empty())
+          {
+            const nlohmann::json& first_face = faces[0];
+
+            std::string name = first_face["recognized_face"];
+            faceName = name;
+            auto bbox = first_face["bounding_box"];
+
+            std::cout << "First recognized face: " << name << std::endl;
+            std::cout << "Bounding box: left=" << bbox["left"]
+                      << ", top=" << bbox["top"]
+                      << ", right=" << bbox["right"]
+                      << ", bottom=" << bbox["bottom"] << std::endl;
+          }
+          else
+          {
+            std::cout << "No faces found!" << std::endl;
+          }
+
+
+
+        }
+        else
+        {
+          std::cout << "\"face_recog\" array not found." << std::endl;
+        }
+
+      }
+
+      if (counter >= n)
+      {
+        sub.reset();       // unsubscribe
+        cv.notify_one();   // wake calling context
+      }
+    };
+
+    *sub = ex.getEntity().subscribe("ZmqDealerMessage", std::move(renderCb));
+
+    ex.getEntity().publish("SetPerceptionCommand", std::string("face_recog"), n);
+
+    {
+      std::unique_lock<std::mutex> lk(mtx);
+      cv.wait(lk, [&]{ return counter >= n; });
+    }
+
+    return faceName;
+  },
+  py::arg("n") = 5)
+
+  //////////////////////////////////////////////////////////////////////////////
   // viaPoint action
   //////////////////////////////////////////////////////////////////////////////
   .def("createActionFile", [](aff::ExampleActionsECS& ex, std::string inputFile)

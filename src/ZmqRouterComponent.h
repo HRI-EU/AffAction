@@ -38,6 +38,8 @@
 #include "LandmarkBase.h"
 
 #include <thread>
+#include <mutex>
+#include <queue>
 
 
 namespace aff
@@ -57,11 +59,14 @@ private:
   void zmqThreadFunc(const std::string& connection);
   void startZmqThread();
   void stopZmqThread();
+  void onSetPerceptionCommand(std::string command, int repetitions);
 
   std::string connectionStr;
   bool threadRunning;
   bool threadFunctionCompleted;
   std::thread zmqThread;
+  std::mutex commandMtx;
+  std::queue<std::pair<std::string,int>> commandQueue;
 };
 
 } // namespace

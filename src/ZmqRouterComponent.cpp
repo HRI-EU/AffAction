@@ -29,37 +29,33 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-*******************************************************************************/
+ ──────────────────────────────────────────────────────────────
+ Zmq router – central coordinator
 
-// ──────────────────────────────────────────────────────────────
-// router.cpp – central coordinator
-//
-// - ROUTER socket ← receives messages / heart‑beats from workers
-// - Tracks liveness per worker (ID ➜ last‑seen time)
-// - Sends a JSON “do_work” command to every *alive* worker
-//   every COMMAND_INTERVAL_MS milliseconds
-// - Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
-//
-// Build:  g++ router.cpp -I/Users/mgienger/Software/AttentiveSupport/src/Smile/src/AffAction/external -I/opt/homebrew/include -std=c++17 \
-//           -L/opt/homebrew/Cellar/zeromq/4.3.5_1/lib -lzmq -o router
-// Run  :  ./router
-// ──────────────────────────────────────────────────────────────
+ - ROUTER socket ← receives messages / heart‑beats from workers
+ - Tracks liveness per worker (ID ➜ last‑seen time)
+ - Sends a JSON “do_work” command to every *alive* worker
+   every COMMAND_INTERVAL_MS milliseconds
+ - Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
+ 
+ *******************************************************************************/
+
 #include "ZmqRouterComponent.h"
 
 #include <Rcs_macros.h>
 
+#include <json.hpp>
 #include <zmq.hpp>
 #include <chrono>
 #include <unordered_map>
 #include <iostream>
 #include <iomanip>
-#include <json.hpp>      // header‑only JSON (https://github.com/nlohmann/json)
+
 
 namespace aff
 {
 using Clock = std::chrono::steady_clock;
 using ms    = std::chrono::milliseconds;
-using json  = nlohmann::json;
 
 // ───────────────────────── configurable constants
 constexpr int  POLL_TIMEOUT_MS      = 100;   // main‑loop poll period
@@ -68,14 +64,6 @@ constexpr int  COMMAND_INTERVAL_MS  = 50;    // broadcast command every n ms
 constexpr char ROUTER_ENDPOINT[]    = "tcp://*:5566";
 // ──────────────────────────────────────────────────────────────
 
-// log with wall‑clock timestamp
-inline void log(const std::string& msg)
-{
-  auto now = std::chrono::system_clock::now();
-  auto itt = std::chrono::system_clock::to_time_t(now);
-  auto tm  = *std::localtime(&itt);
-  std::cout << std::put_time(&tm, "%F %T") << " | " << msg << '\n';
-}
 
 ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connection):
   ComponentBase(parent), LandmarkBase(),
@@ -84,6 +72,7 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   connectionStr = "tcp://*:5566";
   subscribe("Start", &ZmqRouterComponent::startZmqThread);
   subscribe("Stop", &ZmqRouterComponent::stopZmqThread);
+  subscribe("SetPerceptionCommand", &ZmqRouterComponent::onSetPerceptionCommand);
 
   subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
@@ -99,6 +88,13 @@ ZmqRouterComponent::~ZmqRouterComponent()
     stopZmqThread();
     RLOG(0, "Thread stopped.");
   }
+}
+
+void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetitions)
+{
+  RLOG_CPP(0, "command: " << command << " repetitions: " << repetitions);
+  std::lock_guard<std::mutex> lock(commandMtx);
+  commandQueue.push({command, repetitions});
 }
 
 std::string ZmqRouterComponent::getName() const
@@ -158,7 +154,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   router.set(zmq::sockopt::router_mandatory, 1); // detect overflow instead of silent drop
   router.set(zmq::sockopt::sndtimeo, 0);         // non‑blocking sends
 
-  log(std::string("ROUTER bound to ") + connection);
+  RLOG_CPP(0, "ROUTER bound to " << connection);
   router.bind(connection);
 
   // State: worker‑id  → last‑heartbeat‑time
@@ -194,7 +190,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         auto emptyRes = router.recv(empty, zmq::recv_flags::dontwait);
         if (!emptyRes || empty.size() != 0)      // malformed message
         {
-          log("[WARN] Incomplete multipart message (missing empty frame)");
+          RLOG_CPP(0, "[WARN] Incomplete multipart message (missing empty frame)");
           break;
         }
 
@@ -202,7 +198,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         auto msgRes = router.recv(payload, zmq::recv_flags::dontwait);
         if (!msgRes)
         {
-          log("[WARN] Incomplete multipart message (missing payload)");
+          RLOG_CPP(0, "[WARN] Incomplete multipart message (missing payload)");
           break;
         }
 
@@ -210,7 +206,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         std::string data(static_cast<char*>(payload.data()), payload.size());
 
         workers[id] = Clock::now();              // refresh liveness
-        log("[RECV] from " + id + " → " + data);
+        RLOG_CPP(0, "[RECV] from " << id + " → " << data);
 
         // Optionally parse / act on non‑heartbeat replies here
         // json msg = json::parse(data, nullptr, false);
@@ -222,13 +218,28 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
     auto now = Clock::now();
     if (std::chrono::duration_cast<ms>(now - lastCmd).count() >= COMMAND_INTERVAL_MS)
     {
-      json cmd =
+      // Process commands
+      std::string cmdStr;
       {
-        { "type", "do_work" },
-        { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
-      };
-      std::string cmdStr = cmd.dump();
-
+        std::lock_guard<std::mutex> lock(commandMtx);
+        
+        if (!commandQueue.empty())
+        {
+          std::pair<std::string, int> cmdPair = commandQueue.front();
+          std::cout << "Command: " << cmdPair.first << ", Value: " << cmdPair.second << std::endl;
+          nlohmann::json cmd =
+          {
+            { "type", cmdPair.first },
+            { "repetitions", cmdPair.second },
+            { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
+          };
+          cmdStr = cmd.dump();
+          commandQueue.pop();
+        }
+      }
+      
+      
+      if (!cmdStr.empty())
       for (auto& worker : workers)
       {
         auto& id = worker.first;
@@ -247,23 +258,23 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
           if (!ok1 || !ok2 || !ok3)
           {
-            log("[DROP] back‑pressure: queue full for " + id);
+            RLOG_CPP(0, "[DROP] back‑pressure: queue full for " << id);
           }
           else
           {
-            log("[SEND] to   " + id + " → " + cmdStr);
+            RLOG_CPP(0, "[SEND] to   " << id + " -> " << cmdStr);
           }
         }
         catch (const zmq::error_t& e)
         {
           if (e.num() == EHOSTUNREACH)
           {
-            log("[DROP] no route to worker " + id);
+            RLOG_CPP(0, "[DROP] no route to worker " << id);
             last = Clock::time_point{};      // mark as timed‑out
           }
           else
           {
-            log(std::string("[ERROR] send failed for ") + id + ": " + e.what());
+            RLOG_CPP(0, "[ERROR] send failed for " << id << ": " << e.what());
           }
         }
       }
@@ -276,7 +287,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
     {
       if (std::chrono::duration_cast<ms>(now - it->second).count() > HEARTBEAT_LIVENESS)
       {
-        log("[DROP] worker " + it->first + " timed‑out");
+        RLOG_CPP(0, "[DROP] worker " << it->first << " timed‑out");
         it = workers.erase(it);
       }
       else
@@ -284,6 +295,8 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         ++it;
       }
     }
+    
+    
   }
 }
 
