@@ -2163,6 +2163,11 @@ nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, 
 
 void ExampleActionsECS::updateUI()
 {
+  if (!getViewer())
+  {
+    return;
+  }
+
   getViewer()->frame();
   handleKeys();
 }

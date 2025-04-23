@@ -171,6 +171,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::move(ex);
   }))
 
+
   //////////////////////////////////////////////////////////////////////////////
   // Initialization function, to be called after member variables have been
   // configured.
@@ -205,7 +206,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool debug=false) -> int
+  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool headless, bool catch_keyboard_interrupt) -> int
   {
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
@@ -220,7 +221,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::setlocale(LC_ALL, "C");
     QApplication::setQuitOnLastWindowClosed(false);
 
-    if (debug)
+    if (!headless)
     {
       success = ex.initGraphics() && success;
       success = ex.initGuis() && success;
@@ -229,16 +230,33 @@ PYBIND11_MODULE(pyAffaction, m)
     std::thread t(&aff::ExampleActionsECS::start, &ex);
     t.detach();
 
+    const int dt_msec = 16;  // ~60fps
+    const int cycles_per_sec = 200/dt_msec;   // 5 Hz
+    int loopCount = 0;
     QTimer* timer = new QTimer(&app);  // or any parent
     QObject::connect(timer, &QTimer::timeout, [&]()
     {
       ex.updateUI();
+
+      // Safely check Python signals by acquiring the GIL first, once per second.
+      if (catch_keyboard_interrupt && (++loopCount%cycles_per_sec==0))
+      {
+        pybind11::gil_scoped_acquire acquire;
+        if (PyErr_CheckSignals() != 0 && PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
+        {
+          throw pybind11::error_already_set();
+        }
+      }
+
     });
-    timer->start(16);  // ~60fps
+    timer->start(dt_msec);
 
     return app.exec();
 
-  }, "Initializes algorithm, guis and graphics")
+  },
+  "Initializes algorithm, guis and graphics",
+  py::arg("headless") = false,
+  py::arg("catch_keyboard_interrupt") = false)
 
   //////////////////////////////////////////////////////////////////////////////
   // Initialization function, to be called after member variables have been

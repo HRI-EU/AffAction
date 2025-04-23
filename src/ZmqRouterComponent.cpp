@@ -37,7 +37,7 @@
  - Sends a JSON “do_work” command to every *alive* worker
    every COMMAND_INTERVAL_MS milliseconds
  - Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
- 
+
  *******************************************************************************/
 
 #include "ZmqRouterComponent.h"
@@ -92,7 +92,7 @@ ZmqRouterComponent::~ZmqRouterComponent()
 
 void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetitions)
 {
-  RLOG_CPP(0, "command: " << command << " repetitions: " << repetitions);
+  RLOG_CPP(1, "command: " << command << " repetitions: " << repetitions);
   std::lock_guard<std::mutex> lock(commandMtx);
   commandQueue.push({command, repetitions});
 }
@@ -110,7 +110,7 @@ void ZmqRouterComponent::startZmqThread()
     return;
   }
 
-  RLOG(0, "startZmqThread()");
+  RLOG(1, "startZmqThread()");
   threadRunning = true;
   zmqThread = std::thread(&ZmqRouterComponent::zmqThreadFunc, this, connectionStr);
 
@@ -125,11 +125,11 @@ void ZmqRouterComponent::stopZmqThread()
 {
   if (!threadRunning)
   {
-    RLOG(0, "Thread already stopped");
+    RLOG(5, "Thread already stopped");
     return;
   }
 
-  RLOG(0, "Trying to stop thread");
+  RLOG(1, "Trying to stop thread");
   threadRunning = false;
 
   // See startZmqThread() why we don't join the thread here as one would expect.
@@ -140,7 +140,7 @@ void ZmqRouterComponent::stopZmqThread()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  RLOG(0, "onStop() completed");
+  RLOG(1, "onStop() completed");
 }
 
 void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
@@ -154,7 +154,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   router.set(zmq::sockopt::router_mandatory, 1); // detect overflow instead of silent drop
   router.set(zmq::sockopt::sndtimeo, 0);         // non‑blocking sends
 
-  RLOG_CPP(0, "ROUTER bound to " << connection);
+  RLOG_CPP(1, "ROUTER bound to " << connection);
   router.bind(connection);
 
   // State: worker‑id  → last‑heartbeat‑time
@@ -206,7 +206,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         std::string data(static_cast<char*>(payload.data()), payload.size());
 
         workers[id] = Clock::now();              // refresh liveness
-        RLOG_CPP(0, "[RECV] from " << id + " → " << data);
+        RLOG_CPP(1, "[RECV] from " << id + " → " << data);
 
         // Optionally parse / act on non‑heartbeat replies here
         // json msg = json::parse(data, nullptr, false);
@@ -222,7 +222,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
       std::string cmdStr;
       {
         std::lock_guard<std::mutex> lock(commandMtx);
-        
+
         if (!commandQueue.empty())
         {
           std::pair<std::string, int> cmdPair = commandQueue.front();
@@ -237,47 +237,47 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
           commandQueue.pop();
         }
       }
-      
-      
+
+
       if (!cmdStr.empty())
-      for (auto& worker : workers)
-      {
-        auto& id = worker.first;
-        auto& last = worker.second;
-
-        // multipart: [identity][empty][payload]
-        zmq::message_t idMsg(id.data(), id.size());
-        zmq::message_t empty;                    // zero‑length delimiter
-        zmq::message_t body(cmdStr.data(), cmdStr.size());
-
-        try
+        for (auto& worker : workers)
         {
-          auto ok1 = router.send(idMsg, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
-          auto ok2 = router.send(empty, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
-          auto ok3 = router.send(body, zmq::send_flags::dontwait);
+          auto& id = worker.first;
+          auto& last = worker.second;
 
-          if (!ok1 || !ok2 || !ok3)
+          // multipart: [identity][empty][payload]
+          zmq::message_t idMsg(id.data(), id.size());
+          zmq::message_t empty;                    // zero‑length delimiter
+          zmq::message_t body(cmdStr.data(), cmdStr.size());
+
+          try
           {
-            RLOG_CPP(0, "[DROP] back‑pressure: queue full for " << id);
+            auto ok1 = router.send(idMsg, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+            auto ok2 = router.send(empty, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+            auto ok3 = router.send(body, zmq::send_flags::dontwait);
+
+            if (!ok1 || !ok2 || !ok3)
+            {
+              RLOG_CPP(0, "[DROP] back‑pressure: queue full for " << id);
+            }
+            else
+            {
+              RLOG_CPP(0, "[SEND] to   " << id + " -> " << cmdStr);
+            }
           }
-          else
+          catch (const zmq::error_t& e)
           {
-            RLOG_CPP(0, "[SEND] to   " << id + " -> " << cmdStr);
+            if (e.num() == EHOSTUNREACH)
+            {
+              RLOG_CPP(0, "[DROP] no route to worker " << id);
+              last = Clock::time_point{};      // mark as timed‑out
+            }
+            else
+            {
+              RLOG_CPP(0, "[ERROR] send failed for " << id << ": " << e.what());
+            }
           }
         }
-        catch (const zmq::error_t& e)
-        {
-          if (e.num() == EHOSTUNREACH)
-          {
-            RLOG_CPP(0, "[DROP] no route to worker " << id);
-            last = Clock::time_point{};      // mark as timed‑out
-          }
-          else
-          {
-            RLOG_CPP(0, "[ERROR] send failed for " << id << ": " << e.what());
-          }
-        }
-      }
 
       lastCmd = now;
     }
@@ -295,8 +295,8 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         ++it;
       }
     }
-    
-    
+
+
   }
 }
 
