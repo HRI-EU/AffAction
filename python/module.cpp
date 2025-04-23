@@ -230,6 +230,7 @@ PYBIND11_MODULE(pyAffaction, m)
     std::thread t(&aff::ExampleActionsECS::start, &ex);
     t.detach();
 
+    std::atomic<bool> kb_int{false};   // To be sure
     const int dt_msec = 16;  // ~60fps
     const int cycles_per_sec = 200/dt_msec;   // 5 Hz
     int loopCount = 0;
@@ -241,17 +242,35 @@ PYBIND11_MODULE(pyAffaction, m)
       // Safely check Python signals by acquiring the GIL first, once per second.
       if (catch_keyboard_interrupt && (++loopCount%cycles_per_sec==0))
       {
-        pybind11::gil_scoped_acquire acquire;
-        if (PyErr_CheckSignals() != 0 && PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
+        pybind11::gil_scoped_acquire guard;
+
+        if (PyErr_CheckSignals() != 0 &&
+            PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
         {
-          throw pybind11::error_already_set();
+            // 1 clear so ~gil_scoped_acquire won't throw
+            PyErr_Clear();
+            kb_int.store(true, std::memory_order_relaxed);
+
+            // 2 quit Qt cleanly
+            QCoreApplication::quit();
         }
       }
 
     });
     timer->start(dt_msec);
 
-    return app.exec();
+    int res = app.exec();
+    
+    /* ---------- back in the outer C++ stack ---------- */
+    if (catch_keyboard_interrupt && kb_int.load())
+    {
+        pybind11::gil_scoped_acquire guard;       // need GIL
+        PyErr_SetNone(PyExc_KeyboardInterrupt);   // restore
+        throw pybind11::error_already_set();      // safe to throw now
+    }
+    
+    
+    return res;
 
   },
   "Initializes algorithm, guis and graphics",
