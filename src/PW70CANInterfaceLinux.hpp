@@ -189,7 +189,7 @@ bool PW70CANInterface::send(const std::vector<struct can_frame>& frames)
     int nbytes = write(s, &frame, sizeof(struct can_frame));
     if (nbytes != sizeof(struct can_frame))
     {
-      perror("Error sending CAN frame");
+      RLOG(0, "Error sending CAN frame: %s (%d)", strerror(errno), errno);
       return false;
     }
   }
