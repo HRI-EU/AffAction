@@ -51,7 +51,7 @@ class PredictionTreeNode
 {
 public:
   bool success; /**< Flag indicating whether the action was successfully executed. */
-  double cost ; /**< Cost of the action execution. */
+  double cost; /**< Cost of the action execution. */
   double accumulatedCost; /**< Sum of cost up to this node. */
   int idx; /**< Solution index of the action. */
   int uniqueId; /**< Unique identifier for nodes in tree. */

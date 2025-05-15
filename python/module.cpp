@@ -247,12 +247,12 @@ PYBIND11_MODULE(pyAffaction, m)
         if (PyErr_CheckSignals() != 0 &&
             PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
         {
-            // 1 clear so ~gil_scoped_acquire won't throw
-            PyErr_Clear();
-            kb_int.store(true, std::memory_order_relaxed);
+          // 1 clear so ~gil_scoped_acquire won't throw
+          PyErr_Clear();
+          kb_int.store(true, std::memory_order_relaxed);
 
-            // 2 quit Qt cleanly
-            QCoreApplication::quit();
+          // 2 quit Qt cleanly
+          QCoreApplication::quit();
         }
       }
 
@@ -260,16 +260,16 @@ PYBIND11_MODULE(pyAffaction, m)
     timer->start(dt_msec);
 
     int res = app.exec();
-    
+
     /* ---------- back in the outer C++ stack ---------- */
     if (catch_keyboard_interrupt && kb_int.load())
     {
-        pybind11::gil_scoped_acquire guard;       // need GIL
-        PyErr_SetNone(PyExc_KeyboardInterrupt);   // restore
-        throw pybind11::error_already_set();      // safe to throw now
+      pybind11::gil_scoped_acquire guard;       // need GIL
+      PyErr_SetNone(PyExc_KeyboardInterrupt);   // restore
+      throw pybind11::error_already_set();      // safe to throw now
     }
-    
-    
+
+
     return res;
 
   },
@@ -778,7 +778,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //
   // return value: [(failure step, failure reason)] (empty if successful)
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> nlohmann::json//std::vector<std::tuple<std::vector<std::string>, std::string, std::string, std::string, double>>
   {
     const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
@@ -787,38 +787,64 @@ PYBIND11_MODULE(pyAffaction, m)
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
                                               0, true, ex.earlyExitAction);
 
+    nlohmann::json j_result = nlohmann::json::array();
+
+    if (!tree)
+    {
+      j_result.push_back(
+      {
+        {"actions", {}},
+        {"success", false},
+        {"error", "Failed to compute prediction tree"},
+        {"reason", ""},
+        {"suggestion", ""},
+        {"developer", ""},
+        {"cost", 0.0}
+      });
+
+      return j_result;
+    }
+
+
     // Handling a fatal error in the syntax for the first action
-    RCHECK(tree);
     std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
-    if (slnPath.empty() || !tree->root->feedbackMsg.error.empty())
+
+    if (slnPath.empty())
+    {
+      j_result.push_back(
+      {
+        {"actions", {}},
+        {"success", false},
+        {"error", "Prediction tree contains no solutions"},
+        {"reason", ""},
+        {"suggestion", ""},
+        {"developer", ""},
+        {"cost", 0.0}
+      });
+
+      return j_result;
+    }
+
+
+    if (!tree->root->feedbackMsg.error.empty())
     {
       if (tree->root->fatalError)
       {
         RLOG_CPP(0, "Fatal Error in Solution 0");
       }
-      return {std::make_tuple(std::vector<std::string>(), tree->root->feedbackMsg.reason, tree->root->feedbackMsg.suggestion)};
-    }
 
-    // Checking for whether the search was successful
-    if (slnPath.back()->success && slnPath.size() == seq.size())
-    {
-      RLOG_CPP(0, "Solution 0 is SUCCESSFUL");
-
-      std::vector<std::string> predictedSeq;
-      predictedSeq.reserve(slnPath.size());
-      for (auto node : slnPath)
+      j_result.push_back(
       {
-        predictedSeq.push_back(node->actionCommand());
-      }
+        {"actions", {}},
+        {"success", false},
+        {"error", "Fatal Error in Solution 0"},
+        {"reason", ""},
+        {"suggestion", ""},
+        {"developer", ""},
+        {"cost", 0.0}
+      });
 
-      std::string detailedActionCommand = Rcs::String_concatenate(predictedSeq, ";");
-      RLOG_CPP(0, "Final action sequence: " + detailedActionCommand);
-
-      PollBlockerComponent blocker(&ex);
-      ex.getEntity().publish("ActionSequence", detailedActionCommand);
-      blocker.wait();
-
-      return std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>();
+      return j_result;
     }
 
     // Checking the longest failure
@@ -833,7 +859,7 @@ PYBIND11_MODULE(pyAffaction, m)
 
     // Reporting only the nodes with the longest failure
     std::vector<aff::ActionResult> actionResults;
-    std::vector<std::tuple<std::vector<std::string>, std::string, std::string>> searchResults;
+    std::vector<std::tuple<std::vector<std::string>, std::string, std::string, std::string, double>> searchResults;
     for (size_t slnIdx = 0; !slnPath.empty(); ++slnIdx, slnPath = tree->findSolutionPath(slnIdx, false))
     {
       RLOG_CPP(0, "Solution " << slnIdx << " is NOT SUCCESSFUL");
@@ -852,11 +878,50 @@ PYBIND11_MODULE(pyAffaction, m)
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
       actionResults.push_back(errMsg);
-      searchResults.emplace_back(std::move(predictedSeq), errMsg.reason, errMsg.suggestion);
+      j_result.push_back(
+      {
+        {"actions", predictedSeq},
+        {"success", slnPath.back()->success},
+        {"error", errMsg.error},
+        {"reason", errMsg.reason},
+        {"suggestion", errMsg.suggestion},
+        {"developer", errMsg.developer},
+        {"cost", slnPath.back()->cost}
+      });
+
     }
-    ex.getEntity().publish("ActionResult", false, 0.0, actionResults);
-    return searchResults;
-  })
+
+    return j_result;
+  }, R"pbdoc(
+Plans an action sequence, providing detailed feedback on failure.
+
+This function accepts a semicolon- and plus-separated string of action commands and
+uses depth-first search to build a valid plan. If planning fails, the function returns a list
+of tuples describing the failure(s).
+
+Parameters:
+    sequence_command (str): Semicolon-separated action commands
+    (e.g., "get bottle_of_cola; put bottle_of_cola table").
+
+Returns:
+    List[Tuple[List[str], str, str]]: A list of failure reports. Each tuple
+    contains:
+        - A list of actions executed before failure.
+        - A string describing the reason for failure.
+        - A string suggesting a possible fix or recommendation.
+
+    Returns an empty list if the sequence was successfully planned and
+    published.
+
+Example:
+    failures = sim.plan_fb_rich("get bottle_of_cola; put bottle_of_cola table")
+    No success: [
+        (['get bottle_of_tomato_sauce hand_left_robot PowerGrasp'], 'The non-existing-object is unknown.', 'Use an object name that is defined in the environment'),
+        (['get bottle_of_tomato_sauce hand_right_robot PowerGrasp'], 'The non-existing-object is unknown.', 'Use an object name that is defined in the environment')]
+
+    Success:
+        print("Plan executed successfully.")
+)pbdoc")
 
   //////////////////////////////////////////////////////////////////////////////
   // Predict action sequence as tree, non-blocking version
@@ -1291,6 +1356,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("virtualCameraWindowEnabled", &aff::ExampleActionsECS::virtualCameraWindowEnabled)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
+  .def_readwrite("numSceneQueries", &aff::ExampleActionsECS::numSceneQueries)
   .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
   .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
 
