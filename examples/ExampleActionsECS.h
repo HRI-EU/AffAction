@@ -132,6 +132,7 @@ public:
   std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;
+  int numSceneQueries;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
   bool unittest, verbose, turbo;
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;

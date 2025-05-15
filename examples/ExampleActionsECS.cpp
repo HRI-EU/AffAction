@@ -245,6 +245,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   loopCount = 0;
   blockingMainThread = false;
   maxNumThreads = 0;
+  numSceneQueries = NUM_SCENEQUERIES;
 
   pause = false;
   noSpeedCheck = false;
@@ -359,6 +360,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-enableSceneTransformationsDataRecorder", &sceneTransformationDataRecorderEnabled, "Enable recording of scene transformations");
   parser->getArgument("-enableSceneTransformationPlayer", &sceneTransformationDataPlayerEnabled, "Enable playing of scene transformations");
   parser->getArgument("-blockingMainThread", &blockingMainThread, "Let the UIs run in the main thread (blocking)");
+  parser->getArgument("-numSceneQueries", &numSceneQueries, "Initial number og scene queries (default: %d)", numSceneQueries);
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
