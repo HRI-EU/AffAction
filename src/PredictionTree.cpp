@@ -219,6 +219,14 @@ size_t PredictionTree::getNumNodes() const
   return collection.size();
 }
 
+std::vector<PredictionTreeNode*> PredictionTree::getLeafNodes(bool onlySuccessfulOnes,
+                                                              PredictionTreeNode* node) const
+{
+  std::vector<PredictionTreeNode*> collection;
+  getLeafNodes(collection, onlySuccessfulOnes, node);
+  return collection;
+}
+
 void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, bool onlySuccessfulOnes, PredictionTreeNode* node) const
 {
   if (!node)

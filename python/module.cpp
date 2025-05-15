@@ -773,12 +773,9 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Fill in the parameters of the action sequence,
-  // providing rich information about the reason for failure
   //
-  // return value: [(failure step, failure reason)] (empty if successful)
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> nlohmann::json//std::vector<std::tuple<std::vector<std::string>, std::string, std::string, std::string, double>>
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> nlohmann::json
   {
     const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
@@ -786,70 +783,39 @@ PYBIND11_MODULE(pyAffaction, m)
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
                                               0, true, ex.earlyExitAction);
-
-    nlohmann::json j_result = nlohmann::json::array();
-
+    
+    nlohmann::json j_inner = {
+        {"actions",    nlohmann::json::array()},
+        {"success",    false},
+        {"error",      ""},
+        {"reason",     ""},
+        {"suggestion", ""},
+        {"developer",  ""},
+        {"cost",       0.0}
+    };
+    
     if (!tree)
     {
-      j_result.push_back(
-      {
-        {"actions", {}},
-        {"success", false},
-        {"error", "Failed to compute prediction tree"},
-        {"reason", ""},
-        {"suggestion", ""},
-        {"developer", ""},
-        {"cost", 0.0}
-      });
-
-      return j_result;
+      j_inner["error"] = "Failed to compute prediction tree";
+      return nlohmann::json::array({j_inner});
     }
 
-
+    if (!tree->root->feedbackMsg.error.empty())
+    {
+      j_inner["error"] = "Error in Solution 0";
+      return nlohmann::json::array({j_inner});
+    }
+    
     // Handling a fatal error in the syntax for the first action
     std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
 
     if (slnPath.empty())
     {
-      j_result.push_back(
-      {
-        {"actions", {}},
-        {"success", false},
-        {"error", "Prediction tree contains no solutions"},
-        {"reason", ""},
-        {"suggestion", ""},
-        {"developer", ""},
-        {"cost", 0.0}
-      });
-
-      return j_result;
+      j_inner["error"] = "Prediction tree contains no solutions";
+      return nlohmann::json::array({j_inner});
     }
 
-
-    if (!tree->root->feedbackMsg.error.empty())
-    {
-      if (tree->root->fatalError)
-      {
-        RLOG_CPP(0, "Fatal Error in Solution 0");
-      }
-
-      j_result.push_back(
-      {
-        {"actions", {}},
-        {"success", false},
-        {"error", "Fatal Error in Solution 0"},
-        {"reason", ""},
-        {"suggestion", ""},
-        {"developer", ""},
-        {"cost", 0.0}
-      });
-
-      return j_result;
-    }
-
-    // Checking the longest failure
-    std::vector<aff::PredictionTreeNode*> leafs;
-    tree->getLeafNodes(leafs, false);
+    std::vector<aff::PredictionTreeNode*> leafs = tree->getLeafNodes();
 
     int deepest_level = 0;
     for (auto leaf : leafs)
@@ -858,17 +824,17 @@ PYBIND11_MODULE(pyAffaction, m)
     }
 
     // Reporting only the nodes with the longest failure
-    std::vector<aff::ActionResult> actionResults;
-    std::vector<std::tuple<std::vector<std::string>, std::string, std::string, std::string, double>> searchResults;
+    nlohmann::json j_result = nlohmann::json::array();
+
     for (size_t slnIdx = 0; !slnPath.empty(); ++slnIdx, slnPath = tree->findSolutionPath(slnIdx, false))
     {
-      RLOG_CPP(0, "Solution " << slnIdx << " is NOT SUCCESSFUL");
+      // We only consider solutions that are on the deepest tree level
       if (slnPath.back()->level < deepest_level)
       {
-        RLOG_CPP(0, "Solution " << slnIdx << " skipped");
         continue;
       }
 
+      // Accumulate the grounded sequence ommand
       std::vector<std::string> predictedSeq;
       predictedSeq.reserve(slnPath.size());
       for (auto node : slnPath)
@@ -877,7 +843,6 @@ PYBIND11_MODULE(pyAffaction, m)
       }
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
-      actionResults.push_back(errMsg);
       j_result.push_back(
       {
         {"actions", predictedSeq},
@@ -893,34 +858,43 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return j_result;
   }, R"pbdoc(
-Plans an action sequence, providing detailed feedback on failure.
+Plans an action sequence and returns detailed feedback for each attempted solution.
 
-This function accepts a semicolon- and plus-separated string of action commands and
-uses depth-first search to build a valid plan. If planning fails, the function returns a list
-of tuples describing the failure(s).
+This function resolves a semicolon-separated string of action commands into a
+sequence of robot actions. It attempts to plan and evaluate possible execution paths using
+a depth-first search strategy. The result includes detailed feedback for the deepest (most
+complete) failed solution paths, or the successful path(s) if available.
 
-Parameters:
-    sequence_command (str): Semicolon-separated action commands
-    (e.g., "get bottle_of_cola; put bottle_of_cola table").
+Parameters
+----------
+sequence_command : str
+    A semicolon-separated sequence of high-level action commands to execute.
+    Example: "get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_5"
 
-Returns:
-    List[Tuple[List[str], str, str]]: A list of failure reports. Each tuple
-    contains:
-        - A list of actions executed before failure.
-        - A string describing the reason for failure.
-        - A string suggesting a possible fix or recommendation.
+Returns
+-------
+List[dict]
+    A list of result dictionaries, each containing:
+      - actions (List[str]): The list of action strings that were executed or planned.
+      - success (bool): Whether the plan was successful.
+      - error (str): Description of the failure or error ("SUCCESS" if successful).
+      - reason (str): More specific explanation of the failure, if available.
+      - suggestion (str): Suggested corrective action.
+      - developer (str): Developer-oriented debug message, if applicable.
+      - cost (float): Planning cost of the solution (lower is better).
 
-    Returns an empty list if the sequence was successfully planned and
-    published.
+    If planning fails completely, a single-element list is returned with an error summary.
+    If multiple deepest failure paths exist, each is reported.
 
-Example:
-    failures = sim.plan_fb_rich("get bottle_of_cola; put bottle_of_cola table")
-    No success: [
-        (['get bottle_of_tomato_sauce hand_left_robot PowerGrasp'], 'The non-existing-object is unknown.', 'Use an object name that is defined in the environment'),
-        (['get bottle_of_tomato_sauce hand_right_robot PowerGrasp'], 'The non-existing-object is unknown.', 'Use an object name that is defined in the environment')]
+Example
+-------
+>>> results = sim.plan_fb_rich("get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_1")
+>>> for r in results:
+...     print("Actions:", r["actions"])
+...     print("Success:", r["success"])
+...     print("Error:", r["error"])
+...     print("Suggestion:", r["suggestion"])
 
-    Success:
-        print("Plan executed successfully.")
 )pbdoc")
 
   //////////////////////////////////////////////////////////////////////////////

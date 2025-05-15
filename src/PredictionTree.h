@@ -315,6 +315,9 @@ public:
   void getLeafNodes(std::vector<PredictionTreeNode*>& collection,
                     bool onlySuccessfulOnes=false,
                     PredictionTreeNode* node = nullptr) const;
+  
+  std::vector<PredictionTreeNode*> getLeafNodes(bool onlySuccessfulOnes=false,
+                                                PredictionTreeNode* node = nullptr) const;
 
 private:
   /**
