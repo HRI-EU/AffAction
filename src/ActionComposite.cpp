@@ -80,6 +80,7 @@ std::unique_ptr<ActionBase> ActionComposite::clone() const
 
 void ActionComposite::addAction(ActionBase* action)
 {
+  RCHECK(action);
   actions.push_back(std::unique_ptr<ActionBase>(action));
 }
 
@@ -91,16 +92,11 @@ std::vector<std::string> ActionComposite::createTasksXML() const
   for (const auto& a : actions)
   {
     std::vector<std::string> ti = a->createTasksXML();
-    //tasks.insert(tasks.end(), ti.begin(), ti.end());
 
     // Check for duplicates
     for (const auto& tsk_i : ti)
     {
-      if (std::find(tasks.begin(), tasks.end(), tsk_i) != tasks.end())
-      {
-        //RLOG_CPP(0, "Skipping duplicate task:\n" << tsk_i);
-      }
-      else
+      if (std::find(tasks.begin(), tasks.end(), tsk_i) == tasks.end())
       {
         tasks.push_back(tsk_i);
       }
@@ -146,6 +142,14 @@ double ActionComposite::getDefaultDuration() const
   return duration;
 }
 
+void ActionComposite::setDuration(double duration)
+{
+  for (const auto& a : actions)
+  {
+    a->setDuration(duration);
+  }
+}
+
 std::vector<std::string> ActionComposite::getManipulators() const
 {
   std::vector<std::string> mVec;
@@ -162,13 +166,13 @@ std::vector<std::string> ActionComposite::getManipulators() const
 std::string ActionComposite::getActionCommand() const
 {
   std::string compositeCmd;
-  RMSG("CHECK DURATION DISASTER!!!");
+
   for (size_t i=0; i<actions.size(); ++i)
   {
     compositeCmd += actions[i]->getActionCommand();
     if (i < actions.size() - 1)
     {
-      compositeCmd += "+";
+      compositeCmd += " + ";
     }
   }
 
@@ -519,7 +523,7 @@ class ActionMultiString : public ActionComposite
 {
 public:
 
-  ActionMultiString(const ActionDoubleGet& other) : ActionComposite(other)
+  ActionMultiString(const ActionMultiString& other) : ActionComposite(other)
   {
   }
 
@@ -540,6 +544,15 @@ public:
       {
         std::vector<std::string> words = Rcs::String_split(params[i], " ");
         ActionResult errMsg;
+        auto action = ActionFactory::create(domain, graph, words, errMsg);
+        if (!action)
+        {
+          throw ActionException(ActionException::ParamInvalid,
+                                errMsg.error + " " + errMsg.reason,
+                                errMsg.suggestion,
+                                errMsg.developer + " " + std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+        }
+
         addAction(ActionFactory::create(domain, graph, words, errMsg));
       }
     }
