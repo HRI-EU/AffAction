@@ -783,17 +783,17 @@ PYBIND11_MODULE(pyAffaction, m)
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
                                               0, true, ex.earlyExitAction);
-    
+
     nlohmann::json j_inner = {
-        {"actions",    nlohmann::json::array()},
-        {"success",    false},
-        {"error",      ""},
-        {"reason",     ""},
-        {"suggestion", ""},
-        {"developer",  ""},
-        {"cost",       0.0}
+      {"actions",    nlohmann::json::array()},
+      {"success",    false},
+      {"error",      ""},
+      {"reason",     ""},
+      {"suggestion", ""},
+      {"developer",  ""},
+      {"cost",       0.0}
     };
-    
+
     if (!tree)
     {
       j_inner["error"] = "Failed to compute prediction tree";
@@ -805,7 +805,7 @@ PYBIND11_MODULE(pyAffaction, m)
       j_inner["error"] = "Error in Solution 0";
       return nlohmann::json::array({j_inner});
     }
-    
+
     // Handling a fatal error in the syntax for the first action
     std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
 
@@ -883,12 +883,15 @@ List[dict]
       - developer (str): Developer-oriented debug message, if applicable.
       - cost (float): Planning cost of the solution (lower is better).
 
+    The list is sorted according to the quality of the solution. The first entries are the
+    successful solutions, sorted by their accumulated cost (the first entry is the overall 
+    best solution path). This is followed by solutions that contain the most number of steps.
     If planning fails completely, a single-element list is returned with an error summary.
-    If multiple deepest failure paths exist, each is reported.
+    If multiple deepest failure paths exist, each found one is reported. 
 
 Example
 -------
->>> results = sim.plan_fb_rich("get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_1")
+>>> results = sim.plan_fb_rich("get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray")
 >>> for r in results:
 ...     print("Actions:", r["actions"])
 ...     print("Success:", r["success"])
