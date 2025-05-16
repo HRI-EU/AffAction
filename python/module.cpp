@@ -775,7 +775,7 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> nlohmann::json
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
   {
     const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
@@ -797,13 +797,13 @@ PYBIND11_MODULE(pyAffaction, m)
     if (!tree)
     {
       j_inner["error"] = "Failed to compute prediction tree";
-      return nlohmann::json::array({j_inner});
+      return nlohmann::json::array({ j_inner });
     }
 
     if (!tree->root->feedbackMsg.error.empty())
     {
       j_inner["error"] = "Error in Solution 0";
-      return nlohmann::json::array({j_inner});
+      return nlohmann::json::array({ j_inner });
     }
 
     // Handling a fatal error in the syntax for the first action
@@ -815,26 +815,32 @@ PYBIND11_MODULE(pyAffaction, m)
       return nlohmann::json::array({j_inner});
     }
 
-    std::vector<aff::PredictionTreeNode*> leafs = tree->getLeafNodes();
+    std::vector<aff::PredictionTreeNode*> leafs = tree->getLeafNodes(successes_only);
 
+    // Find the deepest level of the leaf nodes
     int deepest_level = 0;
     for (auto leaf : leafs)
     {
       deepest_level = std::max(deepest_level, leaf->level);
     }
 
+    // Remove all nodes not at deepest level
+    leafs.erase(
+      std::remove_if(leafs.begin(), leafs.end(),
+                     [deepest_level](aff::PredictionTreeNode* node)
+    {
+      return node->level < deepest_level;
+    }),
+    leafs.end());
+
+
     // Reporting only the nodes with the longest failure
     nlohmann::json j_result = nlohmann::json::array();
 
-    for (size_t slnIdx = 0; !slnPath.empty(); ++slnIdx, slnPath = tree->findSolutionPath(slnIdx, false))
+    for (auto leaf : leafs)
     {
-      // We only consider solutions that are on the deepest tree level
-      if (slnPath.back()->level < deepest_level)
-      {
-        continue;
-      }
-
-      // Accumulate the grounded sequence ommand
+      // Accumulate the grounded sequence command
+      auto slnPath = tree->getPathToNode(leaf);
       std::vector<std::string> predictedSeq;
       predictedSeq.reserve(slnPath.size());
       for (auto node : slnPath)
@@ -843,6 +849,7 @@ PYBIND11_MODULE(pyAffaction, m)
       }
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
+      RLOG_CPP(0, "ADDING " << slnPath.back()->actionCommand());
       j_result.push_back(
       {
         {"actions", predictedSeq},
@@ -857,7 +864,11 @@ PYBIND11_MODULE(pyAffaction, m)
     }
 
     return j_result;
-  }, R"pbdoc(
+  },
+  py::arg("sequenceCommand"),
+  py::arg("successes_only") = true,
+  py::arg("max_threads") = 0,
+  R"pbdoc(
 Plans an action sequence and returns detailed feedback for each attempted solution.
 
 This function resolves a semicolon-separated string of action commands into a
@@ -870,6 +881,14 @@ Parameters
 sequence_command : str
     A semicolon-separated sequence of high-level action commands to execute.
     Example: "get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_5"
+
+successes_only: bool
+    If true, only successful paths will be returned. Otherwise, all paths that reach the overall
+    deepest level will be returned.
+
+max_threads: int
+    The maximum number of threads used in the depth-firrst search. If max_threads is 0 (default),
+    the number of threads will be determined by the computer's thread affinity (as many as possible)
 
 Returns
 -------
@@ -1382,7 +1401,7 @@ Example
 
             std::string name = first_face["recognized_face"];
             faceName = name;
-            auto bbox = first_face["bounding_box"];
+            auto& bbox = first_face["bounding_box"];
 
             std::cout << "First recognized face: " << name << std::endl;
             std::cout << "Bounding box: left=" << bbox["left"]

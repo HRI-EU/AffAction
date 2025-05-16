@@ -465,7 +465,7 @@ public:
                      std::tuple<Affordance*, Capability*> grasp,
                      double wLin, double wAng)
   {
-    RLOG(1, "wAng=%f", wAng);
+    //RLOG(1, "wAng=%f", wAng);
     RcsBody* bdy0 = RcsGraph_getBodyByName(graph, std::get<0>(grasp)->frame.c_str());
     RcsBody* bdy1 = RcsGraph_getBodyByName(graph, std::get<1>(grasp)->frame.c_str());
 

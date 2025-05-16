@@ -263,6 +263,16 @@ public:
    * @return The i-th best path where i is parameter index.
    */
   std::vector<PredictionTreeNode*> findSolutionPath(size_t index = 0, bool onlySuccessfulOnes = true) const;
+
+  /**
+   * @brief Returns the path from the root node to the given node. The returned vector is
+   *        sorted from the root node to the passed one, and includes the target node.
+   *
+   * @param node Target of the path
+   * @return Node path
+   */
+  std::vector<PredictionTreeNode*> getPathToNode(PredictionTreeNode* node) const;
+
   std::vector<std::string> findSolutionPathAsStrings(size_t index = 0, bool onlySuccessfulOnes = true) const;
 
   std::vector<ActionResult> getSolutionErrorStrings(size_t index = 0) const;
@@ -315,7 +325,7 @@ public:
   void getLeafNodes(std::vector<PredictionTreeNode*>& collection,
                     bool onlySuccessfulOnes=false,
                     PredictionTreeNode* node = nullptr) const;
-  
+
   std::vector<PredictionTreeNode*> getLeafNodes(bool onlySuccessfulOnes=false,
                                                 PredictionTreeNode* node = nullptr) const;
 
