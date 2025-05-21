@@ -66,8 +66,8 @@ static void MyParseSceneEntity(const xmlNodePtr node, aff::ActionScene* scene, s
   }
   else if (isXMLNodeName(node, "Manipulator"))
   {
-    std::string mName = Rcs::getXMLNodePropertySTLString(node, "name");
-    RLOG_CPP(5, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
+    std::string mName = Rcs::getXMLNodePropertySTLString(node, "body");
+    RLOG_CPP(0, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
     scene->manipulators.emplace_back(Manipulator(node, groupSuffix));
   }
 
@@ -100,7 +100,8 @@ static void MyParseRecursive(const xmlNodePtr node, aff::ActionScene* self, std:
   else if (isXMLNodeName(node, "Group"))
   {
     std::string grpSfx = Rcs::getXMLNodePropertySTLString(node, "name");
-    MyParseRecursive(node->children, self, suffix + grpSfx, parse);
+    //MyParseRecursive(node->children, self, suffix + grpSfx, parse);
+    MyParseRecursive(node->children, self, grpSfx+suffix, parse);
     MyParseRecursive(node->next, self, suffix, parse);
   }
   else // can be a Manipulator, Body or junk

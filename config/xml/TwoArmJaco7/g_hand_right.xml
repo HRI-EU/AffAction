@@ -29,39 +29,39 @@
 
 <Graph>
 
-    <Body name="hand_right_robot" prev="hand_base_right" transform="0 0 -0.1 0 0 0" >
+    <Body name="hand_robot" prev="hand_base" transform="0 0 -0.1 0 0 0" >
         <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
                transform="0 0 0.2 180 0 0" color="RED"/>
         <Shape type="FRAME" scale="0.3"/>
     </Body>
 
-    <Body name="hand_right_powergrasp" prev="hand_right_robot" transform="0 -0.02 -0.04 0 90 0">
+    <Body name="hand_powergrasp" prev="hand_robot" transform="0 -0.02 -0.04 0 90 0">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <!-- <Body name="hand_right_threefinger_poke" prev="hand_right_robot" transform="0 0 -0.11 0 180 0"> -->
+    <!-- <Body name="hand_threefinger_poke" prev="hand_robot" transform="0 0 -0.11 0 180 0"> -->
     <!--     <Shape type="FRAME" scale="0.1"/> -->
     <!-- </Body> -->
 
-    <Body name="hand_right_palmgrasp" prev="hand_right_robot" transform="0 0 -0.02 0 90 0">
+    <Body name="hand_palmgrasp" prev="hand_robot" transform="0 0 -0.02 0 90 0">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_right_pincergrasp" prev="hand_right_robot" transform="0 0 -0.09 0 90 0">
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0 0 -0.09 0 90 0">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_right_point" prev="hand_right_robot" transform="0 -0.07 -0.09 0 90 -20">
+    <Body name="hand_point" prev="hand_robot" transform="0 -0.07 -0.09 0 90 -20">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator body="hand_right_robot" types="hand hand_right" >
-    <Joints names="j2s7s300_joint_finger_1_right j2s7s300_joint_finger_2_right j2s7s300_joint_finger_3_right"/>
-    <PowergraspCapability frame="hand_right_palmgrasp" />
-    <PalmgraspCapability frame="hand_right_palmgrasp" />
-    <PincergraspCapability frame="hand_right_pincergrasp" />
-    <TwistgraspCapability frame="hand_right_pincergrasp" />
-    <FingerpushCapability frame="hand_right_point" />
+  <Manipulator body="hand_robot" types="hand hand" >
+    <Joints names="j2s7s300_joint_finger_1 j2s7s300_joint_finger_2 j2s7s300_joint_finger_3"/>
+    <PowergraspCapability frame="hand_palmgrasp" />
+    <PalmgraspCapability frame="hand_palmgrasp" />
+    <PincergraspCapability frame="hand_pincergrasp" />
+    <TwistgraspCapability frame="hand_pincergrasp" />
+    <FingerpushCapability frame="hand_point" />
   </Manipulator>
 
 </Graph>

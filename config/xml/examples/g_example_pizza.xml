@@ -73,15 +73,27 @@
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
 
+  
+  <!-- -->
   <Group prev="aruco_base" name="_2" transform="0.87 0 0 0 0 180">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
 
+  <Agent body="Johnnie" types="robot" name="Johnnie" >
+    <Component manipulator="hand_robot_left_1" />
+    <Component manipulator="hand_robot_right_1" />
+    <Component manipulator="hand_robot_left_2" />
+    <Component manipulator="hand_robot_right_2" />
+    <xComponent manipulator="head_kinect_link" />
+  </Agent>
+  
+  <!--
   <Group prev="aruco_base" name="_3" transform="0 1.2 0 0 0 -90">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
-
-  <!--  Scene  -->
+-->
+  
+  <!--  Scene -->
   <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.7 0 0 0" >
     <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
   </Group>
@@ -111,6 +123,21 @@
     <joint_state joint="j2s7s300_joint_6_left_1" position="160"/>
     <joint_state joint="j2s7s300_joint_7_left_1" position="0"/>
 	
+  <joint_state joint="j2s7s300_joint_1_right_2" position="20"/>
+  <joint_state joint="j2s7s300_joint_2_right_2" position="280"/>
+  <joint_state joint="j2s7s300_joint_3_right_2" position="-90"/>
+  <joint_state joint="j2s7s300_joint_4_right_2" position="70"/>
+  <joint_state joint="j2s7s300_joint_5_right_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_6_right_2" position="200"/>
+  <joint_state joint="j2s7s300_joint_7_right_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_1_left_2" position="-20"/>
+  <joint_state joint="j2s7s300_joint_2_left_2" position="80"/>
+  <joint_state joint="j2s7s300_joint_3_left_2" position="90"/>
+  <joint_state joint="j2s7s300_joint_4_left_2" position="290"/>
+  <joint_state joint="j2s7s300_joint_5_left_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_6_left_2" position="160"/>
+  <joint_state joint="j2s7s300_joint_7_left_2" position="0"/>
+  
     <joint_state joint="ptu_tilt_joint_1" position="27.76684" />
     <joint_state joint="LeftEyeThY_1" position="0.036163" />
     <joint_state joint="LeftEyeThZ_1" position="-3.477837" />

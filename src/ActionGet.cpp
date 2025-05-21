@@ -468,6 +468,12 @@ bool ActionGet::initialize(const ActionScene& domain,
   handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
   handClosed = hand->getFingerAnglesFromModelState(graph, "close_fingers");
 
+  if (handOpen.size() != hand->getNumFingers())
+  {
+    RLOG_CPP(0, "Wrong number of fingers: " << handOpen.size() << " should be " << hand->getNumFingers());
+    //return false;
+  }
+  
   // Get the frame of the affordance from the second capability
   Affordance* winningAff = std::get<0>(affordanceMap[solutionRank]);
   affordanceFrame = winningAff->frame;

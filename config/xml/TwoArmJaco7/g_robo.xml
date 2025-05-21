@@ -55,6 +55,7 @@
     <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
       <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
     </Group>
+    <xi:include href="g_hand_right.xml"/>
   </Group>
 
   <!-- Left arm -->
@@ -66,11 +67,10 @@
     <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
       <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
     </Group>
+    <xi:include href="g_hand_left.xml"/>
   </Group>
 
 
-  <xi:include href="g_hand_left.xml"/>
-  <xi:include href="g_hand_right.xml"/>
 
   
   
@@ -98,11 +98,6 @@
     <GazeCapability frame="head_kinect_lens" />
   </Manipulator>
 
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-    <Component manipulator="hand_left_robot" />
-    <Component manipulator="hand_right_robot" />
-    <Component manipulator="head_kinect_link" />
-  </Agent>
 
   <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
   <model_state model="default" time_stamp="0">
