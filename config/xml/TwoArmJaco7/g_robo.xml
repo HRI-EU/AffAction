@@ -33,7 +33,7 @@
   <xi:include href="g_item_base.xml"/>
 
   <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
-  <Group  prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
     <xi:include href="g_head_v2.xml" />
   </Group>
 
@@ -42,27 +42,32 @@
     <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
-  <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
-  </Body>
 
-  <Body name="adapter_shoulder_right_3" prev="adapter_shoulder_right_2" transform="0 0 0 30 0 -8.444">
-    <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-  </Body>
 
-  <Group name="_right" prev="adapter_shoulder_right_3" transform="0 0 0 0 0 -90">
-    <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+
+
+  <!-- Right arm -->
+  <Group name="_right" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
+      <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
   </Group>
 
-  <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
-  </Body>
-
-  <Body name="adapter_shoulder_left_3" prev="adapter_shoulder_left_2" transform="0 0 0 30 0 8.444">
-    <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-  </Body>
-
-  <Group name="_left" prev="adapter_shoulder_left_3" transform="0 0 0 0 0 -90" >
-    <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+  <!-- Left arm -->
+  <Group name="_left" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
+      <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
   </Group>
+
 
   <xi:include href="g_hand_left.xml"/>
   <xi:include href="g_hand_right.xml"/>
