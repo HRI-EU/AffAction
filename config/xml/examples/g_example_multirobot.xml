@@ -27,7 +27,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default_1b" >
 
   <ActionSequence name="1" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
   <ActionSequence name="2" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
@@ -40,8 +40,15 @@
   <ActionSequence name="9" text="get salt_bottle; put salt_bottle above pizza_dough" />
 
   <ActionSequence name="p1" text="get bottle_of_tomato_sauce + get bottle_of_salt; move bottle_of_tomato_sauce above table + put bottle_of_salt table; pour bottle_of_tomato_sauce pizza_dough; put bottle_of_tomato_sauce table" />
+  <ActionSequence name="p2" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce" />
 
-  <Body name="default_camera_view" transform="2.2 0 1.5 0 -12 180" was_transform="-1.8 -2.5 3.0 -34 21 66" />
+  <ActionSequence name="p3" text="put bottle_of_tomato_sauce + put bottle_of_salt + put bbq_sauce_bottle + put bottle_of_pesto_sauce" />
+
+  <ActionSequence name="p4" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce; move bottle_of_tomato_sauce above table + put bottle_of_salt shelf; put bottle_of_tomato_sauce pizza_dough + put bottle_of_pesto_sauce table + put bbq_sauce_bottle shelf" />
+
+  <ActionSequence name="p5" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce; move bottle_of_tomato_sauce above pizza_dough; pour bottle_of_tomato_sauce pizza_dough" />
+
+  <Body name="default_camera_view" transform="0.5 3.7 2.6 25 -10 -100" />
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
@@ -68,14 +75,23 @@
  
 
   <!-- The model of the robot. -->
-  <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
+  
+  <Group prev="aruco_base" name="_1" transform="-0.87 0 0 0 0 0">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
   </Group>
 
-  <Agent body="Johnnie" types="robot" name="Johnnie" >
-    <Component manipulator="hand_robot_left" />
-    <Component manipulator="hand_robot_right" />
-    <Component manipulator="head_kinect_link" />
+  
+  <!-- -->
+  <Group prev="aruco_base" name="_2" transform="0.87 0 0 0 0 180">
+    <xi:include href="../TwoArmJaco7/g_robo.xml" />
+  </Group>
+
+  <Agent body="Johnnie_1" types="robot" >
+    <Component manipulator="hand_robot_left_1" />
+    <Component manipulator="hand_robot_right_1" />
+    <Component manipulator="hand_robot_left_2" />
+    <Component manipulator="hand_robot_right_2" />
+    <xComponent manipulator="head_kinect_link" />
   </Agent>
   
   <!--  Scene -->
@@ -91,6 +107,88 @@
     <xi:include href="g_human_agent.xml"/>
   </Group>
   
+  <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
+  <model_state model="default_1b" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_right_1" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right_1" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_right_1" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_right_1" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right_1" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_1_left_1" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left_1" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left_1" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left_1" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left_1" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left_1" position="0"/>
+	
+  <joint_state joint="j2s7s300_joint_1_right_2" position="20"/>
+  <joint_state joint="j2s7s300_joint_2_right_2" position="280"/>
+  <joint_state joint="j2s7s300_joint_3_right_2" position="-90"/>
+  <joint_state joint="j2s7s300_joint_4_right_2" position="70"/>
+  <joint_state joint="j2s7s300_joint_5_right_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_6_right_2" position="200"/>
+  <joint_state joint="j2s7s300_joint_7_right_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_1_left_2" position="-20"/>
+  <joint_state joint="j2s7s300_joint_2_left_2" position="80"/>
+  <joint_state joint="j2s7s300_joint_3_left_2" position="90"/>
+  <joint_state joint="j2s7s300_joint_4_left_2" position="290"/>
+  <joint_state joint="j2s7s300_joint_5_left_2" position="0"/>
+  <joint_state joint="j2s7s300_joint_6_left_2" position="160"/>
+  <joint_state joint="j2s7s300_joint_7_left_2" position="0"/>
+  
+    <joint_state joint="ptu_tilt_joint_1" position="27.76684" />
+    <joint_state joint="LeftEyeThY_1" position="0.036163" />
+    <joint_state joint="LeftEyeThZ_1" position="-3.477837" />
+    <joint_state joint="LeftPupilX_1" position="0.039072" />
+    <joint_state joint="LeftPupilThY_1" position="-0.036227" />
+    <joint_state joint="LeftPupilThZ_1" position="3.477834" />
+    <joint_state joint="GazeXL_1" position="0.989079" />
+    <joint_state joint="RightEyeThY_1" position="0.036163" />
+    <joint_state joint="RightEyeThZ_1" position="3.477838" />
+    <joint_state joint="RightPupilX_1" position="0.039072" />
+    <joint_state joint="RightPupilThY_1" position="-0.003299" />
+    <joint_state joint="RightPupilThZ_1" position="-3.477835" />
+    <joint_state joint="GazeXR_1" position="0.989079" />
+    <joint_state joint="gpx_1" position="-0.02" />
+    <joint_state joint="gpz_1" position="0.971" />
+  </model_state>
+
+  <model_state model="default_1" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_1_right" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_1_right" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_1_right" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_1_right" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_1_right" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_1_right" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_1_right" position="0"/>
+     <joint_state joint="j2s7s300_joint_1_1_left" position="-20"/>
+     <joint_state joint="j2s7s300_joint_2_1_left" position="80"/>
+     <joint_state joint="j2s7s300_joint_3_1_left" position="90"/>
+     <joint_state joint="j2s7s300_joint_4_1_left" position="290"/>
+     <joint_state joint="j2s7s300_joint_5_1_left" position="0"/>
+     <joint_state joint="j2s7s300_joint_6_1_left" position="160"/>
+     <joint_state joint="j2s7s300_joint_7_1_left" position="0"/>
+	
+    <joint_state joint="ptu_tilt_joint_1" position="27.76684" />
+    <joint_state joint="LeftEyeThY_1" position="0.036163" />
+    <joint_state joint="LeftEyeThZ_1" position="-3.477837" />
+    <joint_state joint="LeftPupilX_1" position="0.039072" />
+    <joint_state joint="LeftPupilThY_1" position="-0.036227" />
+    <joint_state joint="LeftPupilThZ_1" position="3.477834" />
+    <joint_state joint="GazeXL_1" position="0.989079" />
+    <joint_state joint="RightEyeThY_1" position="0.036163" />
+    <joint_state joint="RightEyeThZ_1" position="3.477838" />
+    <joint_state joint="RightPupilX_1" position="0.039072" />
+    <joint_state joint="RightPupilThY_1" position="-0.003299" />
+    <joint_state joint="RightPupilThZ_1" position="-3.477835" />
+    <joint_state joint="GazeXR_1" position="0.989079" />
+    <joint_state joint="gpx_1" position="-0.02" />
+    <joint_state joint="gpz_1" position="0.971" />
+  </model_state>
+
   <model_state model="default" time_stamp="0">
     <joint_state joint="j2s7s300_joint_1_right" position="20"/>
     <joint_state joint="j2s7s300_joint_2_right" position="280"/>
