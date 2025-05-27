@@ -269,13 +269,16 @@ src/PW70Component.cpp
 src/VirtualCameraWindow.cpp
 src/TTSComponent.cpp
 src/RespeakerSoundDirComponent.cpp
+src/RetargetComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
+examples/ExampleRetarget.cpp
 examples/ExampleFlowMatching.cpp
 examples/ExampleViapoints.cpp
 src/JacoShmComponent.cpp
+src/AzureBodyTrackingComponent.cpp
 )
 
 IF (AFFACTION_WITH_ROS)
@@ -302,6 +305,10 @@ TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<INSTALL_INTERFACE:include/AffAction>)
 
 TARGET_LINK_LIBRARIES(AffAction PUBLIC Tropic RcsGraphics RcsGui RcsPhysics)
+
+IF (TARGET AzureTracker)
+  TARGET_LINK_LIBRARIES(AffAction PUBLIC AzureTracker)
+ENDIF()
 
 IF (AFFACTION_WITH_PCAN_BASIC)
   FIND_PACKAGE(PCAN-Basic REQUIRED)
@@ -464,7 +471,7 @@ ENDIF(WIN32)
 ###############################################################################
 # Mark for export
 ###############################################################################
-#SMILEACTIONS_ADD_EXPORT_LIBRARY(SmileActions)
+#AFFACTION_ADD_EXPORT_LIBRARY(AzureTracker)
 
 INCLUDE(CopyOrLinkConfig)
 RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}/config)
@@ -472,4 +479,4 @@ RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}
 ################################################################################
 # Target export script
 ################################################################################
-INCLUDE(ExportAffAction)
+#INCLUDE(ExportAffAction)
