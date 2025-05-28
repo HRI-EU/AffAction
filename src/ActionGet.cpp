@@ -473,7 +473,7 @@ bool ActionGet::initialize(const ActionScene& domain,
     RLOG_CPP(0, "Wrong number of fingers: " << handOpen.size() << " should be " << hand->getNumFingers());
     //return false;
   }
-  
+
   // Get the frame of the affordance from the second capability
   Affordance* winningAff = std::get<0>(affordanceMap[solutionRank]);
   affordanceFrame = winningAff->frame;

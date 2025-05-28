@@ -911,7 +911,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
 
     RCSGRAPH_FOREACH_BODY(graph)
     {
-      if ((!BODY->rigid_body_joints) || (BODY->id == -1))
+      if ((BODY->firstChildId==-1) || (!BODY->rigid_body_joints) || (BODY->id == -1))
       {
         continue;
       }

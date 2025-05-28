@@ -1032,6 +1032,27 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Get body under mouse");
 
+  viewer->setKeyCallback('n', [this](char k)
+  {
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (bn)
+    {
+      auto textCmd = "get " + std::string(bn->body()->name);
+      entity.publish("PlanDFSEE", textCmd);
+    }
+  }, "Get body under mouse");
+
+  viewer->setKeyCallback('N', [this](char k)
+  {
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (bn)
+    {
+      auto textCmd = "put " + std::string(bn->body()->name);
+      entity.publish("PlanDFSEE", textCmd);
+    }
+
+  }, "Put body under mouse");
+
   viewer->setKeyCallback('l', [this](char k)
   {
     auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
