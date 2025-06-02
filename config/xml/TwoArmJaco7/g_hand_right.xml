@@ -29,7 +29,7 @@
 
 <Graph>
 
-    <Body name="hand_robot" prev="hand_base" transform="0 0 -0.1 0 0 0" >
+    <Body name="hand_robot" prev="hand_base_right" transform="0 0 -0.1 0 0 0" >
         <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
                transform="0 0 0.2 180 0 0" color="RED"/>
         <Shape type="FRAME" scale="0.3"/>
@@ -55,7 +55,7 @@
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator body="hand_robot" types="hand hand" >
+  <Manipulator body="hand_robot" types="hand hand_right" >
     <Joints names="j2s7s300_joint_finger_1 j2s7s300_joint_finger_2 j2s7s300_joint_finger_3"/>
     <PowergraspCapability frame="hand_palmgrasp" />
     <PalmgraspCapability frame="hand_palmgrasp" />

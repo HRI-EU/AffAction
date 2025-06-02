@@ -29,12 +29,11 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
- ──────────────────────────────────────────────────────────────
  Zmq router – central coordinator
 
- - ROUTER socket ← receives messages / heart‑beats from workers
- - Tracks liveness per worker (ID ➜ last‑seen time)
- - Sends a JSON “do_work” command to every *alive* worker
+ - ROUTER socket receives messages and heart‑beats from workers
+ - Tracks liveness per worker (ID, last‑seen time)
+ - Sends a JSON “do_work” command to every alive worker
    every COMMAND_INTERVAL_MS milliseconds
  - Drops (and logs) workers that miss HEARTBEAT_LIVENESS ms
 
@@ -57,12 +56,10 @@ namespace aff
 using Clock = std::chrono::steady_clock;
 using ms    = std::chrono::milliseconds;
 
-// ───────────────────────── configurable constants
 constexpr int  POLL_TIMEOUT_MS      = 100;   // main‑loop poll period
-constexpr int  HEARTBEAT_LIVENESS   = 6000;  // ms without heartbeat → drop worker
+constexpr int  HEARTBEAT_LIVENESS   = 6000;  // ms without heartbeat: drop worker
 constexpr int  COMMAND_INTERVAL_MS  = 50;    // broadcast command every n ms
 constexpr char ROUTER_ENDPOINT[]    = "tcp://*:5566";
-// ──────────────────────────────────────────────────────────────
 
 
 ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connection):
@@ -157,7 +154,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   RLOG_CPP(1, "ROUTER bound to " << connection);
   router.bind(connection);
 
-  // State: worker‑id  → last‑heartbeat‑time
+  // State: worker‑id, last‑heartbeat‑time
   std::unordered_map<std::string, Clock::time_point> workers;
 
   Clock::time_point lastCmd = Clock::now();
@@ -165,11 +162,11 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   // Network loop
   while (this->threadRunning)
   {
-    // ── poll for inbound messages
+    // Poll for inbound messages
     zmq::pollitem_t items[] = { { router, 0, ZMQ_POLLIN, 0 } };
     zmq::poll(items, 1, std::chrono::milliseconds{POLL_TIMEOUT_MS});
 
-    // ───────────────────────────────────────── inbound messages
+    // Inbound messages
     if (items[0].revents & ZMQ_POLLIN)
     {
       // Drain *all* queued messages to avoid backlog
@@ -183,7 +180,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         auto idRes = router.recv(identity, zmq::recv_flags::dontwait);
         if (!idRes)
         {
-          break;  // queue empty → done
+          break;  // queue empty: done
         }
 
         // Part 2: empty delimiter (REQ/ROUTER convention)
@@ -206,7 +203,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         std::string data(static_cast<char*>(payload.data()), payload.size());
 
         workers[id] = Clock::now();              // refresh liveness
-        RLOG_CPP(1, "[RECV] from " << id + " → " << data);
+        RLOG_CPP(1, "[RECV] from id=" << id + ": " << data);
 
         // Optionally parse / act on non‑heartbeat replies here
         // json msg = json::parse(data, nullptr, false);
@@ -214,7 +211,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
       }
     }
 
-    // ───────────────────────────────────────── broadcast command
+    // Broadcast command
     auto now = Clock::now();
     if (std::chrono::duration_cast<ms>(now - lastCmd).count() >= COMMAND_INTERVAL_MS)
     {
@@ -282,7 +279,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
       lastCmd = now;
     }
 
-    // ───────────────────────────────────────── liveness sweep
+    // Liveness sweep
     for (auto it = workers.begin(); it != workers.end();)
     {
       if (std::chrono::duration_cast<ms>(now - it->second).count() > HEARTBEAT_LIVENESS)
@@ -300,4 +297,4 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   }
 }
 
-}   // nymespace
+}   // namespace

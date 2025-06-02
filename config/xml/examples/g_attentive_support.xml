@@ -64,6 +64,12 @@
   </Group>
 
   <!--  Agent models -->
+  <Agent body="Johnnie" types="robot" name="Johnnie" >
+    <Component manipulator="hand_robot_left" />
+    <Component manipulator="hand_robot_right" />
+    <Component manipulator="head_kinect_link" />
+  </Agent>
+  
   <Group prev="aruco_base" name="Felix" color="RED" transform="0 -1 0.5 0 0 -90" >
     <xi:include href="g_human_agent.xml"/>
   </Group>
