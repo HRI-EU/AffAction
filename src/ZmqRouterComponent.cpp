@@ -284,7 +284,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
     {
       if (std::chrono::duration_cast<ms>(now - it->second).count() > HEARTBEAT_LIVENESS)
       {
-        RLOG_CPP(0, "[DROP] worker " << it->first << " timed‑out");
+        RLOG_CPP(0, "[DROP] worker " << it->first << " timed out");
         it = workers.erase(it);
       }
       else
