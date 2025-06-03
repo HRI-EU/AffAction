@@ -449,6 +449,13 @@ INSTALL(TARGETS AffAction EXPORT AffActionExport
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/AffAction)
 
+IF (TARGET AzureTracker)
+  INSTALL(TARGETS AzureTracker EXPORT AffActionExport
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib/AffAction)
+ENDIF()
+
 INSTALL(TARGETS TestLLMSim TestAffordance ExampleRunnerAff
         RUNTIME DESTINATION bin 
         LIBRARY DESTINATION lib
@@ -479,4 +486,4 @@ RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}
 ################################################################################
 # Target export script
 ################################################################################
-#INCLUDE(ExportAffAction)
+INCLUDE(ExportAffAction)
