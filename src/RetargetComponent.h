@@ -52,11 +52,11 @@ public:
 
   void startRecording();
   void stopRecording();
+  bool isRecording() const;
 
 private:
   void onRetarget(std::map<int, std::vector<HTr>> poses);
   FILE* fd;
-  bool record;
   double lastSampleTime;
   std::string fileName;
 };

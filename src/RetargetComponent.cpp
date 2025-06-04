@@ -1063,7 +1063,7 @@ void RetargetComponent::toggleThreading()
 
 
 RetargetLogger::RetargetLogger(EntityBase* parent, const std::string& fileName_) :
-  ComponentBase(parent), record(false), lastSampleTime(-1), fileName(fileName_)
+  ComponentBase(parent), fd(nullptr), lastSampleTime(-1), fileName(fileName_)
 {
   subscribe("RetargetPose", &RetargetLogger::onRetarget);
 }
@@ -1073,9 +1073,14 @@ RetargetLogger::~RetargetLogger()
   stopRecording();
 }
 
+bool RetargetLogger::isRecording() const
+{
+  return fd ? true : false;
+}
+
 void RetargetLogger::onRetarget(std::map<int, std::vector<HTr>> poseMap)
 {
-  if (!record)
+  if (!isRecording())
   {
     return;
   }
@@ -1107,18 +1112,26 @@ void RetargetLogger::onRetarget(std::map<int, std::vector<HTr>> poseMap)
 
 void RetargetLogger::startRecording()
 {
-  fd = fopen(fileName.c_str(), "w+");
-  RCHECK(fd);
-  record = true;
+  if (!fd)
+  {
+    fd = fopen(fileName.c_str(), "w+");
+    if (!fd)
+    {
+      RLOG_CPP(1, "Failed to open " << fileName << " for logging");
+    }
+  }
 }
 
 void RetargetLogger::stopRecording()
 {
-  record = false;
   if (fd)
   {
     fclose(fd);
     fd = NULL;
+  }
+  else
+  {
+    RLOG_CPP(1, "Recording already stopped");
   }
 }
 

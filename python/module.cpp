@@ -527,32 +527,117 @@ PYBIND11_MODULE(pyAffaction, m)
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
+  // a = sim.captureImage(0, 0, 1, 0, 0, 0)
   //////////////////////////////////////////////////////////////////////////////
   .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
                           double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
   {
     aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
+
+    if (!virtualCamera)
+    {
+      RLOG(1, "Creating new virtual camera - not part of simulator");
+      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), 640, 480);
+      ex.setVirtualCamera(virtualCamera);
+    }
+
     py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3}), depthImage({virtualCamera->height, virtualCamera->width});
     virtualCamera->render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
-    return std::make_tuple(std::move(colorImage), std::move(depthImage));
-  }, "Renders the current state of the scene. The input is the camera origin and yrp rotation around that origin. Outputs the color and depth image.")
+
+    // Multiply each color channel by 255
+    auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
+    for (auto i = 0; i < img.shape(0); ++i)
+    {
+      for (auto j = 0; j < img.shape(1); ++j)
+      {
+        for (auto k = 0; k < 3; ++k)
+        {
+          img(i, j, k) *= 255.0;
+        }
+      }
+    }
+
+    return std::make_tuple(colorImage, depthImage);
+  },
+  R"pbdoc(
+Renders the desired state of the scene. The input is the camera origin and yrp rotation 
+around that origin. Outputs the color and depth image. If there is no virtual camera
+instantiated in the simulator, this will be done in this function. This leads to the
+first call being a bit more slow than the consecutive ones, since the camera construction
+takes 1-2 secs.
+Camera frame convention: x points forward, z point upward, and y points left
+
+Example
+-------
+import cv2
+import numpy as np
+
+color, depth = sim.captureImage(-0.77, 0.0, 1.66, 0.0, 1.0, 0.0)
+color_np = np.array(color)
+color_bgr = cv2.cvtColor(color_np.astype(np.uint8), cv2.COLOR_RGB2BGR)
+cv2.imwrite("color_image.jpg", color_bgr)
+
+depth_np = np.array(depth)
+depth_normalized = cv2.normalize(depth_np, None, 0, 255, cv2.NORM_MINMAX)
+depth_display = depth_normalized.astype(np.uint8)
+cv2.imwrite("depth_image.jpg", depth_display)
+)pbdoc")
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
   //////////////////////////////////////////////////////////////////////////////
   .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<double>
   {
-    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
-    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3});
     const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
-    RCHECK(cam);
+    if (!cam)
+    {
+      RLOG_CPP(1, "Camera body " << cameraName << " not found - returning empty array");
+      return py::array_t<double>({ 0, 0, 3 });
+    }
 
+    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
+
+    if (!virtualCamera)
+    {
+      RLOG(1, "Creating new virtual camera - not part of simulator");
+      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), 640, 480);
+      ex.setVirtualCamera(virtualCamera);
+    }
+
+    py::array_t<double> colorImage({ virtualCamera->height, virtualCamera->width, 3 });
     virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
-    return std::move(colorImage);
-  }, "Renders the current state of the scene. The input is the camera body name. Outputs the color image.")
 
+    // Multiply each color channel by 255
+    auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
+    for (auto i = 0; i < img.shape(0); ++i)
+    {
+        for (auto j = 0; j < img.shape(1); ++j)
+        {
+            for (auto k = 0; k < 3; ++k)
+            {
+                img(i, j, k) *= 255.0;
+            }
+        }
+    }
+
+    return colorImage;
+  }, R"pbdoc(
+Renders the desired state of the scene from the given camera. Outputs the color image.
+If there is no virtual camera instantiated in the simulator, this will be done in this 
+function. This leads to the first call being a bit more slow than the consecutive ones, 
+since the camera construction takes 1-2 secs.
+Camera frame convention: x points forward, z point upward, and y points left
+
+Example
+-------
+import cv2
+import numpy as np
+
+color = sim.captureColorImageFromFrame("camera_01")
+color_np = np.array(color)
+color_bgr = cv2.cvtColor(color_np.astype(np.uint8), cv2.COLOR_RGB2BGR)
+cv2.imwrite("color_image.jpg", color_bgr)
+)pbdoc")
   //////////////////////////////////////////////////////////////////////////////
   // Returns the entity of which child is a child of, or an empty string
   //////////////////////////////////////////////////////////////////////////////

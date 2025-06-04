@@ -100,6 +100,7 @@ public:
   EntityBase& getEntity();
   const VirtualCamera* getVirtualCamera() const;
   VirtualCamera* getVirtualCamera();
+  void setVirtualCamera(VirtualCamera* camera);
   void addComponentArgument(const std::string& arg);
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;

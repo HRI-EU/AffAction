@@ -1946,6 +1946,11 @@ VirtualCamera* ExampleActionsECS::getVirtualCamera()
   return virtualCamera.get();
 }
 
+void ExampleActionsECS::setVirtualCamera(VirtualCamera* camera)
+{
+  virtualCamera = std::unique_ptr<VirtualCamera>(camera);
+}
+
 void ExampleActionsECS::startThreaded()
 {
   std::thread t1([&]
