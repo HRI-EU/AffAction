@@ -903,10 +903,10 @@ List[dict]
       - cost (float): Planning cost of the solution (lower is better).
 
     The list is sorted according to the quality of the solution. The first entries are the
-    successful solutions, sorted by their accumulated cost (the first entry is the overall 
+    successful solutions, sorted by their accumulated cost (the first entry is the overall
     best solution path). This is followed by solutions that contain the most number of steps.
     If planning fails completely, a single-element list is returned with an error summary.
-    If multiple deepest failure paths exist, each found one is reported. 
+    If multiple deepest failure paths exist, each found one is reported.
 
 Example
 -------
@@ -1177,25 +1177,25 @@ Example
                             double skeleton_radius)
   {
     ex.addComponentArgument("-landmarks_zmq");
-    ex.addComponentArgument("-landmarks_connection" + connection);
-    ex.addComponentArgument("-landmarks_camera" + camera_name);
+    ex.addComponentArgument("-landmarks_connection " + connection);
+    ex.addComponentArgument("-landmarks_camera " + camera_name);
 
     if (withFaceTracking)
     {
       ex.addComponentArgument("-face_tracking");
-      ex.addComponentArgument("-face_bodyName" + face_name);
+      ex.addComponentArgument("-face_bodyName " + face_name);
     }
 
     if (withArucoTracking)
     {
       ex.addComponentArgument("-aruco_tracking");
-      ex.addComponentArgument("-aruco_base" + base_marker);
+      ex.addComponentArgument("-aruco_base " + base_marker);
     }
 
     if (withSkeletonTracking)
     {
       ex.addComponentArgument("-skeleton_tracking");
-      ex.addComponentArgument("-skeleton_radius" + std::to_string(skeleton_radius));
+      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
     }
   },
   py::arg("connection") = "tcp://localhost:5555",
@@ -1218,28 +1218,28 @@ Example
                                double skeleton_radius)
   {
     ex.addComponentArgument("-landmarks_router");
-    ex.addComponentArgument("-landmarks_connection" + connection);
-    ex.addComponentArgument("-landmarks_camera" + camera_name);
+    ex.addComponentArgument("-landmarks_connection " + connection);
+    ex.addComponentArgument("-landmarks_camera " + camera_name);
 
     if (withFaceTracking)
     {
       ex.addComponentArgument("-face_tracking");
-      ex.addComponentArgument("-face_bodyName" + face_name);
+      ex.addComponentArgument("-face_bodyName " + face_name);
     }
 
     if (withArucoTracking)
     {
       ex.addComponentArgument("-aruco_tracking");
-      ex.addComponentArgument("-aruco_base" + base_marker);
+      ex.addComponentArgument("-aruco_base " + base_marker);
     }
 
     if (withSkeletonTracking)
     {
       ex.addComponentArgument("-skeleton_tracking");
-      ex.addComponentArgument("-skeleton_radius" + std::to_string(skeleton_radius));
+      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
     }
   },
-  py::arg("connection") = "tcp://localhost:5566",
+  py::arg("connection") = "tcp://*:5566",
   py::arg("camera_name") = "camera_0",
   py::arg("withFaceTracking") = false,
   py::arg("face_name") = "face",
