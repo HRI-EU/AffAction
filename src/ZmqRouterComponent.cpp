@@ -59,14 +59,12 @@ using ms    = std::chrono::milliseconds;
 constexpr int  POLL_TIMEOUT_MS      = 100;   // main‑loop poll period
 constexpr int  HEARTBEAT_LIVENESS   = 6000;  // ms without heartbeat: drop worker
 constexpr int  COMMAND_INTERVAL_MS  = 50;    // broadcast command every n ms
-constexpr char ROUTER_ENDPOINT[]    = "tcp://*:5566";
 
 
 ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connection):
   ComponentBase(parent), LandmarkBase(),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false)
 {
-  connectionStr = "tcp://*:5566";
   subscribe("Start", &ZmqRouterComponent::startZmqThread);
   subscribe("Stop", &ZmqRouterComponent::stopZmqThread);
   subscribe("SetPerceptionCommand", &ZmqRouterComponent::onSetPerceptionCommand);
@@ -140,19 +138,41 @@ void ZmqRouterComponent::stopZmqThread()
   RLOG(1, "onStop() completed");
 }
 
+static zmq::socket_t create_router_socket(zmq::context_t& ctx, const std::string& connection)
+{
+  try
+  {
+    zmq::socket_t router(ctx, zmq::socket_type::router);
+
+    const int SND_HWM = 150;  // max unsent messages per peer
+
+    router.set(zmq::sockopt::sndhwm, SND_HWM);
+    router.set(zmq::sockopt::router_mandatory, 1);
+    router.set(zmq::sockopt::sndtimeo, 0); // non-blocking send
+
+    router.bind(connection);
+
+    RLOG_CPP(1, "ROUTER bound to " << connection);
+    return router;
+  }
+  catch (const zmq::error_t& e)
+  {
+    RLOG_CPP(0, "ZeroMQ error during router setup with connection '" << connection << "': " << e.what());
+    throw;
+  }
+  catch (const std::exception& e)
+  {
+    RLOG_CPP(0, "General exception during router setup with connection '" << connection << "': " << e.what());
+    throw;
+  }
+}
+
+
 void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 {
   // ZeroMQ context & socket setup
   zmq::context_t ctx{1};
-  zmq::socket_t  router{ctx, zmq::socket_type::router};
-
-  const int SND_HWM = 150;                       // keep at most 150 unsent cmds / worker
-  router.set(zmq::sockopt::sndhwm, SND_HWM);
-  router.set(zmq::sockopt::router_mandatory, 1); // detect overflow instead of silent drop
-  router.set(zmq::sockopt::sndtimeo, 0);         // non‑blocking sends
-
-  RLOG_CPP(1, "ROUTER bound to " << connection);
-  router.bind(connection);
+  zmq::socket_t router = create_router_socket(ctx, connection);
 
   // State: worker‑id, last‑heartbeat‑time
   std::unordered_map<std::string, Clock::time_point> workers;
@@ -184,10 +204,21 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         }
 
         // Part 2: empty delimiter (REQ/ROUTER convention)
-        auto emptyRes = router.recv(empty, zmq::recv_flags::dontwait);
+        zmq::recv_result_t emptyRes = router.recv(empty, zmq::recv_flags::dontwait);
         if (!emptyRes || empty.size() != 0)      // malformed message
         {
           RLOG_CPP(0, "[WARN] Incomplete multipart message (missing empty frame)");
+
+          if (empty.size() == 0)
+          {
+            RLOG_CPP(0, "[Empty frame]");
+          }
+          else
+          {
+            std::string s(static_cast<char*>(empty.data()), empty.size());
+            RLOG_CPP(0, "Frame as string: \"" << s << "\"");
+          }
+
           break;
         }
 
@@ -200,14 +231,23 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         }
 
         std::string id(static_cast<char*>(identity.data()), identity.size());
-        std::string data(static_cast<char*>(payload.data()), payload.size());
+        std::string payLoadStr(static_cast<char*>(payload.data()), payload.size());
 
         workers[id] = Clock::now();              // refresh liveness
-        RLOG_CPP(1, "[RECV] from id=" << id + ": " << data);
 
-        // Optionally parse / act on non‑heartbeat replies here
-        // json msg = json::parse(data, nullptr, false);
-        getEntity()->publish("ZmqDealerMessage", id, data);
+        try
+        {
+          RLOG_CPP(0, "Parsing payload json: " << payLoadStr);
+          nlohmann::json json = nlohmann::json::parse(payLoadStr);
+          RLOG_CPP(0, "Calling setJsonInput");
+          setJsonInput(json);
+          RLOG_CPP(0, "done setJsonInput: " << json.dump(4));
+        }
+        catch (const nlohmann::json::parse_error& e)
+        {
+          std::cerr << "[JSON parse error] at byte " << e.byte << ": " << e.what() << std::endl;
+        }
+
       }
     }
 
@@ -223,7 +263,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         if (!commandQueue.empty())
         {
           std::pair<std::string, int> cmdPair = commandQueue.front();
-          std::cout << "Command: " << cmdPair.first << ", Value: " << cmdPair.second << std::endl;
+          RLOG_CPP(0, "Command: " << cmdPair.first << ", Value: " << cmdPair.second);
           nlohmann::json cmd =
           {
             { "type", cmdPair.first },

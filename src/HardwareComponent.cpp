@@ -160,7 +160,9 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     }
     else if (parentClass==LandmarkParentClass::ZmqRouterComponent)
     {
-      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      RLOG_CPP(0, "Creating ZmqRouterComponent with camera "
+               << landmarksCamera << " and connection " << connection);
+      RLOG_CPP(0, "Extra-args: " << extraArgs);
       ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;

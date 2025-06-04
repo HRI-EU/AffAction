@@ -67,7 +67,7 @@ static void MyParseSceneEntity(const xmlNodePtr node, aff::ActionScene* scene, s
   else if (isXMLNodeName(node, "Manipulator"))
   {
     std::string mName = Rcs::getXMLNodePropertySTLString(node, "body");
-    RLOG_CPP(0, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
+    //RLOG_CPP(0, "Manipulator: name: '" << mName << "' group suffix: '" << groupSuffix << "'");
     scene->manipulators.emplace_back(Manipulator(node, groupSuffix));
   }
 
