@@ -77,6 +77,7 @@ namespace py = pybind11;
 #include <chrono>
 #include <vector>
 #include <tuple>
+#include <algorithm>
 #include <locale.h>
 
 
@@ -560,7 +561,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::make_tuple(colorImage, depthImage);
   },
   R"pbdoc(
-Renders the desired state of the scene. The input is the camera origin and yrp rotation 
+Renders the desired state of the scene. The input is the camera origin and yrp rotation
 around that origin. Outputs the color and depth image. If there is no virtual camera
 instantiated in the simulator, this will be done in this function. This leads to the
 first call being a bit more slow than the consecutive ones, since the camera construction
@@ -586,7 +587,7 @@ cv2.imwrite("depth_image.jpg", depth_display)
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
   //////////////////////////////////////////////////////////////////////////////
-  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<double>
+  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<uint8_t>
   {
     const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
     if (!cam)
@@ -608,23 +609,51 @@ cv2.imwrite("depth_image.jpg", depth_display)
     virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
 
     // Multiply each color channel by 255
-    auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
-    for (auto i = 0; i < img.shape(0); ++i)
+    // auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
+    // for (auto i = 0; i < img.shape(0); ++i)
+    // {
+    //     for (auto j = 0; j < img.shape(1); ++j)
+    //     {
+    //         for (auto k = 0; k < 3; ++k)
+    //         {
+    //             img(i, j, k) *= 255.0;
+    //         }
+    //     }
+    // }
+
+
+
+
+
+
+    py::array_t<uint8_t> colorImageUint8({virtualCamera->height, virtualCamera->width, 3});
+    auto src = colorImage.unchecked<3>();       // float64
+    auto dst = colorImageUint8.mutable_unchecked<3>();  // uint8_t
+
+    for (ssize_t i = 0; i < src.shape(0); ++i)
     {
-        for (auto j = 0; j < img.shape(1); ++j)
+      for (ssize_t j = 0; j < src.shape(1); ++j)
+      {
+        for (ssize_t k = 0; k < 3; ++k)
         {
-            for (auto k = 0; k < 3; ++k)
-            {
-                img(i, j, k) *= 255.0;
-            }
+          // double val = std::round(src(i, j, k) * 255.0);
+          // dst(i, j, k) = static_cast<uint8_t>(std::clamp(val, 0.0, 255.0));
+          double val = std::round(src(i, j, k) * 255.0);
+          if (val < 0.0)
+            val = 0.0;
+          else if (val > 255.0)
+            val = 255.0;
+          dst(i, j, k) = static_cast<uint8_t>(val);
+
         }
+      }
     }
 
-    return colorImage;
+    return colorImageUint8;
   }, R"pbdoc(
 Renders the desired state of the scene from the given camera. Outputs the color image.
-If there is no virtual camera instantiated in the simulator, this will be done in this 
-function. This leads to the first call being a bit more slow than the consecutive ones, 
+If there is no virtual camera instantiated in the simulator, this will be done in this
+function. This leads to the first call being a bit more slow than the consecutive ones,
 since the camera construction takes 1-2 secs.
 Camera frame convention: x points forward, z point upward, and y points left
 
@@ -635,7 +664,7 @@ import numpy as np
 
 color = sim.captureColorImageFromFrame("camera_01")
 color_np = np.array(color)
-color_bgr = cv2.cvtColor(color_np.astype(np.uint8), cv2.COLOR_RGB2BGR)
+color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
 cv2.imwrite("color_image.jpg", color_bgr)
 )pbdoc")
   //////////////////////////////////////////////////////////////////////////////

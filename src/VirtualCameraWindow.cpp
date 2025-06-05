@@ -96,7 +96,11 @@ void VirtualCameraWindow::setEnabled(bool enabled)
 
 bool VirtualCameraWindow::isEnabled()
 {
+#ifdef PIXELGUI_WITH_ASYNCWIDGET
   return pixelGui && pixelGui->getWidget();
+#else
+  return pixelGui ? true : false;
+#endif
 }
 
 void VirtualCameraWindow::toggle()
@@ -111,6 +115,9 @@ void VirtualCameraWindow::enable()
     return;
   }
 
+#ifdef PIXELGUI_WITH_ASYNCWIDGET
+  static
+#endif
   std::vector<Rcs::PPSGui::Entry> pps;
 
   if (!depthBuffer.empty())
@@ -123,7 +130,12 @@ void VirtualCameraWindow::enable()
     pps.push_back(Rcs::PPSGui::Entry("Color image", virtualCamera->width, virtualCamera->height, colorBuffer.data(), 3, 1.0));
   }
 
+#ifdef PIXELGUI_WITH_ASYNCWIDGET
   pixelGui = std::make_unique<Rcs::PixelGui>(pps);
+#else
+  pixelGui = std::make_unique<Rcs::PPSGui>(&pps, (pthread_mutex_t*)NULL);
+  pixelGui->show();
+#endif
 }
 
 void VirtualCameraWindow::disable()

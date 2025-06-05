@@ -38,10 +38,12 @@
 #include "VirtualCamera.h"
 
 #include <DepthRenderer.h>
-#include <AsyncWidget.h>
+#include <PPSGui.h>
 
 #include <mutex>
 #include <memory>
+
+//#define PIXELGUI_WITH_ASYNCWIDGET
 
 namespace aff
 {
@@ -74,8 +76,11 @@ protected:
   void disable();
   void toggle();
 
+#ifdef PIXELGUI_WITH_ASYNCWIDGET
   std::unique_ptr<Rcs::AsyncWidget> pixelGui;
-
+#else
+  std::unique_ptr<Rcs::PPSGui> pixelGui;
+#endif
   std::vector<double> colorBuffer;
   std::vector<double> depthBuffer;
 
