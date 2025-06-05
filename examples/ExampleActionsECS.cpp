@@ -641,7 +641,7 @@ bool ExampleActionsECS::initAlgo()
 
   if (virtualCameraEnabled)
   {
-    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getCurrentGraph()),
+    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getGraph()),
                                                     virtualCameraWidth, virtualCameraHeight);
   }
   // Add the SceneTransformationDataRecorder
@@ -718,7 +718,11 @@ bool ExampleActionsECS::initGraphics()
       RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
       HTr_copy(&A_CI, &camBdy->A_BI);
     }
-    addComponent(new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI));
+
+    VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI);
+    vcam->setBlockingMainThread(this->blockingMainThread);
+    vcam->setEnabled(true);
+    addComponent(vcam);
   }
 
   // Optional graphics window. We don't use a static instance since this will
@@ -728,8 +732,6 @@ bool ExampleActionsECS::initGraphics()
     RLOG(1, "Running without graphics");
     return true;
   }
-
-  //viewer = new GraphicsWindow(&entity, GraphicsWindow::SyncMode::SyncWithRenderEvent);
 
   auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
   viewer = new GraphicsWindow(&entity, syncMode);

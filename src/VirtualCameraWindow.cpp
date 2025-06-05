@@ -33,7 +33,6 @@
 
 #include "VirtualCameraWindow.h"
 
-#include <PPSGui.h>
 
 namespace aff
 {
@@ -43,22 +42,14 @@ VirtualCameraWindow::VirtualCameraWindow(EntityBase* parent,
                                          bool color, bool depth, const HTr* A_CamI) :
   ComponentBase(parent), virtualCamera(_virtualCamera),
   colorBuffer(color ? _virtualCamera->width * _virtualCamera->height * 3 : 0),
-  depthBuffer(depth ? _virtualCamera->width * _virtualCamera->height : 0)
+  depthBuffer(depth ? _virtualCamera->width * _virtualCamera->height : 0),
+  blockingMainThread(false)
 {
-  if (A_CamI)
-  {
-    setCameraTransform(A_CamI);
-  }
-  else
-  {
-    HTr_setIdentity(&cameraTransform);
-  }
-
+  HTr_copy(&cameraTransform, A_CamI ? A_CamI : HTr_identity());
   subscribe("Render", &VirtualCameraWindow::update);
   subscribe("ToggleVirtualRenderGui", &VirtualCameraWindow::toggle);
-
-  enable();
 }
+
 VirtualCameraWindow::~VirtualCameraWindow()
 {
 }
@@ -96,11 +87,12 @@ void VirtualCameraWindow::setEnabled(bool enabled)
 
 bool VirtualCameraWindow::isEnabled()
 {
-#ifdef PIXELGUI_WITH_ASYNCWIDGET
+  if (getBlockingMainThread())
+  {
+    return ppsGui ? true : false;
+  }
+
   return pixelGui && pixelGui->getWidget();
-#else
-  return pixelGui ? true : false;
-#endif
 }
 
 void VirtualCameraWindow::toggle()
@@ -110,14 +102,11 @@ void VirtualCameraWindow::toggle()
 
 void VirtualCameraWindow::enable()
 {
-  if (pixelGui)
+  if (pixelGui || ppsGui)
   {
     return;
   }
 
-#ifdef PIXELGUI_WITH_ASYNCWIDGET
-  static
-#endif
   std::vector<Rcs::PPSGui::Entry> pps;
 
   if (!depthBuffer.empty())
@@ -130,12 +119,16 @@ void VirtualCameraWindow::enable()
     pps.push_back(Rcs::PPSGui::Entry("Color image", virtualCamera->width, virtualCamera->height, colorBuffer.data(), 3, 1.0));
   }
 
-#ifdef PIXELGUI_WITH_ASYNCWIDGET
-  pixelGui = std::make_unique<Rcs::PixelGui>(pps);
-#else
-  pixelGui = std::make_unique<Rcs::PPSGui>(&pps, (pthread_mutex_t*)NULL);
-  pixelGui->show();
-#endif
+  if (getBlockingMainThread())
+  {
+    ppsGui = std::make_unique<Rcs::PPSGui>(&pps, (pthread_mutex_t*)NULL);
+    ppsGui->show();
+  }
+  else
+  {
+    pixelGui = std::make_unique<Rcs::PixelGui>(pps);
+  }
+
 }
 
 void VirtualCameraWindow::disable()
@@ -167,6 +160,16 @@ int VirtualCameraWindow::getHeight() const
 const VirtualCamera* VirtualCameraWindow::getCamera() const
 {
   return virtualCamera;
+}
+
+void VirtualCameraWindow::setBlockingMainThread(bool blocking)
+{
+  this->blockingMainThread = blocking;
+}
+
+bool VirtualCameraWindow::getBlockingMainThread() const
+{
+  return this->blockingMainThread;
 }
 
 } // aff

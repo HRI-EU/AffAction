@@ -37,13 +37,10 @@
 #include "ComponentBase.h"
 #include "VirtualCamera.h"
 
-#include <DepthRenderer.h>
 #include <PPSGui.h>
 
-#include <mutex>
 #include <memory>
 
-//#define PIXELGUI_WITH_ASYNCWIDGET
 
 namespace aff
 {
@@ -71,16 +68,16 @@ public:
   int getWidth() const;
   int getHeight() const;
 
+  void setBlockingMainThread(bool blocking);
+  bool getBlockingMainThread() const;
+
 protected:
   void enable();
   void disable();
   void toggle();
 
-#ifdef PIXELGUI_WITH_ASYNCWIDGET
   std::unique_ptr<Rcs::AsyncWidget> pixelGui;
-#else
-  std::unique_ptr<Rcs::PPSGui> pixelGui;
-#endif
+  std::unique_ptr<Rcs::PPSGui> ppsGui;
   std::vector<double> colorBuffer;
   std::vector<double> depthBuffer;
 
@@ -90,6 +87,8 @@ protected:
 private:
   VirtualCameraWindow(const VirtualCameraWindow&) = delete;
   VirtualCameraWindow& operator=(const VirtualCameraWindow&) = delete;
+
+  bool blockingMainThread;
 };
 
 } // aff

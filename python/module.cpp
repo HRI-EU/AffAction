@@ -609,32 +609,15 @@ cv2.imwrite("depth_image.jpg", depth_display)
     virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
 
     // Multiply each color channel by 255
-    // auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
-    // for (auto i = 0; i < img.shape(0); ++i)
-    // {
-    //     for (auto j = 0; j < img.shape(1); ++j)
-    //     {
-    //         for (auto k = 0; k < 3; ++k)
-    //         {
-    //             img(i, j, k) *= 255.0;
-    //         }
-    //     }
-    // }
-
-
-
-
-
-
     py::array_t<uint8_t> colorImageUint8({virtualCamera->height, virtualCamera->width, 3});
     auto src = colorImage.unchecked<3>();       // float64
     auto dst = colorImageUint8.mutable_unchecked<3>();  // uint8_t
 
-    for (ssize_t i = 0; i < src.shape(0); ++i)
+    for (auto i = 0; i < src.shape(0); ++i)
     {
-      for (ssize_t j = 0; j < src.shape(1); ++j)
+      for (auto j = 0; j < src.shape(1); ++j)
       {
-        for (ssize_t k = 0; k < 3; ++k)
+        for (auto k = 0; k < 3; ++k)
         {
           // double val = std::round(src(i, j, k) * 255.0);
           // dst(i, j, k) = static_cast<uint8_t>(std::clamp(val, 0.0, 255.0));
