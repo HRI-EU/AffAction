@@ -50,8 +50,7 @@
 namespace aff
 {
 
-VirtualCamera::VirtualCamera(osg::Node* node, int width, int height)// :
-//width(width_), height(height_), virtualRenderer(width_, height_)
+VirtualCamera::VirtualCamera(osg::Node* node, int width, int height)
 {
   // These come from a Kinect v2 calbration
   double fx = 1.36972287105 * height;
