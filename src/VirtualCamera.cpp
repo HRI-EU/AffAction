@@ -50,8 +50,8 @@
 namespace aff
 {
 
-VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
-  width(width_), height(height_), virtualRenderer(width_, height_)
+VirtualCamera::VirtualCamera(osg::Node* node, int width, int height)// :
+//width(width_), height(height_), virtualRenderer(width_, height_)
 {
   // These come from a Kinect v2 calbration
   double fx = 1.36972287105 * height;
@@ -132,63 +132,35 @@ VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
   virtualRenderer.setProjectionFromFocalParams(fx, fy, cx, cy, near, far);
 }
 
-VirtualCamera::~VirtualCamera()
-{}
-
-void VirtualCamera::render(double x, double y, double z,
-                           double thx, double thy, double thz,
-                           double* colorBuffer, double* depthBuffer)
+void VirtualCamera::capture(const HTr* A_camI)
 {
-  double transform6d[] = {x, y, z, thx, thy, thz};
-
-  HTr A_camI;
-  HTr_from6DVector(&A_camI, transform6d);
-
-  render(&A_camI, colorBuffer, depthBuffer);
-}
-
-void VirtualCamera::render(const HTr* A_camI, double* colorBuffer, double* depthBuffer)
-{
-  if (!colorBuffer && !depthBuffer)
-  {
-    RLOG(1, "No buffers to render to");
-    return;
-  }
-
-  const std::lock_guard<std::mutex> lockGuard(virtualRendererLock);
-
-  double t_render = Timer_getSystemTime();
   virtualRenderer.setCameraTransform(A_camI);
   virtualRenderer.frame();
+}
 
-  if (colorBuffer)
-  {
-    const auto& colorImage = virtualRenderer.getRGBImageRef();
-    for (size_t i = 0; i < height; i++)
-    {
-      for (size_t j = 0; j < width; j++)
-      {
-        colorBuffer[(i * width + j) * 3] = colorImage[i][j][0];
-        colorBuffer[(i * width + j) * 3 + 1] = colorImage[i][j][1];
-        colorBuffer[(i * width + j) * 3 + 2] = colorImage[i][j][2];
-      }
-    }
-  }
+void VirtualCamera::getColorImage(uint8_t* data, size_t size)
+{
+  virtualRenderer.getColorImage(data, size);
+}
 
-  if (depthBuffer)
-  {
-    const auto& depthImage = virtualRenderer.getDepthImageRef();
-    for (size_t i = 0; i < height; i++)
-    {
-      for (size_t j = 0; j < width; j++)
-      {
-        depthBuffer[i * width + j] = depthImage[i][j];
-      }
-    }
-  }
+void VirtualCamera::getDepthImage(float* data, size_t size)
+{
+  virtualRenderer.getDepthImage(data, size);
+}
 
-  t_render = Timer_getSystemTime() - t_render;
-  RLOG(1, "Rendering took %.1f msec", 1000.0 * t_render);
+Rcs::DepthRenderer* VirtualCamera::getRenderer()
+{
+  return &virtualRenderer;
+}
+
+size_t VirtualCamera::getHeight() const
+{
+  return virtualRenderer.getHeight();
+}
+
+size_t VirtualCamera::getWidth() const
+{
+  return virtualRenderer.getWidth();
 }
 
 }   // namespace aff

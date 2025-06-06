@@ -41,8 +41,8 @@ VirtualCameraWindow::VirtualCameraWindow(EntityBase* parent,
                                          VirtualCamera* _virtualCamera,
                                          bool color, bool depth, const HTr* A_CamI) :
   ComponentBase(parent), virtualCamera(_virtualCamera),
-  colorBuffer(color ? _virtualCamera->width * _virtualCamera->height * 3 : 0),
-  depthBuffer(depth ? _virtualCamera->width * _virtualCamera->height : 0),
+  colorBuffer(color ? _virtualCamera->getWidth() * _virtualCamera->getHeight() * 3 : 0),
+  depthBuffer(depth ? _virtualCamera->getWidth() * _virtualCamera->getHeight() : 0),
   blockingMainThread(false)
 {
   HTr_copy(&cameraTransform, A_CamI ? A_CamI : HTr_identity());
@@ -69,8 +69,8 @@ void VirtualCameraWindow::setCameraTransform(const HTr* A_CamI)
 
 void VirtualCameraWindow::update()
 {
-  virtualCamera->render(&cameraTransform, colorBuffer.empty() ? nullptr : colorBuffer.data(),
-                        depthBuffer.empty() ? nullptr : depthBuffer.data());
+  virtualCamera->capture(&cameraTransform);
+  virtualCamera->getRenderer()->getColorImage(colorBuffer.data(), colorBuffer.size());
 }
 
 void VirtualCameraWindow::setEnabled(bool enabled)
@@ -111,12 +111,12 @@ void VirtualCameraWindow::enable()
 
   if (!depthBuffer.empty())
   {
-    pps.push_back(Rcs::PPSGui::Entry("Depth image", virtualCamera->width, virtualCamera->height, depthBuffer.data(), 1, 0.1));
+    pps.push_back(Rcs::PPSGui::Entry("Depth image", virtualCamera->getWidth(), virtualCamera->getHeight(), depthBuffer.data(), 1, 0.1));
   }
 
   if (!colorBuffer.empty())
   {
-    pps.push_back(Rcs::PPSGui::Entry("Color image", virtualCamera->width, virtualCamera->height, colorBuffer.data(), 3, 1.0));
+    pps.push_back(Rcs::PPSGui::Entry("Color image", virtualCamera->getWidth(), virtualCamera->getHeight(), colorBuffer.data(), 3, 1.0));
   }
 
   if (getBlockingMainThread())
@@ -149,12 +149,12 @@ std::vector<double> VirtualCameraWindow::getColorBuffer() const
 
 int VirtualCameraWindow::getWidth() const
 {
-  return virtualCamera->width;
+  return virtualCamera->getWidth();
 }
 
 int VirtualCameraWindow::getHeight() const
 {
-  return virtualCamera->height;
+  return virtualCamera->getHeight();
 }
 
 const VirtualCamera* VirtualCameraWindow::getCamera() const

@@ -531,7 +531,7 @@ PYBIND11_MODULE(pyAffaction, m)
   // a = sim.captureImage(0, 0, 1, 0, 0, 0)
   //////////////////////////////////////////////////////////////////////////////
   .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
-                          double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
+                          double thx, double thy, double thz) -> std::tuple<py::array_t<uint8_t>, py::array_t<float>>
   {
     aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
 
@@ -542,23 +542,20 @@ PYBIND11_MODULE(pyAffaction, m)
       ex.setVirtualCamera(virtualCamera);
     }
 
-    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3}), depthImage({virtualCamera->height, virtualCamera->width});
-    virtualCamera->render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
+    HTr A_camI;
+    double x6[6];
+    VecNd_set6(x6, x, y, z, thx, thy, thz);
+    HTr_from6DVector(&A_camI, x6);
+    virtualCamera->capture(&A_camI);
 
-    // Multiply each color channel by 255
-    auto img = colorImage.mutable_unchecked<3>();  // shape: [height, width, channels]
-    for (auto i = 0; i < img.shape(0); ++i)
-    {
-      for (auto j = 0; j < img.shape(1); ++j)
-      {
-        for (auto k = 0; k < 3; ++k)
-        {
-          img(i, j, k) *= 255.0;
-        }
-      }
-    }
+    py::array_t<uint8_t> colorImageUint8({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 3 });
+    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
 
-    return std::make_tuple(colorImage, depthImage);
+    py::array_t<float> depthImageFloat({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 1 });
+    virtualCamera->getDepthImage(depthImageFloat.mutable_data(), depthImageFloat.size());
+
+    return std::make_tuple(colorImageUint8, depthImageFloat);
+
   },
   R"pbdoc(
 Renders the desired state of the scene. The input is the camera origin and yrp rotation
@@ -575,7 +572,7 @@ import numpy as np
 
 color, depth = sim.captureImage(-0.77, 0.0, 1.66, 0.0, 1.0, 0.0)
 color_np = np.array(color)
-color_bgr = cv2.cvtColor(color_np.astype(np.uint8), cv2.COLOR_RGB2BGR)
+color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
 cv2.imwrite("color_image.jpg", color_bgr)
 
 depth_np = np.array(depth)
@@ -605,32 +602,10 @@ cv2.imwrite("depth_image.jpg", depth_display)
       ex.setVirtualCamera(virtualCamera);
     }
 
-    py::array_t<double> colorImage({ virtualCamera->height, virtualCamera->width, 3 });
-    virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
+    virtualCamera->capture(&cam->A_BI);
 
-    // Multiply each color channel by 255
-    py::array_t<uint8_t> colorImageUint8({virtualCamera->height, virtualCamera->width, 3});
-    auto src = colorImage.unchecked<3>();       // float64
-    auto dst = colorImageUint8.mutable_unchecked<3>();  // uint8_t
-
-    for (auto i = 0; i < src.shape(0); ++i)
-    {
-      for (auto j = 0; j < src.shape(1); ++j)
-      {
-        for (auto k = 0; k < 3; ++k)
-        {
-          // double val = std::round(src(i, j, k) * 255.0);
-          // dst(i, j, k) = static_cast<uint8_t>(std::clamp(val, 0.0, 255.0));
-          double val = std::round(src(i, j, k) * 255.0);
-          if (val < 0.0)
-            val = 0.0;
-          else if (val > 255.0)
-            val = 255.0;
-          dst(i, j, k) = static_cast<uint8_t>(val);
-
-        }
-      }
-    }
+    py::array_t<uint8_t> colorImageUint8({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 3});
+    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
 
     return colorImageUint8;
   }, R"pbdoc(
