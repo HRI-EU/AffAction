@@ -219,7 +219,7 @@ public:
     if (recordImages)
     {
       static size_t runningIdx = 0;
-      osg::ref_ptr<osg::Image> img = vectorToOsgImage(colorBuffer, virtualCamera->width, virtualCamera->height);
+      osg::ref_ptr<osg::Image> img = vectorToOsgImage(colorBuffer, virtualCamera->getWidth(), virtualCamera->getHeight());
 
       // Create a stringstream to build the filename with padding
       std::ostringstream ss;
