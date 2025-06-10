@@ -46,12 +46,16 @@ class VirtualCamera
 {
 public:
 
-  VirtualCamera(osg::Node* node, int width=640, int height=480);
+  VirtualCamera(osg::Node* node, int width=640, int height=480,
+                double near=0.1, double far=10.0);
   virtual ~VirtualCamera() = default;
 
   void getColorImage(uint8_t* data, size_t size);
   void getDepthImage(float* data, size_t size);
   void capture(const HTr* A_camI);
+  static bool initCamera(const std::string& cameraName, int width, int height,
+                         double& fx, double& fy, double& cx, double& cy,
+                         double& near, double& far);
 
   Rcs::DepthRenderer* getRenderer();
 

@@ -594,17 +594,21 @@ cv2.imwrite("depth_image.jpg", depth_display)
     }
 
     aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-
+    int width = 640, height = 480;
     if (!virtualCamera)
     {
       RLOG(1, "Creating new virtual camera - not part of simulator");
-      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), 640, 480);
+      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), width, height);
       ex.setVirtualCamera(virtualCamera);
     }
 
+    width = (int)virtualCamera->getWidth();
+    height = (int)virtualCamera->getHeight();
+
     virtualCamera->capture(&cam->A_BI);
 
-    py::array_t<uint8_t> colorImageUint8({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 3});
+    // Here width and height need to be reversed
+    py::array_t<uint8_t> colorImageUint8({height, width, 3});
     virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
 
     return colorImageUint8;
