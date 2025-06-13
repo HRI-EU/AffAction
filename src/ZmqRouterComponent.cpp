@@ -237,11 +237,11 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         try
         {
-          RLOG_CPP(0, "Parsing payload json: " << payLoadStr);
+          //RLOG_CPP(0, "Parsing payload json: " << payLoadStr);
           nlohmann::json json = nlohmann::json::parse(payLoadStr);
-          RLOG_CPP(0, "Calling setJsonInput");
+          //RLOG_CPP(0, "Calling setJsonInput");
           setJsonInput(json);
-          RLOG_CPP(0, "done setJsonInput: " << json.dump(4));
+          //RLOG_CPP(0, "done setJsonInput: " << json.dump(4));
         }
         catch (const nlohmann::json::parse_error& e)
         {

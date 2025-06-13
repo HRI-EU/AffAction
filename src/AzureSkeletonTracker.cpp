@@ -87,6 +87,49 @@ static HTr parsePose(const nlohmann::json& json)
   return trf;
 }
 
+static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const std::string& key)
+{
+  try
+  {
+    // Check if key exists and is structured correctly
+    if (!entry.contains(key))
+    {
+      std::cerr << "Missing key: " << key << std::endl;
+      return std::vector<int>();
+    }
+
+    const auto& box_array = entry.at(key).at("bounding_box");
+    if (!box_array.is_array() || box_array.size() != 4)
+    {
+      RLOG_CPP(1, "Invalid bounding_box format for key: " << key);
+      return std::vector<int>();
+    }
+
+    // Safely extract and validate all 4 integers
+    for (size_t i = 0; i < 4; ++i)
+    {
+      if (!box_array[i].is_number_integer())
+      {
+        RLOG_CPP(1, "Non-integer value in bounding box at index " << i);
+        return std::vector<int>();
+      }
+    }
+
+    std::vector<int> bb_vec;
+    bb_vec.push_back(box_array[0].get<int>());
+    bb_vec.push_back(box_array[1].get<int>());
+    bb_vec.push_back(box_array[2].get<int>());
+    bb_vec.push_back(box_array[3].get<int>());
+    return bb_vec;
+  }
+  catch (const std::exception& e)
+  {
+    RLOG_CPP(1, "Exception while parsing bounding box: " << e.what());
+    return std::vector<int>();
+  }
+}
+
+
 typedef enum
 {
   PELVIS = 0,
@@ -751,6 +794,25 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     markers[EAR_LEFT] = parsePose(entry.value()["ear_left"]);
     markers[EYE_RIGHT] = parsePose(entry.value()["eye_right"]);
     markers[EAR_RIGHT] = parsePose(entry.value()["ear_right"]);
+
+    // Bounding boxes
+    //"head": {
+    //    "bounding_box": [
+    //        477,
+    //            86,
+    //            520,
+    //            520
+    //    ] , ...
+    //}
+    std::vector<int> bb = parse_bounding_box(entry.value(), "head");
+    if (!bb.empty())
+    {
+      RLOG_CPP(0, "bb: ");
+      for (const auto& bbi : bb)
+      {
+        std::cout << bbi << " ";
+      }
+    }
 
     for (auto& marker : markers)
     {
