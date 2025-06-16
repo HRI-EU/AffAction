@@ -233,6 +233,11 @@ std::string RetargetComponent::Pose::getConfigFileName(BodyType bType)
     case BodyType::DexBot:
       cfgName = "c_dexbot.xml";
       break;
+
+    case BodyType::SmileJaco2:
+      cfgName = "c_smile_jaco2.xml";
+      break;
+
     default:
       RFATAL("Unknown body type: %d", (int)bType);
   }
@@ -293,6 +298,16 @@ std::map<std::string, int> RetargetComponent::Pose::getNameIdMap(BodyType bType)
       res["lbr_link_4_L"] = 6;
       res["lbr_link_6_L"] = 7;
       break;
+
+    // The below correspondences relate to a model from OpenSim.
+    case BodyType::SmileJaco2:
+      res["forearm_r"] = 13;
+      res["hand_r"] = 14;
+
+      res["forearm_l"] = 6;
+      res["hand_l"] = 7;
+      break;
+
     default:
       RFATAL("Unknown body type: %d", (int)bType);
   }

@@ -86,7 +86,7 @@ public:
 
   enum class BodyType
   {
-    OpenSim, BVH, DexBot
+    OpenSim, BVH, DexBot, SmileJaco2
   };
 
   enum class PoseState

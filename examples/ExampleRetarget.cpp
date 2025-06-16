@@ -123,6 +123,10 @@ bool ExampleRetarget::initAlgo()
     {
       bType = RetargetComponent::BodyType::BVH;
     }
+    else if (avatarName == "Smile")
+    {
+      bType = RetargetComponent::BodyType::SmileJaco2;
+    }
     retargetC = std::make_unique<RetargetComponent>(&entity, bType, maxPeople);
     retargetC->setCameraTransform(cameraBodyName);
   }
