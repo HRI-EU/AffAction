@@ -79,9 +79,7 @@ ZmqRouterComponent::~ZmqRouterComponent()
 {
   if (threadRunning)
   {
-    RLOG(0, "Thread still running in destructor - stopping it now.");
     stopZmqThread();
-    RLOG(0, "Thread stopped.");
   }
 }
 
@@ -124,18 +122,24 @@ void ZmqRouterComponent::stopZmqThread()
     return;
   }
 
-  RLOG(1, "Trying to stop thread");
   threadRunning = false;
 
   // See startZmqThread() why we don't join the thread here as one would expect.
   // mpThread.join();
   // RLOG(0, "Thread joined");
+  int stopCount = 0;
   while (!threadFunctionCompleted)
   {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    stopCount++;
+
+    if (stopCount>50)
+    {
+      RLOG(0, "Still trying to stop ZmqRouterComponent after %.1f seconds ...",
+           0.1*stopCount);
+    }
   }
 
-  RLOG(1, "onStop() completed");
 }
 
 static zmq::socket_t create_router_socket(zmq::context_t& ctx, const std::string& connection)
@@ -170,6 +174,8 @@ static zmq::socket_t create_router_socket(zmq::context_t& ctx, const std::string
 
 void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 {
+  this->threadFunctionCompleted = false;
+
   // ZeroMQ context & socket setup
   zmq::context_t ctx{1};
   zmq::socket_t router = create_router_socket(ctx, connection);
@@ -182,6 +188,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   // Network loop
   while (this->threadRunning)
   {
+    RLOG(1, "Tic");
     // Poll for inbound messages
     zmq::pollitem_t items[] = { { router, 0, ZMQ_POLLIN, 0 } };
     zmq::poll(items, 1, std::chrono::milliseconds{POLL_TIMEOUT_MS});
@@ -333,8 +340,9 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
       }
     }
 
-
   }
+
+  threadFunctionCompleted = true;
 }
 
 }   // namespace

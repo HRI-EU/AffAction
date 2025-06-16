@@ -62,6 +62,7 @@ namespace py = pybind11;
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
+#include <Rcs_quaternion.h>
 #include <Rcs_math.h>
 #include <Rcs_timer.h>
 #include <Rcs_typedef.h>
@@ -1402,7 +1403,10 @@ Example
   py::arg("voice") = "kathleen")
   .def("addVirtualCamera", [](aff::ExampleActionsECS& ex, int width, int height, bool withGui)
   {
+    ex.virtualCameraWidth = width;
+    ex.virtualCameraHeight = height;
     ex.virtualCameraEnabled = true;
+    ex.virtualCameraWindowEnabled = withGui;
   },
   py::arg("width") = 640,
   py::arg("height") = 480,
@@ -1519,6 +1523,43 @@ Example
     return faceName;
   },
   py::arg("n") = 5)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // viaPoint action
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getControls", [](aff::ExampleActionsECS& ex, std::vector<std::string> endeffectors) -> nlohmann::json
+  {
+    nlohmann::json controls;
+
+    RCSGRAPH_TRAVERSE_JOINTS(ex.getGraph())
+    {
+      if (!JNT->constrained)
+      {
+        controls["Joints"][JNT->name] = ex.getGraph()->q->ele[JNT->jointIndex];
+      }
+    }
+
+    for (const auto& ee : endeffectors)
+    {
+      const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), ee.c_str());
+      if (bdy)
+      {
+        std::vector<double> position = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
+        std::vector<double> rotation(4, 0.0);
+        Quat_fromRotationMatrix(rotation.data(), MAT3D_CAST bdy->A_BI.rot);
+
+        controls["Endeffector"][ee]["position"] = position;
+        controls["Endeffector"][ee]["quaternion"] = rotation;
+      }
+      else
+      {
+        RLOG_CPP(0, "Body '" << ee << "' not found in graph");
+      }
+    }
+
+    return controls;
+  },
+  py::arg("endeffectors") = std::vector<std::string>())
 
   //////////////////////////////////////////////////////////////////////////////
   // viaPoint action

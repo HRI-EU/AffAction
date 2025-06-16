@@ -76,12 +76,71 @@
   </Body>
  
 
-  <!-- The model of the robot. -->
+  <!-- The model of the robot.
   
   <Group prev="aruco_base" name="_1" transform="-0.87 0 0.15 0 0 0">
     <xi:include href="../TwoArmJaco7/g_robo.xml" />
+  </Group> -->
+
+
+
+  <!-- Aluminum structure including PTU. -->
+  <Group prev="aruco_base" name="_1" transform="-0.87 0 0.15 0 0 0">
+  <xi:include href="../TwoArmJaco7/g_item_base.xml"/>
+
+  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+    <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
   </Group>
 
+  <!-- Shoulder adaptors and arms with hands. -->
+  <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
+    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+  </Body>
+
+
+
+
+
+  <!-- Right arm -->
+  <Group name="_right" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_right.xml"/>
+  </Group>
+
+  <!-- Left arm -->
+  <Group name="_left" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+  </Group>
+
+  </Group>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
   
   <!-- -->
   <Group prev="aruco_base" name="_2" transform="-0.87 0 0.0 0 0 0">
@@ -170,21 +229,53 @@
     <joint_state joint="j2s7s300_joint_6_left_2" position="160"/>
     <joint_state joint="j2s7s300_joint_7_left_2" position="0"/>
     
-    <joint_state joint="ptu_tilt_joint_1" position="27.76684" />
-    <joint_state joint="LeftEyeThY_1" position="0.036163" />
-    <joint_state joint="LeftEyeThZ_1" position="-3.477837" />
-    <joint_state joint="LeftPupilX_1" position="0.039072" />
-    <joint_state joint="LeftPupilThY_1" position="-0.036227" />
-    <joint_state joint="LeftPupilThZ_1" position="3.477834" />
-    <joint_state joint="GazeXL_1" position="0.989079" />
-    <joint_state joint="RightEyeThY_1" position="0.036163" />
-    <joint_state joint="RightEyeThZ_1" position="3.477838" />
-    <joint_state joint="RightPupilX_1" position="0.039072" />
-    <joint_state joint="RightPupilThY_1" position="-0.003299" />
-    <joint_state joint="RightPupilThZ_1" position="-3.477835" />
-    <joint_state joint="GazeXR_1" position="0.989079" />
-    <joint_state joint="gpx_1" position="-0.02" />
-    <joint_state joint="gpz_1" position="0.971" />
+    <!-- <joint_state joint="ptu_tilt_joint_1" position="27.76684" /> -->
+    <!-- <joint_state joint="LeftEyeThY_1" position="0.036163" /> -->
+    <!-- <joint_state joint="LeftEyeThZ_1" position="-3.477837" /> -->
+    <!-- <joint_state joint="LeftPupilX_1" position="0.039072" /> -->
+    <!-- <joint_state joint="LeftPupilThY_1" position="-0.036227" /> -->
+    <!-- <joint_state joint="LeftPupilThZ_1" position="3.477834" /> -->
+    <!-- <joint_state joint="GazeXL_1" position="0.989079" /> -->
+    <!-- <joint_state joint="RightEyeThY_1" position="0.036163" /> -->
+    <!-- <joint_state joint="RightEyeThZ_1" position="3.477838" /> -->
+    <!-- <joint_state joint="RightPupilX_1" position="0.039072" /> -->
+    <!-- <joint_state joint="RightPupilThY_1" position="-0.003299" /> -->
+    <!-- <joint_state joint="RightPupilThZ_1" position="-3.477835" /> -->
+    <!-- <joint_state joint="GazeXR_1" position="0.989079" /> -->
+    <!-- <joint_state joint="gpx_1" position="-0.02" /> -->
+    <!-- <joint_state joint="gpz_1" position="0.971" /> -->
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_1" position="10" />
+    
+    <joint_state joint="j2s7s300_joint_finger_1_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_2" position="10" />
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_1" position="50" />
+
+    <joint_state joint="j2s7s300_joint_finger_1_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_2" position="50" />
   </model_state>
 
 <BroadPhase DistanceThreshold="0.001">
@@ -202,6 +293,5 @@
 </BroadPhase>
 
 <xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
-  <!-- <xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/> -->
 
 </Graph>

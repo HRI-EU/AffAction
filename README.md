@@ -33,7 +33,7 @@ The action "get apple" leads to:
   (usually distance in wrench space). In this computation step, the robot's 
   particular embodiment (reachability, joint ranges ...) is not considered.
 - The action is simulated forward with a prediction class, and is checked 
-  against violations of the robot's limits and against collisiins. The first 
+  against violations of the robot's limits and against collisions. The first 
   feasible solution is sent for execution. In this computation step, the 
   robot's embodiment is considered.
 
