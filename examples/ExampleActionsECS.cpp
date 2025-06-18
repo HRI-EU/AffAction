@@ -1160,6 +1160,15 @@ bool ExampleActionsECS::initGraphics()
     getEntity().publish("EstimateCameraPose", 20);
   }, "Calibrate camera");
 
+  viewer->setKeyCallback('y', [this](char k)
+  {
+    static bool enable_stt = false;
+    enable_stt = !enable_stt;
+    RLOG(0, "%s speech-to-text", enable_stt ? "Starting" : "Stopping");
+    int repetitions = enable_stt ? 1 : 0;
+    getEntity().publish("SetPerceptionCommand", std::string("speech_to_text"), repetitions);
+  }, "Toggle STT");
+  
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
