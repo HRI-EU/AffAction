@@ -29,7 +29,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-*******************************************************************************/
+************************************sw*******************************************/
 
 #include "FaceTracker.h"
 
@@ -44,6 +44,7 @@
 #include <Rcs_utilsCPP.h>
 #include <Rcs_body.h>
 #include <Rcs_shape.h>
+#include <Rcs_timer.h>
 
 #include <string>
 #include <iostream>
@@ -103,7 +104,7 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
 
-  NLOG_CPP(1, "FaceTracker::parse" << json.dump());
+  NLOG_CPP(1, "FaceTracker::parse" << jsonData.dump());
   size_t nFaceLandmarks = 0;
   for (auto& entry : jsonData.items())
   {
@@ -259,7 +260,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)
 
   // Hide graphics from the beginning
   this->sw = new Rcs::NodeBase();
-  sw->hide();
+//  sw->hide();
   HTr A_cam;
   HTr_copy(&A_cam, cameraFrame);
   A_cam.org[0] += DISTANCE_FACE_TO_CAM;
@@ -283,6 +284,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)
   this->faceMeshNode = new Rcs::MeshNode(this->mesh);
   Rcs::setNodeMaterial("#EFD0B9", faceMeshNode);   // Fair skin tone #FFDBAC, light skin tone: #EFD0B9, medium-light: #E0C19F
   faceMeshNode->clearMesh();
+  faceMeshNode->makeDynamic();
   viewer->add(faceMeshNode.get());
 
   RLOG(1, "Added debug graphics");
