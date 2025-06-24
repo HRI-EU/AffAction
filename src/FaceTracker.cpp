@@ -29,7 +29,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-************************************sw*******************************************/
+*******************************************************************************/
 
 #include "FaceTracker.h"
 
@@ -147,8 +147,8 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
   // and non-deterministic loop.
   if (sw.valid() && sw->isVisible())
   {
-    viewer->lock();
-    faceMeshNode->update(mesh);
+    //viewer->lock();
+    faceMeshNode->update(this->mesh);
     faceFrameNode->setTransformation(&faceTrf);
     leftIrisNode->setOrigin(C_leftIris.org);
     leftIrisNode->setDirection(Vec3d_ex());
@@ -156,7 +156,7 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     rightIrisNode->setOrigin(C_rightIris.org);
     rightIrisNode->setDirection(Vec3d_ex());
     rightIrisNode->setArrowLength(0.3);
-    viewer->unlock();
+    //viewer->unlock();
   }
 
 }
@@ -260,7 +260,7 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)
 
   // Hide graphics from the beginning
   this->sw = new Rcs::NodeBase();
-//  sw->hide();
+  sw->hide();
   HTr A_cam;
   HTr_copy(&A_cam, cameraFrame);
   A_cam.org[0] += DISTANCE_FACE_TO_CAM;
@@ -281,8 +281,9 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)
   viewer->add(sw.get());
 
   // We show the debug face in world coordinates
+  // Fair skin tone #FFDBAC, light skin tone: #EFD0B9, medium-light: #E0C19F
   this->faceMeshNode = new Rcs::MeshNode(this->mesh);
-  Rcs::setNodeMaterial("#EFD0B9", faceMeshNode);   // Fair skin tone #FFDBAC, light skin tone: #EFD0B9, medium-light: #E0C19F
+  Rcs::setNodeMaterial("#EFD0B9", faceMeshNode);
   faceMeshNode->clearMesh();
   faceMeshNode->makeDynamic();
   viewer->add(faceMeshNode.get());

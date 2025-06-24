@@ -1168,7 +1168,7 @@ bool ExampleActionsECS::initGraphics()
     int repetitions = enable_stt ? 1 : 0;
     getEntity().publish("SetPerceptionCommand", std::string("speech_to_text"), repetitions);
   }, "Toggle STT");
-  
+
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
