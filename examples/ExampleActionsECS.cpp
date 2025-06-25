@@ -2628,7 +2628,7 @@ public:
     entity.process();
     Timer_waitDT(0.5);
     entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
     getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
     entity.process();
 

@@ -29,7 +29,7 @@
 
 <Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="kinova_home" >
 
-  <ActionSequence name="1" text="pose pose1; pose kinova_home" />
+  <ActionSequence name="1" text="pose pose1; pose pose2; pose kinova_home" />
   <ActionSequence name="2" text="pose f10; pose f40; pose f0; pose f30" />
 
   <Body name="base_link" physics="dynamic" mass="1.697" cogVector="-0.000648 -0.000166 0.084487" inertia="0.004622 9e-06 6e-05   9e-06 0.004495 9e-06   6e-05 9e-06 0.002079" >

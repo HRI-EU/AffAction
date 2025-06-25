@@ -143,11 +143,6 @@ public:
           }
         }
 
-        RLOG(1, "Checking watchdog: %f %f %f",
-             Timer_getSystemTime(),
-             t_watchdog,
-             Timer_getSystemTime()-t_watchdog);
-
         if ((Timer_getSystemTime() - t_watchdog > max_timeout) &&
             (isInitialized.load(std::memory_order_acquire)))
         {
@@ -183,7 +178,7 @@ public:
         memcpy(message.data(), message_str.c_str(), message_str.size());
 
         send_socket.send(message, zmq::send_flags::none);
-        RLOG_CPP(0, "Sent motor commands: " << message_str);
+        RLOG_CPP(5, "Sent motor commands: " << message_str);
       }
     }
 
@@ -408,14 +403,14 @@ private:
     std::lock_guard<std::mutex> lock(cmdMtx);
     jointCommands = q7;
     gripper_command = gripper_des;
-
-
   }
 
   void onInitFromState(const RcsGraph* target)
   {
-    RLOG(0, "RoboJacoComponent::onInitFromState()");
+    RLOG(0, "KortexComponent::onInitFromState()");
+    MatNd_printCommentDigits("q_des:", target->q, 4);
     onSetJointPosition(target->q);
+    jointCommandsPrev = jointCommands;
   }
 
   void onEmergencyStop()
@@ -458,7 +453,7 @@ private:
       recv_json = nlohmann::json::parse(recv_msg);
 
       // If successful, process the parsed JSON data
-      RLOG_CPP(1, "Parsed joint angles: " << recv_json.dump(4));
+      RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
       std::vector<double> q, qd, tor;
       double q_grip = -1.0;
@@ -519,8 +514,6 @@ private:
     {
       return cmdJson;
     }
-
-    RLOG_CPP(0, "Sending motor commands");
 
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
