@@ -31,6 +31,7 @@
 
 *******************************************************************************/
 
+#include "RoboNetworkInterface.hpp"
 #include "ComponentBase.h"
 #include "json.hpp"
 
@@ -40,173 +41,12 @@
 #include <Rcs_math.h>
 #include <Rcs_dynamics.h>
 
-#include <zmq.hpp>
-
-#include <string>
-#include <iostream>
-#include <thread>
 #include <mutex>
-#include <chrono>
 
 
 
 namespace aff
 {
-
-/*******************************************************************************
- *
- ******************************************************************************/
-class NetworkComponent
-{
-public:
-
-  virtual ~NetworkComponent()
-  {
-    stop();
-  }
-
-  virtual void start()
-  {
-    if (runLoop)
-    {
-      RLOG(0, "NetworkComponent already started - doing nothing");
-      return;
-    }
-
-    runLoop = true;
-    std::string recvEndpoint = "tcp://localhost:5555";
-    recv_thread = std::thread(&NetworkComponent::recvThreadFunc, this, recvEndpoint);
-
-    while (!isInitialized.load(std::memory_order_acquire))
-    {
-      fprintf(stderr, ".");
-      fflush(stderr);
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    std::string sendEndpoint = "tcp://*:5556";
-    send_thread = std::thread(&NetworkComponent::sendThreadFunc, this, sendEndpoint);
-    RLOG(0, "NetworkComponent: All threads started");
-  }
-
-  virtual void stop()
-  {
-    if (!runLoop)
-    {
-      RLOG(0, "NetworkComponent already stopped - doing nothing");
-      return;
-    }
-
-    runLoop = false;
-
-    if (send_thread.joinable())
-    {
-      send_thread.join();
-      RLOG(0, "Joined socket send thread");
-    }
-
-    if (recv_thread.joinable())
-    {
-      recv_thread.join();
-      RLOG(0, "Joined socket receive thread");
-    }
-
-    RLOG(0, "NetworkComponent stopped");
-  }
-
-  void recvThreadFunc(std::string recvEndpoint)
-  {
-
-    try
-    {
-      const double max_timeout = 2.0;   // seconds
-      double t_watchdog = Timer_getSystemTime();
-      zmq::context_t context(1);
-      zmq::socket_t sub(context, zmq::socket_type::sub);
-
-      sub.connect(recvEndpoint);
-      sub.set(zmq::sockopt::subscribe, "");
-      sub.set(zmq::sockopt::rcvtimeo, 100);   // 100 ms timeout to catch runLoop
-
-      while (runLoop && !watchDogTriggered)
-      {
-        zmq::message_t msg;
-        if (sub.recv(msg, zmq::recv_flags::none))
-        {
-          t_watchdog = Timer_getSystemTime();
-          std::string msg_str(static_cast<char*>(msg.data()), msg.size());
-          const bool dataOk = process_incoming_message(msg_str);
-
-          if (dataOk)
-          {
-            isInitialized.store(true, std::memory_order_release);
-          }
-        }
-
-        if ((Timer_getSystemTime() - t_watchdog > max_timeout) &&
-            (isInitialized.load(std::memory_order_acquire)))
-        {
-          RLOG(0, "Watchdog triggered - robot disconnected");
-          watchDogTriggered = true;
-        }
-
-      }
-    }
-    catch (const std::exception& e)
-    {
-      RLOG_CPP(0, "Recv thread terminating: " << e.what());
-    }
-
-    RLOG(0, "Exiting recvThreadFunc()");
-  }
-
-
-  void sendThreadFunc(std::string sendEndpoint)
-  {
-    zmq::context_t context(1);
-    zmq::socket_t send_socket(context, zmq::socket_type::pub);
-    send_socket.bind(sendEndpoint);
-
-    while (runLoop && !watchDogTriggered)
-    {
-      nlohmann::json cmdJson = compile_outgoing_message();
-
-      if (!cmdJson.empty())
-      {
-        std::string message_str = cmdJson.dump();
-        zmq::message_t message(message_str.size());
-        memcpy(message.data(), message_str.c_str(), message_str.size());
-
-        send_socket.send(message, zmq::send_flags::none);
-        RLOG_CPP(5, "Sent motor commands: " << message_str);
-      }
-    }
-
-    RLOG(0, "Exiting sendThreadFunc()");
-  }
-
-
-
-protected:
-
-  virtual bool process_incoming_message(const std::string& recv_msg) = 0;
-  virtual nlohmann::json compile_outgoing_message() = 0;
-
-  mutable std::atomic<bool> isInitialized{false};
-  bool watchDogTriggered = false;
-  bool runLoop = false;
-  std::thread recv_thread;
-  std::thread send_thread;
-};
-
-
-
-
-
-
-
-
-
 
 /*******************************************************************************
  *
@@ -252,11 +92,14 @@ public:
   int jointId;
 };
 
-class KortexComponent : public ComponentBase, public NetworkComponent
+class KortexComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
-  KortexComponent(EntityBase* parent, std::string suffix="")
-    : ComponentBase(parent)
+  KortexComponent(EntityBase* parent,
+                  std::string suffix="",
+                  std::string otherRecv="tcp://localhost:5555",
+                  std::string otherSend="tcp://localhost:5556")
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
   {
     jntNameIdPairs.push_back(JointNameIndexPair("joint_1"+suffix));
     jntNameIdPairs.push_back(JointNameIndexPair("joint_2"+suffix));
@@ -268,8 +111,8 @@ public:
 
     gripperNameIdPairs.push_back(JointNameIndexPair("finger_joint"+suffix));
 
-    subscribe("Start", &NetworkComponent::start);
-    subscribe("Stop", &NetworkComponent::stop);
+    subscribe("Start", &RoboNetworkInterface::start);
+    subscribe("Stop", &RoboNetworkInterface::stop);
     subscribe("UpdateGraph", &KortexComponent::onUpdateGraph);
     subscribe("SetJointCommand", &KortexComponent::onSetJointPosition);
     subscribe("InitFromState", &KortexComponent::onInitFromState);
@@ -299,7 +142,8 @@ public:
 
     if (T_robo->m!=T_gravity->m)
     {
-      RLOG(0, "Mismatch in torque vector dimensions: robo: %d   gravity: %d", T_robo->m, T_gravity->m);
+      RLOG(0, "Mismatch in torque vector dimensions: robo: %d   gravity: %d",
+           T_robo->m, T_gravity->m);
       return;
     }
 
@@ -505,14 +349,14 @@ private:
     return membersInitialized;
   }
 
-  nlohmann::json compile_outgoing_message()
+  std::string compile_outgoing_message()
   {
     Timer_waitDT(0.01);               // 100 Hz command rate
     nlohmann::json cmdJson;
 
     if (!enableCommands || jointCommands.empty() || (jointCommands==jointCommandsPrev))
     {
-      return cmdJson;
+      return std::string();
     }
 
     {
@@ -532,7 +376,7 @@ private:
     jointCommandsPrev = jointCommands;
     gripper_command_prev = gripper_command;
 
-    return cmdJson;
+    return cmdJson.dump();
   }
 
 

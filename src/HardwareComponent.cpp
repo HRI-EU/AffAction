@@ -332,17 +332,29 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
     {
-      components.push_back(new aff::KortexComponent(&entity, "left"));
+      std::string suffix = "left";
+      std::string otherRecv="tcp://localhost:5557";
+      std::string otherSend="tcp://localhost:5558";
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
     {
-      components.push_back(new aff::KortexComponent(&entity, "right"));
+      std::string suffix = "right";
+      std::string otherRecv="tcp://localhost:5555";
+      std::string otherSend="tcp://localhost:5556";
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
     {
-      components.push_back(new aff::KortexComponent(&entity));
+      std::string suffix = "";
+      std::string otherRecv="tcp://localhost:5555";
+      std::string otherSend="tcp://localhost:5556";
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
   }
 
