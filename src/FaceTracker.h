@@ -88,6 +88,7 @@ private:
 
   bool addGraphics(Rcs::Viewer* viewer, const HTr* cameraFrame);
 
+  bool newFaceUpdate;
   RcsMeshData* mesh;
   MatNd* landmarks;
   Rcs::Viewer* viewer;
