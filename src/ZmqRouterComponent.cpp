@@ -85,7 +85,7 @@ ZmqRouterComponent::~ZmqRouterComponent()
 
 void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetitions)
 {
-  RLOG_CPP(1, "command: " << command << " repetitions: " << repetitions);
+  RLOG_CPP(0, "command: " << command << " repetitions: " << repetitions);
   std::lock_guard<std::mutex> lock(commandMtx);
   commandQueue.push({command, repetitions});
 }
@@ -188,7 +188,6 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   // Network loop
   while (this->threadRunning)
   {
-    RLOG(1, "Tic");
     // Poll for inbound messages
     zmq::pollitem_t items[] = { { router, 0, ZMQ_POLLIN, 0 } };
     zmq::poll(items, 1, std::chrono::milliseconds{POLL_TIMEOUT_MS});
@@ -246,10 +245,11 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         {
           nlohmann::json json = nlohmann::json::parse(payLoadStr);
           setJsonInput(json);
+          getEntity()->publish("ZmqDealerMessage", id, payLoadStr);
         }
         catch (const nlohmann::json::parse_error& e)
         {
-          std::cerr << "[JSON parse error] at byte " << e.byte << ": " << e.what() << std::endl;
+          RLOG_CPP(0, "[JSON parse error] at byte " << e.byte << ": " << e.what());
         }
 
       }
@@ -260,31 +260,43 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
     if (std::chrono::duration_cast<ms>(now - lastCmd).count() >= COMMAND_INTERVAL_MS)
     {
       // Process commands
-      std::string cmdStr;
+      std::string cmdStr, id_str;
       {
         std::lock_guard<std::mutex> lock(commandMtx);
 
         if (!commandQueue.empty())
         {
           std::pair<std::string, int> cmdPair = commandQueue.front();
-          RLOG_CPP(0, "Command: " << cmdPair.first << ", Value: " << cmdPair.second);
           nlohmann::json cmd =
           {
             { "type", cmdPair.first },
             { "repetitions", cmdPair.second },
+            { "bounding_box", {
+                { "left", 222 },
+                { "top", 284 },
+                { "right", 379 },
+                { "bottom", 441 }
+            }},
             { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
           };
           cmdStr = cmd.dump();
+          id_str = cmdPair.first;
           commandQueue.pop();
         }
+
       }
 
-
+      RLOG_CPP(1, "Going through " << workers.size() << " workers");
       if (!cmdStr.empty())
         for (auto& worker : workers)
         {
           auto& id = worker.first;
           auto& last = worker.second;
+          
+          if (id != id_str)
+          {
+            continue;
+          }
 
           // multipart: [identity][empty][payload]
           zmq::message_t idMsg(id.data(), id.size());

@@ -1457,8 +1457,7 @@ Example
     auto renderCb = [&, sub, n](std::string id, std::string data) mutable
     {
       std::lock_guard<std::mutex> lk(mtx);
-      //std::cerr << ".";
-      RMSG_CPP("id: " << id << " data: " << data);
+      RLOG_CPP(1, "id: " << id << " data: " << data);
 
       if (id=="face_recog")
       {
@@ -1472,34 +1471,30 @@ Example
         {
           counter++;
           const auto& faces = j["data"]["face_recog"];
-          std::cout << counter << "Number of recognized faces: " << faces.size() << std::endl;
-
+          RLOG_CPP(1, "Iteration " << counter << ": number of recognized faces: " << faces.size());
 
           if (!faces.empty())
           {
             const nlohmann::json& first_face = faces[0];
 
-            std::string name = first_face["recognized_face"];
-            faceName = name;
+            faceName = first_face["recognized_face"];
             auto& bbox = first_face["bounding_box"];
 
-            std::cout << "First recognized face: " << name << std::endl;
-            std::cout << "Bounding box: left=" << bbox["left"]
+            RLOG_CPP(1, "First recognized face: " << faceName);
+            RLOG_CPP(1, "Bounding box: left=" << bbox["left"]
                       << ", top=" << bbox["top"]
                       << ", right=" << bbox["right"]
-                      << ", bottom=" << bbox["bottom"] << std::endl;
+                      << ", bottom=" << bbox["bottom"]);
           }
           else
           {
-            std::cout << "No faces found!" << std::endl;
+            RLOG_CPP(1, "No faces found!");
           }
-
-
 
         }
         else
         {
-          std::cout << "\"face_recog\" array not found." << std::endl;
+          RLOG_CPP(1, "\"face_recog\" array not found.");
         }
 
       }
@@ -1511,13 +1506,17 @@ Example
       }
     };
 
+    RLOG(1, "Subscribing ZmqDealerMessage");
     *sub = ex.getEntity().subscribe("ZmqDealerMessage", std::move(renderCb));
 
+    RLOG(1, "Publishing PerceptionCommand");
     ex.getEntity().publish("SetPerceptionCommand", std::string("face_recog"), n);
 
     {
       std::unique_lock<std::mutex> lk(mtx);
+      RLOG(1, "cv.wait");
       cv.wait(lk, [&]{ return counter >= n; });
+      RLOG(1, "done cv.wait");
     }
 
     return faceName;
