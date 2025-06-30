@@ -1453,9 +1453,15 @@ Example
     int counter = 0;
     auto sub = std::make_shared<ES::ScopedSubscription>();
     std::string faceName;
+    auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
 
-    auto renderCb = [&, sub, n](std::string id, std::string data) mutable
+    auto renderCb = [&, sub, n, active](std::string id, std::string data) mutable
     {
+      if (!*active) {
+        RLOG_CPP(1, "Callback skipped because function is no longer active.");
+        return;
+      }
+      
       std::lock_guard<std::mutex> lk(mtx);
       RLOG_CPP(1, "id: " << id << " data: " << data);
 
@@ -1501,6 +1507,7 @@ Example
 
       if (counter >= n)
       {
+        *active = false;  // prevent further callback execution
         sub.reset();       // unsubscribe
         cv.notify_one();   // wake calling context
       }
@@ -1515,7 +1522,18 @@ Example
     {
       std::unique_lock<std::mutex> lk(mtx);
       RLOG(1, "cv.wait");
-      cv.wait(lk, [&]{ return counter >= n; });
+      py::gil_scoped_release release;  // Unblock waiting period
+      //cv.wait(lk, [&]{ return counter >= n; });
+      
+      bool success = cv.wait_for(lk, std::chrono::seconds(2), [&]() { return counter >= n; });
+
+      if (!success)
+      {
+        RLOG_CPP(0, "Timeout reached while waiting for face recognition.");
+      }
+ 
+      *active = false;  // ensure no more callbacks after return
+      sub.reset();      // explicitly unsubscribe
       RLOG(1, "done cv.wait");
     }
 

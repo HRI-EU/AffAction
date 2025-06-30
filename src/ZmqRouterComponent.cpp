@@ -286,7 +286,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
       }
 
-      RLOG_CPP(1, "Going through " << workers.size() << " workers");
+      RLOG_CPP(5, "Going through " << workers.size() << " workers");
       if (!cmdStr.empty())
         for (auto& worker : workers)
         {
