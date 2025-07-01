@@ -27,6 +27,12 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+
+<!--
+base left gravity: -9.64772 -0.202127 -1.76541
+base right gravity: -9.64772 -0.793742 -1.58981
+-->
+
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude"
        resourcePath="${SIT}/Data/RobotMeshes/1.0/data"
        name="JacoDefaultPoseArmsHigh"

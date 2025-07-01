@@ -2,6 +2,7 @@
 import sys
 import json
 import os
+import time
 import platform
 from pathlib import Path
 import logging
@@ -54,7 +55,7 @@ class SimulatorManager:
             
         from pyAffaction import (LlmSim, addResourcePath, setLogLevel)
         logger.debug(f"Setting up the simulator. PATH: {os.environ.get('PATH')}")
-        #setLogLevel(-1)
+        setLogLevel(-1)
         addResourcePath(str(smile_ws_path / "config"))
         addResourcePath(str(smile_ws_path / "config" / "xml" / "examples"))
 
@@ -64,6 +65,8 @@ class SimulatorManager:
         self.sim.verbose = False
         self.sim.addVirtualCamera(width=320, height=240, withGui=False)
         self.sim.xmlFileName = self.scene
+        self.sim.dt = 0.05
+        self.sim.enableWireframeToggle = False
 
     def stop(self):
         """
@@ -74,11 +77,61 @@ class SimulatorManager:
             self.sim.stop()
             self.sim = None
 
+def pour_into(SIMULATION, source_container_name: str, target_container_name: str) -> str:
+    """
+    Pour a source container into a target container. You do not have to grasp the source container before 
+    pouring it. You hold it in your hand after finishing.
+
+    :param source_container_name: The name of the container to pour from.
+    :param target_container_name: The name of the container to pour into.
+    :return: Result message.
+    """
+
+    # We get the object if it is not already held in the hand.
+    holding_hand = SIMULATION.is_held_by(source_container_name)
+    get_command = ""
+    if not holding_hand:
+        get_command = f"get {source_container_name};"
+
+    # The strings support and support_frame will be remembered so that the object will
+    # be put back to the same place where it has been picked up. In cases when the object is
+    # already held in the hand, they may be empty. Then, the object is put on the best
+    # support location according to the action cost.
+    support = SIMULATION.get_parent_entity(source_container_name)
+    support_frame = SIMULATION.get_closest_parent_affordance(source_container_name, "Supportable")
+
+    # We move the object above the target container, pour, and just put it
+    # somewhere. That's not so nice, but pretty safe and works in most cases.
+    action_command = (
+        f"{get_command}"
+        f"move {source_container_name} above {target_container_name} height 0.15;"
+        f"pour_put {source_container_name} {target_container_name} putPlace {support};"
+        f"pose default,default_up,default_high"
+    )
+    results = SIMULATION.plan_fb_rich(action_command)
+    logger.info(f"Planning result: {json.dumps(results, indent=2)}")
+
+    if not results:
+        logger.info(f"First planning run failed - trying more robust one ...")
+        action_command = (
+            f"{get_command}"
+            f"move {source_container_name} above {target_container_name} height 0.15;"
+            f"pour {source_container_name} {target_container_name};"
+            f"put {source_container_name};"
+            f"pose default,default_up,default_high"
+        )
+        results = SIMULATION.plan_fb_rich(action_command)
+
+    logger.info(f"Planning result: {json.dumps(results, indent=2)}")
+
+    actions_string = '; '.join(results[0]["actions"]) if results else ""
+    
+    return actions_string
 
 
 
 def main():
-    sim_manager = SimulatorManager(scene="g_example_spiderbot.xml")
+    sim_manager = SimulatorManager(scene="g_example_worldmodel.xml")
     sim_manager.setup("build")
     global sim   # For interactive console needed
     sim = sim_manager.sim
@@ -86,7 +139,15 @@ def main():
     sim.callEvent("Start")
     sim.callEvent("Process")
 
-    sim.plan_fb_nonblock("get bottle_of_olive_oil")
+    grounded_actions = pour_into(sim, "bottle_of_pesto_sauce", "glass_blue")
+    grounded_actions = pour_into(sim, "bottle_of_salt", "glass_green")
+    grounded_actions = pour_into(sim, "bottle_of_tomato_sauce", "glass_red")
+    
+    if not grounded_actions:
+        logger.info("No solution found")
+    else:
+        logger.info(f"Executing: {grounded_actions}")
+        sim.execute(grounded_actions)
 
     try:
         while True:
@@ -94,8 +155,11 @@ def main():
             color_img = sim.captureColorImageFromFrame("camera_01")
             color_np = np.array(color_img)
             color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
-            cv2.imwrite("color_image.jpg", color_bgr)
-            controls = sim.getControls(["hand_robot_left_1", "hand_robot_left_2", "hand_robot_right_1", "hand_robot_right_2"])
+            #cv2.imwrite("color_image.jpg", color_bgr)
+            cv2.imshow("Screen capture", color_bgr)
+            key = cv2.waitKey(1)
+
+            controls = sim.getControls(["hand_robot_left", "hand_robot_right"])
             logger.info("Controls:\n%s", json.dumps(controls, indent=2))
     except KeyboardInterrupt:
         print("Exiting simulation loop via Ctrl-C...")        

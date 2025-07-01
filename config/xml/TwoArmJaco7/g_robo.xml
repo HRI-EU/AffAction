@@ -89,7 +89,7 @@
     <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
     <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
     <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
+    <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
   </Body>
   
 

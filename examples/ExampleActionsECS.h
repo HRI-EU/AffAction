@@ -139,6 +139,8 @@ public:
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool hasBeenStopped;
   bool blockingMainThread;
+  double dt;
+  bool enableWireframeToggle;
 
 
   /*! \brief Retrieves the gaze data in JSON format.
@@ -160,7 +162,7 @@ protected:
   std::string physicsEngine;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
-  double dt, dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
+  double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
   bool plot, valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
   unsigned int loopCount;

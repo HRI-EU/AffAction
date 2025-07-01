@@ -46,6 +46,7 @@
 #include <EventGui.h>
 #include <ConstraintFactory.h>
 #include <ActivationSet.h>
+#include <CollisionModelConstraint.h>
 
 #include <ForceDragger.h>
 #include <ExampleFactory.h>
@@ -244,6 +245,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   speedUp = 1;
   loopCount = 0;
   blockingMainThread = false;
+  enableWireframeToggle = true;   // Show wireframe if collisions are deactivated
   maxNumThreads = 0;
   numSceneQueries = NUM_SCENEQUERIES;
 
@@ -1191,6 +1193,8 @@ bool ExampleActionsECS::initGraphics()
     c->createDebugGraphics(viewer, getGraph());
   }
 
+  // Do not show wireframes when collision model is changed
+  tropic::CollisionModelConstraint::setEnableWireframeToggle(enableWireframeToggle);
 
   return true;
 }
@@ -2295,6 +2299,40 @@ public:
     xmlFileName = "g_example_curiosity_cocktails_gen3.xml";
     return true;
   }
+
+  std::string help()
+  {
+    std::stringstream s;
+
+    RcsBody* base = RcsGraph_getBodyByName(getGraph(), "base_link_left");
+    if (base)
+    {
+      double base_gravity[3], I_gravity[3];
+      Vec3d_set(I_gravity, 0.0, 0.0, -9.81);
+      Vec3d_rotate(base_gravity, base->A_BI.rot, I_gravity);
+      s << "base left gravity: "
+        <<  base_gravity[0] << " "
+        <<  base_gravity[1] << " "
+        <<  base_gravity[2] << std::endl;
+    }
+
+    base = RcsGraph_getBodyByName(getGraph(), "base_link_right");
+    if (base)
+    {
+      double base_gravity[3], I_gravity[3];
+      Vec3d_set(I_gravity, 0.0, 0.0, -9.81);
+      Vec3d_rotate(base_gravity, base->A_BI.rot, I_gravity);
+      s << "base right gravity: "
+        <<  base_gravity[0] << " "
+        <<  base_gravity[1] << " "
+        <<  base_gravity[2] << std::endl;
+    }
+
+
+    s << std::endl << std::endl << ExampleActionsECS::help() << std::endl;
+    return s.str();
+  }
+
 };
 
 RCS_REGISTER_EXAMPLE(ExampleCocktailGen3, "Actions", "Cocktails Gen3");

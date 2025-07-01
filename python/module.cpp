@@ -58,7 +58,7 @@ namespace py = pybind11;
 #include <TTSComponent.h>
 #include <PredictionTree.h>
 #include <AzureSkeletonTracker.h>
-#include "ActionEyeGaze.h"
+#include <ActionEyeGaze.h>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -854,7 +854,7 @@ cv2.imwrite("color_image.jpg", color_bgr)
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
   {
-    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
+    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
     std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
 
@@ -926,9 +926,9 @@ cv2.imwrite("color_image.jpg", color_bgr)
       }
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
-      RLOG_CPP(0, "ADDING " << slnPath.back()->actionCommand());
       j_result.push_back(
       {
+        {"lifted_actions", actionSequence},
         {"actions", predictedSeq},
         {"success", slnPath.back()->success},
         {"error", errMsg.error},
@@ -1435,6 +1435,8 @@ Example
   .def_readwrite("numSceneQueries", &aff::ExampleActionsECS::numSceneQueries)
   .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
   .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
+  .def_readwrite("dt", &aff::ExampleActionsECS::dt)
+  .def_readwrite("enableWireframeToggle", &aff::ExampleActionsECS::enableWireframeToggle)
 
   //////////////////////////////////////////////////////////////////////////////
   // GazeDisambiguation
@@ -1457,11 +1459,12 @@ Example
 
     auto renderCb = [&, sub, n, active](std::string id, std::string data) mutable
     {
-      if (!*active) {
+      if (!*active)
+      {
         RLOG_CPP(1, "Callback skipped because function is no longer active.");
         return;
       }
-      
+
       std::lock_guard<std::mutex> lk(mtx);
       RLOG_CPP(1, "id: " << id << " data: " << data);
 
@@ -1524,14 +1527,17 @@ Example
       RLOG(1, "cv.wait");
       py::gil_scoped_release release;  // Unblock waiting period
       //cv.wait(lk, [&]{ return counter >= n; });
-      
-      bool success = cv.wait_for(lk, std::chrono::seconds(2), [&]() { return counter >= n; });
+
+      bool success = cv.wait_for(lk, std::chrono::seconds(2), [&]()
+      {
+        return counter >= n;
+      });
 
       if (!success)
       {
         RLOG_CPP(0, "Timeout reached while waiting for face recognition.");
       }
- 
+
       *active = false;  // ensure no more callbacks after return
       sub.reset();      // explicitly unsubscribe
       RLOG(1, "done cv.wait");
