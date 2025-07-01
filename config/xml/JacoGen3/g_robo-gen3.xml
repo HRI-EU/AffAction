@@ -79,7 +79,7 @@ base right gravity: -9.64772 -0.793742 -1.58981
 	 <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
 	 <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
 	 <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-	 <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
+	 <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
        </Body>
        
        <Manipulator body="head_kinect_link" types="head">
@@ -100,9 +100,7 @@ base right gravity: -9.64772 -0.793742 -1.58981
          <joint_state joint="joint_5_right" position="0"/>
          <joint_state joint="joint_6_right" position="-20"/>
          <joint_state joint="joint_7_right" position="-90"/>
-         <joint_state joint="joint_finger_1_right" position="10"/>
-         <joint_state joint="joint_finger_2_right" position="10"/>
-         <joint_state joint="joint_finger_3_right" position="10"/>
+         <joint_state joint="finger_joint_right" position="0"/>
 
          <joint_state joint="joint_1_left" position="10"/>
          <joint_state joint="joint_2_left" position="-70"/>
@@ -111,9 +109,7 @@ base right gravity: -9.64772 -0.793742 -1.58981
          <joint_state joint="joint_5_left" position="0"/>
          <joint_state joint="joint_6_left" position="20"/>
          <joint_state joint="joint_7_left" position="90"/>
-         <joint_state joint="joint_finger_1_left" position="10"/>
-         <joint_state joint="joint_finger_2_left" position="10"/>
-         <joint_state joint="joint_finger_3_left" position="10"/>
+         <joint_state joint="finger_joint_left" position="0"/>
        </model_state>
 
      </Graph>

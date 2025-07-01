@@ -206,7 +206,7 @@
     <xi:include href="../scene/g_glass_quadratic.xml"/>
   </Group>
   
-  <Group prev="table_grid_1_2" name="_green" color="GREEN" rigid_body_joints="true" >
+  <Group prev="table_grid_2_2" name="_green" color="GREEN" rigid_body_joints="true" >
     <xi:include href="../scene/g_glass_quadratic.xml"/>
   </Group>
 

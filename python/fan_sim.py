@@ -77,7 +77,7 @@ class SimulatorManager:
             self.sim.stop()
             self.sim = None
 
-def pour_into(SIMULATION, source_container_name: str, target_container_name: str) -> str:
+def pour_into(SIMULATION, source_container_name: str, target_container_name: str, hand_name: str) -> str:
     """
     Pour a source container into a target container. You do not have to grasp the source container before 
     pouring it. You hold it in your hand after finishing.
@@ -91,7 +91,7 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
     holding_hand = SIMULATION.is_held_by(source_container_name)
     get_command = ""
     if not holding_hand:
-        get_command = f"get {source_container_name};"
+        get_command = f"get {source_container_name} {hand_name};"
 
     # The strings support and support_frame will be remembered so that the object will
     # be put back to the same place where it has been picked up. In cases when the object is
@@ -139,9 +139,9 @@ def main():
     sim.callEvent("Start")
     sim.callEvent("Process")
 
-    grounded_actions = pour_into(sim, "bottle_of_pesto_sauce", "glass_blue")
-    grounded_actions = pour_into(sim, "bottle_of_salt", "glass_green")
-    grounded_actions = pour_into(sim, "bottle_of_tomato_sauce", "glass_red")
+    # grounded_actions = pour_into(sim, "bottle_of_pesto_sauce", "glass_blue", "hand_robot_left")
+    grounded_actions = pour_into(sim, "bottle_of_salt", "glass_green", "hand_robot_right")
+    # grounded_actions = pour_into(sim, "bottle_of_tomato_sauce", "glass_green", "hand_robot_right")
     
     if not grounded_actions:
         logger.info("No solution found")
@@ -160,7 +160,7 @@ def main():
             key = cv2.waitKey(1)
 
             controls = sim.getControls(["hand_robot_left", "hand_robot_right"])
-            logger.info("Controls:\n%s", json.dumps(controls, indent=2))
+            logger.debug("Controls:\n%s", json.dumps(controls, indent=2))
     except KeyboardInterrupt:
         print("Exiting simulation loop via Ctrl-C...")        
         sim.callEvent("Stop")

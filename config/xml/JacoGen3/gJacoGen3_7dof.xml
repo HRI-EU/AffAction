@@ -32,12 +32,12 @@
   <ActionSequence name="1" text="pose pose1; pose pose2; pose kinova_home" />
   <ActionSequence name="2" text="pose f10; pose f40; pose f0; pose f30" />
 
-  <Body name="base_link" physics="dynamic" mass="1.697" cogVector="-0.000648 -0.000166 0.084487" inertia="0.004622 9e-06 6e-05   9e-06 0.004495 9e-06   6e-05 9e-06 0.002079" >
+  <Body name="jaco_base_link" physics="dynamic" mass="1.697" cogVector="-0.000648 -0.000166 0.084487" inertia="0.004622 9e-06 6e-05   9e-06 0.004495 9e-06   6e-05 9e-06 0.002079" >
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/base_link.STL" color="#bfbfbfff" />
     <Shape type="FRAME" scale="0.3" />
   </Body>
 
-  <Body name="shoulder_link" prev="base_link" physics="dynamic" mass="1.3773" cogVector="-0.000023 -0.010364 -0.07336" inertia="0.00457 1e-06 2e-06   1e-06 0.004831 0.000448   2e-06 0.000448 0.001409" >
+  <Body name="shoulder_link" prev="jaco_base_link" physics="dynamic" mass="1.3773" cogVector="-0.000023 -0.010364 -0.07336" inertia="0.00457 1e-06 2e-06   1e-06 0.004831 0.000448   2e-06 0.000448 0.001409" >
     <Joint name="joint_1" range="-720 0 720" type="RotZ" transform="0 0 0.15643 180 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.25" weightJL="2" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/shoulder_link.STL" color="#bfbfbfff" />
   </Body>
