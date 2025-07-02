@@ -186,6 +186,19 @@ public:
           RLOG_CPP(0, "ZMQ send error: " << e.what());
         }
       }
+    }   // while ...
+
+
+
+    // Before we quit the command sender thread, we sened a final quit command
+    // to the drivers so that they shut down gracefully
+    try
+    {
+      pub_socket.send(zmq::buffer("{ \"quit\": true}"), zmq::send_flags::none);
+    }
+    catch (const zmq::error_t& e)
+    {
+      RLOG_CPP(0, "ZMQ send error on quit command: " << e.what());
     }
 
     RLOG(0, "Exiting sendThreadFunc()");

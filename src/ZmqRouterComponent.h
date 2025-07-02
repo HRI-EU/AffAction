@@ -49,7 +49,7 @@ class ZmqRouterComponent : public ComponentBase, public LandmarkBase
 {
 public:
 
-  ZmqRouterComponent(EntityBase* parent, std::string connection="tcp://*:5566");
+  ZmqRouterComponent(EntityBase* parent, std::string connection="tcp://*:40000");
   virtual ~ZmqRouterComponent();
   virtual std::string getName() const;
 

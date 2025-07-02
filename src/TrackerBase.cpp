@@ -43,7 +43,8 @@
 namespace aff
 {
 
-TrackerBase::TrackerBase(const std::string& cameraName) : currentTime(0.0), frozen(false), cameraNamedId(cameraName, -1)
+TrackerBase::TrackerBase(const std::string& cameraName) :
+  currentTime(0.0), frozen(false), cameraNamedId(cameraName, -1)
 {
 }
 
