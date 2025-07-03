@@ -39,13 +39,23 @@
         <Joint name="DofBaseThZ" type="RotZ" range="-360 0 360" weightJL="0.1" weightMetric="0.01" constraint="true"/>
     </Body>
 
-    <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.534 0 0 0" physics="none">
+    <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.5152 0 0 0" transform_high="-0.075 0 0.9552 0 0 0" physics="none">
       <Shape type="BOX" extents="0.08 0.107 0.004" distance="false" physics="false" graphics="true"
 	     transform="0 0 0.633 0 0 0" color="GRAY" />
-        <Shape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true"
-               transform="0 0 0.131 0 0 0" color="GRAY" />
+        <noShape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true"
+               transform="0.2 0 0.131 0 0 0" color="GRAY" />
+        <Shape type="MESH" meshFile="item24/item_2627_profil-8-80x80-natur-262_1000_medium.stl" transform="0 0 0.131 90 0 0" scale="0.001" />
+	
         <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false" color="RED" />
     </Body>
+
+    <!-- <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.534 0 0 0" physics="none"> -->
+    <!--   <Shape type="BOX" extents="0.08 0.107 0.004" distance="false" physics="false" graphics="true" -->
+    <!-- 	     transform="0 0 0.633 0 0 0" color="GRAY" /> -->
+    <!--     <Shape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true" -->
+    <!--            transform="0 0 0.131 0 0 0" color="GRAY" /> -->
+    <!--     <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false" color="RED" /> -->
+    <!-- </Body> -->
 
     <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
       <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
@@ -59,12 +69,12 @@
         <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false" physics="false" transform="0.4 0 0 0 -90 0" />
     </Body>
 
-    <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0" />
+    <!-- <Body name="screen_mount_3_link" prev="center_post_link" transform="0.13 0 0.11 0 -20 0" /> -->
 
-    <Body name="screen_link" prev="screen_mount_3_link" transform="0.042 0 0 0 0 0" physics="none">
-      <Shape type="BOX" extents="0.03 0.2 0.28" distance="true" physics="true" graphics="true"
-	     transform="0.02 0 0 90 0 0" color="BLACK_RUBBER"/>
-    </Body>
+    <!-- <Body name="screen_link" prev="screen_mount_3_link" transform="0.042 0 0 0 0 0" physics="none"> -->
+    <!--   <Shape type="BOX" extents="0.03 0.2 0.28" distance="true" physics="true" graphics="true" -->
+    <!-- 	     transform="0.02 0 0 90 0 0" color="BLACK_RUBBER"/> -->
+    <!-- </Body> -->
 
     <Body name="ptu_link" prev="center_post_link" transform="0 0 0.633 0 0 90" physics="none" mass="0.01"
           inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
