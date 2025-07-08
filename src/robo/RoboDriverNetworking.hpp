@@ -45,7 +45,12 @@
 
 
 /*******************************************************************************
- *
+ * Class to send feedback message from driver process to the remote computer.
+ * The driver proccess calls updateMessage() through the passed function object.
+ * This will not be executed in the driver's process, but instead deferred to
+ * the networking thread with a condition variable to avoid hitting timing limits
+ * through networking. This is particularly an issue for high-frequency loops
+ * (like the 1kHz loop examples in the Kortex library).
  *******************************************************************************/
 class FeedbackThread
 {
@@ -122,6 +127,9 @@ private:
     while (run_flag && runLoop)
     {
       cv_.wait(lock, [this,&run_flag] { return !run_flag || !runLoop || !message_.empty(); });
+
+      // The condition variable will also be notified in case of quitting. In this case, we
+      // quit the thread function without sending anything.
       if (!run_flag || !runLoop)
       {
         break;
@@ -156,7 +164,17 @@ private:
 
 
 /*******************************************************************************
+ * Receives commands from the remote host, and passes them to the robo driver
+ * thread. There is no constraint on the frequency of the incoming commands,
+ * they can come at any frequency (slower than the driver loop). Filtering is
+ * done inside the driver's thread.
  *
+ * The passed cmdFcn is responsible to implement the parsing of the commands.
+ * If the cmdFcn returns true, the thread quits and stops all driver threads.
+ * This allows to implement a quit-logic in the parsed commands.
+ *
+ * Currently, the command function is responsible to implement the wait cycle.
+ * \todo: That is not so good.
  *******************************************************************************/
 class CommandThread
 {

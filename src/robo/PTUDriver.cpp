@@ -45,6 +45,7 @@
 #include <Rcs_cmdLine.h>
 #include <Rcs_math.h>
 #include "Rcs_filters.h"
+#include <Rcs_timer.h>
 
 #include <zmq.hpp>
 #include <csignal>
@@ -106,11 +107,16 @@ public:
     filterInitialized(false),
     panTiltFilt(0.1, 0.0, 0.02, 2)
   {
+    const double dt = 0.02;   // 50Hz loop
+    const double tmc = 0.1;
+    panTiltFilt.setMaxVel(PAN_VELOCITY_MAX_RAD, 0);
+    panTiltFilt.setMaxVel(TILT_VELOCITY_MAX_RAD, 1);
+    panTiltFilt.setDt(dt);
   }
 
   static void limit_check(double pan, double tilt, void* param)
   {
-    RLOG_CPP(0, "Limit check");
+    RLOG_CPP(2, "Limit check");
     // Your limit checking logic here
   }
 
@@ -134,7 +140,7 @@ public:
     self->current_pan_position = pan_angle;
     self->current_tilt_position = tilt_angle;
 
-    RLOG_CPP(2, std::fixed << std::setprecision(2)
+    RLOG_CPP(0, std::fixed << std::setprecision(2)
              << "Timestamp: " << timestamp << " sec, "
              << "dt: " << dt << " , "
              << "Pan angle[deg]: " << RCS_RAD2DEG(pan_angle)
@@ -155,22 +161,34 @@ public:
     self->panTiltFilt.getVelocity(filtVel);
 
 
-    RLOG(2, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
+    RLOG(0, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
          RCS_RAD2DEG(filtPos[0]), RCS_RAD2DEG(filtPos[1]),
          RCS_RAD2DEG(filtVel[0]), RCS_RAD2DEG(filtVel[1]));
-
-    if (self->feedbackFcn)
-    {
-      self->feedbackFcn("Here goes the feedback json");
-    }
-
-    // Here is the velocity control loop
-    //self->velocityControlStep(filtPos[0], filtPos[1], filtVel[0], filtVel[1]);
 
     double desired_pan_position = filtPos[0];
     double desired_tilt_position = filtPos[1];
     double desired_pan_velocity = filtVel[0];
     double desired_tilt_velocity = filtVel[1];
+
+    if (self->feedbackFcn)
+    {
+      nlohmann::json fbJson;
+      fbJson["time"] = Timer_getSystemTime();
+      fbJson["position"] = std::vector<double> {self->current_pan_position, self->current_tilt_position};
+      fbJson["pan_curr"] = self->current_pan_position;
+      fbJson["tilt_curr"] = self->current_tilt_position;
+      fbJson["pan_vel_curr"] = self->current_pan_velocity;
+      fbJson["tilt_vel_curr"] = self->current_tilt_velocity;
+      fbJson["pan_des"] = desired_pan_position;
+      fbJson["tilt_des"] = desired_tilt_position;
+      fbJson["pan_vel_des"] = desired_pan_velocity;
+      fbJson["tilt_vel_des"] = desired_tilt_velocity;
+
+      self->feedbackFcn(fbJson.dump());
+    }
+
+    // Here is the velocity control loop
+
 
     if (!self->pw70)
     {
@@ -196,7 +214,7 @@ public:
 
     bool success = self->pw70->move_velocity(corrected_pan_velocity, corrected_tilt_velocity);
 
-    RLOG(1, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
+    RLOG(0, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
          success ? "SUCCESS" : "FAILURE",
          RCS_RAD2DEG(corrected_pan_velocity),
          RCS_RAD2DEG(corrected_tilt_velocity),
@@ -222,6 +240,7 @@ public:
 
     // Wait a moment to allow the interface to initialize
     std::this_thread::sleep_for(std::chrono::seconds(2));
+    this->pw70->move_position(-45.0, -30.0, 10.0, 10.0);
   }
 
   void stop()
@@ -243,6 +262,14 @@ public:
     auto j = nlohmann::json::parse(message);
 
     // Parse message into motor commands here
+
+    if (j.contains("q_des") && filterInitialized)
+    {
+      // We receive radians. Degrees are only used internally.
+      auto q_des = j["q_des"].get<std::array<double, 2>>();
+      this->panTiltFilt.setTarget(q_des.data());
+      RLOG(0, "Setting filter target to %f %f", q_des[0], q_des[1]);
+    }
 
     bool quitMe = j.value("quit", false);
 
@@ -283,8 +310,8 @@ int main(int argc, char** argv)
 {
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
-  std::string sendEndpoint = "tcp://*:5555";
-  std::string recvEndpoint = "tcp://*:5556";
+  std::string sendEndpoint = "tcp://*:5559";
+  std::string recvEndpoint = "tcp://*:5560";
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
@@ -297,6 +324,7 @@ int main(int argc, char** argv)
   // auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
   auto fbFcn = [&feedback](const std::string& message)
   {
+    RLOG_CPP(1, "Feedback: " << message);
     feedback.updateMessage(message);
   };
 
@@ -304,7 +332,7 @@ int main(int argc, char** argv)
   auto cmdFcn = [&robo](const std::string& message) -> bool
   {
     RLOG_CPP(1, "Received: " << message);
-    return false;// robo.setCommand(message);
+    return robo.setCommand(message);
   };
 
   std::vector<double> q_default(DOF_PTU, 0.0);
