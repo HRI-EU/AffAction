@@ -264,7 +264,7 @@ private:
       {
         if (e.num() == EINTR)
         {
-          RLOG_CPP(1, "ZMQ recv interrupted by signal, shutting down");
+          RLOG_CPP(1, "ZMQ recv interrupted by signal, shutting down" << e.what());
           break;  // graceful shutdown
         }
         else

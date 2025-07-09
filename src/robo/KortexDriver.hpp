@@ -34,8 +34,8 @@
 
 #include <Rcs_filters.h>
 #include <Rcs_macros.h>
-#include <Rcs_timer.h>
-#include <Rcs_math.h>
+#include <Rcs_basicMath.h>
+#include <Rcs_VecNd.h>
 
 #if defined (_MSC_VER)
 #pragma warning(push)
@@ -57,11 +57,6 @@
 #pragma warning(pop)
 #endif
 
-#include <ctime>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <cmath>
 #include <thread>
 #include <mutex>
 #include <chrono>
@@ -71,10 +66,21 @@ constexpr std::size_t   DOF_ARM        = 7;   // Gen3 R-07
 constexpr std::uint16_t TCP_PORT   = 10000;   // high-level services
 constexpr std::uint16_t UDP_PORT   = 10001;   // BaseCyclic feedback
 
-#define MINIMAL_POSITION_ERROR  ((double)1.5)
-#define MINIMAL_VELOCITY  ((double)0.75)
+#define MINIMAL_GRIPPER_POSITION_ERROR  ((double)1.5)
+#define MINIMAL_GRIPPER_VELOCITY  ((double)0.75)
 
 
+/*******************************************************************************
+ * Time in seconds from epoch
+ ******************************************************************************/
+static double getWallclockTime()
+{
+  auto currentTime = std::chrono::system_clock::now();
+
+  double seconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime.time_since_epoch()).count();
+
+  return seconds;
+}
 
 /*******************************************************************************
  * Angle wrapping helpers
@@ -316,7 +322,7 @@ public:
     {
       fprintf(stderr, ".");
       fflush(stderr);
-      Timer_waitDT(0.1);
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     RLOG(0, "Kortex thread running");
@@ -515,7 +521,7 @@ private:
       /* ---------- main loop ---------- */
       while (run_flag.load() && runLoop)
       {
-        double t_cycle = Timer_getSystemTime();
+        double t_cycle = getWallclockTime();
 
         // Get feedback and iterate command filters
         base_feedback = base_cyclic.RefreshFeedback();   // UDP 10001
@@ -559,7 +565,7 @@ private:
         feedbackFcn(feedback2JsonString(base_feedback, 0, nullptr, std::vector<double>()));
 
         // FPS
-        t_cycle = Timer_getSystemTime() - t_cycle;
+        t_cycle = getWallclockTime() - t_cycle;
 
         if (t_cycle > 1.1*dt)
         {
@@ -939,9 +945,9 @@ private:
         const double gripper_curr = base_feedback.interconnect().gripper_feedback().motor()[0].position();
         const double gripper_error = cmd.gripper_pos - gripper_curr;
         const double gripper_p_gain = 2.5;
-        double gripper_velocity = Math_clip(gripper_p_gain*dt*fabs(gripper_error), MINIMAL_VELOCITY, 100.0);
+        double gripper_velocity = Math_clip(gripper_p_gain*dt*fabs(gripper_error), MINIMAL_GRIPPER_VELOCITY, 100.0);
 
-        if (fabs(gripper_error) < MINIMAL_POSITION_ERROR)
+        if (fabs(gripper_error) < MINIMAL_GRIPPER_POSITION_ERROR)
         {
           gripper_velocity = 0.0;
         }
@@ -1065,7 +1071,7 @@ private:
     imu_accel.push_back(feedback.base().imu_acceleration_z());
 
     nlohmann::json fbJson;
-    fbJson["time"] = Timer_getSystemTime();
+    fbJson["time"] = getWallclockTime();
     fbJson["cycle_time_usec"] = time_usec;
     fbJson["position"] = jointPos;
     fbJson["velocity"] = jointVel;
