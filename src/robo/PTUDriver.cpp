@@ -44,7 +44,7 @@
 
 #include <Rcs_cmdLine.h>
 #include <Rcs_math.h>
-#include "Rcs_filters.h"
+#include <Rcs_filters.h>
 #include <Rcs_timer.h>
 
 #include <zmq.hpp>
@@ -98,7 +98,7 @@ class PTUDriver
 {
 public:
 
-  PTUDriver() :
+  PTUDriver(int update_frequency=50) :
     current_pan_position(0.0),
     current_tilt_position(0.0),
     current_pan_velocity(0.0),
@@ -107,11 +107,14 @@ public:
     filterInitialized(false),
     panTiltFilt(0.1, 0.0, 0.02, 2)
   {
-    const double dt = 0.02;   // 50Hz loop
+    const double dt = 1.0/ update_frequency;   // 50Hz loop
+    RCHECK(dt >= 0.01);
     const double tmc = 0.1;
+    panTiltFilt.setDt(dt);
     panTiltFilt.setMaxVel(PAN_VELOCITY_MAX_RAD, 0);
     panTiltFilt.setMaxVel(TILT_VELOCITY_MAX_RAD, 1);
-    panTiltFilt.setDt(dt);
+    panTiltFilt.setTimeConstant(tmc, 0);
+    panTiltFilt.setTimeConstant(tmc, 1);
   }
 
   static void limit_check(double pan, double tilt, void* param)
@@ -235,12 +238,12 @@ public:
     this->feedbackFcn = feedbackFcn_;
 
     // Create an instance of PW70CANInterface with the callbacks
-    this->pw70 = std::make_unique<aff::PW70CANInterface>(limit_check, position_update, this, 50);
+    const int frequency = 50;   // 1, 10, 25, 50 or 100
+    this->pw70 = std::make_unique<aff::PW70CANInterface>(limit_check, position_update, this, frequency);
     this->pw70->reset_stop();
 
     // Wait a moment to allow the interface to initialize
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    this->pw70->move_position(-45.0, -30.0, 10.0, 10.0);
   }
 
   void stop()
@@ -338,7 +341,6 @@ int main(int argc, char** argv)
   std::vector<double> q_default(DOF_PTU, 0.0);
   VecNd_setRandom(q_default.data(), 1360.0, 1560.0, DOF_PTU);
   robo.start(fbFcn, runLoop, readOnly);
-
 
   // Start non-threaded
   bool blocking = true;

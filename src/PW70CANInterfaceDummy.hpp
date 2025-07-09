@@ -37,8 +37,10 @@
 #include <thread>
 #include <vector>
 #include <functional>
+#include <thread>
 #include <mutex>
 #include <iostream>
+#include <chrono>
 
 namespace aff
 {
@@ -47,13 +49,30 @@ class PW70CANInterface
 {
 public:
   // Constructor and Destructor
-  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                   std::function<void(double, double, double, void*)> position_callback,
-                   void* param, int freq) {}
-  ~PW70CANInterface() {}
+  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback_,
+                   std::function<void(double, double, double, void*)> position_callback_,
+                   void* param,
+                   int freq) :
+    limit_check_callback(limit_check_callback_),
+    position_callback(position_callback_),
+    callbackParam(param)
+  {
+    recv_thread = std::thread(&PW70CANInterface::receive_messages, this, freq);
+  }
+
+  ~PW70CANInterface()
+  {
+  }
 
   // Public Methods
-  void cleanup() {}
+  void cleanup()
+  {
+    if (recv_thread.joinable())
+    {
+      recv_thread.join();
+    }
+  }
+
   bool enable_frequent_position_update(int frequency)
   {
     return true;
@@ -102,6 +121,37 @@ public:
   static void limit_check(double pan, double tilt, void* param);
   static void position_update(double pan, double tilt, double timestamp, void* param);
   static int test();
+
+  // Receive messages method
+  void PW70CANInterface::receive_messages(int update_frequency)
+  {
+    double pan_value_radians = 0.0;
+    double tilt_value_radians = 0.0;
+
+    while (true)
+    {
+      // Get current time
+      auto current_time = std::chrono::system_clock::now();
+      double current_time_sec = std::chrono::duration<double>(current_time.time_since_epoch()).count();
+
+      // Call the callbacks after both pan and tilt have been updated
+      limit_check_callback(pan_value_radians, tilt_value_radians, callbackParam);
+
+      if (position_callback)
+      {
+        position_callback(pan_value_radians, tilt_value_radians, current_time_sec, callbackParam);
+      }
+
+      std::this_thread::sleep_for(std::chrono::milliseconds{1000 / update_frequency});
+
+    }
+  }
+private:
+
+  std::thread recv_thread;
+  std::function<void(double, double, void*)> limit_check_callback;
+  std::function<void(double, double, double, void*)> position_callback;
+  void* callbackParam;
 };
 
 }   // namespace
