@@ -78,5 +78,20 @@ std::unique_ptr<PW70CANInterface> PW70CANInterface::create(std::function<void(do
   return pw70;
 }
 
+std::unique_ptr<PW70CANInterface> PW70CANInterface::create()
+{
+  std::unique_ptr<PW70CANInterface> pw70;
+
+#if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
+  pw70 = std::make_unique<PW70CANInterfaceWin>();
+#elif defined(__linux__) && !defined(__APPLE__)
+  pw70 = std::make_unique<PW70CANInterfaceLinux>();
+#else
+  RLOG_CPP(0, "This function only creates CAN instances");
+#endif
+
+  return pw70;
+}
+
 
 }   // namespace

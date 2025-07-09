@@ -46,6 +46,8 @@ public:
 
   virtual ~PW70CANInterface() = default;
 
+  static std::unique_ptr<PW70CANInterface> create();
+
   static std::unique_ptr<PW70CANInterface> create(std::function<void(double, double, void*)> limit_callback,
                                                   std::function<void(double, double, double, void*)> pos_callback,
                                                   void* param,

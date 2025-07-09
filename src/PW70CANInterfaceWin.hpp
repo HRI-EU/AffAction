@@ -64,6 +64,7 @@ class PW70CANInterfaceWin : public PW70CANInterface
 {
 public:
   // Constructor and Destructor
+  PW70CANInterfaceWin();
   PW70CANInterfaceWin(std::function<void(double, double, void*)> limit_check_callback,
                       std::function<void(double, double, double, void*)> position_callback,
                       void* param, int freq);
@@ -130,6 +131,24 @@ float PW70CANInterfaceWin::le_to_float(uint32_t value)
 }
 
 // Constructor
+PW70CANInterfaceWin::PW70CANInterfaceWin() :
+  PW70CANInterface(nullptr, nullptr, nullptr, 0), running(false)
+{
+  // Initialize PCAN handle (adjust this according to your hardware)
+  m_PcanHandle = PCAN_USBBUS1; // Use the appropriate handle for your hardware
+
+  // Initialize the CAN channel at 500 Kbps (adjust baud rate if needed)
+  TPCANStatus status = CAN_Initialize(m_PcanHandle, PCAN_BAUD_500K);
+  if (status != PCAN_ERROR_OK)
+  {
+    char errorMsg[256];
+    CAN_GetErrorText(status, 0, errorMsg);
+    std::cerr << "Error initializing PCAN: " << errorMsg << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+}
+
 PW70CANInterfaceWin::PW70CANInterfaceWin(std::function<void(double, double, void*)> limit_check_callback,
                                          std::function<void(double, double, double, void*)> position_callback,
                                          void* param, int freq) :

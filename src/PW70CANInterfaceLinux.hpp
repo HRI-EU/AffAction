@@ -30,8 +30,6 @@
 
 *******************************************************************************/
 
-// g++ -std=c++11 -o test_pw70_can_interface PW70CANInterface.cpp -pthread -DMAIN
-
 #ifndef PW70CANINTERFACELINUX_H
 #define PW70CANINTERFACELINUX_H
 
@@ -49,6 +47,7 @@ namespace aff
 class PW70CANInterfaceLinux : public PW70CANInterface
 {
 public:
+  PW70CANInterfaceLinux();
   PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
                         std::function<void(double, double, double, void*)> position_callback,
                         void* param, int freq);
@@ -78,6 +77,7 @@ private:
   std::thread recv_thread;
   bool running;
   void receive_messages();
+  int init_can() const;
 };
 
 }   // namespace
@@ -105,13 +105,41 @@ namespace aff
 {
 
 
+PW70CANInterfaceLinux::PW70CANInterfaceLinux()
+  : PW70CANInterface(nullptr, nullptr, nullptr, 0), running(false)
+{
+  this->s = init_can();
+}
+
 PW70CANInterfaceLinux::PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
                                              std::function<void(double, double, double, void*)> position_callback,
                                              void* param, int freq)
   : PW70CANInterface(limit_check_callback, position_callback, param, freq), running(true)
 {
+  this->s = init_can();
+
+  // Start the receive thread
+  recv_thread = std::thread(&PW70CANInterfaceLinux::receive_messages, this);
+
+  // Enable regular status updates.
+  enable_frequent_position_update(freq);
+}
+
+// Destructor
+PW70CANInterfaceLinux::~PW70CANInterfaceLinux()
+{
+  if (running)
+  {
+    cleanup();
+  }
+}
+
+int PW70CANInterfaceLinux::init_can() const
+{
+  int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
   // Open CAN socket
-  if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
+  if (s < 0)
   {
     RLOG(0, "Error while opening socket: %s (%d)", strerror(errno), errno);
     throw std::runtime_error("Error while opening socket");
@@ -136,20 +164,7 @@ PW70CANInterfaceLinux::PW70CANInterfaceLinux(std::function<void(double, double, 
     throw std::runtime_error("Error in socket bind");
   }
 
-  // Start the receive thread
-  recv_thread = std::thread(&PW70CANInterfaceLinux::receive_messages, this);
-
-  // Enable regular status updates.
-  enable_frequent_position_update(freq);
-}
-
-// Destructor
-PW70CANInterfaceLinux::~PW70CANInterfaceLinux()
-{
-  if (running)
-  {
-    cleanup();
-  }
+  return s;
 }
 
 // Cleanup method
@@ -158,8 +173,8 @@ void PW70CANInterfaceLinux::cleanup()
   disable_frequent_position_update();
 
   // Stop and fast stop to disable motor current and engage brakes.
-  stop();
-  // fast_stop();
+  //stop();
+  fast_stop();   // With brakes
 
   // Stop the receive thread
   std::cout << "Joining CAN receiver thread" << std::endl;

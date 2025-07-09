@@ -135,7 +135,7 @@ public:
     self->current_pan_position = pan_angle;
     self->current_tilt_position = tilt_angle;
 
-    RLOG_CPP(0, std::fixed << std::setprecision(2)
+    RLOG_CPP(1, std::fixed << std::setprecision(2)
              << "Timestamp: " << timestamp << " sec, "
              << "dt: " << dt << " , "
              << "Pan angle[deg]: " << RCS_RAD2DEG(pan_angle)
@@ -156,7 +156,7 @@ public:
     self->panTiltFilt.getVelocity(filtVel);
 
 
-    RLOG(0, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
+    RLOG(1, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
          RCS_RAD2DEG(filtPos[0]), RCS_RAD2DEG(filtPos[1]),
          RCS_RAD2DEG(filtVel[0]), RCS_RAD2DEG(filtVel[1]));
 
@@ -209,7 +209,7 @@ public:
 
     bool success = self->pw70->move_velocity(corrected_pan_velocity, corrected_tilt_velocity);
 
-    RLOG(0, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
+    RLOG(1, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
          success ? "SUCCESS" : "FAILURE",
          RCS_RAD2DEG(corrected_pan_velocity),
          RCS_RAD2DEG(corrected_tilt_velocity),
@@ -231,7 +231,6 @@ public:
 
     // Create an instance of PW70CANInterface with the callbacks
     const int frequency = 50;   // 1, 10, 25, 50 or 100
-    //this->pw70 = std::make_unique<aff::PW70CANInterfaceLinux>(limit_check, position_update, this, frequency);
     this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency);
     this->pw70->reset_stop();
 
@@ -342,6 +341,27 @@ static void runPTU(int argc, char** argv)
   feedback.stop();
 }
 
+/*******************************************************************************
+ *
+ *******************************************************************************/
+static void initializePan()
+{
+  auto pw70 = aff::PW70CANInterface::create();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->reference_pan();
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+}
+
+/*******************************************************************************
+ *
+ *******************************************************************************/
+static void initializeTilt()
+{
+  auto pw70 = aff::PW70CANInterface::create();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->reference_tilt();
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+}
 
 /*******************************************************************************
  *
@@ -350,10 +370,45 @@ int main(int argc, char** argv)
 {
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
+  int mode = 0;
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
+  argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
 
-  runPTU(argc, argv);
+  switch (mode)
+  {
+    case 0:
+      printf("\nHere's what you can do:\n\n");
+      printf("\t-m 0   Prints this message (default)\n");
+      printf("\t-m 1   Run PTU server (velocity loop)\n");
+      printf("\t-m 2   Initialize pan motor\n");
+      printf("\t-m 3   Initialize tilt motor\n");
+      printf("\n");
+      argP.print();
+      break;
+
+    case 1:
+      runPTU(argc, argv);
+      break;
+
+    case 2:
+      initializePan();
+      break;
+
+    case 3:
+      initializeTilt();
+      break;
+
+
+    default:
+      RLOG_CPP(0, "No mode " << mode);
+  };
+
+  RLOG_CPP(0, "Thanks, that's it for mode " << mode);
+
+
+
+
 
   return 0;
 }
