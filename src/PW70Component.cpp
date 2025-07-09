@@ -30,46 +30,46 @@
 
 *******************************************************************************/
 
-#if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
-#include "PW70CANInterfaceWin.hpp"
-#elif defined(__linux__) && !defined(__APPLE__)
-#include "PW70CANInterfaceLinux.hpp"
-#else
-#include "PW70CANInterfaceDummy.hpp"
-#endif
+// #if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
+// #include "PW70CANInterfaceWin.hpp"
+// #elif defined(__linux__) && !defined(__APPLE__)
+// #include "PW70CANInterfaceLinux.hpp"
+// #else
+// #include "PW70CANInterfaceDummy.hpp"
+// #endif
 
-namespace aff
-{
+// namespace aff
+// {
 
-void PW70CANInterface::limit_check(double pan, double tilt, void* param)
-{
-  std::cout << "Limit check" << std::endl;
-  // Your limit checking logic here
-}
+// void PW70CANInterface::limit_check(double pan, double tilt, void* param)
+// {
+//   std::cout << "Limit check" << std::endl;
+//   // Your limit checking logic here
+// }
 
-void PW70CANInterface::position_update(double pan, double tilt, double timestamp, void* param)
-{
-  // Your position update logic here
-  std::cout << "Position update" << std::endl;
-}
+// void PW70CANInterface::position_update(double pan, double tilt, double timestamp, void* param)
+// {
+//   // Your position update logic here
+//   std::cout << "Position update" << std::endl;
+// }
 
-int PW70CANInterface::test()
-{
-  PW70CANInterface ptu(limit_check, position_update, nullptr, 50);
+// int PW70CANInterface::test()
+// {
+//   PW70CANInterface ptu(limit_check, position_update, nullptr, 50);
 
-  // Wait a moment to allow the interface to initialize
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+//   // Wait a moment to allow the interface to initialize
+//   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-  // Example commands
-  ptu.move_position(-45.0, -30.0, 10.0, 10.0);
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+//   // Example commands
+//   ptu.move_position(-45.0, -30.0, 10.0, 10.0);
+//   std::this_thread::sleep_for(std::chrono::seconds(5));
 
-  ptu.stop();
-  ptu.cleanup();
-  return 0;
-}
+//   ptu.stop();
+//   ptu.cleanup();
+//   return 0;
+// }
 
-}   // namespace
+// }   // namespace
 
 
 
@@ -87,6 +87,8 @@ int PW70CANInterface::test()
 
 #include <iostream>
 #include <iomanip>
+#include <memory>
+#include <thread>
 
 // Angular limits (conservative)
 #define PAN_MIN_RAD           (-80.0*(M_PI/180.0))
@@ -161,7 +163,8 @@ void PW70Component::onStart()
   }
 
   // Create an instance of PW70CANInterface with the callbacks
-  this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdate, this, controlFrequency);
+  //this->pw70 = std::make_unique<PW70CANInterfaceLinux>(limitCheck, positionUpdate, this, controlFrequency);
+  this->pw70 = PW70CANInterface::create(limitCheck, positionUpdate, this, controlFrequency);
   this->pw70->reset_stop();
 
   // Wait a moment to allow the interface to initialize
@@ -369,7 +372,7 @@ void PW70VelocityComponent::onStart()
   // Create an instance of PW70CANInterface with the callbacks
   try
   {
-    this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdateVel, this, controlFrequency);
+    this->pw70 = PW70CANInterface::create(limitCheck, positionUpdateVel, this, controlFrequency);
     this->pw70->reset_stop();
   }
   catch (...)

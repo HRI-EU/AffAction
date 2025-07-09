@@ -33,18 +33,17 @@
 #ifndef PW70COMPONENT_H
 #define PW70COMPONENT_H
 
-
 #include "ComponentBase.h"
+#include "PW70CANInterface.h"
 
-#include "Rcs_graph.h"
-#include "Rcs_filters.h"
+#include <Rcs_graph.h>
+#include <Rcs_filters.h>
 
 #include <memory>
 
 
 namespace aff
 {
-class PW70CANInterface;
 
 class PW70Component : public ComponentBase
 {

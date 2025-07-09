@@ -265,6 +265,7 @@ src/FaceGestureComponent.cpp
 src/GazeComponent.cpp
 src/CameraViewComponent.cpp
 src/PhysicsComponent.cpp
+src/PW70CANInterface.cpp
 src/PW70Component.cpp
 src/VirtualCameraWindow.cpp
 src/TTSComponent.cpp

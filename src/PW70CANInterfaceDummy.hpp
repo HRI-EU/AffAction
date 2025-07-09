@@ -33,34 +33,30 @@
 #ifndef PW70CANINTERFACEDUMMY_H
 #define PW70CANINTERFACEDUMMY_H
 
-#include <cmath>
+#include "PW70CANInterface.h"
+
 #include <thread>
-#include <vector>
-#include <functional>
-#include <thread>
-#include <mutex>
-#include <iostream>
 #include <chrono>
+
+
 
 namespace aff
 {
 
-class PW70CANInterface
+class PW70CANInterfaceDummy : public PW70CANInterface
 {
 public:
   // Constructor and Destructor
-  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback_,
-                   std::function<void(double, double, double, void*)> position_callback_,
-                   void* param,
-                   int freq) :
-    limit_check_callback(limit_check_callback_),
-    position_callback(position_callback_),
-    callbackParam(param)
+  PW70CANInterfaceDummy(std::function<void(double, double, void*)> limit_check_callback,
+                        std::function<void(double, double, double, void*)> position_callback,
+                        void* param,
+                        int freq) :
+    PW70CANInterface(limit_check_callback, position_callback, param, freq)
   {
-    recv_thread = std::thread(&PW70CANInterface::receive_messages, this, freq);
+    recv_thread = std::thread(&PW70CANInterfaceDummy::receive_messages, this, freq);
   }
 
-  ~PW70CANInterface()
+  ~PW70CANInterfaceDummy()
   {
   }
 
@@ -123,7 +119,7 @@ public:
   static int test();
 
   // Receive messages method
-  void PW70CANInterface::receive_messages(int update_frequency)
+  void receive_messages(int update_frequency)
   {
     double pan_value_radians = 0.0;
     double tilt_value_radians = 0.0;
@@ -149,9 +145,6 @@ public:
 private:
 
   std::thread recv_thread;
-  std::function<void(double, double, void*)> limit_check_callback;
-  std::function<void(double, double, double, void*)> position_callback;
-  void* callbackParam;
 };
 
 }   // namespace

@@ -31,15 +31,7 @@
 *******************************************************************************/
 
 #include "RoboDriverNetworking.hpp"
-
-#if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
-#include "PW70CANInterfaceWin.hpp"
-#elif defined(__linux__) && !defined(__APPLE__)
-#include "PW70CANInterfaceLinux.hpp"
-#else
-#include "PW70CANInterfaceDummy.hpp"
-#endif
-
+#include "PW70CANInterface.h"
 #include "json.hpp"
 
 #include <Rcs_cmdLine.h>
@@ -239,7 +231,8 @@ public:
 
     // Create an instance of PW70CANInterface with the callbacks
     const int frequency = 50;   // 1, 10, 25, 50 or 100
-    this->pw70 = std::make_unique<aff::PW70CANInterface>(limit_check, position_update, this, frequency);
+    //this->pw70 = std::make_unique<aff::PW70CANInterfaceLinux>(limit_check, position_update, this, frequency);
+    this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency);
     this->pw70->reset_stop();
 
     // Wait a moment to allow the interface to initialize
@@ -279,21 +272,21 @@ public:
     return quitMe;
   }
 
-  int test()
-  {
-    aff::PW70CANInterface ptu(limit_check, position_update, nullptr, 50);
+  // int test()
+  // {
+  //   aff::PW70CANInterfaceLinux ptu(limit_check, position_update, nullptr, 50);
 
-    // Wait a moment to allow the interface to initialize
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+  //   // Wait a moment to allow the interface to initialize
+  //   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-    // Example commands
-    ptu.move_position(-45.0, -30.0, 10.0, 10.0);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+  //   // Example commands
+  //   ptu.move_position(-45.0, -30.0, 10.0, 10.0);
+  //   std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    ptu.stop();
-    ptu.cleanup();
-    return 0;
-  }
+  //   ptu.stop();
+  //   ptu.cleanup();
+  //   return 0;
+  // }
 
   std::unique_ptr<aff::PW70CANInterface> pw70;
   std::function<void(const std::string&)> feedbackFcn;
@@ -309,14 +302,11 @@ public:
 /*******************************************************************************
  *
  *******************************************************************************/
-int main(int argc, char** argv)
+static void runPTU(int argc, char** argv)
 {
-  signal(SIGINT, quit);   // Ctrl-C stops threads
-
   std::string sendEndpoint = "tcp://*:5559";
   std::string recvEndpoint = "tcp://*:5560";
   Rcs::CmdLineParser argP(argc, argv);
-  argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
 
   FeedbackThread feedback;
@@ -350,6 +340,20 @@ int main(int argc, char** argv)
   commands.stop();
   robo.stop();
   feedback.stop();
+}
+
+
+/*******************************************************************************
+ *
+ *******************************************************************************/
+int main(int argc, char** argv)
+{
+  signal(SIGINT, quit);   // Ctrl-C stops threads
+
+  Rcs::CmdLineParser argP(argc, argv);
+  argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
+
+  runPTU(argc, argv);
 
   return 0;
 }

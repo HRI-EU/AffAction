@@ -33,6 +33,8 @@
 #ifndef PW70CANINTERFACEWIN_H
 #define PW70CANINTERFACEWIN_H
 
+#include "PW70CANInterface.h"
+
 // Include standard headers
 #include <functional>
 #include <thread>
@@ -58,7 +60,7 @@
 namespace aff
 {
 
-class PW70CANInterface
+class PW70CANInterface : public PW70CANInterface
 {
 public:
   // Constructor and Destructor
@@ -96,12 +98,9 @@ private:
 
   // Member Variables
   TPCANHandle m_PcanHandle;  // Handle to the PCAN device
-  std::function<void(double, double, void*)> limit_check_callback;
-  std::function<void(double, double, double, void*)> position_callback;
   bool running;
   std::thread recv_thread;
   std::mutex socket_mutex;
-  void* callbackParam;
 };
 
 }   // namespace
@@ -133,9 +132,8 @@ float PW70CANInterface::le_to_float(uint32_t value)
 // Constructor
 PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
                                    std::function<void(double, double, double, void*)> position_callback,
-                                   void* param, int freq)
-  : limit_check_callback(limit_check_callback), position_callback(position_callback),
-    running(true), callbackParam(param)
+                                   void* param, int freq) :
+  PW70CANInterface(limit_check_callback, position_callback, param, freq), running(true)
 {
   // Initialize PCAN handle (adjust this according to your hardware)
   m_PcanHandle = PCAN_USBBUS1; // Use the appropriate handle for your hardware
