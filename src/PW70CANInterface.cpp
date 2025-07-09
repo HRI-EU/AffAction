@@ -68,7 +68,7 @@ std::unique_ptr<PW70CANInterface> PW70CANInterface::create(std::function<void(do
   }
 
 #if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
-  pw70 = std::make_unique<PW70CANInterfaceLinuxWin>(limit_check_callback, position_callback, param, frequency);
+  pw70 = std::make_unique<PW70CANInterfaceWin>(limit_check_callback, position_callback, param, frequency);
 #elif defined(__linux__) && !defined(__APPLE__)
   pw70 = std::make_unique<PW70CANInterfaceLinux>(limit_check_callback, position_callback, param, frequency);
 #else
