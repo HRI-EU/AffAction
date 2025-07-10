@@ -40,7 +40,7 @@
     </Body>
 
     <Body name="center_post_link" prev="base_link" transform="-0.075 0 0.5152 0 0 0" transform_high="-0.075 0 0.9552 0 0 0" physics="none">
-        <Joint name="DofPoleZ" type="TransZ" range="-1 0 1" weightJL="0.1" weightMetric="0.01" constraint="untrue" />
+        <Joint name="DofPoleZ" type="TransZ" range="-1 0 1" weightJL="0.1" weightMetric="0.01" constraint="true" />
       <Shape type="BOX" extents="0.08 0.107 0.004" distance="false" physics="false" graphics="true"
 	     transform="0 0 0.633 0 0 0" color="GRAY" />
         <noShape type="BOX" extents="0.08 0.08 1" distance="false" physics="true" graphics="true"
