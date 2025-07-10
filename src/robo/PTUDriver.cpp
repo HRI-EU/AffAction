@@ -65,6 +65,9 @@ static std::atomic<bool> runLoop(true);
 #define TILT_VELOCITY_MIN_RAD (1.0*(M_PI/180.0))
 #define TILT_VELOCITY_MAX_RAD (40.0*(M_PI/180.0))
 
+#define PANTILT_FILT_MIN_TMC  (0.05)
+
+static double pan_tilt_max_vel[2] = { PAN_VELOCITY_MAX_RAD, TILT_VELOCITY_MAX_RAD };
 
 /*******************************************************************************
  *
@@ -84,6 +87,20 @@ void quit(int /*sig*/)
 }
 
 /*******************************************************************************
+ *
+ * Command json:
+ * { q_des: [10.0 20.0], 'quit': true }
+ *
+ * or:
+ *
+ * {
+ *   "joints": {
+ *     "joint_1": { "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 },
+ *     "joint_2": { "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 }
+ *   },
+ *   "quit": true
+ * }
+ *
  *
  *******************************************************************************/
 class PTUDriver
@@ -111,8 +128,6 @@ public:
 
   static void limit_check(double pan, double tilt, void* param)
   {
-    RLOG_CPP(2, "Limit check");
-    // Your limit checking logic here
   }
 
   // Angles come in in radians, timestamp is seconds since epoch (system clock)
@@ -135,30 +150,60 @@ public:
     self->current_pan_position = pan_angle;
     self->current_tilt_position = tilt_angle;
 
-    RLOG_CPP(1, std::fixed << std::setprecision(2)
-             << "Timestamp: " << timestamp << " sec, "
-             << "dt: " << dt << " , "
-             << "Pan angle[deg]: " << RCS_RAD2DEG(pan_angle)
-             << ", Tilt angle[deg]: " << RCS_RAD2DEG(tilt_angle)
-             << ", Pan velocity[deg]: " << RCS_RAD2DEG(self->current_pan_velocity)
-             << ", Tilt velocity[deg]: " << RCS_RAD2DEG(self->current_tilt_velocity));
-
     if (!self->filterInitialized)
     {
+      double q_init[2] = { pan_angle, tilt_angle };
+      self->panTiltFilt.init(q_init);
       self->filterInitialized = true;
-      std::vector<double> q_init = { pan_angle, tilt_angle };
-      self->panTiltFilt.init(q_init.data());
+    }
+
+    // Here comes the command
+    RoboCommand copyOfCmd;
+    {
+      std::lock_guard<std::mutex> lock(self->cmdMtx);
+      if (self->cmd.newCommand)
+      {
+        copyOfCmd.jointCommands.swap(self->cmd.jointCommands);
+        copyOfCmd.newCommand = true;
+        copyOfCmd.quitMe = self->cmd.quitMe;
+        self->cmd.newCommand = false;
+      }
+    }
+
+    if (copyOfCmd.newCommand)
+    {
+      for (const auto& pair : copyOfCmd.jointCommands)
+      {
+        const std::string& joint_name = pair.first;
+        const JointCommand& cmd = pair.second;
+
+        std::cout << "Joint: " << joint_name << "\n";
+
+        if (cmd.has_position_command)
+        {
+          self->panTiltFilt.setTarget(cmd.position_command, cmd.index);
+          std::cout << "  position_command: " << cmd.position_command << "\n";
+        }
+
+        if (cmd.has_vmax)
+        {
+          self->panTiltFilt.setMaxVel(cmd.vmax, cmd.index);
+          std::cout << "  vmax: " << cmd.vmax << "\n";
+        }
+
+        if (cmd.has_tmc)
+        {
+          self->panTiltFilt.setTimeConstant(cmd.tmc, cmd.index);
+          std::cout << "  tmc: " << cmd.tmc << "\n";
+        }
+      }
+
     }
 
     double filtPos[2], filtVel[2];
     self->panTiltFilt.iterate();
     self->panTiltFilt.getPosition(filtPos);
     self->panTiltFilt.getVelocity(filtVel);
-
-
-    RLOG(1, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
-         RCS_RAD2DEG(filtPos[0]), RCS_RAD2DEG(filtPos[1]),
-         RCS_RAD2DEG(filtVel[0]), RCS_RAD2DEG(filtVel[1]));
 
     double desired_pan_position = filtPos[0];
     double desired_tilt_position = filtPos[1];
@@ -183,8 +228,6 @@ public:
     }
 
     // Here is the velocity control loop
-
-
     if (!self->pw70)
     {
       RLOG(0, "pw70 not initialized - quitting control thread");
@@ -217,17 +260,13 @@ public:
          RCS_RAD2DEG(desired_tilt_position - self->current_tilt_position));
   }
 
-  void start(std::function<void(const std::string&)> feedbackFcn_,
-             const std::atomic_bool& run_flag,
-             bool readOnly)
+  void start(const std::atomic_bool& run_flag, bool readOnly)
   {
     if (this->pw70)
     {
       RLOG(1, "PW70 already running - skipping start");
       return;
     }
-
-    this->feedbackFcn = feedbackFcn_;
 
     // Create an instance of PW70CANInterface with the callbacks
     const int frequency = 50;   // 1, 10, 25, 50 or 100
@@ -252,11 +291,132 @@ public:
     RLOG(0, "pw70.reset()");
   }
 
+  // Parses this:
+  // {
+  //   "joints": {
+  //     "joint_1": { "index": 0, "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 },
+  //     "joint_2": { "index": 0, "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 }
+  //   },
+  //   "quit": true
+  // }
+  // All entries are optional
   bool setCommand(const std::string& message)
   {
-    auto j = nlohmann::json::parse(message);
+    nlohmann::json data;
+    bool quitMe = false;
 
-    // Parse message into motor commands here
+    // Parse with exception safety
+    try
+    {
+      data = nlohmann::json::parse(message);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+      RLOG_CPP(1, "JSON parse error: " << e.what());
+      return quitMe;
+    }
+
+
+    // Parse into temporary variable to keep concurrent access short. We do all
+    // the checking and validation here so that there is no overhead in the
+    // control loop.
+    std::map<std::string, JointCommand> joint_map_tmp;
+    bool success = true;
+
+
+    // Validate "joints"
+    if (data.contains("joints") && data["joints"].is_object())
+    {
+      // Iterate joints
+      for (auto it = data["joints"].begin(); it != data["joints"].end(); ++it)
+      {
+        const std::string& joint_name = it.key();
+        const nlohmann::json& joint_data = it.value();
+
+        if (!joint_data.is_object())
+        {
+          RLOG_CPP(1, "Joint `" << joint_name << "` is not an object");
+          success = false;
+          continue;
+        }
+
+        JointCommand cmd{};
+
+        // Ensure required field "index"
+        if (joint_data.contains("index") &&
+            joint_data["index"].is_number() &&
+            joint_data["index"] < DOF_PTU)
+        {
+          cmd.index = joint_data["index"].get<int>();
+        }
+        else
+        {
+          RLOG_CPP(1, "Joint `" << joint_name << "` has no or wrong index: " << data.dump(2));
+          success = false;
+          continue;
+        }
+
+        // Optional position_command
+        if (joint_data.contains("position_command") &&
+            joint_data["position_command"].is_number())
+        {
+          cmd.position_command = joint_data["position_command"].get<double>();
+          cmd.has_position_command = true;
+        }
+
+        // Optional vmax
+        if (joint_data.contains("vmax") && joint_data["vmax"].is_number())
+        {
+          cmd.vmax = joint_data["vmax"].get<double>();
+          cmd.has_vmax = true;
+
+          if (cmd.vmax > pan_tilt_max_vel[cmd.index])
+          {
+            RLOG_CPP(1, "Joint `" << joint_name << "` exceeds vmax: " << data.dump(2));
+            success = false;
+          }
+        }
+
+        // Optional tmc
+        if (joint_data.contains("tmc") && joint_data["tmc"].is_number())
+        {
+          cmd.tmc = joint_data["tmc"].get<double>();
+          cmd.has_tmc = true;
+
+          if (cmd.tmc < PANTILT_FILT_MIN_TMC)
+          {
+            RLOG_CPP(1, "Joint `" << joint_name << "` has too low tmc: " << data.dump(2));
+            success = false;
+          }
+        }
+
+        joint_map_tmp.emplace(joint_name, cmd);
+      }
+    }
+
+    // Parse quitMe
+    quitMe = data.value("quit", false);
+
+    // Parsing finished - perform concurrent swap here
+    if (success)
+    {
+      std::lock_guard<std::mutex> lock(cmdMtx);
+      cmd.jointCommands.swap(joint_map_tmp);
+      cmd.newCommand = true;
+      cmd.quitMe = quitMe;
+    }
+    else
+    {
+      RLOG_CPP(0, "Error creading commands: " << data.dump(2));
+    }
+
+    return quitMe;
+  }
+
+  // Parses this: { q_des: [10.0 20.0], 'quit': true }
+  bool setCommand2(const std::string& message)
+  {
+    auto j = nlohmann::json::parse(message);
 
     if (j.contains("q_des") && filterInitialized)
     {
@@ -271,21 +431,13 @@ public:
     return quitMe;
   }
 
-  // int test()
-  // {
-  //   aff::PW70CANInterfaceLinux ptu(limit_check, position_update, nullptr, 50);
+  void registerFeedbackCallback(std::function<void(const std::string&)> cb)
+  {
+    feedbackFcn = std::move(cb);
+  }
 
-  //   // Wait a moment to allow the interface to initialize
-  //   std::this_thread::sleep_for(std::chrono::seconds(2));
+private:
 
-  //   // Example commands
-  //   ptu.move_position(-45.0, -30.0, 10.0, 10.0);
-  //   std::this_thread::sleep_for(std::chrono::seconds(5));
-
-  //   ptu.stop();
-  //   ptu.cleanup();
-  //   return 0;
-  // }
 
   std::unique_ptr<aff::PW70CANInterface> pw70;
   std::function<void(const std::string&)> feedbackFcn;
@@ -295,6 +447,28 @@ public:
   double current_time_stamp;
   bool filterInitialized;
   Rcs::RampFilterND panTiltFilt;
+
+  // Command data struct
+  struct JointCommand
+  {
+    int index;
+    double position_command;
+    double vmax;
+    double tmc;
+    bool has_position_command;
+    bool has_vmax;
+    bool has_tmc;
+  };
+
+  struct RoboCommand
+  {
+    std::map<std::string, JointCommand> jointCommands;
+    bool quitMe;
+    bool newCommand;
+  };
+
+  std::mutex cmdMtx;
+  RoboCommand cmd;
 };
 
 
@@ -303,38 +477,37 @@ public:
  *******************************************************************************/
 static void runPTU(int argc, char** argv)
 {
-  std::string sendEndpoint = "tcp://*:5559";
-  std::string recvEndpoint = "tcp://*:5560";
+  std::string sendFeedbackEndpoint = "tcp://*:5559";
+  std::string recvCommandsEndpoint = "tcp://*:5560";
   Rcs::CmdLineParser argP(argc, argv);
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
+  argP.getArgument("-sendFeedbackEndpoint", &sendFeedbackEndpoint, "Feedback sender endpoint (default is %s)", sendFeedbackEndpoint.c_str());
+  argP.getArgument("-recvCommandsEndpoint", &recvCommandsEndpoint, "Command receiver endpoint (default is %s)", recvCommandsEndpoint.c_str());
 
+
+  if (argP.hasArgument("-h"))
+  {
+    argP.print();
+    return;
+  }
+
+  // Thread sending sensory data to remote process
   FeedbackThread feedback;
-  feedback.start(sendEndpoint, runLoop);
+  feedback.start(sendFeedbackEndpoint, runLoop);
 
+  // Robo driver thread. The FeedbackThread's updateMessage function is called
+  // in each control cycle once registered.
   PTUDriver robo;
+  auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
+  robo.registerFeedbackCallback(fbFcn);
+  robo.start(runLoop, readOnly);
 
-  // auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
-  auto fbFcn = [&feedback](const std::string& message)
-  {
-    RLOG_CPP(1, "Feedback: " << message);
-    feedback.updateMessage(message);
-  };
-
-  // auto cmdFcn = std::bind(&KortexDriver::setCommand, &robo, std::placeholders::_1);
-  auto cmdFcn = [&robo](const std::string& message) -> bool
-  {
-    RLOG_CPP(1, "Received: " << message);
-    return robo.setCommand(message);
-  };
-
-  std::vector<double> q_default(DOF_PTU, 0.0);
-  VecNd_setRandom(q_default.data(), 1360.0, 1560.0, DOF_PTU);
-  robo.start(fbFcn, runLoop, readOnly);
-
-  // Start non-threaded
+  // Command receiver. On each arriving command, the PTUDriver's setCommand
+  // functionis called.
   bool blocking = true;
   CommandThread commands;
-  commands.start(recvEndpoint, cmdFcn, runLoop, blocking);
+  auto cmdFcn = std::bind(&PTUDriver::setCommand, &robo, std::placeholders::_1);
+  commands.start(recvCommandsEndpoint, cmdFcn, runLoop, blocking);
 
   commands.stop();
   robo.stop();
@@ -366,6 +539,30 @@ static void initializeTilt()
 /*******************************************************************************
  *
  *******************************************************************************/
+static void movePanTilt(int argc, char** argv)
+{
+  Rcs::CmdLineParser argP(argc, argv);
+
+  double pan_in_deg = 0.0, tilt_in_deg = 0.0, pan_vel_in_deg = 10.0, tilt_vel_in_deg = 10.0;
+  argP.getArgument("-pan_in_deg", &pan_in_deg, "Pan angle in degrees (default is %f)", pan_in_deg);
+  argP.getArgument("-tilt_in_deg", &tilt_in_deg, "Tilt angle in degrees (default is %f)", tilt_in_deg);
+  argP.getArgument("-pan_vel_in_deg", &pan_vel_in_deg, "Pan angle in degrees (default is %f)", pan_vel_in_deg);
+  argP.getArgument("-tilt_vel_in_deg", &tilt_vel_in_deg, "Tilt angle in degrees (default is %f)", tilt_vel_in_deg);
+
+  auto pw70 = aff::PW70CANInterface::create();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->move_position(RCS_DEG2RAD(pan_in_deg),
+                      RCS_DEG2RAD(tilt_in_deg),
+                      RCS_DEG2RAD(pan_vel_in_deg),
+                      RCS_DEG2RAD(tilt_vel_in_deg));
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+  pw70->stop();
+  pw70->cleanup();
+}
+
+/*******************************************************************************
+ *
+ *******************************************************************************/
 int main(int argc, char** argv)
 {
   signal(SIGINT, quit);   // Ctrl-C stops threads
@@ -383,6 +580,7 @@ int main(int argc, char** argv)
       printf("\t-m 1   Run PTU server (velocity loop)\n");
       printf("\t-m 2   Initialize pan motor\n");
       printf("\t-m 3   Initialize tilt motor\n");
+      printf("\t-m 4   Move to pan and tilt position (in degrees)\n");
       printf("\n");
       argP.print();
       break;
@@ -397,6 +595,10 @@ int main(int argc, char** argv)
 
     case 3:
       initializeTilt();
+      break;
+
+    case 4:
+      movePanTilt(argc, argv);
       break;
 
 

@@ -1096,27 +1096,13 @@ private:
     return fbJson.dump();
   }
 
-  // The feedback actuator position is clipped to a range between [0...360] degrees. Since
-  // some joints are initialized close to the transitioning point, we clip them into a
-  // range [-180 ... 180] degrees so that there is no issue when initializing the driver.
   std::vector<double> getJointPositionsInDeg(const k_api::BaseCyclic::Feedback& feedback) const
   {
     std::vector<double> jointPos(feedback.actuators_size());
 
-    // Convert to radians for fmod
     for (size_t i=0; i<jointPos.size(); ++i)
     {
       jointPos[i] = feedback.actuators(i).position();
-      // jointPos[i] = RCS_DEG2RAD(feedback.actuators(i).position());
-
-      // // Re-align the critical (on-the-border) joints. Joint 2 is 180 deg, therefore we leave it
-      // if (i!=2)
-      // {
-      //   jointPos[i] = Math_fmodAngle(jointPos[i]);
-      // }
-
-      // // Convert to degrees
-      // jointPos[i] = RCS_RAD2DEG(jointPos[i]);
     }
 
     return jointPos;

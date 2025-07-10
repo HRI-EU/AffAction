@@ -46,7 +46,7 @@ def _send_payload_once(payload: dict, endpoint: str) -> None:
     ctx.term()
 
 
-def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:5560") -> None:
+def ptu_command_once_old(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:5560") -> None:
     """
     Send a single PTU pan/tilt position command.
 
@@ -65,6 +65,29 @@ def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: st
             math.radians(tilt_in_degrees)
         ],
         "quit": False,
+    }
+    _send_payload_once(payload, endpoint)
+
+
+def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:5560") -> None:
+    """
+    Send a single PTU pan/tilt position command.
+
+    Parameters
+    ----------
+    pan_in_degrees : float
+        Desired pan angle in degrees.
+    tilt_in_degrees : float
+        Desired tilt angle in degrees.
+    endpoint : str, optional
+        ZeroMQ PUB socket endpoint (default: "tcp://localhost:5560").
+    """
+    payload = {
+        "joints": {
+          "pan": { "index": 0, "position_command": math.radians(pan_in_degrees), "novmax": 0.2, "notmc": 0.1 },
+          "tilt": { "index": 1, "position_command": math.radians(tilt_in_degrees), "novmax": 0.2, "notmc": 0.1 }
+        },
+        "quit": False
     }
     _send_payload_once(payload, endpoint)
 
