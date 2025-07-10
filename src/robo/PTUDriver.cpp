@@ -89,9 +89,6 @@ void quit(int /*sig*/)
 /*******************************************************************************
  *
  * Command json:
- * { q_des: [10.0 20.0], 'quit': true }
- *
- * or:
  *
  * {
  *   "joints": {
@@ -100,7 +97,6 @@ void quit(int /*sig*/)
  *   },
  *   "quit": true
  * }
- *
  *
  *******************************************************************************/
 class PTUDriver
@@ -114,6 +110,7 @@ public:
     current_tilt_velocity(0.0),
     current_time_stamp(0.0),
     filterInitialized(false),
+    dummy_mode(false),
     panTiltFilt(0.1, 0.0, 0.02, 2)
   {
     const double dt = 1.0/ update_frequency;   // 50Hz loop
@@ -177,24 +174,19 @@ public:
         const std::string& joint_name = pair.first;
         const JointCommand& cmd = pair.second;
 
-        std::cout << "Joint: " << joint_name << "\n";
-
         if (cmd.has_position_command)
         {
           self->panTiltFilt.setTarget(cmd.position_command, cmd.index);
-          std::cout << "  position_command: " << cmd.position_command << "\n";
         }
 
         if (cmd.has_vmax)
         {
           self->panTiltFilt.setMaxVel(cmd.vmax, cmd.index);
-          std::cout << "  vmax: " << cmd.vmax << "\n";
         }
 
         if (cmd.has_tmc)
         {
           self->panTiltFilt.setTimeConstant(cmd.tmc, cmd.index);
-          std::cout << "  tmc: " << cmd.tmc << "\n";
         }
       }
 
@@ -214,11 +206,8 @@ public:
     {
       nlohmann::json fbJson;
       fbJson["time"] = Timer_getSystemTime();
-      fbJson["position"] = std::vector<double> {self->current_pan_position, self->current_tilt_position};
-      fbJson["pan_curr"] = self->current_pan_position;
-      fbJson["tilt_curr"] = self->current_tilt_position;
-      fbJson["pan_vel_curr"] = self->current_pan_velocity;
-      fbJson["tilt_vel_curr"] = self->current_tilt_velocity;
+      fbJson["position"] = std::vector<double> { self->current_pan_position, self->current_tilt_position };
+      fbJson["velocity"] = std::vector<double> { self->current_pan_velocity, self->current_tilt_velocity };
       fbJson["pan_des"] = desired_pan_position;
       fbJson["tilt_des"] = desired_tilt_position;
       fbJson["pan_vel_des"] = desired_pan_velocity;
@@ -252,7 +241,7 @@ public:
 
     bool success = self->pw70->move_velocity(corrected_pan_velocity, corrected_tilt_velocity);
 
-    RLOG(1, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
+    RLOG(5, "%s sending velocities[deg]: %.3f %.3f   errors: %.3f %.3f",
          success ? "SUCCESS" : "FAILURE",
          RCS_RAD2DEG(corrected_pan_velocity),
          RCS_RAD2DEG(corrected_tilt_velocity),
@@ -270,7 +259,7 @@ public:
 
     // Create an instance of PW70CANInterface with the callbacks
     const int frequency = 50;   // 1, 10, 25, 50 or 100
-    this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency);
+    this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency, this->dummy_mode);
     this->pw70->reset_stop();
 
     // Wait a moment to allow the interface to initialize
@@ -315,7 +304,6 @@ public:
       RLOG_CPP(1, "JSON parse error: " << e.what());
       return quitMe;
     }
-
 
     // Parse into temporary variable to keep concurrent access short. We do all
     // the checking and validation here so that there is no overhead in the
@@ -413,27 +401,14 @@ public:
     return quitMe;
   }
 
-  // Parses this: { q_des: [10.0 20.0], 'quit': true }
-  bool setCommand2(const std::string& message)
-  {
-    auto j = nlohmann::json::parse(message);
-
-    if (j.contains("q_des") && filterInitialized)
-    {
-      // We receive radians. Degrees are only used internally.
-      auto q_des = j["q_des"].get<std::array<double, 2>>();
-      this->panTiltFilt.setTarget(q_des.data());
-      RLOG(0, "Setting filter target to %f %f", q_des[0], q_des[1]);
-    }
-
-    bool quitMe = j.value("quit", false);
-
-    return quitMe;
-  }
-
   void registerFeedbackCallback(std::function<void(const std::string&)> cb)
   {
     feedbackFcn = std::move(cb);
+  }
+
+  void setDummyMode(bool enable)
+  {
+    this->dummy_mode = enable;
   }
 
 private:
@@ -446,6 +421,7 @@ private:
   double current_pan_velocity, current_tilt_velocity;
   double current_time_stamp;
   bool filterInitialized;
+  bool dummy_mode;
   Rcs::RampFilterND panTiltFilt;
 
   // Command data struct
@@ -483,7 +459,7 @@ static void runPTU(int argc, char** argv)
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
   argP.getArgument("-sendFeedbackEndpoint", &sendFeedbackEndpoint, "Feedback sender endpoint (default is %s)", sendFeedbackEndpoint.c_str());
   argP.getArgument("-recvCommandsEndpoint", &recvCommandsEndpoint, "Command receiver endpoint (default is %s)", recvCommandsEndpoint.c_str());
-
+  bool dummy_mode = argP.hasArgument("-dummy_mode", "Run without CAN");
 
   if (argP.hasArgument("-h"))
   {
@@ -500,6 +476,7 @@ static void runPTU(int argc, char** argv)
   PTUDriver robo;
   auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
   robo.registerFeedbackCallback(fbFcn);
+  robo.setDummyMode(dummy_mode);
   robo.start(runLoop, readOnly);
 
   // Command receiver. On each arriving command, the PTUDriver's setCommand

@@ -46,7 +46,6 @@ namespace aff
 class PW70CANInterfaceDummy : public PW70CANInterface
 {
 public:
-  // Constructor and Destructor
   PW70CANInterfaceDummy(std::function<void(double, double, void*)> limit_check_callback,
                         std::function<void(double, double, double, void*)> position_callback,
                         void* param,
@@ -54,11 +53,12 @@ public:
     PW70CANInterface(limit_check_callback, position_callback, param, freq)
   {
     recv_thread = std::thread(&PW70CANInterfaceDummy::receive_messages, this, freq);
+    this->pan_tilt[0] = 0.6;   // Initialize with some non-zero angles to test initialization
+    this->pan_tilt[1] = 0.2;
+    this->dt = 1.0 / freq;
   }
 
-  ~PW70CANInterfaceDummy()
-  {
-  }
+  ~PW70CANInterfaceDummy() = default;
 
   // Public Methods
   void cleanup()
@@ -111,6 +111,8 @@ public:
   }
   bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
   {
+    this->pan_tilt[0] += pan_velocity_radians * dt;
+    this->pan_tilt[1] += tilt_velocity_radians * dt;
     return true;
   }
 
@@ -121,11 +123,12 @@ public:
   // Receive messages method
   void receive_messages(int update_frequency)
   {
-    double pan_value_radians = 0.0;
-    double tilt_value_radians = 0.0;
 
     while (true)
     {
+      double pan_value_radians = this->pan_tilt[0];
+      double tilt_value_radians = this->pan_tilt[1];
+
       // Get current time
       auto current_time = std::chrono::system_clock::now();
       double current_time_sec = std::chrono::duration<double>(current_time.time_since_epoch()).count();
@@ -139,12 +142,13 @@ public:
       }
 
       std::this_thread::sleep_for(std::chrono::milliseconds{1000 / update_frequency});
-
     }
   }
 private:
 
   std::thread recv_thread;
+  double pan_tilt[2];
+  double dt;
 };
 
 }   // namespace

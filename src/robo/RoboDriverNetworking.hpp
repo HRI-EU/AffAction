@@ -57,7 +57,7 @@ class FeedbackThread
 public:
   FeedbackThread() = default;
 
-  void start(const std::string& endpoint, const std::atomic_bool& run_flag)
+  void start(std::string endpoint, const std::atomic_bool& run_flag)
   {
     if (thread_.joinable())
     {
@@ -116,7 +116,7 @@ private:
 
   void networkThreadFcn(std::string endpoint, const std::atomic_bool& run_flag)
   {
-    RLOG(0, "Feedback thread running");
+    RLOG_CPP(0, "Feedback thread running on '" << endpoint << "'");
     zmq::context_t ctx(1);
     zmq::socket_t pub_socket(ctx, zmq::socket_type::pub);
     pub_socket.bind(endpoint);

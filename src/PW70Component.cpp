@@ -163,7 +163,6 @@ void PW70Component::onStart()
   }
 
   // Create an instance of PW70CANInterface with the callbacks
-  //this->pw70 = std::make_unique<PW70CANInterfaceLinux>(limitCheck, positionUpdate, this, controlFrequency);
   this->pw70 = PW70CANInterface::create(limitCheck, positionUpdate, this, controlFrequency);
   this->pw70->reset_stop();
 

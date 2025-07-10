@@ -31,6 +31,10 @@
 
 *******************************************************************************/
 
+#ifndef AFF_ROBONETWORKINTERFACE_H
+#define AFF_ROBONETWORKINTERFACE_H
+
+
 #include <Rcs_macros.h>
 
 #include <zmq.hpp>
@@ -44,12 +48,6 @@
 
 namespace aff
 {
-
-static inline double getMonotonicTimeSeconds() noexcept
-{
-  return std::chrono::duration<double>(
-           std::chrono::steady_clock::now().time_since_epoch()).count();
-}
 
 /*******************************************************************************
  *
@@ -81,6 +79,7 @@ public:
     watchDogTriggered.store(false, std::memory_order_release);
     recv_thread = std::thread(&RoboNetworkInterface::recvThreadFunc, this);
 
+    RLOG_CPP(0, "RoboNetworkInterface: Waiting for message from " << otherSendEndpoint);
     while (!isInitialized.load(std::memory_order_acquire))
     {
       fprintf(stderr, ".");
@@ -204,6 +203,12 @@ public:
     RLOG(0, "Exiting sendThreadFunc()");
   }
 
+  static inline double getMonotonicTimeSeconds() noexcept
+  {
+    return std::chrono::duration<double>(
+             std::chrono::steady_clock::now().time_since_epoch()).count();
+  }
+
 
 
 protected:
@@ -227,3 +232,6 @@ protected:
 };
 
 }   // namespace
+
+
+#endif

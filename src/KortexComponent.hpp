@@ -40,6 +40,7 @@
 #include <Rcs_timer.h>
 #include <Rcs_math.h>
 #include <Rcs_dynamics.h>
+#include <Rcs_utilsCPP.h>
 
 #include <mutex>
 
@@ -48,49 +49,6 @@
 namespace aff
 {
 
-/*******************************************************************************
- *
- ******************************************************************************/
-class JointNameIndexPair
-{
-public:
-
-  JointNameIndexPair() : jointId(-1)
-  {
-  }
-
-  JointNameIndexPair(const std::string& name, int id=-1) : jointName(name), jointId(id)
-  {
-  }
-
-  RcsJoint* getJoint(RcsGraph* graph)
-  {
-    RcsJoint* jnt = nullptr;
-
-    if ((jointId==-1) || (!STREQ(graph->joints[jointId].name, jointName.c_str())))
-    {
-      jnt = RcsGraph_getJointByName(graph, jointName.c_str());
-      if (!jnt)
-      {
-        return nullptr;
-      }
-      else
-      {
-        jointId = jnt->jointIndex;
-      }
-
-    }
-    else
-    {
-      jnt = &graph->joints[jointId];
-    }
-
-    return jnt;
-  }
-
-  std::string jointName;
-  int jointId;
-};
 
 class KortexComponent : public ComponentBase, public RoboNetworkInterface
 {
@@ -101,15 +59,15 @@ public:
                   std::string otherSend="tcp://localhost:5556")
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
   {
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_1"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_2"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_3"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_4"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_5"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_6"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_7"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_1"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_2"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_3"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_4"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_5"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_6"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_7"+suffix));
 
-    gripperNameIdPairs.push_back(JointNameIndexPair("finger_joint"+suffix));
+    gripperNameIdPairs.push_back(Rcs::JointNameIndexPair("finger_joint"+suffix));
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);
@@ -384,8 +342,8 @@ private:
   bool enableCommands = false;
   bool eStop = false;
   int torqueTic = -1;
-  std::vector<JointNameIndexPair> jntNameIdPairs;
-  std::vector<JointNameIndexPair> gripperNameIdPairs;
+  std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
+  std::vector<Rcs::JointNameIndexPair> gripperNameIdPairs;
   std::vector<double> jointPosition, jointVelocity, jointTorque, gravityTorque;
   double gripper_position = 0.0;   // 0: open, 100: closed
   double gripper_command = 0.0;

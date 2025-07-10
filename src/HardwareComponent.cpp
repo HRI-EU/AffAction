@@ -40,6 +40,7 @@
 #include "CameraViewComponent.h"
 #include "FaceGestureComponent.h"
 #include "PW70Component.h"
+#include "PW70ZmqComponent.hpp"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
@@ -320,6 +321,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     {
       RCHECK_MSG(!getKey(argvStrVec, "-pw70_pos"), "Can't start PW70 component both in position and velocity mode");
       components.push_back(createPW70Component(entity, graph, scene, "-pw70_vel", argvString));
+    }
+    else if (getKey(argvStrVec, "-pw70_zmq"))
+    {
+      components.push_back(new PW70ZmqComponent(&entity));
     }
   }
 
