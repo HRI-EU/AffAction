@@ -2300,6 +2300,22 @@ public:
     return true;
   }
 
+  virtual bool initGraphics()
+  {
+    bool success = ExampleActionsECS::initGraphics();
+    graphC->setEnableRender(true);
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+    entity.process();
+    Timer_waitDT(0.5);
+    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+    entity.process();
+
+    return success;
+  }
+
   std::string help()
   {
     std::stringstream s;
