@@ -56,8 +56,8 @@ class PW70ZmqComponent : public ComponentBase, public RoboNetworkInterface
 public:
   PW70ZmqComponent(EntityBase* parent,
                    std::string suffix="",
-                   std::string otherRecv="tcp://localhost:5559",
-                   std::string otherSend="tcp://localhost:5560")
+                   std::string otherRecv="tcp://localhost:40006",
+                   std::string otherSend="tcp://localhost:40007")
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_pan_joint"+suffix));

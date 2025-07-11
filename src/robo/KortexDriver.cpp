@@ -32,6 +32,7 @@
 
 #include "KortexDriver.hpp"
 #include "RoboDriverNetworking.hpp"
+#include "RoboNetworkInfo.hpp"
 
 #include <Rcs_cmdLine.h>
 
@@ -41,7 +42,7 @@
 
 static std::atomic<bool> runLoop(true);
 
-
+#if 0
 /*******************************************************************************
  * Convenience class for maintaining networking information for the
  * Jaco Gen3 robots
@@ -65,8 +66,8 @@ public:
     // 7-dof Jaco Gen3 (right mounted)
     JacoNetworkInfo rummenigge;
     rummenigge.robo_ip = "10.107.149.2";
-    rummenigge.roboToRemotePort = 5555;
-    rummenigge.remoteToRoboPort = 5556;
+    rummenigge.roboToRemotePort = 40002;// was 5555
+    rummenigge.remoteToRoboPort = 40003;// was 5556
     rummenigge.robo_computer_ip = "localhost";
     rummenigge.roboSender = "tcp://*:" + std::to_string(rummenigge.roboToRemotePort);
     rummenigge.roboReceiver = "tcp://*:" + std::to_string(rummenigge.remoteToRoboPort);
@@ -78,8 +79,8 @@ public:
     // 7-dof Jaco Gen3 (left mounted)
     JacoNetworkInfo littbarski;
     littbarski.robo_ip = "10.107.149.3";
-    littbarski.roboToRemotePort = 5557;
-    littbarski.remoteToRoboPort = 5558;
+    littbarski.roboToRemotePort = 40004;// was 5557
+    littbarski.remoteToRoboPort = 40005;// was 5558
     littbarski.robo_computer_ip = "localhost";
     littbarski.roboSender = "tcp://*:" + std::to_string(littbarski.roboToRemotePort);
     littbarski.roboReceiver = "tcp://*:" + std::to_string(littbarski.remoteToRoboPort);
@@ -115,6 +116,7 @@ public:
   }
 
 };
+#endif
 
 /*******************************************************************************
  *
@@ -270,7 +272,7 @@ static void runRobo(int argc, char** argv)
     return;
   }
 
-  JacoNetworkInfo nwInfo = JacoNetworkInfo::getNetworkInfo(robo_name);
+  aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
   if (testMe && nwInfo.roboMode!="TestWithoutRobot")
   {
@@ -333,9 +335,11 @@ int main(int argc, char** argv)
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
   int mode = 0;
+  std::string robo_name = "test_right";
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
+  argP.getArgument("-robo_name", &robo_name, "Name of Jaco Gen3 (default is '%s')", robo_name.c_str());
 
   switch (mode)
   {
@@ -356,17 +360,10 @@ int main(int argc, char** argv)
     case 2:   // Command publisher, initialized with q from robot
     {
       // PTUDriver: bin/KortexDriver -m 2 -dl 1 -subscriber_port 5559 -publisher_port 5560
-      int subscriber_port = 5555;
-      int publisher_port = 5556;
-      std::string ip = "tcp://localhost";
-      argP.getArgument("-ip", &ip, "Network connection, default: %s", ip.c_str());
-      argP.getArgument("-subscriber_port", &subscriber_port, "Network subscriber port, default: %d", subscriber_port);
-      argP.getArgument("-publisher_port", &publisher_port, "Network publisher port, default: %d", publisher_port);
+      aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
-
-      std::string subscriber_connection = ip + ":" + std::to_string(subscriber_port);
-      RLOG_CPP(0, "Waiting for initial joint values on " << subscriber_connection);
-      std::vector<double> q = feedbackSubscriber(subscriber_connection, runLoop, true);
+      RLOG_CPP(0, "Waiting for initial joint values on " << nwInfo.remoteReceiver);
+      std::vector<double> q = feedbackSubscriber(nwInfo.remoteReceiver, runLoop, true);
 
       RLOG(0, "Initializing command publisher with:");
       for (size_t i=0; i<q.size(); ++i)
@@ -374,20 +371,15 @@ int main(int argc, char** argv)
         RLOG(0, "q[%zu] = %f", i, q[i]);
       }
 
-      std::string publisher_connection = ip + ":" + std::to_string(publisher_port);
-      RLOG_CPP(0, "Starting command publisher on " << publisher_connection);
-      sinusoidalCommandPublisher(publisher_connection, runLoop, q);
+      RLOG_CPP(0, "Starting command publisher on " << nwInfo.remoteSender);
+      sinusoidalCommandPublisher(nwInfo.remoteSender, runLoop, q);
     }
     break;
 
     case 3:   // Feedback subscriber
     {
       bool once = false;
-      int port = 5555;
-      std::string ip = "tcp://localhost";
       argP.getArgument("-once", &once, "Just one read, then stop");
-      argP.getArgument("-port", &port, "Network port, default: %d", port);
-      argP.getArgument("-ip", &ip, "Network connection, default: %s", ip.c_str());
 
       if (argP.hasArgument("-h"))
       {
@@ -395,8 +387,9 @@ int main(int argc, char** argv)
         break;
       }
 
-      std::string connection = ip + ":" + std::to_string(port);
-      std::vector<double> q = feedbackSubscriber(connection, runLoop, once);
+      aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+
+      std::vector<double> q = feedbackSubscriber(nwInfo.remoteReceiver, runLoop, once);
       for (size_t i=0; i<q.size(); ++i)
       {
         RLOG(0, "q[%zu] = %f", i, q[i]);

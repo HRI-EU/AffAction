@@ -31,6 +31,7 @@
 *******************************************************************************/
 
 #include "RoboDriverNetworking.hpp"
+#include "RoboNetworkInfo.hpp"
 #include "PW70CANInterface.h"
 #include "json.hpp"
 
@@ -453,13 +454,10 @@ private:
  *******************************************************************************/
 static void runPTU(int argc, char** argv)
 {
-  std::string sendFeedbackEndpoint = "tcp://*:5559";
-  std::string recvCommandsEndpoint = "tcp://*:5560";
+  std::string robo_name = "ptu_test";
   Rcs::CmdLineParser argP(argc, argv);
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
-  argP.getArgument("-sendFeedbackEndpoint", &sendFeedbackEndpoint, "Feedback sender endpoint (default is %s)", sendFeedbackEndpoint.c_str());
-  argP.getArgument("-recvCommandsEndpoint", &recvCommandsEndpoint, "Command receiver endpoint (default is %s)", recvCommandsEndpoint.c_str());
-  bool dummy_mode = argP.hasArgument("-dummy_mode", "Run without CAN");
+  argP.getArgument("-robo_name", &robo_name, "Name of PTU to use (default is '%s')", robo_name.c_str());
 
   if (argP.hasArgument("-h"))
   {
@@ -467,9 +465,12 @@ static void runPTU(int argc, char** argv)
     return;
   }
 
+  aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+  bool dummy_mode = (nwInfo.roboMode == "TestWithoutRobot") ? true : false;
+
   // Thread sending sensory data to remote process
   FeedbackThread feedback;
-  feedback.start(sendFeedbackEndpoint, runLoop);
+  feedback.start(nwInfo.roboSender, runLoop);
 
   // Robo driver thread. The FeedbackThread's updateMessage function is called
   // in each control cycle once registered.
@@ -484,7 +485,7 @@ static void runPTU(int argc, char** argv)
   bool blocking = true;
   CommandThread commands;
   auto cmdFcn = std::bind(&PTUDriver::setCommand, &robo, std::placeholders::_1);
-  commands.start(recvCommandsEndpoint, cmdFcn, runLoop, blocking);
+  commands.start(nwInfo.roboReceiver, cmdFcn, runLoop, blocking);
 
   commands.stop();
   robo.stop();

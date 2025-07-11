@@ -337,8 +337,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
     {
       std::string suffix = "_left";
-      std::string otherRecv="tcp://localhost:5557";
-      std::string otherSend="tcp://localhost:5558";
+      std::string otherRecv="tcp://localhost:40004";// was 5557
+      std::string otherSend="tcp://localhost:40005";// was 5558
       components.push_back(new aff::KortexComponent(&entity, suffix,
                                                     otherRecv,otherSend));
     }
@@ -346,8 +346,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv="tcp://localhost:5555";
-      std::string otherSend="tcp://localhost:5556";
+      std::string otherRecv="tcp://localhost:40002";// was 5555
+      std::string otherSend="tcp://localhost:40003";// was 5556
       components.push_back(new aff::KortexComponent(&entity, suffix,
                                                     otherRecv,otherSend));
     }
