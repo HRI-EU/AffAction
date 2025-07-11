@@ -624,12 +624,17 @@ private:
     // simple mockup state
     std::vector<double> q_curr_deg(DOF_ARM, 0.0);     // position  [deg]
     std::vector<double> qd_des_deg(DOF_ARM, 0.0);
-    VecNd_setRandom(q_curr_deg.data(), -10.0, 10.0, DOF_ARM);
 
     if (q_default_deg.empty())
     {
       q_default_deg = q_curr_deg;
     }
+    else
+    {
+      q_curr_deg = q_default_deg;
+      VecNd_addRandom(q_curr_deg.data(), -10.0, 10.0, DOF_ARM);
+    }
+
     RCHECK(q_default_deg.size() == DOF_ARM);
 
     // Initialize continuous angles close to default pose

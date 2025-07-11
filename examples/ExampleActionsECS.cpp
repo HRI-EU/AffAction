@@ -246,6 +246,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   loopCount = 0;
   blockingMainThread = false;
   enableWireframeToggle = true;   // Show wireframe if collisions are deactivated
+  enableRealGraphVisualization = false;
   maxNumThreads = 0;
   numSceneQueries = NUM_SCENEQUERIES;
 
@@ -1195,6 +1196,21 @@ bool ExampleActionsECS::initGraphics()
 
   // Do not show wireframes when collision model is changed
   tropic::CollisionModelConstraint::setEnableWireframeToggle(enableWireframeToggle);
+
+  // Show the graph of the GraphComponent (updated from hardware)
+  if (enableRealGraphVisualization)
+  {
+    graphC->setEnableRender(true);
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+    entity.process();
+    Timer_waitDT(0.5);
+    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+    entity.process();
+  }
+
 
   return true;
 }
@@ -2297,24 +2313,25 @@ public:
   {
     ExampleActionsECS::initParameters();
     xmlFileName = "g_example_curiosity_cocktails_gen3.xml";
+    enableRealGraphVisualization = true;
     return true;
   }
 
-  virtual bool initGraphics()
-  {
-    bool success = ExampleActionsECS::initGraphics();
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-    entity.process();
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+  //   entity.process();
 
-    return success;
-  }
+  //   return success;
+  // }
 
   std::string help()
   {
@@ -2461,24 +2478,25 @@ public:
     configDirectory = "config/xml/examples";
     xmlFileName = "g_example_pizza.xml";
     speedUp = 1;
+    enableRealGraphVisualization = true;
     componentArgs = "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }
 
-  virtual bool initGraphics()
-  {
-    bool success = ExampleActionsECS::initGraphics();
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
-    entity.process();
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+  //   entity.process();
 
-    return success;
-  }
+  //   return success;
+  // }
 
   bool initAlgo()
   {
@@ -2670,24 +2688,25 @@ public:
     configDirectory = "config/xml/JacoGen3";
     speedUp = 1;
     addComponentArgument("-jacoGen3Zmq");
+    enableRealGraphVisualization = true;
     return true;
   }
 
-  virtual bool initGraphics()
-  {
-    bool success = ExampleActionsECS::initGraphics();
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-    entity.process();
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+  //   entity.process();
 
-    return success;
-  }
+  //   return success;
+  // }
 
   std::string help()
   {

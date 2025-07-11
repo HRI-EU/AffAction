@@ -264,6 +264,12 @@ static void runRobo(int argc, char** argv)
   bool readOnly = argP.hasArgument("-ro", "Read-only, no motor commands");
   bool testMe = argP.hasArgument("-testMe", "Start test network endpoints");
 
+  if (argP.hasArgument("-h"))
+  {
+    argP.print();
+    return;
+  }
+
   JacoNetworkInfo nwInfo = JacoNetworkInfo::getNetworkInfo(robo_name);
 
   if (testMe && nwInfo.roboMode!="TestWithoutRobot")

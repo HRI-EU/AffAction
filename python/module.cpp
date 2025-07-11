@@ -1437,6 +1437,7 @@ Example
   .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
   .def_readwrite("dt", &aff::ExampleActionsECS::dt)
   .def_readwrite("enableWireframeToggle", &aff::ExampleActionsECS::enableWireframeToggle)
+  .def_readwrite("enableRealGraphVisualization", &aff::ExampleActionsECS::enableRealGraphVisualization)
 
   //////////////////////////////////////////////////////////////////////////////
   // GazeDisambiguation

@@ -54,6 +54,7 @@
 #include "ros/LandmarkROSComponent.hpp"
 #include "ros/HololensConnection.hpp"
 #include "ros/MirrorEyeComponent.h"
+#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 #endif
 
 #include <Rcs_typedef.h>
@@ -64,8 +65,6 @@
 
 #include <thread>
 
-
-#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 
 
 
@@ -474,7 +473,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   // The debug graphics will be handled in initGraphics.
   if (dryRun)
   {
-    argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:5555");
+    argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:40000");
     argP.addDescription("-landmarks_zmq", "Start with ZMQ landmarks component");
     argP.addDescription("-landmarks_router", "Start with ZMQ landmarks router-dealer network component");
     argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");

@@ -141,6 +141,7 @@ public:
   bool blockingMainThread;
   double dt;
   bool enableWireframeToggle;
+  bool enableRealGraphVisualization;
 
 
   /*! \brief Retrieves the gaze data in JSON format.

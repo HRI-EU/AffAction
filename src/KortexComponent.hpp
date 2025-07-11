@@ -210,9 +210,17 @@ private:
   void onInitFromState(const RcsGraph* target)
   {
     RLOG(0, "KortexComponent::onInitFromState()");
-    MatNd_printCommentDigits("q_des:", target->q, 4);
+    //MatNd_printCommentDigits("q_des:", target->q, 4);
     onSetJointPosition(target->q);
     jointCommandsPrev = jointCommands;
+
+    for (size_t i = 0; i < jntNameIdPairs.size(); ++i)
+    {
+      const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
+      RCHECK_MSG(jnt, "Robot joint '%s' not found in graph",
+                 jntNameIdPairs[i].jointName.c_str());
+      RLOG(0, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
+    }
   }
 
   void onEmergencyStop()
