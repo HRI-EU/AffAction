@@ -451,7 +451,7 @@ private:
 
 /*******************************************************************************
  *
- *******************************************************************************/
+ ******************************************************************************/
 static void runPTU(int argc, char** argv)
 {
   std::string robo_name = "ptu_test";
@@ -526,6 +526,12 @@ static void movePanTilt(int argc, char** argv)
   argP.getArgument("-tilt_in_deg", &tilt_in_deg, "Tilt angle in degrees (default is %f)", tilt_in_deg);
   argP.getArgument("-pan_vel_in_deg", &pan_vel_in_deg, "Pan angle in degrees (default is %f)", pan_vel_in_deg);
   argP.getArgument("-tilt_vel_in_deg", &tilt_vel_in_deg, "Tilt angle in degrees (default is %f)", tilt_vel_in_deg);
+
+  if (argP.hasArgument("-h"))
+  {
+    argP.print();
+    return;
+  }
 
   auto pw70 = aff::PW70CANInterface::create();
   std::this_thread::sleep_for(std::chrono::seconds(1));

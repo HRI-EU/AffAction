@@ -37,6 +37,12 @@
 #include <Rcs_basicMath.h>
 #include <Rcs_VecNd.h>
 
+#include <thread>
+#include <mutex>
+#include <chrono>
+
+#if defined (AFFACTION_WITH_KINOVA_GEN3)
+
 #if defined (_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable : 4146)
@@ -57,9 +63,13 @@
 #pragma warning(pop)
 #endif
 
-#include <thread>
-#include <mutex>
-#include <chrono>
+namespace k_api = Kinova::Api;
+
+#else
+
+#include <windows.h>
+
+#endif //AFFACTION_WITH_KINOVA_GEN3
 
 
 constexpr std::size_t   DOF_ARM        = 7;   // Gen3 R-07
@@ -76,9 +86,7 @@ constexpr std::uint16_t UDP_PORT   = 10001;   // BaseCyclic feedback
 static double getWallclockTime()
 {
   auto currentTime = std::chrono::system_clock::now();
-
   double seconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime.time_since_epoch()).count();
-
   return seconds;
 }
 
@@ -269,7 +277,6 @@ private:
 /*******************************************************************************
  *
  ******************************************************************************/
-namespace k_api = Kinova::Api;
 
 class KortexDriver
 {
@@ -293,17 +300,18 @@ public:
 
     this->runLoop = true;
 
-    if (controlMode == "HighLevel")
-    {
-      this->kortexThread = std::thread(&KortexDriver::roboThreadFuncHighLevel, this,
-                                       ip_address, readOnly,
-                                       feedbackFcn, std::cref(run_flag));
-    }
-    else if (controlMode == "TestWithoutRobot")
+    if (controlMode == "TestWithoutRobot")
     {
       this->kortexThread = std::thread(&KortexDriver::roboThreadFuncTest, this,
                                        ip_address, readOnly,
                                        feedbackFcn, std::cref(run_flag), q_default);
+    }
+#if defined (AFFACTION_WITH_KINOVA_GEN3)
+    else if (controlMode == "HighLevel")
+    {
+      this->kortexThread = std::thread(&KortexDriver::roboThreadFuncHighLevel, this,
+                                       ip_address, readOnly,
+                                       feedbackFcn, std::cref(run_flag));
     }
     else if (controlMode == "LowLevel")
     {
@@ -311,7 +319,7 @@ public:
                                        ip_address, readOnly,
                                        feedbackFcn, std::cref(run_flag), q_default);
     }
-
+#endif
     else
     {
       RFATAL("Unknown control mode: %s", controlMode.c_str());
@@ -402,6 +410,126 @@ public:
 
 private:
 
+  void roboThreadFuncTest(const std::string& ip,
+                          bool readOnly,
+                          std::function<void(const std::string&)> feedbackFcn,
+                          const std::atomic_bool& run_flag,
+                          std::vector<double> q_default_deg)
+  {
+    RLOG(0, "Starting roboThreadFuncTest");
+    constexpr double dt = 0.01;
+    constexpr double tmc = 0.05;
+    constexpr int filter_substeps = 20;
+    constexpr double dt_filter = dt / (double)filter_substeps;
+    std::vector<double> maxVelInDeg = { 75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0 };
+
+    // simple mockup state
+    std::vector<double> q_curr_deg(DOF_ARM, 0.0);     // position  [deg]
+    std::vector<double> qd_des_deg(DOF_ARM, 0.0);
+
+    if (q_default_deg.empty())
+    {
+      q_default_deg = q_curr_deg;
+    }
+    else
+    {
+      q_curr_deg = q_default_deg;
+      VecNd_addRandom(q_curr_deg.data(), -10.0, 10.0, DOF_ARM);
+    }
+
+    RCHECK(q_default_deg.size() == DOF_ARM);
+
+    // Initialize continuous angles close to default pose
+    std::vector<double> q_cont_deg = closest_to_default(q_curr_deg, q_default_deg);
+
+    // Initialize filter with robot's continuous state
+    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
+      std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt_filter, DOF_ARM);
+    filteredJointCommands->init(q_cont_deg.data());
+    for (size_t i = 0; i < q_cont_deg.size(); ++i)
+    {
+      filteredJointCommands->setMaxVel(maxVelInDeg[i], i);
+      this->incomingCommand.q_des[i] = q_cont_deg[i];
+      if (q_cont_deg[i] != q_curr_deg[i])
+      {
+        RLOG(0, "continuous angles adjusted at index %zu: curr: %f   cont: %f   default: %f",
+             i, q_curr_deg[i], q_cont_deg[i], q_default_deg[i]);
+      }
+    }
+
+    // everything is ready - tell main thread
+    isInitialized.store(true, std::memory_order_release);
+
+    PollingTimer timer(dt, PollingTimer::TimerMode::SleepAndPoll);
+
+    while (run_flag && runLoop)
+    {
+      RoboCommand cmd = getCommand();
+
+      if (cmd.received_q_des)
+      {
+        filteredJointCommands->setTarget(cmd.q_des.data());
+      }
+
+      for (int i = 0; i < filter_substeps; ++i)
+      {
+        filteredJointCommands->iterate();
+      }
+
+      qd_des_deg = computeDesiredJointSpeeds(filteredJointCommands.get(), q_curr_deg);
+
+      for (size_t i = 0; i < DOF_ARM; ++i)
+      {
+        q_curr_deg[i] += qd_des_deg[i] * dt;
+
+        // For testing purposes, we mimic the discontinuities at the 0 / 360 degrees boundaries
+        if (q_curr_deg[i] > 360.0)
+        {
+          q_curr_deg[i] -= 360.0;
+        }
+        else if (q_curr_deg[i] < 0.0)
+        {
+          q_curr_deg[i] += 360.0;
+        }
+
+        const double delta = signed_diff_deg(q_curr_deg[i], wrap360(q_cont_deg[i]));
+        q_cont_deg[i] += delta;
+        // if (i==DOF_ARM-1)
+        // {
+        //   RLOG(0, "[%zu] Cmd: %f   Raw: %f   Cont: %f   delta: %f", i,
+        //        cmd.q_des[i], q_curr_deg[i], q_cont_deg[i], delta);
+        // }
+      }
+
+      nlohmann::json fb;
+      std::vector<double> q_cont_rad(DOF_ARM), qd_curr_rad(DOF_ARM), tau(DOF_ARM, 0.0);
+      for (size_t i = 0; i < DOF_ARM; ++i)
+      {
+        q_cont_rad[i] = RCS_DEG2RAD(q_cont_deg[i]);
+        qd_curr_rad[i] = RCS_DEG2RAD(qd_des_deg[i]);
+      }
+
+      fb["position"] = q_cont_rad;
+      fb["velocity"] = qd_curr_rad;
+      fb["torque"] = tau;                 // always zero in sim
+      fb["imu_acceleration"] = { 0, 0, 9.81 };        // dummy gravity vector
+      fb["gripper_position"] = cmd.gripper_pos;
+
+      feedbackFcn(fb.dump());
+
+      // 4. sleep to keep fixed rate
+      timer.wait();
+
+      if (timer.getWaitCycleCount() % 100 == 0)
+      {
+        RLOG_CPP(1, "Time: " << timer.getTickUs() / 1000);
+      }
+
+    }
+
+    RLOG(0, "Quitting roboThreadFuncTest");
+  }
+
   /*!
    * \brief  Main robot control thread, ROS 1 style.
    *
@@ -412,6 +540,7 @@ private:
    *
    * \throw std::runtime_error on any unrecoverable communication error.
    */
+#if defined (AFFACTION_WITH_KINOVA_GEN3)
   void roboThreadFuncHighLevel(const std::string& ip,
                                bool readOnly,
                                std::function<void(const std::string&)> feedbackFcn,
@@ -606,130 +735,6 @@ private:
       throw;
     }
   }
-
-
-  void roboThreadFuncTest(const std::string& ip,
-                          bool readOnly,
-                          std::function<void(const std::string&)> feedbackFcn,
-                          const std::atomic_bool& run_flag,
-                          std::vector<double> q_default_deg)
-  {
-    RLOG(0, "Starting roboThreadFuncTest");
-    constexpr double dt  = 0.01;
-    constexpr double tmc = 0.05;
-    constexpr int filter_substeps = 20;
-    constexpr double dt_filter = dt/(double) filter_substeps;
-    std::vector<double> maxVelInDeg = { 75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0 };
-
-    // simple mockup state
-    std::vector<double> q_curr_deg(DOF_ARM, 0.0);     // position  [deg]
-    std::vector<double> qd_des_deg(DOF_ARM, 0.0);
-
-    if (q_default_deg.empty())
-    {
-      q_default_deg = q_curr_deg;
-    }
-    else
-    {
-      q_curr_deg = q_default_deg;
-      VecNd_addRandom(q_curr_deg.data(), -10.0, 10.0, DOF_ARM);
-    }
-
-    RCHECK(q_default_deg.size() == DOF_ARM);
-
-    // Initialize continuous angles close to default pose
-    std::vector<double> q_cont_deg = closest_to_default(q_curr_deg, q_default_deg);
-
-    // Initialize filter with robot's continuous state
-    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
-      std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt_filter, DOF_ARM);
-    filteredJointCommands->init(q_cont_deg.data());
-    for (size_t i = 0; i < q_cont_deg.size(); ++i)
-    {
-      filteredJointCommands->setMaxVel(maxVelInDeg[i], i);
-      this->incomingCommand.q_des[i] = q_cont_deg[i];
-      if (q_cont_deg[i] != q_curr_deg[i])
-      {
-        RLOG(0, "continuous angles adjusted at index %zu: curr: %f   cont: %f   default: %f",
-             i, q_curr_deg[i], q_cont_deg[i], q_default_deg[i]);
-      }
-    }
-
-    // everything is ready - tell main thread
-    isInitialized.store(true, std::memory_order_release);
-
-    PollingTimer timer(dt, PollingTimer::TimerMode::SleepAndPoll);
-
-    while (run_flag && runLoop)
-    {
-      RoboCommand cmd = getCommand();
-
-      if (cmd.received_q_des)
-      {
-        filteredJointCommands->setTarget(cmd.q_des.data());
-      }
-
-      for (int i=0; i< filter_substeps; ++i)
-      {
-        filteredJointCommands->iterate();
-      }
-
-      qd_des_deg = computeDesiredJointSpeeds(filteredJointCommands.get(), q_curr_deg);
-
-      for (size_t i = 0; i < DOF_ARM; ++i)
-      {
-        q_curr_deg[i] += qd_des_deg[i]*dt;
-
-        // For testing purposes, we mimic the discontinuities at the 0 / 360 degrees boundaries
-        if (q_curr_deg[i] > 360.0)
-        {
-          q_curr_deg[i] -= 360.0;
-        }
-        else if (q_curr_deg[i] < 0.0)
-        {
-          q_curr_deg[i] += 360.0;
-        }
-
-        const double delta = signed_diff_deg(q_curr_deg[i], wrap360(q_cont_deg[i]));
-        q_cont_deg[i] += delta;
-        // if (i==DOF_ARM-1)
-        // {
-        //   RLOG(0, "[%zu] Cmd: %f   Raw: %f   Cont: %f   delta: %f", i,
-        //        cmd.q_des[i], q_curr_deg[i], q_cont_deg[i], delta);
-        // }
-      }
-
-      nlohmann::json fb;
-      std::vector<double> q_cont_rad(DOF_ARM), qd_curr_rad(DOF_ARM), tau(DOF_ARM, 0.0);
-      for (size_t i = 0; i < DOF_ARM; ++i)
-      {
-        q_cont_rad[i] = RCS_DEG2RAD(q_cont_deg[i]);
-        qd_curr_rad[i] = RCS_DEG2RAD(qd_des_deg[i]);
-      }
-
-      fb["position"]          = q_cont_rad;
-      fb["velocity"]          = qd_curr_rad;
-      fb["torque"]            = tau;                 // always zero in sim
-      fb["imu_acceleration"]  = {0, 0, 9.81};        // dummy gravity vector
-      fb["gripper_position"]  = cmd.gripper_pos;
-
-      feedbackFcn(fb.dump());
-
-      // 4. sleep to keep fixed rate
-      timer.wait();
-
-      if (timer.getWaitCycleCount()%100==0)
-      {
-        RLOG_CPP(1, "Time: " << timer.getTickUs()/1000);
-      }
-
-    }
-
-    RLOG(0, "Quitting roboThreadFuncTest");
-  }
-
-
-
 
   void roboThreadFuncLowLevel(const std::string& ip,
                               bool readOnly,
@@ -1007,37 +1012,6 @@ private:
     RLOG(0, "Quitting robot driver thread");
   }
 
-  std::vector<double> computeDesiredJointSpeeds(const Rcs::RampFilterND* filteredCommands,
-                                                const std::vector<double>& x_curr_in_deg) const
-  {
-    const double ffwGain = 0.9;// ffwGain is Kinova's velocity overshoot
-    const double tau = 0.2;    // seconds to reach 63% of the target error (smaller is more stiff)
-    const double fbGain = 1.0 / tau;
-    std::vector<double> qd_des(filteredCommands->getDim(), 0.0);
-
-    for (unsigned int i = 0; i < qd_des.size(); i++)
-    {
-      // const double x_des = filteredCommands->getPosition(i);
-      // double fberr = Math_fmodAngle(RCS_DEG2RAD(x_des)) - Math_fmodAngle(RCS_DEG2RAD(x_curr_in_deg[i]));
-      // fberr = RCS_RAD2DEG(Math_fmodAngle(fberr));
-
-      // const double maxVel = filteredCommands->getMaxVel(i);
-      // const double xd_des = ffwGain*filteredCommands->getVelocity(i) + fbGain*fberr;
-
-
-      // feedback error in degrees, shortest path
-      const double err_deg = signed_diff_deg(filteredCommands->getPosition(i), x_curr_in_deg[i]);
-
-      // feed-forward + proportional feedback
-      const double xd_des = ffwGain * filteredCommands->getVelocity(i) + fbGain * err_deg;
-
-      // saturate
-      qd_des[i] = Math_clip(xd_des, -filteredCommands->getMaxVel(i), filteredCommands->getMaxVel(i));
-    }
-
-    return qd_des;
-  }
-
   std::string feedback2JsonString(const k_api::BaseCyclic::Feedback& feedback,
                                   int64_t time_usec, const RoboCommand* cmd,
                                   std::vector<double> q_cont_deg)
@@ -1111,6 +1085,39 @@ private:
     }
 
     return jointPos;
+  }
+
+#endif
+
+  std::vector<double> computeDesiredJointSpeeds(const Rcs::RampFilterND* filteredCommands,
+                                                const std::vector<double>& x_curr_in_deg) const
+  {
+    const double ffwGain = 0.9;// ffwGain is Kinova's velocity overshoot
+    const double tau = 0.2;    // seconds to reach 63% of the target error (smaller is more stiff)
+    const double fbGain = 1.0 / tau;
+    std::vector<double> qd_des(filteredCommands->getDim(), 0.0);
+
+    for (unsigned int i = 0; i < qd_des.size(); i++)
+    {
+      // const double x_des = filteredCommands->getPosition(i);
+      // double fberr = Math_fmodAngle(RCS_DEG2RAD(x_des)) - Math_fmodAngle(RCS_DEG2RAD(x_curr_in_deg[i]));
+      // fberr = RCS_RAD2DEG(Math_fmodAngle(fberr));
+
+      // const double maxVel = filteredCommands->getMaxVel(i);
+      // const double xd_des = ffwGain*filteredCommands->getVelocity(i) + fbGain*fberr;
+
+
+      // feedback error in degrees, shortest path
+      const double err_deg = signed_diff_deg(filteredCommands->getPosition(i), x_curr_in_deg[i]);
+
+      // feed-forward + proportional feedback
+      const double xd_des = ffwGain * filteredCommands->getVelocity(i) + fbGain * err_deg;
+
+      // saturate
+      qd_des[i] = Math_clip(xd_des, -filteredCommands->getMaxVel(i), filteredCommands->getMaxVel(i));
+    }
+
+    return qd_des;
   }
 
 

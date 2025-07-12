@@ -32,6 +32,23 @@
 
 OPTION(AFFACTION_WITH_KINOVA_GEN3 "Enable Kinova Gen3 Kortex driver" OFF)
 
+
+
+##############################################################################
+# Kinova Kortex Gen3 driver
+##############################################################################
+ADD_EXECUTABLE(KortexDriver KortexDriver.cpp)
+TARGET_LINK_LIBRARIES(KortexDriver RcsCore ${ZMQ_LIBRARIES})
+TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
+
+IF(UNIX)
+  TARGET_COMPILE_DEFINITIONS(KortexDriver PUBLIC -D_OS_UNIX)
+  TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wall")
+  TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wno-reorder")
+ELSEIF(WIN32)
+  TARGET_COMPILE_DEFINITIONS(KortexDriver PUBLIC -D_OS_WINDOWS -D_USE_MATH_DEFINES)
+ENDIF()
+
 IF (AFFACTION_WITH_KINOVA_GEN3)
   
   SET(KORTEX_BASE_DIR "$ENV{SIT}/External/Kinova-kortex2_Gen3_G3L")
@@ -41,17 +58,10 @@ IF (AFFACTION_WITH_KINOVA_GEN3)
     SET(KORTEX_DIR "${KORTEX_BASE_DIR}/api_cpp/examples/kortex_api/MD")
   ENDIF()
 
-
-  ##############################################################################
-  # Kinova Kortex Gen3 driver
-  ##############################################################################
-  ADD_EXECUTABLE(KortexDriver KortexDriver.cpp)
-
   IF(UNIX)
-    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/libKortexApiCpp.a RcsCore zmq)
+    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/libKortexApiCpp.a)
   ELSEIF(WIN32)
-    FIND_PACKAGE(cppzmq REQUIRED)
-    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/KortexApiCpp.lib RcsCore cppzmq)
+    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/KortexApiCpp.lib)
   ENDIF()
 
   # Add Include Directories
@@ -60,25 +70,17 @@ IF (AFFACTION_WITH_KINOVA_GEN3)
   TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC ${KORTEX_DIR}/include/common)
   TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC ${KORTEX_DIR}/include/messages)
   TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC ${KORTEX_DIR}/include/client_stubs)
-
   TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC ${KORTEX_BASE_DIR}/api_cpp/examples)
   TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC ${KORTEX_BASE_DIR}/api_cpp/examples/thirdParty/cxxopts)
-  
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
 
-  IF(UNIX)
-    TARGET_COMPILE_DEFINITIONS(KortexDriver PUBLIC -D_OS_UNIX)
-    TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wall")
-    TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wno-reorder")
-  ELSEIF(WIN32)
-    TARGET_COMPILE_DEFINITIONS(KortexDriver PUBLIC -D_OS_WINDOWS -D_USE_MATH_DEFINES)
-  ENDIF()
-
+  TARGET_COMPILE_DEFINITIONS(KortexDriver PUBLIC -DAFFACTION_WITH_KINOVA_GEN3)
 
 ENDIF(AFFACTION_WITH_KINOVA_GEN3)
 
 
-
+##############################################################################
+# Socket CAN Schunk PW70 driver
+##############################################################################
 ADD_EXECUTABLE(PTUDriver PTUDriver.cpp)
 IF (APPLE)
   FIND_PACKAGE(PkgConfig REQUIRED)
