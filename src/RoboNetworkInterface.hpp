@@ -50,7 +50,7 @@ namespace aff
 {
 
 /*******************************************************************************
- *
+ * Remote-side network interface
  ******************************************************************************/
 class RoboNetworkInterface
 {
@@ -80,11 +80,19 @@ public:
     recv_thread = std::thread(&RoboNetworkInterface::recvThreadFunc, this);
 
     RLOG_CPP(0, "RoboNetworkInterface: Waiting for message from " << otherSendEndpoint);
+    size_t waitCount = 0;
     while (!isInitialized.load(std::memory_order_acquire))
     {
       fprintf(stderr, ".");
       fflush(stderr);
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      waitCount++;
+
+      if (waitCount > 50)
+      {
+        RLOG_CPP(0, "Didn't hear from robot for 5 seconds - giving up");
+        return;
+      }
     }
 
     send_thread = std::thread(&RoboNetworkInterface::sendThreadFunc, this);
