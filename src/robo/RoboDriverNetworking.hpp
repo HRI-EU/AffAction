@@ -61,7 +61,7 @@ public:
   {
     if (thread_.joinable())
     {
-      RLOG(1, "Warning: FeedbackThread::start() called while thread is already running.");
+      RLOG(1, "FeedbackThread::start() called while thread is already running.");
       return;
     }
 

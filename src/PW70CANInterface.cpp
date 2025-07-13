@@ -87,7 +87,7 @@ std::unique_ptr<PW70CANInterface> PW70CANInterface::create()
 #elif defined(__linux__) && !defined(__APPLE__)
   pw70 = std::make_unique<PW70CANInterfaceLinux>();
 #else
-  RLOG_CPP(0, "This function only creates CAN instances");
+  pw70 = std::make_unique<PW70CANInterfaceDummy>(nullptr, nullptr, nullptr, 0);
 #endif
 
   return pw70;

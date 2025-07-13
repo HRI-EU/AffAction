@@ -465,12 +465,19 @@ static void runPTU(int argc, char** argv)
     return;
   }
 
-  aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
-  bool dummy_mode = (nwInfo.roboMode == "TestWithoutRobot") ? true : false;
+  const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+
+  if (!nwInfo)
+  {
+    RLOG_CPP(0, "Robo name not known: " << robo_name);
+    return;
+  }
+
+  bool dummy_mode = (nwInfo->roboMode == "TestWithoutRobot") ? true : false;
 
   // Thread sending sensory data to remote process
   FeedbackThread feedback;
-  feedback.start(nwInfo.roboSender, runLoop);
+  feedback.start(nwInfo->roboSender, runLoop);
 
   // Robo driver thread. The FeedbackThread's updateMessage function is called
   // in each control cycle once registered.
@@ -485,7 +492,7 @@ static void runPTU(int argc, char** argv)
   bool blocking = true;
   CommandThread commands;
   auto cmdFcn = std::bind(&PTUDriver::setCommand, &robo, std::placeholders::_1);
-  commands.start(nwInfo.roboReceiver, cmdFcn, runLoop, blocking);
+  commands.start(nwInfo->roboReceiver, cmdFcn, runLoop, blocking);
 
   commands.stop();
   robo.stop();
@@ -494,7 +501,7 @@ static void runPTU(int argc, char** argv)
 
 /*******************************************************************************
  *
- *******************************************************************************/
+ ******************************************************************************/
 static void initializePan()
 {
   auto pw70 = aff::PW70CANInterface::create();

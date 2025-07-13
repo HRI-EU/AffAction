@@ -196,16 +196,22 @@ static void runRobo(int argc, char** argv)
     return;
   }
 
-  aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+  const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
-  if (testMe && nwInfo.roboMode!="TestWithoutRobot")
+  if (!nwInfo)
+  {
+    RLOG_CPP(0, "Robo name not known: " << robo_name);
+    return;
+  }
+
+  if (testMe && nwInfo->roboMode!="TestWithoutRobot")
   {
     RMSG("Test function should not be used with real robot (only TestWithoutRobot mode)");
     return;
   }
 
   FeedbackThread feedback;
-  feedback.start(nwInfo.roboSender, runLoop);
+  feedback.start(nwInfo->roboSender, runLoop);
 
   KortexDriver robo;
 
@@ -222,28 +228,28 @@ static void runRobo(int argc, char** argv)
     return robo.setCommand(message);
   };
 
-  robo.start(nwInfo.robo_ip, fbFcn, runLoop, readOnly, nwInfo.roboMode, nwInfo.q_default_deg);
+  robo.start(nwInfo->robo_ip, fbFcn, runLoop, readOnly, nwInfo->roboMode, nwInfo->q_default_deg);
 
   if (testMe)
   {
 
     std::thread([&nwInfo]()
     {
-      std::vector<double> q = feedbackSubscriber(nwInfo.remoteReceiver, runLoop, true);
-      sinusoidalCommandPublisher(nwInfo.remoteSender, runLoop, q);
+      std::vector<double> q = feedbackSubscriber(nwInfo->remoteReceiver, runLoop, true);
+      sinusoidalCommandPublisher(nwInfo->remoteSender, runLoop, q);
 
     }).detach();
 
     std::thread([&nwInfo]()
     {
-      feedbackSubscriber(nwInfo.remoteReceiver, runLoop);
+      feedbackSubscriber(nwInfo->remoteReceiver, runLoop);
     }).detach();
   }
 
   // Start non-threaded
   bool blocking = true;
   CommandThread commands;
-  commands.start(nwInfo.roboReceiver, cmdFcn, runLoop, blocking);
+  commands.start(nwInfo->roboReceiver, cmdFcn, runLoop, blocking);
 
   commands.stop();
   robo.stop();
@@ -284,10 +290,10 @@ int main(int argc, char** argv)
     case 2:   // Command publisher, initialized with q from robot
     {
       // PTUDriver: bin/KortexDriver -m 2 -dl 1 -subscriber_port 5559 -publisher_port 5560
-      aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+      const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
-      RLOG_CPP(0, "Waiting for initial joint values on " << nwInfo.remoteReceiver);
-      std::vector<double> q = feedbackSubscriber(nwInfo.remoteReceiver, runLoop, true);
+      RLOG_CPP(0, "Waiting for initial joint values on " << nwInfo->remoteReceiver);
+      std::vector<double> q = feedbackSubscriber(nwInfo->remoteReceiver, runLoop, true);
 
       RLOG(0, "Initializing command publisher with:");
       for (size_t i=0; i<q.size(); ++i)
@@ -295,8 +301,8 @@ int main(int argc, char** argv)
         RLOG(0, "q[%zu] = %f", i, q[i]);
       }
 
-      RLOG_CPP(0, "Starting command publisher on " << nwInfo.remoteSender);
-      sinusoidalCommandPublisher(nwInfo.remoteSender, runLoop, q);
+      RLOG_CPP(0, "Starting command publisher on " << nwInfo->remoteSender);
+      sinusoidalCommandPublisher(nwInfo->remoteSender, runLoop, q);
     }
     break;
 
@@ -311,9 +317,9 @@ int main(int argc, char** argv)
         break;
       }
 
-      aff::RoboNetworkInfo nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+      const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
-      std::vector<double> q = feedbackSubscriber(nwInfo.remoteReceiver, runLoop, once);
+      std::vector<double> q = feedbackSubscriber(nwInfo->remoteReceiver, runLoop, once);
       for (size_t i=0; i<q.size(); ++i)
       {
         RLOG(0, "q[%zu] = %f", i, q[i]);

@@ -49,13 +49,13 @@ public:
   PW70CANInterfaceDummy(std::function<void(double, double, void*)> limit_check_callback,
                         std::function<void(double, double, double, void*)> position_callback,
                         void* param,
-                        int freq) :
-    PW70CANInterface(limit_check_callback, position_callback, param, freq)
+                        int freq_) :
+    PW70CANInterface(limit_check_callback, position_callback, param, freq_),
+    freq(freq_)
   {
     recv_thread = std::thread(&PW70CANInterfaceDummy::receive_messages, this, freq);
     this->pan_tilt[0] = 0.6;   // Initialize with some non-zero angles to test initialization
     this->pan_tilt[1] = 0.2;
-    this->dt = 1.0 / freq;
   }
 
   ~PW70CANInterfaceDummy() = default;
@@ -111,14 +111,20 @@ public:
   }
   bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
   {
-    this->pan_tilt[0] += pan_velocity_radians * dt;
-    this->pan_tilt[1] += tilt_velocity_radians * dt;
-    return true;
+    const double dt = 1.0 / freq;
+    if (dt > 0.0)
+    {
+      this->pan_tilt[0] += pan_velocity_radians * dt;
+      this->pan_tilt[1] += tilt_velocity_radians * dt;
+      return true;
+    }
+
+    return false;
   }
 
-  static void limit_check(double pan, double tilt, void* param);
-  static void position_update(double pan, double tilt, double timestamp, void* param);
-  static int test();
+  //static void limit_check(double pan, double tilt, void* param);
+  //static void position_update(double pan, double tilt, double timestamp, void* param);
+  //static int test();
 
   // Receive messages method
   void receive_messages(int update_frequency)
@@ -134,7 +140,10 @@ public:
       double current_time_sec = std::chrono::duration<double>(current_time.time_since_epoch()).count();
 
       // Call the callbacks after both pan and tilt have been updated
-      limit_check_callback(pan_value_radians, tilt_value_radians, callbackParam);
+      if (limit_check_callback)
+      {
+        limit_check_callback(pan_value_radians, tilt_value_radians, callbackParam);
+      }
 
       if (position_callback)
       {
@@ -148,7 +157,7 @@ private:
 
   std::thread recv_thread;
   double pan_tilt[2];
-  double dt;
+  int freq;
 };
 
 }   // namespace

@@ -33,8 +33,6 @@
 #ifndef AFF_ROBONETWORKINFO_H
 #define AFF_ROBONETWORKINFO_H
 
-#include <Rcs_macros.h>
-
 #include <string>
 #include <vector>
 #include <map>
@@ -61,7 +59,7 @@ public:
   std::string roboMode;
   std::vector<double> q_default_deg;
 
-  static RoboNetworkInfo getNetworkInfo(const std::string roboName)
+  static const RoboNetworkInfo* getNetworkInfo(const std::string roboName)
   {
     // 7-dof Jaco Gen3 (right mounted)
     RoboNetworkInfo rummenigge;
@@ -130,10 +128,10 @@ public:
 
     if (it == nwInfo.end())
     {
-      RFATAL("roboName '%s' not known", roboName.c_str());
+      return nullptr;
     }
 
-    return it->second;
+    return &it->second;
   }
 
 };
