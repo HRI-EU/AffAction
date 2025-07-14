@@ -46,30 +46,7 @@ def _send_payload_once(payload: dict, endpoint: str) -> None:
     ctx.term()
 
 
-def ptu_command_once_old(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:5560") -> None:
-    """
-    Send a single PTU pan/tilt position command.
-
-    Parameters
-    ----------
-    pan_in_degrees : float
-        Desired pan angle in degrees.
-    tilt_in_degrees : float
-        Desired tilt angle in degrees.
-    endpoint : str, optional
-        ZeroMQ PUB socket endpoint (default: "tcp://localhost:5560").
-    """
-    payload = {
-        "q_des": [
-            math.radians(pan_in_degrees),
-            math.radians(tilt_in_degrees)
-        ],
-        "quit": False,
-    }
-    _send_payload_once(payload, endpoint)
-
-
-def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:5560") -> None:
+def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: str = "tcp://localhost:40007") -> None:
     """
     Send a single PTU pan/tilt position command.
 
@@ -92,14 +69,14 @@ def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: st
     _send_payload_once(payload, endpoint)
 
 
-def ptu_quit(endpoint: str = "tcp://localhost:5560") -> None:
+def ptu_quit(endpoint: str = "tcp://localhost:40007") -> None:
     """
     Send a 'quit' command to terminate the PTU control loop.
 
     Parameters
     ----------
     endpoint : str, optional
-        ZeroMQ PUB socket endpoint (default: "tcp://localhost:5560").
+        ZeroMQ PUB socket endpoint (default: "tcp://localhost:40007").
     """
     payload = {"quit": True}
     _send_payload_once(payload, endpoint)
