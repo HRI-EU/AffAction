@@ -383,7 +383,6 @@ HumanAgent::HumanAgent(const xmlNodePtr node,
   Agent(node, groupSuffix, scene), lastTimeSeen(0.0), visible(false)
 {
   defaultPos.resize(3, 0.0);
-  //Vec3d_setZero(defaultPos);
   defaultRadius = DBL_MAX;
 
   tracker = Rcs::getXMLNodePropertySTLString(node, "tracker");
@@ -405,7 +404,6 @@ Agent* HumanAgent::clone() const
 
 void HumanAgent::setVisibility(const bool newVisibilty)
 {
-
   visible = newVisibilty;
 }
 

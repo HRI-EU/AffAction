@@ -64,16 +64,6 @@ physically interact with an affordance model.
 namespace aff
 {
 
-auto space_fold = [](std::string a, std::string b)
-{
-  return std::move(a) + ' ' + b;
-};
-
-std::string join_strings(const std::vector<std::string>& strings)
-{
-  return std::accumulate(std::next(strings.begin()), strings.end(), strings[0], space_fold);
-}
-
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -116,8 +106,8 @@ SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
     }
   }
 
-  RLOG(5, "Adding SceneEntity with name=%s bdyName=%s instanceId=%s types=%s",
-       name.c_str(), bdyName.c_str(), instanceId.c_str(), join_strings(types).c_str());
+  RLOG_CPP(5, "Adding SceneEntity with name=" <<  name << " bdyName=" << bdyName <<
+           " instanceId=" << instanceId << " types=" << Rcs::String_concatenate(types, " "));
 }
 
 SceneEntity::~SceneEntity()
