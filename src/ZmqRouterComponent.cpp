@@ -238,7 +238,11 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         std::string id(static_cast<char*>(identity.data()), identity.size());
         std::string payLoadStr(static_cast<char*>(payload.data()), payload.size());
-
+        if (workers.find(id) == workers.end())
+        {
+          // Found first occurrence
+          RLOG_CPP(0, "*************************************************** Worker found for the first time: " << id);
+        }
         workers[id] = Clock::now();              // refresh liveness
 
         try
@@ -271,12 +275,14 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
           {
             { "type", cmdPair.first },
             { "repetitions", cmdPair.second },
-            { "bounding_box", {
+            {
+              "no_bounding_box", {
                 { "left", 222 },
                 { "top", 284 },
                 { "right", 379 },
                 { "bottom", 441 }
-            }},
+              }
+            },
             { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
           };
           cmdStr = cmd.dump();
@@ -288,11 +294,12 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
       RLOG_CPP(5, "Going through " << workers.size() << " workers");
       if (!cmdStr.empty())
+      {
         for (auto& worker : workers)
         {
           auto& id = worker.first;
           auto& last = worker.second;
-          
+
           if (id != id_str)
           {
             continue;
@@ -331,6 +338,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
             }
           }
         }
+      }
 
       lastCmd = now;
     }
@@ -348,7 +356,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         ++it;
       }
     }
-    
+
   }   // while (threadRunning)
 
   threadFunctionCompleted = true;
