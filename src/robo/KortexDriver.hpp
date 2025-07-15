@@ -40,6 +40,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <atomic>
 
 #if defined (AFFACTION_WITH_KINOVA_GEN3)
 
@@ -67,7 +68,9 @@ namespace k_api = Kinova::Api;
 
 #else
 
+#if defined (_MSC_VER)
 #include <windows.h>
+#endif
 
 #endif //AFFACTION_WITH_KINOVA_GEN3
 
@@ -83,7 +86,7 @@ constexpr std::uint16_t UDP_PORT   = 10001;   // BaseCyclic feedback
 /*******************************************************************************
  * Time in seconds from epoch
  ******************************************************************************/
-static double getWallclockTime()
+static inline double getWallclockTime()
 {
   auto currentTime = std::chrono::system_clock::now();
   double seconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime.time_since_epoch()).count();
