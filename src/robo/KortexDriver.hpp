@@ -420,6 +420,32 @@ private:
                           std::vector<double> q_default_deg)
   {
     RLOG(0, "Starting roboThreadFuncTest");
+
+#if defined (_OS_UNIX)
+    {
+      pthread_t self = pthread_self();
+      int policy = SCHED_RR;
+
+      // Clamp priority to system limits
+      int desiredPrio = 99;
+      int prioMin = sched_get_priority_min(policy);
+      int prioMax = sched_get_priority_max(policy);
+
+      sched_param param;
+      param.sched_priority = Math_iClip(desiredPrio, prioMin, prioMax);
+
+      int res = pthread_setschedparam(self, policy, &param);
+      if (res != 0)
+      {
+        RLOG_CPP(0, "pthread_setschedparam failed: " << strerror(res));
+      }
+      else
+      {
+        RLOG_CPP(0, "Real-time priority set to " << desiredPrio);
+      }
+    }
+#endif
+
     constexpr double dt = 0.01;
     constexpr double tmc = 0.05;
     constexpr int filter_substeps = 20;
