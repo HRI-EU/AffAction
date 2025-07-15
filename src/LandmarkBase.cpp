@@ -169,14 +169,8 @@ void LandmarkBase::setSkeletonTrackerDefaultPosition(size_t skeletonIndex, doubl
   }
 }
 
-TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::string& faceBodyName, const std::string& camera)
+TrackerBase* LandmarkBase::addFaceTracker(const std::string& faceBodyName, const std::string& camera)
 {
-  if (!scene)
-  {
-    RLOG(0, "Can't add face tracker - scene has not been set");
-    return nullptr;
-  }
-
   FaceTracker* tracker = new FaceTracker(faceBodyName, camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));
 

@@ -133,7 +133,7 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
     }
   }
-  
+
   RLOG_CPP(5, "Received landmarks: " << nFaceLandmarks);
 
   // We assume that the mesh vertices are contained within the landmarks
@@ -169,7 +169,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
   {
     return;
   }
-  
+
   newFaceUpdate = false;
 
   HTr A_CI = getCameraTransform(graph);
@@ -206,7 +206,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 
   RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
-  
+
   for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
   {
     RcsShape* sh = &faceBdy->shapes[i];
@@ -214,13 +214,13 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
     {
       continue;
     }
-    
+
     if (!RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
     {
       RLOG(1, "Face mesh not resizeable - skipping vertices updating.");
       continue;
     }
-    
+
     // Transform camera vertices into face frame
     for (unsigned int i = 0; i < landmarks->m; ++i)
     {
@@ -240,7 +240,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
       dst[0] += DISTANCE_FACE_TO_CAM;
     }
   }
-  
+
 }
 
 bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)

@@ -186,7 +186,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     {
       std::string faceBdyName = "face";
       getKeyValuePair<std::string>(argsVec, "-face_bodyName" + suffix, faceBdyName);
-      lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
+      lmc->addFaceTracker(faceBdyName, landmarksCamera);
     }
 
     if (getKey(argsVec, "-aruco_tracking" + suffix))

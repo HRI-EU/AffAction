@@ -62,7 +62,7 @@ public:
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 
-  TrackerBase* addFaceTracker(const ActionScene* scene, const std::string& agent, const std::string& camera);
+  TrackerBase* addFaceTracker(const std::string& agent, const std::string& camera);
   TrackerBase* addYoloTracker(const std::string& camera);
 
   void startCalibration(const std::string& camera, size_t numFrames);
