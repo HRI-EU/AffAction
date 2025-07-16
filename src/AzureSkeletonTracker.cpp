@@ -821,12 +821,16 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     //    ] , ...
     //}
     std::vector<int> bb = parse_bounding_box(pose, "head");
-    if (!bb.empty())
+
+    REXEC(1)
     {
-      RLOG_CPP(0, "bb: ");
-      for (const auto& bbi : bb)
+      if (!bb.empty())
       {
-        std::cout << bbi << " ";
+        RLOG_CPP(0, "bb: ");
+        for (const auto& bbi : bb)
+        {
+          std::cout << bbi << " ";
+        }
       }
     }
 
