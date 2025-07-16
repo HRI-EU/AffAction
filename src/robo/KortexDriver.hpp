@@ -413,6 +413,37 @@ public:
 
 private:
 
+  bool setRealTimePrio()
+  {
+    bool success = false;
+
+#if defined (_OS_UNIX)
+    pthread_t self = pthread_self();
+    int policy = SCHED_RR;
+
+    // Clamp priority to system limits
+    int desiredPrio = 99;
+    int prioMin = sched_get_priority_min(policy);
+    int prioMax = sched_get_priority_max(policy);
+
+    sched_param param;
+    param.sched_priority = Math_iClip(desiredPrio, prioMin, prioMax);
+
+    int res = pthread_setschedparam(self, policy, &param);
+    if (res != 0)
+    {
+      RLOG_CPP(0, "pthread_setschedparam failed: " << strerror(res));
+    }
+    else
+    {
+      RLOG_CPP(0, "Real-time priority set to " << desiredPrio);
+      success = true;
+    }
+#endif
+
+    return success;
+  }
+
   void roboThreadFuncTest(const std::string& ip,
                           bool readOnly,
                           std::function<void(const std::string&)> feedbackFcn,
@@ -420,31 +451,7 @@ private:
                           std::vector<double> q_default_deg)
   {
     RLOG(0, "Starting roboThreadFuncTest");
-
-#if defined (_OS_UNIX)
-    {
-      pthread_t self = pthread_self();
-      int policy = SCHED_RR;
-
-      // Clamp priority to system limits
-      int desiredPrio = 99;
-      int prioMin = sched_get_priority_min(policy);
-      int prioMax = sched_get_priority_max(policy);
-
-      sched_param param;
-      param.sched_priority = Math_iClip(desiredPrio, prioMin, prioMax);
-
-      int res = pthread_setschedparam(self, policy, &param);
-      if (res != 0)
-      {
-        RLOG_CPP(0, "pthread_setschedparam failed: " << strerror(res));
-      }
-      else
-      {
-        RLOG_CPP(0, "Real-time priority set to " << desiredPrio);
-      }
-    }
-#endif
+    setRealTimePrio();
 
     constexpr double dt = 0.01;
     constexpr double tmc = 0.05;
@@ -576,6 +583,7 @@ private:
                                const std::atomic_bool& run_flag)
   {
     RFATAL("Needs fixing");
+    setRealTimePrio();
     using steady_clock = std::chrono::steady_clock;
 
     // error callback
@@ -771,6 +779,8 @@ private:
                               const std::atomic_bool& run_flag,
                               std::vector<double> q_default_deg)
   {
+    RLOG(0, "Starting roboThreadFuncLowLevel");
+    setRealTimePrio();
     auto error_callback = [](k_api::KError err)
     {
       cout << "_________ callback error _________" << err.toString();
@@ -851,7 +861,6 @@ private:
     // Initialize continuous angles close to default pose
     std::vector<double> q_cont_deg = closest_to_default(q_curr_deg, q_default_deg);
 
-
     // Initialize filters with robot's continuous state
     std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
       std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, DOF_ARM);
@@ -902,8 +911,6 @@ private:
       gripper_motor_command->set_velocity(0.0);
       gripper_motor_command->set_force(100.0);
     }
-
-
 
     // Initialize commands with current state
     base_feedback = base_cyclic.Refresh(base_command);

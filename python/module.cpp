@@ -1316,7 +1316,7 @@ Example
       ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
     }
   },
-  py::arg("connection") = "tcp://*:5566",
+  py::arg("connection") = "tcp://*:40000",
   py::arg("camera_name") = "camera_0",
   py::arg("withFaceTracking") = false,
   py::arg("face_name") = "face",
@@ -1527,7 +1527,6 @@ Example
       std::unique_lock<std::mutex> lk(mtx);
       RLOG(1, "cv.wait");
       py::gil_scoped_release release;  // Unblock waiting period
-      //cv.wait(lk, [&]{ return counter >= n; });
 
       bool success = cv.wait_for(lk, std::chrono::seconds(2), [&]()
       {
