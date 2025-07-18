@@ -38,6 +38,7 @@
 
 #include <IkSolverRMR.h>
 #include <Rcs_filters.h>
+#include <memory>
 
 
 
