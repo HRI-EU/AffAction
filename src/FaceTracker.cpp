@@ -134,7 +134,7 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     }
   }
 
-  RLOG_CPP(5, "Received landmarks: " << nFaceLandmarks);
+  RLOG_CPP(1, "Received face landmarks: " << nFaceLandmarks);
 
   // We assume that the mesh vertices are contained within the landmarks
   // from the beginning. There might be more landmarks than mesh vertices

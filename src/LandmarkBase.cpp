@@ -64,6 +64,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
   if (!json_data.contains("header"))
   {
     RLOG(1, "No 'header' found in json - returning");
+    RLOG_CPP(2, "This is the json:\n" << json_data.dump(2));
     return;
   }
 
@@ -84,7 +85,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
   {
     for (auto& entry : json_data["data"].items())
     {
-      NLOG_CPP(1, entry.key());
+      RLOG_CPP(1, entry.key());
 
       for (const auto& tracker : trackers)
       {
@@ -135,9 +136,9 @@ int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r
   }
 
   auto tracker = new AzureSkeletonTracker(numHumanAgents, camera);
-  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
+  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   RLOG(0, "Added SkeletonTracker");
 
   return numHumanAgents;

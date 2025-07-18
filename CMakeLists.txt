@@ -240,6 +240,7 @@ src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
 src/YoloTracker.cpp
 src/VirtualCamera.cpp
+src/SceneHelpers.cpp
 src/StringParserTools.cpp
 src/HeadGesture.cpp
 src/SceneTransformationDataRecorder.cpp
@@ -253,9 +254,6 @@ src/GraphComponent.cpp
 src/IKComponent.cpp
 src/EyeModelIKComponent.cpp
 src/TrajectoryComponent.cpp
-src/EventGui.cpp
-src/TaskGuiComponent.cpp
-src/TextEditComponent.cpp
 src/ActionComponent.cpp
 src/HardwareComponent.cpp
 src/WebsocketActionComponent.cpp
@@ -271,6 +269,12 @@ src/VirtualCameraWindow.cpp
 src/TTSComponent.cpp
 src/RespeakerSoundDirComponent.cpp
 src/RetargetComponent.cpp
+)
+
+SET(GUI_SRCS
+src/EventGui.cpp
+src/TaskGuiComponent.cpp
+src/TextEditComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
@@ -294,7 +298,7 @@ ENDIF(AFFACTION_WITH_ROS)
 
 SET_PROPERTY(SOURCE src/TTSComponent.cpp PROPERTY COMPILE_DEFINITIONS AFFACTION_PIPER_PATH="${AFFACTION_PIPER_PATH}")
 
-ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
+ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${GUI_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
 
 TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

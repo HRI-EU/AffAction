@@ -59,6 +59,7 @@ namespace py = pybind11;
 #include <PredictionTree.h>
 #include <AzureSkeletonTracker.h>
 #include <ActionEyeGaze.h>
+#include <SceneHelpers.h>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -1300,7 +1301,7 @@ Example
 
     if (withFaceTracking)
     {
-      ex.addComponentArgument("-face_tracking");
+      ex.addComponentArgument("-face_tracking -face_gesture");
       ex.addComponentArgument("-face_bodyName " + face_name);
     }
 
@@ -1449,103 +1450,24 @@ Example
   //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
-  .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n) -> std::string
+  .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> std::string
   {
-    std::mutex mtx;
-    std::condition_variable cv;
-    int counter = 0;
-    auto sub = std::make_shared<ES::ScopedSubscription>();
-    std::string faceName;
-    auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
-
-    auto renderCb = [&, sub, n, active](std::string id, std::string data) mutable
-    {
-      if (!*active)
-      {
-        RLOG_CPP(1, "Callback skipped because function is no longer active.");
-        return;
-      }
-
-      std::lock_guard<std::mutex> lk(mtx);
-      RLOG_CPP(1, "id: " << id << " data: " << data);
-
-      if (id=="face_recog")
-      {
-        // Parse the JSON
-        nlohmann::json j = nlohmann::json::parse(data);
-
-        // Check existence and type of "face_recog"
-        if (j.contains("data") &&
-            j["data"].contains("face_recog") &&
-            j["data"]["face_recog"].is_array())
-        {
-          counter++;
-          const auto& faces = j["data"]["face_recog"];
-          RLOG_CPP(1, "Iteration " << counter << ": number of recognized faces: " << faces.size());
-
-          if (!faces.empty())
-          {
-            const nlohmann::json& first_face = faces[0];
-
-            faceName = first_face["recognized_face"];
-            auto& bbox = first_face["bounding_box"];
-
-            RLOG_CPP(1, "First recognized face: " << faceName);
-            RLOG_CPP(1, "Bounding box: left=" << bbox["left"]
-                      << ", top=" << bbox["top"]
-                      << ", right=" << bbox["right"]
-                      << ", bottom=" << bbox["bottom"]);
-          }
-          else
-          {
-            RLOG_CPP(1, "No faces found!");
-          }
-
-        }
-        else
-        {
-          RLOG_CPP(1, "\"face_recog\" array not found.");
-        }
-
-      }
-
-      if (counter >= n)
-      {
-        *active = false;  // prevent further callback execution
-        sub.reset();       // unsubscribe
-        cv.notify_one();   // wake calling context
-      }
-    };
-
-    RLOG(1, "Subscribing ZmqDealerMessage");
-    *sub = ex.getEntity().subscribe("ZmqDealerMessage", std::move(renderCb));
-
-    RLOG(1, "Publishing PerceptionCommand");
-    ex.getEntity().publish("SetPerceptionCommand", std::string("face_recog"), n);
-
-    {
-      std::unique_lock<std::mutex> lk(mtx);
-      RLOG(1, "cv.wait");
-      py::gil_scoped_release release;  // Unblock waiting period
-
-      bool success = cv.wait_for(lk, std::chrono::seconds(2), [&]()
-      {
-        return counter >= n;
-      });
-
-      if (!success)
-      {
-        RLOG_CPP(0, "Timeout reached while waiting for face recognition.");
-      }
-
-      *active = false;  // ensure no more callbacks after return
-      sub.reset();      // explicitly unsubscribe
-      RLOG(1, "done cv.wait");
-    }
-
-    return faceName;
+    py::gil_scoped_release release;  // Unblock waiting period
+    return aff::recognize_faces(ex.getEntity(), n_iterations, timeout_in_seconds);
   },
-  py::arg("n") = 5)
+  py::arg("n_iterations") = 5,
+  py::arg("timeout_in_seconds") = 2.5)
+
+  //////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////
+  .def("track_facemesh", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> bool
+  {
+    py::gil_scoped_release release;  // Unblock waiting period
+    return aff::track_facemesh(ex.getEntity(), n_iterations, timeout_in_seconds);
+  },
+  py::arg("n_iterations") = 5,
+  py::arg("timeout_in_seconds") = 2.5)
 
   //////////////////////////////////////////////////////////////////////////////
   // viaPoint action
