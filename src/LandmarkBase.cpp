@@ -35,6 +35,7 @@
 #include "ArucoTracker.h"
 #include "AzureSkeletonTracker.h"
 #include "FaceTracker.h"
+#include "YoloTracker.h"
 #include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
@@ -42,13 +43,10 @@
 #include <Rcs_typedef.h>
 
 
-
 namespace aff
 {
 
-
-LandmarkBase::LandmarkBase(RcsGraph* graph) :
-  graphPtr(graph), frozen(false), syncInputJsonWithWallclockTime(false)
+LandmarkBase::LandmarkBase() : frozen(false), syncInputJsonWithWallclockTime(false)
 {
 }
 
@@ -61,9 +59,17 @@ void LandmarkBase::addTracker(std::unique_ptr<TrackerBase> tracker)
   trackers.push_back(std::move(tracker));
 }
 
-void LandmarkBase::setJsonInput(const nlohmann::json& json)
+void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
 {
-  double time;
+  if (!json_data.contains("header"))
+  {
+    RLOG(1, "No 'header' found in json - returning");
+    RLOG_CPP(2, "This is the json:\n" << json_data.dump(2));
+    return;
+  }
+
+  double time = 0.0;
+  const nlohmann::json& json_header = json_data["header"];
 
   if (syncInputJsonWithWallclockTime)
   {
@@ -71,56 +77,42 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json)
   }
   else
   {
-    time = json["header"]["timestamp"];
+    time = json_header["timestamp"];
   }
 
-  std::string cameraFrame = json["header"]["frame_id"];
-
-  for (auto& entry : json["data"].items())
+  // Delegate parsing of data to added trackers
+  if (json_data.contains("data"))
   {
-    NLOG_CPP(1, entry.key());
-
-    for (const auto& tracker : trackers)
+    for (auto& entry : json_data["data"].items())
     {
-      if (entry.key() == tracker->getRequestKeyword())
+      RLOG_CPP(1, entry.key());
+
+      for (const auto& tracker : trackers)
       {
-        tracker->parse(entry.value(), time, cameraFrame);
+        if (entry.key() == tracker->getRequestKeyword())
+        {
+          tracker->parse(json_header, entry.value(), time);
+        }
       }
     }
-  }
-}
-
-void LandmarkBase::setCameraTransform(const HTr* A_camI)
-{
-  double x[6];
-  HTr_to6DVector(x, A_camI);
-  RLOG(0, "Callback: Camera pose for xml: %.3f %.3f %.3f  %.3f %.3f %.3f",
-       x[0], x[1], x[2], RCS_RAD2DEG(x[3]), RCS_RAD2DEG(x[4]), RCS_RAD2DEG(x[5]));
-  for (const auto& tracker : trackers)
-  {
-    tracker->setCameraTransform(A_camI);
   }
 }
 
 void LandmarkBase::addArucoTracker(const std::string& camera, const std::string& baseMarker)
 {
   auto tracker = new ArucoTracker(camera, baseMarker);
-  tracker->addCalibrationFinishedCallback([this](const HTr* A_CI) -> void
-  {
-    setCameraTransform(A_CI);
-  });
   addTracker(std::unique_ptr<ArucoTracker>(tracker));
   RLOG(0, "Added ArucoTracker");
 }
 
-TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
+TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons, const std::string& camera)
 {
-  auto tracker = new AzureSkeletonTracker(numSkeletons);
+  auto tracker = new AzureSkeletonTracker(numSkeletons, camera);
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   return tracker;
 }
 
-int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r)
+int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r, const std::string& camera)
 {
   if (!scene)
   {
@@ -143,10 +135,10 @@ int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r
     return 0;
   }
 
-  auto tracker = new AzureSkeletonTracker(numHumanAgents);
-  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
+  auto tracker = new AzureSkeletonTracker(numHumanAgents, camera);
   tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
+  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   RLOG(0, "Added SkeletonTracker");
 
   return numHumanAgents;
@@ -178,19 +170,33 @@ void LandmarkBase::setSkeletonTrackerDefaultPosition(size_t skeletonIndex, doubl
   }
 }
 
-TrackerBase* LandmarkBase::addFaceTracker(const ActionScene* scene, const std::string& faceBodyName, const std::string& camera)
+TrackerBase* LandmarkBase::addFaceTracker(const std::string& faceBodyName, const std::string& camera)
 {
-  if (!scene)
-  {
-    RLOG(0, "Can't add face tracker - scene has not been set");
-    return nullptr;
-  }
-
-  FaceTracker* tracker = new FaceTracker(faceBodyName);
-  tracker->setCameraName(camera);
+  FaceTracker* tracker = new FaceTracker(faceBodyName, camera);
   addTracker(std::unique_ptr<FaceTracker>(tracker));
 
   return tracker;
+}
+
+TrackerBase* LandmarkBase::addYoloTracker(const std::string& camera)
+{
+  YoloTracker* tracker = new YoloTracker(camera);
+  addTracker(std::unique_ptr<YoloTracker>(tracker));
+  return tracker;
+}
+
+void LandmarkBase::estimateCameraPose(int numFrames)
+{
+  for (auto& t : trackers)
+  {
+    ArucoTracker* at = dynamic_cast<ArucoTracker*>(t.get());
+
+    if (at)
+    {
+      RLOG(0, "Calibrating Aruco camera");
+      at->calibrate(numFrames);
+    }
+  }
 }
 
 void LandmarkBase::startCalibration(const std::string& camera, size_t numFrames)
@@ -264,21 +270,21 @@ bool LandmarkBase::getSyncInputWithWallclock() const
   return syncInputJsonWithWallclockTime;
 }
 
-const RcsGraph* LandmarkBase::getGraph() const
-{
-  return this->graphPtr;
-}
+// const RcsGraph* LandmarkBase::getGraph() const
+// {
+//   return this->graphPtr;
+// }
 
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
 {
   return this->trackers;
 }
 
-void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer)
+void LandmarkBase::createDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   for (auto& tracker : getTrackers())
   {
-    bool success = tracker->initDebugGraphics(viewer, getGraph());
+    bool success = tracker->initDebugGraphics(viewer, graph);
     if (!success)
     {
       RLOG_CPP(1, "Failed to add tracker for '" << tracker->getRequestKeyword() <<"'");

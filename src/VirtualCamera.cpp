@@ -50,36 +50,10 @@
 namespace aff
 {
 
-VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
-  width(width_), height(height_), virtualRenderer(width_, height_)
+VirtualCamera::VirtualCamera(osg::Node* node, int width, int height,
+                             double near, double far):
+  virtualRenderer(width, height, near, far)
 {
-  // These come from a Kinect v2 calbration
-  double fx = 1.36972287105 * height;
-  double cx = width / 2 - 0.5;
-  double fy = 1.36972287105 * height;
-  double cy = height / 2 - 0.5;
-  double near = 0.3;
-  double far = 10.0;
-
-  // This comes for the Logitech C910 through ChatGPT
-  fx = 1.2602 * height;
-  fy = 1.2602 * height;
-  cx = 0.5*width - 0.5;
-  cy = 0.5*height - 0.5;
-
-  // These come from Azure Kinect calibration
-  fx = 1.04857360564 * height;
-  cx = 0.5*width - 0.5;
-  fy = 1.04857360564 * height;
-  cy = 0.5*height - 0.5;
-
-  // These come from Azure Kinect WFOV calibration
-  fx = 0.8201975534 * height;
-  cx = 0.5*width - 0.5;
-  fy = 0.8201975534 * height;
-  cy = 0.5*height - 0.5;
-
-  //osg::ref_ptr<osgFX::Cartoon> rootnode = new osgFX::Cartoon;
   osg::ref_ptr<osg::Group> rootnode = new osg::Group;
 
   double rgba[4];
@@ -99,8 +73,6 @@ VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
   cameraLight->getLight()->setSpecular(osg::Vec4(1.0, 1.0, 1.0, 1.0));
   rootnode->addChild(cameraLight.get());
   rootnode->getOrCreateStateSet()->setMode(GL_LIGHT1, osg::StateAttribute::ON);
-
-
 
   // Shadow map scene. We use the sunlight to case shadows.
   osg::ref_ptr<osgShadow::ShadowMap> sm = new osgShadow::ShadowMap;
@@ -123,72 +95,90 @@ VirtualCamera::VirtualCamera(osg::Node* node, int width_, int height_) :
   // shadowScene->setReceivesShadowTraversalMask(ReceivesShadowTraversalMask);
   // shadowScene->setCastsShadowTraversalMask(CastsShadowTraversalMask);
 
-
   // Set anti-aliasing
   osg::ref_ptr<osg::DisplaySettings> ds = new osg::DisplaySettings;
   ds->setNumMultiSamples(4);
   virtualRenderer.setDisplaySettings(ds.get());
   virtualRenderer.setSceneData(shadowScene.get());
+
+  double fx, cx, fy, cy;
+  bool success = initCamera("AzureKinect WFOV", width, height, fx, fy, cx, cy, near, far);
+  RCHECK(success);
   virtualRenderer.setProjectionFromFocalParams(fx, fy, cx, cy, near, far);
 }
 
-VirtualCamera::~VirtualCamera()
-{}
-
-void VirtualCamera::render(double x, double y, double z,
-                           double thx, double thy, double thz,
-                           double* colorBuffer, double* depthBuffer)
+bool VirtualCamera::initCamera(const std::string& cameraName, int width, int height,
+                               double& fx, double& fy, double& cx, double& cy, double& near, double& far)
 {
-  double transform6d[] = {x, y, z, thx, thy, thz};
 
-  HTr A_camI;
-  HTr_from6DVector(&A_camI, transform6d);
+  if (cameraName=="Kinect_v2")
+  {
+    fx = 1.36972287105 * height;
+    fy = fx;
+    cx = 0.5*width - 0.5;
+    cy = 0.5*height - 0.5;
+  }
+  else if (cameraName=="Logitech_C910")
+  {
+    fx = 1.2602 * height;
+    fy = fx;
+    cx = 0.5*width - 0.5;
+    cy = 0.5*height - 0.5;
+  }
+  else if (cameraName=="AzureKinect")
+  {
+    fx = 1.04857360564 * height;
+    fy = fx;
+    cx = 0.5*width - 0.5;
+    cy = 0.5*height - 0.5;
+  }
+  else if (cameraName=="AzureKinect WFOV")
+  {
+    fx = 0.8201975534 * height;
+    fy = fx;
+    cx = 0.5*width - 0.5;
+    cy = 0.5*height - 0.5;
+  }
+  else
+  {
+    return false;
+  }
 
-  render(&A_camI, colorBuffer, depthBuffer);
+  near = 0.3;
+  far = 10.0;
+
+  return true;
 }
 
-void VirtualCamera::render(const HTr* A_camI, double* colorBuffer, double* depthBuffer)
+void VirtualCamera::capture(const HTr* A_camI)
 {
-  if (!colorBuffer && !depthBuffer)
-  {
-    RLOG(1, "No buffers to render to");
-    return;
-  }
-
-  const std::lock_guard<std::mutex> lockGuard(virtualRendererLock);
-
-  double t_render = Timer_getSystemTime();
   virtualRenderer.setCameraTransform(A_camI);
   virtualRenderer.frame();
+}
 
-  if (colorBuffer)
-  {
-    const auto& colorImage = virtualRenderer.getRGBImageRef();
-    for (size_t i = 0; i < height; i++)
-    {
-      for (size_t j = 0; j < width; j++)
-      {
-        colorBuffer[(i * width + j) * 3] = colorImage[i][j][0];
-        colorBuffer[(i * width + j) * 3 + 1] = colorImage[i][j][1];
-        colorBuffer[(i * width + j) * 3 + 2] = colorImage[i][j][2];
-      }
-    }
-  }
+void VirtualCamera::getColorImage(uint8_t* data, size_t size)
+{
+  virtualRenderer.getColorImage(data, size);
+}
 
-  if (depthBuffer)
-  {
-    const auto& depthImage = virtualRenderer.getDepthImageRef();
-    for (size_t i = 0; i < height; i++)
-    {
-      for (size_t j = 0; j < width; j++)
-      {
-        depthBuffer[i * width + j] = depthImage[i][j];
-      }
-    }
-  }
+void VirtualCamera::getDepthImage(float* data, size_t size)
+{
+  virtualRenderer.getDepthImage(data, size);
+}
 
-  t_render = Timer_getSystemTime() - t_render;
-  RLOG(1, "Rendering took %.1f msec", 1000.0 * t_render);
+Rcs::DepthRenderer* VirtualCamera::getRenderer()
+{
+  return &virtualRenderer;
+}
+
+size_t VirtualCamera::getHeight() const
+{
+  return virtualRenderer.getHeight();
+}
+
+size_t VirtualCamera::getWidth() const
+{
+  return virtualRenderer.getWidth();
 }
 
 }   // namespace aff

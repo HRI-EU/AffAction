@@ -351,7 +351,11 @@ void TTSComponent::localThread()
 
     if (whichTTS=="native")
     {
+#if defined (__APPLE__)
+      consCmd = "say -v Reed " + std::string("\"") + text + std::string("\"");
+#else
       consCmd = "espeak " + std::string("\"") + text + std::string("\"");
+#endif
     }
     if (whichTTS=="spd-say")
     {

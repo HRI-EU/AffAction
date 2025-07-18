@@ -37,8 +37,7 @@
 #include "EntityBase.h"
 
 #include <GraphicsWindow.h>
-#include <MediaPipeComponent.h>
-#include <OsimRetargetComponent.h>
+#include <LandmarkZmqComponent.h>
 #include <RetargetComponent.h>
 #include <AzureBodyTrackingComponent.h>
 
@@ -60,9 +59,8 @@ public:
   size_t maxPeople;
   EntityBase entity;
   std::string dataSource;   // AzurePython, AzureCPP, FromFile, None
-  std::unique_ptr<MediaPipeComponent> mpC;
-  std::unique_ptr<OsimRetargetComponent> retargetC;
-  std::unique_ptr<RetargetComponent> retargetC2;
+  std::unique_ptr<LandmarkZmqComponent> mpC;
+  std::unique_ptr<RetargetComponent> retargetC;
   std::unique_ptr<RetargetLogger> logger;
   std::unique_ptr<RetargetPlayer> player;
   std::unique_ptr<GraphicsWindow> viewer;

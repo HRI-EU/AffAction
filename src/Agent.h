@@ -132,7 +132,6 @@ private:
   std::string headBdyName;
   std::string leftHandBdyName;
   std::string rightHandBdyName;
-
 };
 
 } // namespace aff

@@ -31,6 +31,7 @@
 *******************************************************************************/
 
 #ifndef AFF_RESPEAKERSOUNDDIRCOMPONENT_H
+#define AFF_RESPEAKERSOUNDDIRCOMPONENT_H
 
 #include "ComponentBase.h"
 
@@ -39,15 +40,6 @@
 
 namespace aff
 {
-
-// Base interface for Respeaker access
-class RespeakerInterfaceBase
-{
-public:
-  virtual ~RespeakerInterfaceBase() = default;
-  virtual int angle_in_degrees() = 0;
-  virtual unsigned char version() = 0;
-};
 
 class RespeakerUSBComponent : public ComponentBase
 {
@@ -63,7 +55,6 @@ private:
 
   bool threadRunning;
   std::thread usbThread;
-  RespeakerInterfaceBase* rinterface = nullptr;
 };
 
 } // namespace aff

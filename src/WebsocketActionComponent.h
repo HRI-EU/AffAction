@@ -64,7 +64,9 @@ class WebsocketActionComponent : public ComponentBase
 {
 public:
 
-  WebsocketActionComponent(EntityBase* parent, unsigned int port=AFF_WEBSOCKETACTIONCOMPONENT_DEFAULTPORT);
+  WebsocketActionComponent(EntityBase* parent,
+                           unsigned int port=AFF_WEBSOCKETACTIONCOMPONENT_DEFAULTPORT,
+                           std::string eventToPublish="ActionSequence");
   virtual ~WebsocketActionComponent();
 
 private:
@@ -82,6 +84,7 @@ private:
   unsigned int port = AFF_WEBSOCKETACTIONCOMPONENT_DEFAULTPORT;
   std::thread bgThread;
   std::string lastResultMsg;
+  std::string eventToPublish;
 };
 
 }   // namespace aff

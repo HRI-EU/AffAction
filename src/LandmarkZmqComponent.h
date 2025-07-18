@@ -51,9 +51,7 @@ public:
    *         the contents of the file will be parsed into a json string and
    *         passed to the class methods, instead of running a zmq interface.
    */
-  LandmarkZmqComponent(EntityBase* parent,
-                       RcsGraph* graph,
-                       std::string connection = "tcp://localhost:5555");
+  LandmarkZmqComponent(EntityBase* parent, std::string connection = "tcp://localhost:5555");
 
   virtual ~LandmarkZmqComponent();
 
@@ -66,9 +64,8 @@ protected:
 private:
 
   void onToggleJsonLogging();
-  void onEstimateCameraPose(int numFrames);
   void fromFileThreadFunc(const std::string& fileName);
-  void zmqThreadFunc();
+  void zmqThreadFunc(const std::string& connection);
   void startZmqThread();
   void stopZmqThread();
 

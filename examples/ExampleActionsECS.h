@@ -80,7 +80,8 @@ public:
   virtual void run();
   virtual void step();
   virtual std::string help();
-
+  virtual void updateUI();
+  virtual void setSyncMode(std::string syncMode);
   virtual void startThreaded();
 
   // Accessors
@@ -99,6 +100,7 @@ public:
   EntityBase& getEntity();
   const VirtualCamera* getVirtualCamera() const;
   VirtualCamera* getVirtualCamera();
+  void setVirtualCamera(VirtualCamera* camera);
   void addComponentArgument(const std::string& arg);
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;
@@ -131,11 +133,15 @@ public:
   std::string virtualCameraBodyName;
   unsigned int speedUp;
   int maxNumThreads;
+  int numSceneQueries;
   bool noLimits, noViewer, noTextGui, earlyExitAction;
   bool unittest, verbose, turbo;
   bool noSpeedCheck, noJointCheck, noCollCheck, noTrajCheck;
   bool hasBeenStopped;
-
+  bool blockingMainThread;
+  double dt;
+  bool enableWireframeToggle;
+  bool enableRealGraphVisualization;
 
 
   /*! \brief Retrieves the gaze data in JSON format.
@@ -143,7 +149,7 @@ public:
   * \return JSON object containing the gaze data from all the agents.
   */
   nlohmann::json getUsersGazeData() const;
-   
+
   nlohmann::json getRecordedTransformations(double start_time, double end_time) const;
   void loadTransformationDataFromFile(const std::string& filename) const;
   void startPlaybackTransformationData() const;
@@ -157,7 +163,7 @@ protected:
   std::string physicsEngine;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
-  double dt, dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
+  double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
   bool plot, valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
   unsigned int loopCount;
@@ -217,16 +223,16 @@ protected:
   RcsGraph* graphToInitializeWith;
 
   /*! \brief List of gaze components.
-  * 
+  *
   * This vector contains pointers to instances of GazeComponent,
   * each of which is responsible for tracking the gaze of a specific agent.
-  * 
+  *
   */
   std::vector<GazeComponent*> gazeComponents;
-  SceneTransformationDataRecorder* sceneTransformationDataRecorder; 
-  SceneTransformationDataPlayer * sceneTransformationDataPlayer;
+  SceneTransformationDataRecorder* sceneTransformationDataRecorder;
+  SceneTransformationDataPlayer* sceneTransformationDataPlayer;
 
-  
+
 
 
 };

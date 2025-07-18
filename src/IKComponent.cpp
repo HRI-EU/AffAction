@@ -89,12 +89,12 @@ void IKComponent::subscribeAll()
 
 void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
 {
-  if (this->eStop == true)
+  if (this->eStop)
   {
     return;
   }
 
-  if (this->a_prev==NULL)
+  if (!this->a_prev)
   {
     this->a_prev = MatNd_clone(a);
   }
@@ -124,21 +124,16 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
                                             lambda, qFilt, phase, speedLimitCheck, jointLimitCheck,
                                             collisionCheck, applySpeedAndAccLimits, true, NULL, resMsg);
 
-  // We only print this once after the e-stop being triggered, therefore the
-  // second comparison
+  // We only print this once after the e-stop being triggered, therefore the second comparison
   if ((ikOk<0) && (eStop==false))
   {
-    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
+    RLOG_CPP(1, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
+    getEntity()->publish("EmergencyStop");
   }
 
   // Gradually activate null space so that it takes 1 second from 0 to alphaMax.
-  // This is only happening after class construction / initialization, but not
-  // during run-time.
-  this->alpha += getEntity()->getDt()*alphaMax;
-  if (this->alpha > this->alphaMax)
-  {
-    this->alpha = this->alphaMax;
-  }
+  // This is only happening after class construction / initialization, not at run-time.
+  this->alpha = std::min(this->alpha+getEntity()->getDt()*alphaMax, this->alphaMax);
 
   // Memorize last activation vector to detect task switches
   MatNd_copy(this->a_prev, a);

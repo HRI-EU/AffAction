@@ -48,7 +48,6 @@ physically interact with an affordance model.
 
 namespace aff
 {
-std::string join_strings(const std::vector<std::string>& strings);
 
 class SceneEntity
 {

@@ -51,7 +51,7 @@
 
   <Body name="GazePointL" prev="LeftEyeBall" >
     <Joint name="GazeXL" type="TransX" range="0 1 3" weightJL="0" />
-    <Shape type="SPHERE" radius="0.02" graphics="true" color="RED" />
+    <Shape type="SPHERE" radius="0.02" graphics="untrue" color="RED" />
   </Body>
 
   <Body name="RightEyeBase" transform="-0.01 -0.06 0.06 0 0 0" />
@@ -76,7 +76,7 @@
 
   <Body name="GazePointR" prev="RightEyeBall" >
     <Joint name="GazeXR" type="TransX" range="0 1 3" weightJL="0" />
-    <Shape type="SPHERE" radius="0.02" graphics="true" color="RED" />
+    <Shape type="SPHERE" radius="0.02" graphics="untrue" color="RED" />
   </Body>
 
 </Graph>

@@ -43,21 +43,6 @@ IF (WIN32)
 ENDIF()
 
 ################################################################################
-# Macro to copy dlls into bin directory
-################################################################################
-IF (NOT COMMAND COPY_DLL)
-MACRO(COPY_DLL libname)
-IF (WIN32)
-  ADD_CUSTOM_COMMAND(
-      TARGET ${libname} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-      ${LIBRARY_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/${libname}.dll
-      ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/${libname}.dll)
-ENDIF(WIN32)
-ENDMACRO()
-ENDIF(NOT COMMAND COPY_DLL)
-
-################################################################################
 # Check if project is stand-alone or inside tree with dependencies
 ################################################################################
 SET(STANDALONE_PROJECT OFF)
@@ -65,8 +50,6 @@ IF(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   PROJECT(AffAction)
   SET(OpenGL_GL_PREFERENCE GLVND) # Removes warning OpenGL_GL_PREFERENCE has not been set to "GLVND" or "LEGACY"
   SET(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-  SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-  SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
   SET(RCS_CONFIG_DIR "$ENV{SIT}/Libraries/Rcs/1.0/config")
   LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
   LIST(APPEND CMAKE_PREFIX_PATH $ENV{SIT}/Libraries/Rcs/1.0/share/cmake/Rcs)
@@ -112,6 +95,7 @@ ADD_DEFINITIONS(-DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
 SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 SET(BUILD_SHARED_LIBS ON)
 SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)   # for dlls
 
 ################################################################################
 # Setup exported target collection
@@ -254,7 +238,9 @@ src/LandmarkBase.cpp
 src/ConcurrentExecutor.cpp
 src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
+src/YoloTracker.cpp
 src/VirtualCamera.cpp
+src/SceneHelpers.cpp
 src/StringParserTools.cpp
 src/HeadGesture.cpp
 src/SceneTransformationDataRecorder.cpp
@@ -268,27 +254,36 @@ src/GraphComponent.cpp
 src/IKComponent.cpp
 src/EyeModelIKComponent.cpp
 src/TrajectoryComponent.cpp
-src/EventGui.cpp
-src/TaskGuiComponent.cpp
-src/TextEditComponent.cpp
 src/ActionComponent.cpp
 src/HardwareComponent.cpp
 src/WebsocketActionComponent.cpp
 src/LandmarkZmqComponent.cpp
+src/ZmqRouterComponent.cpp
 src/FaceGestureComponent.cpp
 src/GazeComponent.cpp
 src/CameraViewComponent.cpp
 src/PhysicsComponent.cpp
+src/PW70CANInterface.cpp
 src/PW70Component.cpp
 src/VirtualCameraWindow.cpp
 src/TTSComponent.cpp
 src/RespeakerSoundDirComponent.cpp
+src/RetargetComponent.cpp
+)
+
+SET(GUI_SRCS
+src/EventGui.cpp
+src/TaskGuiComponent.cpp
+src/TextEditComponent.cpp
 )
 
 SET(EXAMPLE_SRCS
 examples/ExampleActionsECS.cpp
+examples/ExampleRetarget.cpp
 examples/ExampleFlowMatching.cpp
+examples/ExampleViapoints.cpp
 src/JacoShmComponent.cpp
+src/AzureBodyTrackingComponent.cpp
 )
 
 IF (AFFACTION_WITH_ROS)
@@ -303,7 +298,7 @@ ENDIF(AFFACTION_WITH_ROS)
 
 SET_PROPERTY(SOURCE src/TTSComponent.cpp PROPERTY COMPILE_DEFINITIONS AFFACTION_PIPER_PATH="${AFFACTION_PIPER_PATH}")
 
-ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
+ADD_LIBRARY(AffAction ${ACTION_SRCS} ${ECS_SRCS} ${GUI_SRCS} ${EXAMPLE_SRCS} ${ROS_SRCS})
 
 TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -316,35 +311,35 @@ TARGET_INCLUDE_DIRECTORIES(AffAction PUBLIC
 
 TARGET_LINK_LIBRARIES(AffAction PUBLIC Tropic RcsGraphics RcsGui RcsPhysics)
 
+IF (TARGET AzureTracker)
+  TARGET_LINK_LIBRARIES(AffAction PUBLIC AzureTracker)
+ENDIF()
+
 IF (AFFACTION_WITH_PCAN_BASIC)
   FIND_PACKAGE(PCAN-Basic REQUIRED)
   IF(TARGET PCAN-Basic::PCAN-Basic)
     TARGET_LINK_LIBRARIES(AffAction PRIVATE PCAN-Basic::PCAN-Basic)
     TARGET_COMPILE_DEFINITIONS(AffAction PRIVATE -DAFFACTION_WITH_PCAN_BASIC)
+    MESSAGE(STATUS "Linking AffAction with PCAN_BASIC_DLLS: ${PCAN_BASIC_DLLS}")
   ENDIF()
 ENDIF(AFFACTION_WITH_PCAN_BASIC)
 
 # zmq library is used to communicate with python from MediaPipeComponent
 IF (WIN32)
   FIND_PACKAGE(cppzmq REQUIRED)
-  TARGET_LINK_LIBRARIES(AffAction PRIVATE cppzmq)
+  SET(ZMQ_LIBRARIES cppzmq)
 ELSEIF(APPLE)
-  find_package(PkgConfig REQUIRED)
-  #pkg_check_modules(zeromq REQUIRED)
-  pkg_check_modules(ZMQ REQUIRED libzmq)
-  MESSAGE("zmq libs: ${ZMQ_LIBRARIES}")
-  #link_directories(${ZMQ_LIBRARY_DIRS})
-  #TARGET_LINK_LIBRARIES(AffAction PRIVATE ${ZMQ_LIBRARIES})
-  TARGET_LINK_LIBRARIES(AffAction PRIVATE /opt/homebrew/Cellar/zeromq/4.3.5_1/lib/libzmq.5.dylib)
+  FIND_PACKAGE(PkgConfig REQUIRED)
+  PKG_CHECK_MODULES(ZMQ REQUIRED libzmq)
+  TARGET_LINK_DIRECTORIES(AffAction PRIVATE ${ZMQ_LIBRARY_DIRS})
 ELSE()
-  TARGET_LINK_LIBRARIES(AffAction PRIVATE zmq)
+  SET(ZMQ_LIBRARIES zmq)
 ENDIF()
+TARGET_LINK_LIBRARIES(AffAction PRIVATE ${ZMQ_LIBRARIES})
 
 # Experimental respeaker c++ class
 # LIBUSB_1_INCLUDE_DIRS, LIBUSB_1_LIBRARIES
 # PORTAUDIO_INCLUDE_DIR, PORTAUDIO_LIBRARIES
-
-# Experimental respeaker c++ class
 IF (AFFACTION_WITH_RESPEAKER)
   IF (UNIX)
     FIND_PACKAGE(PkgConfig REQUIRED)
@@ -374,12 +369,12 @@ ENDIF()
 
 IF(AFFACTION_WITH_OPTIM)
   IF(TARGET RcsOptim)
-    MESSAGE(STATUS "Building AffAction with optimization support")
+    MESSAGE(STATUS "Compiling AffAction with optimization support")
     #LIST(APPEND ActionBase src/OptimizationSet.cpp)
     TARGET_COMPILE_DEFINITIONS(AffAction PUBLIC -DSMILEACTIONS_WITH_OPTIM)
     TARGET_LINK_LIBRARIES(AffAction PRIVATE RcsOptim)
   ELSE()
-    MESSAGE(STATUS "Building AffAction without optimization support")
+    MESSAGE(STATUS "Compiling AffAction without optimization support")
   ENDIF()
 
 ENDIF()
@@ -420,23 +415,36 @@ ENDIF()
 ADD_EXECUTABLE(TreeTest examples/TreeTest.cpp)
 TARGET_LINK_LIBRARIES(TreeTest RcsCore)
 
+ADD_EXECUTABLE(RunPTU examples/RunPTU.cpp)
+IF (APPLE)
+  FIND_PACKAGE(PkgConfig REQUIRED)
+  PKG_CHECK_MODULES(ZMQ REQUIRED libzmq)
+  TARGET_LINK_DIRECTORIES(RunPTU PRIVATE ${ZMQ_LIBRARY_DIRS})
+ENDIF()
+TARGET_LINK_LIBRARIES(RunPTU AffAction ${ZMQ_LIBRARIES})
+
 
 IF (WIN32 AND AFFACTION_WITH_MQTT)
   ADD_EXECUTABLE(MqttTest examples/MqttTest.cpp)
   TARGET_INCLUDE_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
   TARGET_LINK_DIRECTORIES(MqttTest PUBLIC $ENV{SIT}/External/mosquitto/devel)
   TARGET_LINK_LIBRARIES(MqttTest PUBLIC RcsCore mosquitto mosquittopp)
-  ADD_CUSTOM_COMMAND(
-    TARGET MqttTest POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    $ENV{SIT}/External/mosquitto/mosquitto.dll
-    ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/mosquitto.dll)
+#  ADD_CUSTOM_COMMAND(
+#    TARGET MqttTest POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy
+#    $ENV{SIT}/External/mosquitto/mosquitto.dll
+#    ${EXECUTABLE_OUTPUT_PATH}/${CMAKE_BUILD_TYPE}/mosquitto.dll)
 ENDIF()
 
 ################################################################################
 # Python module with pybind11
 ################################################################################
 ADD_SUBDIRECTORY(python)
+
+################################################################################
+# Robotics components
+################################################################################
+ADD_SUBDIRECTORY(src/robo)
 
 ################################################################################
 # Doxygen html documentation
@@ -451,13 +459,20 @@ INSTALL(TARGETS AffAction EXPORT AffActionExport
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/AffAction)
 
-INSTALL(TARGETS TestLLMSim TestAffordance 
+IF (TARGET AzureTracker)
+  INSTALL(TARGETS AzureTracker EXPORT AffActionExport
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib/AffAction)
+ENDIF()
+
+INSTALL(TARGETS TestLLMSim TestAffordance ExampleRunnerAff
         RUNTIME DESTINATION bin 
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib/AffAction)
 
 ###############################################################################
-# Install the headers
+# Install the headers and the dependent dlls (for Windows)
 ###############################################################################
 INSTALL(
  DIRECTORY src/
@@ -465,15 +480,15 @@ INSTALL(
  FILES_MATCHING PATTERN "*.h"
 )
 
+IF (WIN32)
+  FILE(GLOB DLL_FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}/*.dll)
+  INSTALL(FILES ${DLL_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+ENDIF(WIN32)
+
 ###############################################################################
 # Mark for export
 ###############################################################################
-#SMILEACTIONS_ADD_EXPORT_LIBRARY(SmileActions)
-
-###############################################################################
-# copy the .dll file to the same folder as the executable
-###############################################################################
-COPY_DLL(AffAction)
+#AFFACTION_ADD_EXPORT_LIBRARY(AzureTracker)
 
 INCLUDE(CopyOrLinkConfig)
 RCS_COPY_OR_LINK_CONFIG(${CMAKE_CURRENT_SOURCE_DIR}/config ${PROJECT_BINARY_DIR}/config)

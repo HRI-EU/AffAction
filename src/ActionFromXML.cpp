@@ -39,6 +39,7 @@
 #include <Rcs_parser.h>
 #include <Rcs_macros.h>
 #include <Rcs_utils.h>
+#include <Rcs_resourcePath.h>
 
 
 namespace aff
@@ -61,10 +62,11 @@ ActionFromXML::ActionFromXML(const ActionScene& domain,
   }
 
   xmlFile = params[0];
+  std::string xmlFilePath = Rcs::getAbsoluteFileName(xmlFile);
 
-  if (File_exists(xmlFile.c_str()))
+  if (File_exists(xmlFilePath.c_str()))
   {
-    node = parseXMLFile(xmlFile.c_str(), "Action", &doc);
+    node = parseXMLFile(xmlFilePath.c_str(), "Action", &doc);
   }
   else
   {

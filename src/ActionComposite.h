@@ -54,6 +54,7 @@ public:
   std::vector<std::string> createTasksXML() const override;
   virtual double getDefaultDuration() const override;
   virtual double getDuration() const override;
+  virtual void setDuration(double duration) override;
   void addAction(ActionBase* action);
   std::vector<std::string> getManipulators() const override;
   std::string getActionCommand() const override;

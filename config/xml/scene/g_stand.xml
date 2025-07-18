@@ -1,0 +1,29 @@
+<Graph>
+
+  <Body name="WheelStand" prev="Lab Frame" physics="kinematic" color="PEWTER" >
+
+    <!-- Outer frame -->
+    <Shape type="BOX" extents="0.08 0.8 0.08" transform="-0.36 0 0.16 0 0 0" graphics="true" distance="true" />
+    <Shape type="BOX" extents="0.08 0.8 0.08" transform="0.36 0 0.16 0 0 0" graphics="true" distance="true" />
+    <Shape type="BOX" extents="0.08 0.638 0.08" transform="0 -0.36 0.16 0 0 90" graphics="true" distance="true" />
+    <Shape type="BOX" extents="0.08 0.638 0.08" transform="0 0.36 0.16 0 0 90" graphics="true" distance="true" />
+
+    <!-- Wheels -->
+    <Shape type="CYLINDER" color="BLACK_RUBBER" length="0.04" radius="0.06" transform="0.287 0.3 0.06 90 0 0" graphics="true" physics="false" distance="false" />
+    <Shape type="CYLINDER" color="BLACK_RUBBER" length="0.04" radius="0.06" transform="0.287 -0.3 0.06 90 0 0" graphics="true" physics="false" distance="false" />
+    <Shape type="CYLINDER" color="BLACK_RUBBER" length="0.04" radius="0.06" transform="-0.287 0.3 0.06 90 0 0" graphics="true" physics="false" distance="false" />
+    <Shape type="CYLINDER" color="BLACK_RUBBER" length="0.04" radius="0.06" transform="-0.287 -0.3 0.06 90 0 0" graphics="true" physics="false" distance="false" />
+    <Shape type="FRAME" scale="0.7" />
+
+    <!-- Mid -->
+    <Shape type="BOX" extents="0.638 0.16 0.04" transform="0 0 0.14 0 0 0" graphics="true" distance="true" color="RANDOM" />
+
+    <!-- High beam -->
+    <Shape type="BOX" extents="0.08 0.08 1.04" transform="-0.1 0 0.681 0 0 0" graphics="true" distance="false" color="RANDOM" />
+    <xShape type="BOX" extents="0.08 0.08 1.04" transform="-0.1 0 1.131 0 0 0" graphics="true" distance="false" color="RANDOM" />
+    <Shape type="BOX" extents="0.12 0.04 0.6" transform="-0.12 0.06 0.461 0 0 0" graphics="true" distance="false" color="RANDOM" />
+    <Shape type="BOX" extents="0.12 0.04 0.6" transform="-0.12 -0.06 0.461 0 0 0" graphics="true" distance="false" color="RANDOM" />
+    
+  </Body>
+
+</Graph>

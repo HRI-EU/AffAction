@@ -44,6 +44,7 @@
 #include <Rcs_utilsCPP.h>
 #include <Rcs_body.h>
 #include <Rcs_shape.h>
+#include <Rcs_timer.h>
 
 #include <string>
 #include <iostream>
@@ -51,7 +52,7 @@
 #include <sstream>
 #include <fstream>
 
-#define DISTANCE_FACE_TO_CAM         (1.0)
+#define DISTANCE_FACE_TO_CAM         (0.0)
 //#define FACEMESH_SIMPLE_NUM_VERTICES (468)
 #define FACEMESH_IRIS_NUM_VERTICES   (478)
 
@@ -68,8 +69,8 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 }
 
 // In case the iris is estimated, there are 10 more landmarks
-FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
-  mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
+FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& camera) :
+  TrackerBase(nameOfFaceBody), newFaceUpdate(false), mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
 {
   std::string meshFile = Rcs::getAbsoluteFileName("hri_scitos_description/FaceMesh-holes-478.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
@@ -85,7 +86,6 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody) :
   this->landmarks = MatNd_create(FACEMESH_IRIS_NUM_VERTICES, 3);
 
   HTr_setIdentity(&this->faceTrf);
-  HTr_setIdentity(&this->A_camI);
 }
 
 FaceTracker::~FaceTracker()
@@ -99,24 +99,15 @@ std::string FaceTracker::getRequestKeyword() const
   return "mediapipe";
 }
 
-void FaceTracker::setCameraName(const std::string& cameraFrame)
-{
-  this->cameraName = cameraFrame;
-}
-
-std::string FaceTracker::getCameraName() const
-{
-  return this->cameraName;
-}
-
 // Does not depend on this->mesh
-void FaceTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
+void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
+  newFaceUpdate = true;
 
-  NLOG_CPP(1, "FaceTracker::parse" << json.dump());
+  NLOG_CPP(1, "FaceTracker::parse" << jsonData.dump());
   size_t nFaceLandmarks = 0;
-  for (auto& entry : json.items())
+  for (auto& entry : jsonData.items())
   {
     const std::string& key = entry.key();
     //RLOG_CPP(1, "json[" << entry.key() << "]" << nlohmann::to_string(entry.value()));
@@ -143,7 +134,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
     }
   }
 
-  RLOG_CPP(5, "Received landmarks: " << nFaceLandmarks);
+  RLOG_CPP(1, "Received face landmarks: " << nFaceLandmarks);
 
   // We assume that the mesh vertices are contained within the landmarks
   // from the beginning. There might be more landmarks than mesh vertices
@@ -157,8 +148,8 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
   // and non-deterministic loop.
   if (sw.valid() && sw->isVisible())
   {
-    viewer->lock();
-    faceMeshNode->update(mesh);
+    //viewer->lock();
+    faceMeshNode->update(this->mesh);
     faceFrameNode->setTransformation(&faceTrf);
     leftIrisNode->setOrigin(C_leftIris.org);
     leftIrisNode->setDirection(Vec3d_ex());
@@ -166,7 +157,7 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
     rightIrisNode->setOrigin(C_rightIris.org);
     rightIrisNode->setDirection(Vec3d_ex());
     rightIrisNode->setArrowLength(0.3);
-    viewer->unlock();
+    //viewer->unlock();
   }
 
 }
@@ -174,6 +165,14 @@ void FaceTracker::parse(const nlohmann::json& json, double time, const std::stri
 void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
+  if (!newFaceUpdate)
+  {
+    return;
+  }
+
+  newFaceUpdate = false;
+
+  HTr A_CI = getCameraTransform(graph);
 
   // The landmarks array is in camera coordinates. We transform it into the
   // face frame to display this coherently
@@ -181,7 +180,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 
   // World -> face
   HTr A_FI;
-  HTr_transform(&A_FI, &this->A_camI, A_FC);
+  HTr_transform(&A_FI, &A_CI, A_FC);
 
   // Amplify the face rotations
   double tmp6[6];
@@ -202,52 +201,49 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 
   double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, faceName.c_str()));
   RCHECK_MSG(q6, "Body with name '%s' and six rigid body joints not found - please make sure it exists in the xml file.", faceName.c_str());
-  lpFiltTrf(q6, &A_FI, 0.05);
+  //lpFiltTrf(q6, &A_FI, 0.05);
   //RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
 
   RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
+
   for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
   {
     RcsShape* sh = &faceBdy->shapes[i];
-    if (sh->type == RCSSHAPE_MESH)
+    if ((sh->type!=RCSSHAPE_MESH) || (sh->mesh->nVertices!=landmarks->m))
     {
-      //RLOG(0, "Found mesh at index %d", i);
-      if (sh->mesh->nVertices== landmarks->m)
-      {
-        if (RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
-        {
-          //RLOG(0, "Copying mesh with %d vertices and %d faces", mesh->nVertices, mesh->nFaces);
-          for (unsigned int i = 0; i < landmarks->m; ++i)
-          {
-            double* dst = &sh->mesh->vertices[3 * i];
-            Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
-          }
-        }
-        else
-        {
-          RLOG(1, "Face mesh not resizeable - skipping vertices updating. Please fix in xml file!");
-        }
+      continue;
+    }
 
-      }
+    if (!RcsShape_isOfComputeType(sh, RCSSHAPE_COMPUTE_RESIZEABLE))
+    {
+      RLOG(1, "Face mesh not resizeable - skipping vertices updating.");
+      continue;
+    }
+
+    // Transform camera vertices into face frame
+    for (unsigned int i = 0; i < landmarks->m; ++i)
+    {
+      double* dst = &sh->mesh->vertices[3 * i];
+      Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
+    }
+
+  }
+
+  // That's the debug mesh, we transform it to world coordinates to test
+  if (sw.valid() && sw->isVisible())
+  {
+    for (unsigned int i = 0; i < mesh->nVertices; ++i)
+    {
+      double* dst = &mesh->vertices[3 * i];
+      Vec3d_transform(dst, &A_CI, MatNd_getRowPtr(landmarks, i));
+      dst[0] += DISTANCE_FACE_TO_CAM;
     }
   }
 
-  for (unsigned int i = 0; i < mesh->nVertices; ++i)
-  {
-    double* dst = &mesh->vertices[3 * i];
-    Vec3d_transform(dst, &this->A_camI, MatNd_getRowPtr(landmarks, i));
-    dst[0] += DISTANCE_FACE_TO_CAM;
-  }
-
 }
 
-const RcsMeshData* FaceTracker::getMesh() const
-{
-  return this->mesh;
-}
-
-bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
+bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const HTr* cameraFrame)
 {
   if (!viewer_)
   {
@@ -274,7 +270,8 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
   // Hide graphics from the beginning
   this->sw = new Rcs::NodeBase();
   sw->hide();
-  HTr A_cam = cameraFrame->A_BI;
+  HTr A_cam;
+  HTr_copy(&A_cam, cameraFrame);
   A_cam.org[0] += DISTANCE_FACE_TO_CAM;
   sw->setTransformation(&A_cam);
 
@@ -293,19 +290,16 @@ bool FaceTracker::addGraphics(Rcs::Viewer* viewer_, const RcsBody* cameraFrame)
   viewer->add(sw.get());
 
   // We show the debug face in world coordinates
+  // Fair skin tone #FFDBAC, light skin tone: #EFD0B9, medium-light: #E0C19F
   this->faceMeshNode = new Rcs::MeshNode(this->mesh);
-  Rcs::setNodeMaterial("#EFD0B9", faceMeshNode);   // Fair skin tone #FFDBAC, light skin tone: #EFD0B9, medium-light: #E0C19F
+  Rcs::setNodeMaterial("#EFD0B9", faceMeshNode);
   faceMeshNode->clearMesh();
+  faceMeshNode->makeDynamic();
   viewer->add(faceMeshNode.get());
 
   RLOG(1, "Added debug graphics");
 
   return true;
-}
-
-void FaceTracker::setCameraTransform(const HTr* A_CI)
-{
-  HTr_copy(&A_camI, A_CI);
 }
 
 // This method estimates the frame of reference for the face landmarks.
@@ -457,8 +451,8 @@ bool FaceTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
     return false;
   }
 
-  const RcsBody* cam = RcsGraph_getBodyByName(graph, getCameraName().c_str());
-  bool success = addGraphics(viewer, cam);
+  HTr A_CI = getCameraTransform(graph);
+  bool success = addGraphics(viewer, &A_CI);
 
   if (!success)
   {

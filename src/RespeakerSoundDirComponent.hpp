@@ -40,6 +40,8 @@
 
 #include <Rcs_macros.h>
 
+#include <libusb-1.0/libusb.h>
+
 #include <iostream>
 #include <thread>
 #include <queue>
@@ -57,16 +59,10 @@
 namespace aff
 {
 
-// ------------------- Linux Implementation -------------------
-
-//#if !defined(_WIN32)
-
-#include <libusb-1.0/libusb.h>
-
-class RespeakerInterfaceLinux : public RespeakerInterfaceBase
+class RespeakerInterface
 {
 public:
-  RespeakerInterfaceLinux()
+  RespeakerInterface()
   {
     RLOG(5, "RespeakerInterfaceLinux(): libusb_init");
     if (libusb_init(&ctx) < 0)
@@ -100,7 +96,7 @@ public:
     RLOG(5, "done");
   }
 
-  ~RespeakerInterfaceLinux() override
+  ~RespeakerInterface()
   {
     if (dev_handle)
     {
@@ -145,7 +141,7 @@ public:
     libusb_free_device_list(list, 1);
   }
 
-  int angle_in_degrees() override
+  int angle_in_degrees()
   {
     // VOICEACTIVITY parameter: id = 19, offset = 32, type = int
     int isVoice = readParam(19, 32, true);
@@ -157,7 +153,7 @@ public:
     return readParam(21, 0, true); // DOAANGLE is int
   }
 
-  unsigned char version() override
+  unsigned char version()
   {
     unsigned char data;
     // This mimics the python code: device.ctrl_transfer(...) = libusb_control_transfer
@@ -229,195 +225,6 @@ private:
   static constexpr uint16_t PRODUCT_ID = 0x0018;
   static constexpr unsigned int TIMEOUT = 100000;
 };
-
-//#endif // !_WIN32
-
-
-// ------------------- Windows Implementation -------------------
-#if defined(_WIN32)
-#include <windows.h>
-#include <setupapi.h>
-#include <hidsdi.h>
-// #pragma comment(lib, "hid.lib")
-// #pragma comment(lib, "setupapi.lib")
-
-class RespeakerInterfaceWin : public RespeakerInterfaceBase
-{
-public:
-  RespeakerInterfaceWin()
-  {
-    RLOG(0, "RespeakerInterfaceWin(): Starting initialization using Windows HID API");
-
-    GUID HidGuid;
-    HidD_GetHidGuid(&HidGuid);
-    RLOG(0, "RespeakerInterfaceWin(): Retrieved HID GUID");
-
-    HDEVINFO deviceInfoSet = SetupDiGetClassDevs(&HidGuid, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-    if (deviceInfoSet == INVALID_HANDLE_VALUE)
-    {
-      RLOG(0, "RespeakerInterfaceWin(): Failed to get device info set");
-      throw std::runtime_error("Failed to get HID device info set");
-    }
-    RLOG(0, "RespeakerInterfaceWin(): Device info set retrieved");
-
-    SP_DEVICE_INTERFACE_DATA deviceInterfaceData;
-    deviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-
-    bool deviceFound = false;
-
-    for (DWORD i = 0; SetupDiEnumDeviceInterfaces(deviceInfoSet, nullptr, &HidGuid, i, &deviceInterfaceData); ++i)
-    {
-      RLOG(0, "RespeakerInterfaceWin(): Enumerating device interface #%d", i);
-
-      DWORD requiredSize = 0;
-      SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, nullptr, 0, &requiredSize, nullptr);
-
-      auto detailData = static_cast<SP_DEVICE_INTERFACE_DETAIL_DATA*>(malloc(requiredSize));
-      if (!detailData)
-      {
-        RLOG(0, "RespeakerInterfaceWin(): Failed to allocate memory for device interface detail");
-        continue;
-      }
-      detailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-      if (SetupDiGetDeviceInterfaceDetail(deviceInfoSet, &deviceInterfaceData, detailData, requiredSize, nullptr, nullptr))
-      {
-        RLOG(0, "RespeakerInterfaceWin(): Device path: %s", detailData->DevicePath);
-
-        HANDLE handle = CreateFile(
-                          detailData->DevicePath,
-                          GENERIC_READ,// | GENERIC_WRITE,       // Requested access
-                          FILE_SHARE_READ,// | FILE_SHARE_WRITE, // Allow other processes to access the device
-                          nullptr,
-                          OPEN_EXISTING,
-                          FILE_ATTRIBUTE_NORMAL,
-                          nullptr);
-
-
-        if (handle == INVALID_HANDLE_VALUE)
-        {
-          DWORD errorCode = GetLastError();
-          RLOG(0, "RespeakerInterfaceWin(): Failed to open device: %lu", errorCode);
-          free(detailData);
-          continue;
-        }
-
-        // Get device attributes
-        HIDD_ATTRIBUTES attrib;
-        attrib.Size = sizeof(HIDD_ATTRIBUTES);
-        if (HidD_GetAttributes(handle, &attrib))
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Device attributes - VID: 0x%04X, PID: 0x%04X",
-               attrib.VendorID, attrib.ProductID);
-        }
-        else
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Failed to get device attributes");
-          CloseHandle(handle);
-          free(detailData);
-          continue;
-        }
-
-        // Retrieve manufacturer, product, and serial strings
-        wchar_t manufacturer[128];
-        wchar_t product[128];
-        wchar_t serial[128];
-
-        if (HidD_GetManufacturerString(handle, manufacturer, sizeof(manufacturer)))
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Manufacturer: %ls", manufacturer);
-        }
-        else
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Failed to get manufacturer string");
-        }
-
-        if (HidD_GetProductString(handle, product, sizeof(product)))
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Product: %ls", product);
-        }
-        else
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Failed to get product string");
-        }
-
-        if (HidD_GetSerialNumberString(handle, serial, sizeof(serial)))
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Serial Number: %ls", serial);
-        }
-        else
-        {
-          RLOG(0, "RespeakerInterfaceWin(): Failed to get serial number string");
-        }
-
-        // Check if this is the desired device based on additional information
-        if (attrib.VendorID == VENDOR_ID && attrib.ProductID == PRODUCT_ID)
-        {
-          deviceHandle = handle;
-          deviceFound = true;
-          RLOG(0, "RespeakerInterfaceWin(): Found and opened ReSpeaker HID device");
-          free(detailData);
-          break;
-        }
-
-        CloseHandle(handle);
-        free(detailData);
-      }
-      else
-      {
-        RLOG(0, "RespeakerInterfaceWin(): Failed to get device interface detail for device #%d", i);
-        free(detailData);
-      }
-    }
-
-    SetupDiDestroyDeviceInfoList(deviceInfoSet);
-
-    if (!deviceFound || deviceHandle == INVALID_HANDLE_VALUE)
-    {
-      RLOG(0, "RespeakerInterfaceWin(): Failed to find or open ReSpeaker HID device");
-      throw std::runtime_error("Failed to find and open Respeaker HID device");
-    }
-
-    RLOG(0, "RespeakerInterfaceWin(): Initialization completed successfully");
-  }
-
-  ~RespeakerInterfaceWin() override
-  {
-    if (deviceHandle != INVALID_HANDLE_VALUE)
-    {
-      RLOG(0, "RespeakerInterfaceWin(): Closing device handle");
-      CloseHandle(deviceHandle);
-    }
-  }
-
-  int angle_in_degrees() override
-  {
-    // Implementation remains the same
-    return readParam(21, 0, true);
-  }
-
-  unsigned char version() override
-  {
-    // Implementation remains the same
-    return 0; // Placeholder for your actual implementation
-  }
-
-private:
-  HANDLE deviceHandle = INVALID_HANDLE_VALUE;
-  static constexpr uint16_t VENDOR_ID = 0x2886;
-  static constexpr uint16_t PRODUCT_ID = 0x0018;
-  static constexpr unsigned int TIMEOUT = 100000;
-  static constexpr unsigned char FEATURE_REPORT_ID = 0x01;
-
-  int readParam(uint16_t index, uint16_t value, bool isInt)
-  {
-    // Implementation remains the same
-    return 0; // Placeholder for your actual implementation
-  }
-};
-
-
-#endif // _WIN32
 
 
 } // namespace aff

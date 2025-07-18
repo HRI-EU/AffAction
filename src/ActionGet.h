@@ -136,6 +136,7 @@ public:
 
   std::vector<double> handOpen;
   std::vector<double> handClosed;
+  std::vector<double> I_graspPoint;   // Absolute point for BallGraspable
 };
 
 }   // namespace aff

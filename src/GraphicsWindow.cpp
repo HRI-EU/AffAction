@@ -348,11 +348,9 @@ std::vector<std::string> MapItem::deactivatedBodies;
 namespace aff
 {
 
-GraphicsWindow::GraphicsWindow(EntityBase* parent, bool startWithStartEvent,
-                               bool synWithEventLoop_, bool simpleGraphics) :
+GraphicsWindow::GraphicsWindow(EntityBase* parent, SyncMode syncMode, bool simpleGraphics) :
   aff::ComponentBase(parent),
-  Rcs::Viewer(!simpleGraphics, !simpleGraphics),
-  synWithEventLoop(synWithEventLoop_)
+  Rcs::Viewer(!simpleGraphics, !simpleGraphics)
 {
   pthread_mutex_init(&frameMtx, NULL);
   setWindowSize(0, 0, 640, 480);
@@ -365,21 +363,16 @@ GraphicsWindow::GraphicsWindow(EntityBase* parent, bool startWithStartEvent,
   this->vertexNode = new Rcs::VertexArrayNode();
   add(vertexNode.get());
 
-  subscribeAll(startWithStartEvent);
-
-  //if (startWithStartEvent==false)
-  //{
-  //  start();
-  //}
-}
-
-void GraphicsWindow::subscribeAll(bool startWithStartEvent)
-{
-  if (startWithStartEvent)
+  if (syncMode==SyncMode::Threaded)
   {
     subscribe("Start", &GraphicsWindow::start);
     subscribe("Stop", &GraphicsWindow::stop);
   }
+  else if (syncMode==SyncMode::RenderEvent)
+  {
+    subscribe("Render", &GraphicsWindow::frame);
+  }
+
   subscribe("ReloadGraph", &GraphicsWindow::onReloadGraph);
   subscribe("RenderGraph", &GraphicsWindow::onRender);
   subscribe("RenderLines", &GraphicsWindow::onRenderLines);
@@ -400,12 +393,6 @@ void GraphicsWindow::subscribeAll(bool startWithStartEvent)
   subscribe("SetObjectAlpha", &GraphicsWindow::onObjectAlpha);
   subscribe("SetObjectsAlpha", &GraphicsWindow::onObjectsAlpha);
   subscribe("SetNodeTransform", &GraphicsWindow::onSetNodeTransform);
-
-  if (this->synWithEventLoop)
-  {
-    subscribe("Render", &GraphicsWindow::frame);
-  }
-
 }
 
 GraphicsWindow::~GraphicsWindow()
@@ -417,19 +404,13 @@ GraphicsWindow::~GraphicsWindow()
 
 void GraphicsWindow::start()
 {
-  // If no viewer has been launched before the start event is called, we call
-  // the Viewer's create() function to initialize the graphics window etc.
-  if (!viewer.valid())
+  if (isThreadRunning())
   {
-    create(true, true);
+    RLOG(5, "GraphicsWindow::start(): Viewer thread already running - nothing to do");
+    return;
   }
 
-  // Only in case the viewer runs in its own thread, we launch up the thread
-  // function here.
-  if (!this->synWithEventLoop)
-  {
-    runInThread(&frameMtx);
-  }
+  runInThread(&frameMtx);
 }
 
 void GraphicsWindow::stop()

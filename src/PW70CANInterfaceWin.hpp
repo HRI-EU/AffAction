@@ -33,6 +33,8 @@
 #ifndef PW70CANINTERFACEWIN_H
 #define PW70CANINTERFACEWIN_H
 
+#include "PW70CANInterface.h"
+
 // Include standard headers
 #include <functional>
 #include <thread>
@@ -58,14 +60,15 @@
 namespace aff
 {
 
-class PW70CANInterface
+class PW70CANInterfaceWin : public PW70CANInterface
 {
 public:
   // Constructor and Destructor
-  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                   std::function<void(double, double, double, void*)> position_callback,
-                   void* param, int freq);
-  ~PW70CANInterface();
+  PW70CANInterfaceWin();
+  PW70CANInterfaceWin(std::function<void(double, double, void*)> limit_check_callback,
+                      std::function<void(double, double, double, void*)> position_callback,
+                      void* param, int freq);
+  ~PW70CANInterfaceWin();
 
   // Public Methods
   void cleanup();
@@ -96,12 +99,9 @@ private:
 
   // Member Variables
   TPCANHandle m_PcanHandle;  // Handle to the PCAN device
-  std::function<void(double, double, void*)> limit_check_callback;
-  std::function<void(double, double, double, void*)> position_callback;
   bool running;
   std::thread recv_thread;
   std::mutex socket_mutex;
-  void* callbackParam;
 };
 
 }   // namespace
@@ -119,23 +119,40 @@ namespace aff
 {
 
 // Helper function to convert float to little-endian uint32_t
-uint32_t PW70CANInterface::float_to_le(float value)
+uint32_t PW70CANInterfaceWin::float_to_le(float value)
 {
   return *reinterpret_cast<uint32_t*>(&value);
 }
 
 // Helper function to convert little-endian uint32_t to float
-float PW70CANInterface::le_to_float(uint32_t value)
+float PW70CANInterfaceWin::le_to_float(uint32_t value)
 {
   return *reinterpret_cast<float*>(&value);
 }
 
 // Constructor
-PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                                   std::function<void(double, double, double, void*)> position_callback,
-                                   void* param, int freq)
-  : limit_check_callback(limit_check_callback), position_callback(position_callback),
-    running(true), callbackParam(param)
+PW70CANInterfaceWin::PW70CANInterfaceWin() :
+  PW70CANInterface(nullptr, nullptr, nullptr, 0), running(false)
+{
+  // Initialize PCAN handle (adjust this according to your hardware)
+  m_PcanHandle = PCAN_USBBUS1; // Use the appropriate handle for your hardware
+
+  // Initialize the CAN channel at 500 Kbps (adjust baud rate if needed)
+  TPCANStatus status = CAN_Initialize(m_PcanHandle, PCAN_BAUD_500K);
+  if (status != PCAN_ERROR_OK)
+  {
+    char errorMsg[256];
+    CAN_GetErrorText(status, 0, errorMsg);
+    std::cerr << "Error initializing PCAN: " << errorMsg << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+}
+
+PW70CANInterfaceWin::PW70CANInterfaceWin(std::function<void(double, double, void*)> limit_check_callback,
+                                         std::function<void(double, double, double, void*)> position_callback,
+                                         void* param, int freq) :
+  PW70CANInterface(limit_check_callback, position_callback, param, freq), running(true)
 {
   // Initialize PCAN handle (adjust this according to your hardware)
   m_PcanHandle = PCAN_USBBUS1; // Use the appropriate handle for your hardware
@@ -151,14 +168,14 @@ PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> li
   }
 
   // Start the receive thread
-  recv_thread = std::thread(&PW70CANInterface::receive_messages, this);
+  recv_thread = std::thread(&PW70CANInterfaceWin::receive_messages, this);
 
   // Enable regular status updates.
   enable_frequent_position_update(freq);
 }
 
 // Destructor
-PW70CANInterface::~PW70CANInterface()
+PW70CANInterfaceWin::~PW70CANInterfaceWin()
 {
   if (running)
   {
@@ -167,7 +184,7 @@ PW70CANInterface::~PW70CANInterface()
 }
 
 // Cleanup method
-void PW70CANInterface::cleanup()
+void PW70CANInterfaceWin::cleanup()
 {
   disable_frequent_position_update();
 
@@ -187,7 +204,7 @@ void PW70CANInterface::cleanup()
 }
 
 // Send method
-bool PW70CANInterface::send(std::vector<TPCANMsg> frames)
+bool PW70CANInterfaceWin::send(std::vector<TPCANMsg> frames)
 {
   std::lock_guard<std::mutex> lock(socket_mutex);
   for (auto& frame : frames)
@@ -205,7 +222,7 @@ bool PW70CANInterface::send(std::vector<TPCANMsg> frames)
 }
 
 // Receive messages method
-void PW70CANInterface::receive_messages()
+void PW70CANInterfaceWin::receive_messages()
 {
   bool pan_updated = false;
   bool tilt_updated = false;
@@ -287,7 +304,7 @@ void PW70CANInterface::receive_messages()
 }
 
 // Enable frequent position update method
-bool PW70CANInterface::enable_frequent_position_update(int frequency)
+bool PW70CANInterfaceWin::enable_frequent_position_update(int frequency)
 {
   // Schunk Motion Protocol commands
   std::map<int, std::vector<uint8_t>> can_state_cmds =
@@ -326,7 +343,7 @@ bool PW70CANInterface::enable_frequent_position_update(int frequency)
 }
 
 // Disable frequent position update method
-bool PW70CANInterface::disable_frequent_position_update()
+bool PW70CANInterfaceWin::disable_frequent_position_update()
 {
   TPCANMsg msg1;
   msg1.ID = 0x50D;
@@ -342,7 +359,7 @@ bool PW70CANInterface::disable_frequent_position_update()
 }
 
 // Stop method
-bool PW70CANInterface::stop()
+bool PW70CANInterfaceWin::stop()
 {
   TPCANMsg msg1;
   msg1.ID = 0x50D;
@@ -358,7 +375,7 @@ bool PW70CANInterface::stop()
 }
 
 // Fast stop method
-bool PW70CANInterface::fast_stop()
+bool PW70CANInterfaceWin::fast_stop()
 {
   TPCANMsg msg1;
   msg1.ID = 0x50D;
@@ -374,7 +391,7 @@ bool PW70CANInterface::fast_stop()
 }
 
 // Reference pan method
-bool PW70CANInterface::reference_pan()
+bool PW70CANInterfaceWin::reference_pan()
 {
   TPCANMsg msg;
   msg.ID = 0x50E;
@@ -387,7 +404,7 @@ bool PW70CANInterface::reference_pan()
 }
 
 // Reference tilt method
-bool PW70CANInterface::reference_tilt()
+bool PW70CANInterfaceWin::reference_tilt()
 {
   TPCANMsg msg;
   msg.ID = 0x50D;
@@ -400,7 +417,7 @@ bool PW70CANInterface::reference_tilt()
 }
 
 // Reset stop method
-bool PW70CANInterface::reset_stop()
+bool PW70CANInterfaceWin::reset_stop()
 {
   TPCANMsg msg1;
   msg1.ID = 0x50D;
@@ -416,7 +433,7 @@ bool PW70CANInterface::reset_stop()
 }
 
 // Set target velocity method
-bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceWin::set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
   TPCANMsg msg1, msg2;
 
@@ -439,7 +456,7 @@ bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double t
 }
 
 // Set target position method
-bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radians)
+bool PW70CANInterfaceWin::set_target_position(double pan_radians, double tilt_radians)
 {
   TPCANMsg msg1, msg2;
 
@@ -462,7 +479,7 @@ bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radia
 }
 
 // Move position method
-bool PW70CANInterface::move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceWin::move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
 {
   if (!set_target_velocity(pan_velocity_radians, tilt_velocity_radians))
   {
@@ -472,7 +489,7 @@ bool PW70CANInterface::move_position(double pan_radians, double tilt_radians, do
 }
 
 // Move velocity method
-bool PW70CANInterface::move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceWin::move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
   TPCANMsg msg1, msg2;
 

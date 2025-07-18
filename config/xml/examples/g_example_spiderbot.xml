@@ -1,0 +1,297 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+
+  <ActionSequence name="1" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
+  <ActionSequence name="2" text="get peppers_bottle; put peppers_bottle tray; pose default; get pesto_sauce_bottle; put pesto_sauce_bottle tray; pose default; get salt_bottle; put salt_bottle tray; pose default; get tomato_sauce_bottle; put tomato_sauce_bottle; get tomato_sauce_bottle; put tomato_sauce_bottle tray; pose default" />
+  <ActionSequence name="3" text="get tomato_sauce_bottle; move tomato_sauce_bottle above pizza_dough; pour tomato_sauce_bottle pizza_dough" />
+  <ActionSequence name="4" text="get_and_hold salt_bottle; release salt_bottle shelf" />
+  <ActionSequence name="5" text="get_and_hold salt_bottle; release salt_bottle" />
+  <ActionSequence name="6" text="get_and_hold italian_seasoning_5; release italian_seasoning_5" />
+  <ActionSequence name="7" text="get_and_hold goat_cheese_5; release goat_cheese_5" />
+  <ActionSequence name="8" text="get_and_hold salt_bottle; move salt_bottle above pizza_dough height 0.1" />
+  <ActionSequence name="9" text="get salt_bottle; put salt_bottle above pizza_dough" />
+
+  <ActionSequence name="p1" text="get bottle_of_tomato_sauce + get bottle_of_salt; move bottle_of_tomato_sauce above table + put bottle_of_salt table; pour bottle_of_tomato_sauce pizza_dough; put bottle_of_tomato_sauce table" />
+  <ActionSequence name="p2" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce" />
+
+  <ActionSequence name="p3" text="put bottle_of_tomato_sauce + put bottle_of_salt + put bbq_sauce_bottle + put bottle_of_pesto_sauce" />
+
+  <ActionSequence name="p4" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce; move bottle_of_tomato_sauce above table + put bottle_of_salt shelf; put bottle_of_tomato_sauce pizza_dough + put bottle_of_pesto_sauce table + put bbq_sauce_bottle shelf" />
+
+  <ActionSequence name="p5" text="get bottle_of_tomato_sauce + get bottle_of_salt + get bbq_sauce_bottle + get bottle_of_pesto_sauce; move bottle_of_tomato_sauce above pizza_dough; pour bottle_of_tomato_sauce pizza_dough" />
+
+  <ActionSequence name="p6" text="get bottle_of_olive_oil + get bottle_of_salt + get bottle_of_pesto_sauce" />
+
+  <Body name="default_camera_view" transform="0.5 3.7 2.6 25 -10 -100" />
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
+            graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <!-- The model for a simple camera. -->
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 -180 40 90" was_rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
+    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
+    <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
+    <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+  <AffordanceModel body="camera_0" name="camera" types="camera.n.01">
+    <Supportable frame="camera_0"/>
+  </AffordanceModel>
+
+   <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" >
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
+ 
+
+  <!-- The model of the robot.
+  
+  <Group prev="aruco_base" name="_1" transform="-0.87 0 0.15 0 0 0">
+    <xi:include href="../TwoArmJaco7/g_robo.xml" />
+  </Group> -->
+
+
+
+  <!-- Aluminum structure including PTU. -->
+  <Group prev="aruco_base" name="_1" transform="-0.87 0 0.15 0 0 0">
+  <xi:include href="../TwoArmJaco7/g_item_base.xml"/>
+
+  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+    <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
+  </Group>
+
+  <!-- Shoulder adaptors and arms with hands. -->
+  <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
+    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+  </Body>
+
+
+
+
+
+  <!-- Right arm -->
+  <Group name="_right" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_right.xml"/>
+  </Group>
+
+  <!-- Left arm -->
+  <Group name="_left" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+  </Group>
+
+  </Group>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <!-- -->
+  <Group prev="aruco_base" name="_2" transform="-0.87 0 0.0 0 0 0">
+
+  <!-- Shoulder adaptors and arms with hands. -->
+  <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
+    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+  </Body>
+
+  <!-- Right arm -->
+  <Group name="_right" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_right.xml"/>
+  </Group>
+
+  <!-- Left arm -->
+  <Group name="_left" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+  </Group>
+
+  </Group>
+
+  <Agent body="Johnnie_1" types="robot" >
+    <Component manipulator="hand_robot_left_1" />
+    <Component manipulator="hand_robot_right_1" />
+    <Component manipulator="hand_robot_left_2" />
+    <Component manipulator="hand_robot_right_2" />
+    <xComponent manipulator="head_kinect_link" />
+  </Agent>
+  
+  <!--  Scene -->
+  <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.7 0 0 0" >
+    <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
+  </Group>
+
+  <Group prev="table" >
+    <xi:include href="../pizza/g_pizza.xml"/>
+  </Group>
+
+  <Group prev="aruco_base" name="Felix" color="RED" transform="0 -1 0.5 0 0 -90" >
+    <xi:include href="g_human_agent.xml"/>
+  </Group>
+  
+  <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_1_right_1" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right_1" position="260"/>
+    <joint_state joint="j2s7s300_joint_3_right_1" position="-120"/>
+    <joint_state joint="j2s7s300_joint_4_right_1" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right_1" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_1_left_1" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left_1" position="100"/>
+    <joint_state joint="j2s7s300_joint_3_left_1" position="120"/>
+    <joint_state joint="j2s7s300_joint_4_left_1" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left_1" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left_1" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left_1" position="0"/>
+    
+    <joint_state joint="j2s7s300_joint_1_right_2" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right_2" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_right_2" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_right_2" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right_2" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right_2" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right_2" position="0"/>
+    <joint_state joint="j2s7s300_joint_1_left_2" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left_2" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left_2" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left_2" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left_2" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left_2" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left_2" position="0"/>
+    
+    <!-- <joint_state joint="ptu_tilt_joint_1" position="27.76684" /> -->
+    <!-- <joint_state joint="LeftEyeThY_1" position="0.036163" /> -->
+    <!-- <joint_state joint="LeftEyeThZ_1" position="-3.477837" /> -->
+    <!-- <joint_state joint="LeftPupilX_1" position="0.039072" /> -->
+    <!-- <joint_state joint="LeftPupilThY_1" position="-0.036227" /> -->
+    <!-- <joint_state joint="LeftPupilThZ_1" position="3.477834" /> -->
+    <!-- <joint_state joint="GazeXL_1" position="0.989079" /> -->
+    <!-- <joint_state joint="RightEyeThY_1" position="0.036163" /> -->
+    <!-- <joint_state joint="RightEyeThZ_1" position="3.477838" /> -->
+    <!-- <joint_state joint="RightPupilX_1" position="0.039072" /> -->
+    <!-- <joint_state joint="RightPupilThY_1" position="-0.003299" /> -->
+    <!-- <joint_state joint="RightPupilThZ_1" position="-3.477835" /> -->
+    <!-- <joint_state joint="GazeXR_1" position="0.989079" /> -->
+    <!-- <joint_state joint="gpx_1" position="-0.02" /> -->
+    <!-- <joint_state joint="gpz_1" position="0.971" /> -->
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_1" position="10" />
+    
+    <joint_state joint="j2s7s300_joint_finger_1_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_2" position="10" />
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_1" position="50" />
+
+    <joint_state joint="j2s7s300_joint_finger_1_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left_2" position="50" />
+  </model_state>
+
+<BroadPhase DistanceThreshold="0.001">
+    <Tree root="upperarm_left_1"/>
+    <Tree root="upperarm_right_1"/>
+    <Tree root="upperarm_left_2"/>
+    <Tree root="upperarm_right_2"/>
+    <Body name="center_post_link_1"/>
+    <Body name="screen_link_1"/>
+    <Body name="head_kinect_link_1"/>
+    <Body name="adapter_shoulder_left_3_1"/>
+    <Body name="adapter_shoulder_right_3_1"/>
+    <Body name="adapter_shoulder_left_3_2"/>
+    <Body name="adapter_shoulder_right_3_2"/>
+</BroadPhase>
+
+<xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+
+</Graph>

@@ -28,23 +28,116 @@
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+#      "rotation":{
+#         "x":0.306903929,
+#         "y":0.176378131,
+#         "z":-0.0579901077,
+#         "w":0.9334548
+#      }
+
+
+default_text = '''
+{
+   "Head":{
+      "position":{
+         "x":0.0,
+         "y":1.7,
+         "z":0.0
+      },
+      "rotation":{
+         "x":-0.0579901077,
+         "y":0.9334548,
+         "z":0.306903929,
+         "w":0.176378131
+      }
+   },
+   "LeftEye":{
+      "position":{
+         "x":-0.07225178,
+         "y":1.43196809,
+         "z":0.009275467
+      },
+      "rotation":{
+         "x":-0.0579901077,
+         "y":0.9334548,
+         "z":0.306903929,
+         "w":0.176378131
+      }
+   },
+   "RightEye":{
+      "position":{
+         "x":0.0434882864,
+         "y":1.43196809,
+         "z":0.05463351
+      },
+      "rotation":{
+         "x":-0.0579901077,
+         "y":0.9334548,
+         "z":0.306903929,
+         "w":0.176378131
+      }
+   },
+   "LeftHand":{
+      "position":{
+         "x":-0.213651448,
+         "y":1.19429386,
+         "z":0.2773032
+      },
+      "rotation":{
+         "x":0.306908131,
+         "y":0.176378921,
+         "z":-0.05799081,
+         "w":0.9334532
+      }
+   },
+   "RightHand":{
+      "position":{
+         "x":0.361321181,
+         "y":1.16164911,
+         "z":0.09951973
+      },
+      "rotation":{
+         "x":0.306908131,
+         "y":0.176378921,
+         "z":-0.05799081,
+         "w":0.9334532
+      }
+   },
+   "LeftEarAngle":330.445648,
+   "RightEarAngle":326.061768
+}
+'''
+
+
+
 
 import websocket
 from websocket import create_connection
-
 import sys
 
-print('cmd entry:', sys.argv)
+# Print received command-line arguments
+print("Command-line arguments:", sys.argv)
 
-for i in range(1, len(sys.argv)):
-    print('argument:', i, 'value:', sys.argv[i])
+# Check if an argument was provided, else use a default message
+if len(sys.argv) > 1:
+    test_command = sys.argv[1]
+else:
+    print("No command-line argument provided. Using default message")
+    test_command = default_text
 
-test_command = sys.argv[1]
-    
-socket = create_connection("ws://localhost:35000")
-socket.send(test_command)
+try:
+    # Connect to the WebSocket server
+    socket = create_connection("ws://localhost:35000")
+    print(f"Connected to ws://localhost:35000, sending: {test_command}")
 
-result = socket.recv()
-print("Received: {}".format(result))
+    # Send message
+    socket.send(test_command)
 
-socket.close()
+    # Receive response
+    #result = socket.recv()
+    #print("Received:", result)
+
+    # Close connection
+    socket.close()
+except Exception as e:
+    print(f"WebSocket connection error: {e}")

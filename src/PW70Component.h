@@ -33,16 +33,17 @@
 #ifndef PW70COMPONENT_H
 #define PW70COMPONENT_H
 
-
 #include "ComponentBase.h"
+#include "PW70CANInterface.h"
 
-#include "Rcs_graph.h"
-#include "Rcs_filters.h"
+#include <Rcs_graph.h>
+#include <Rcs_filters.h>
+
+#include <memory>
 
 
 namespace aff
 {
-class PW70CANInterface;
 
 class PW70Component : public ComponentBase
 {
@@ -61,6 +62,8 @@ public:
   void onStart();
   void onMovePosition(double pan_in_radians, double tilt_in_radians);
   void onUpdateGraph(RcsGraph* graph);
+  void getSensorData(double& pan_position, double& tilt_position,
+                     double& pan_velocity, double& tilt_velocity, double& time_stamp) const;
 
   // Disallow copying and assigning
   PW70Component(const PW70Component&) = delete;
@@ -71,7 +74,7 @@ protected:
   bool setControlFrequency(int freq);
 
   std::unique_ptr<PW70CANInterface> pw70;
-  std::mutex panTiltUpdateMtx;
+  mutable std::mutex panTiltUpdateMtx;
 
   double current_pan_position, current_tilt_position;
   double current_pan_velocity, current_tilt_velocity;

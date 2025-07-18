@@ -170,27 +170,7 @@ ActionEyeGaze::~ActionEyeGaze()
 std::vector<std::string> ActionEyeGaze::createTasksXML() const
 {
   std::vector<std::string> tasks = createEyeTasksXML();
-  std::string xmlTask;
-
-  // xmlTask = "<Task name=\"EyeL C1\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
-  // tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"EyeL C2\" effector=\"" + leftPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
-  // tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"GazeL\"  effector=\"" + gazePoint + "\" refBdy=\"" + leftGazePoint + "\" controlVariable=\"XYZ\" />";
-  // tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"EyeR C1\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"Z\" />";
-  // tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"EyeR C2\" effector=\"" + rightPupil + "\" refBdy=\"" + screenSurface + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />";
-  // tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"GazeR\" effector=\"" + gazePoint + "\" refBdy=\"" + rightGazePoint + "\" controlVariable=\"XYZ\" />";
-  // tasks.push_back(xmlTask);
-
-  xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetBody + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
+  std::string xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetBody + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
 
   return tasks;
@@ -218,9 +198,6 @@ std::vector<std::string> ActionEyeGaze::createEyeTasksXML()
 
   xmlTask = "<Task name=\"GazeR\" effector=\"" + gazePoint + "\" refBdy=\"" + rightGazePoint + "\" controlVariable=\"XYZ\" />";
   tasks.push_back(xmlTask);
-
-  // xmlTask = "<Task name=\"GazePoint\" effector=\"" + gazePoint + "\" refBdy=\"" + gazeTargetBody + "\" refFrame=\"Johnnie\" controlVariable=\"XYZ\" />";
-  // tasks.push_back(xmlTask);
 
   return tasks;
 }

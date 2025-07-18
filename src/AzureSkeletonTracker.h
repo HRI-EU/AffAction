@@ -43,6 +43,7 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include <mutex>
 
 
 
@@ -55,7 +56,7 @@ class AzureSkeletonTracker : public TrackerBase
 {
 public:
 
-  AzureSkeletonTracker(size_t numSkeletons);
+  AzureSkeletonTracker(size_t numSkeletons, const std::string& camera);
 
   virtual ~AzureSkeletonTracker();
 
@@ -65,8 +66,6 @@ public:
   void update(ActionScene* scene, RcsGraph* graph);
 
   std::string getRequestKeyword() const;
-
-  void setCameraTransform(const HTr* A_CI);
 
   bool isSkeletonVisible(size_t idx) const;
 
@@ -83,7 +82,7 @@ public:
 private:
 
   // Process landmark frames. Called from perception thread (30Hz or so)
-  void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
 
   void updateAgents(ActionScene* scene, RcsGraph* graph);
 
@@ -98,6 +97,7 @@ private:
   double defaultPosRadius;
   HTr A_CI;
   size_t skeletonIndex = 0;
+  std::mutex updateMtx;
 };
 
 } // namespace aff

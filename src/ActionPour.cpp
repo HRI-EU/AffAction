@@ -214,7 +214,7 @@ void ActionPour::init(const ActionScene& domain,
   this->glas = std::string(glasBdy->name);
 
   const RcsBody* roboBaseBdy = RcsGraph_getBodyByName(graph, roboBaseFrame.c_str());
-  RCHECK(roboBaseBdy);
+  RCHECK_MSG(roboBaseBdy, "%s", roboBaseFrame.c_str());
   this->roboBaseFrame = std::string(roboBaseBdy->name);
 
   // Transition the liquid from bottle to glas.

@@ -417,7 +417,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     result.collCost += controller->getCollisionCost();
 
     // We compute a tracking error that models a task space error between
-    // desired and commanded task space vectors. This error emergrs only
+    // desired and commanded task space vectors. This error occurs only
     // if the speed and / or acceleration limits are enforced. Otherwise,
     // it should never occur since the joint space displacements don't
     // undergo any clipping.
@@ -911,7 +911,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
 
     RCSGRAPH_FOREACH_BODY(graph)
     {
-      if ((!BODY->rigid_body_joints) || (BODY->id == -1))
+      if ((BODY->firstChildId==-1) || (!BODY->rigid_body_joints) || (BODY->id == -1))
       {
         continue;
       }

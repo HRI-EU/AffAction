@@ -106,19 +106,20 @@ namespace aff
 {
 
 
-LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, RcsGraph* graph, std::string connection):
-  ComponentBase(parent), LandmarkBase(graph),
+LandmarkZmqComponent::LandmarkZmqComponent(EntityBase* parent, std::string connection):
+  ComponentBase(parent), LandmarkBase(),
   connectionStr(connection), threadRunning(false), threadFunctionCompleted(false),
-  readDataFromFile(false), socketTimeoutInMsec(3000), frameRate(0.0), logging(false)
+  readDataFromFile(false), socketTimeoutInMsec(20000), frameRate(0.0), logging(false)
 {
   readDataFromFile = File_exists(connection.c_str());
 
   subscribe("Start", &LandmarkZmqComponent::startZmqThread);
   subscribe("Stop", &LandmarkZmqComponent::stopZmqThread);
-  subscribe("UpdateScene", &LandmarkZmqComponent::onUpdateScene);
-  subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
-  subscribe("EstimateCameraPose", &LandmarkZmqComponent::onEstimateCameraPose);
   subscribe("ToggleJsonLogging", &LandmarkZmqComponent::onToggleJsonLogging);
+
+  subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
+  subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
+  subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
   subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
 }
 
@@ -154,20 +155,6 @@ double LandmarkZmqComponent::getCurrentTime() const
 {
   //RLOG(1, "DERIVED");
   return readDataFromFile ? 0.0 : LandmarkBase::getCurrentTime();
-}
-
-void LandmarkZmqComponent::onEstimateCameraPose(int numFrames)
-{
-  for (auto& t : trackers)
-  {
-    ArucoTracker* at = dynamic_cast<ArucoTracker*>(t.get());
-
-    if (at)
-    {
-      RLOG(0, "Calibrating Aruco camera");
-      at->calibrate(numFrames);
-    }
-  }
 }
 
 void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
@@ -220,21 +207,21 @@ void LandmarkZmqComponent::fromFileThreadFunc(const std::string& fileName)
   threadFunctionCompleted = true;
 }
 
-void LandmarkZmqComponent::zmqThreadFunc()
+void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
 {
-  RLOG(5, "zmqThreadFunc()");
+  RLOG_CPP(5, "Starting zmqThreadFunc(): " << connection);
   threadFunctionCompleted = false;
   zmq::context_t context;
   zmq::socket_t socket(context, ZMQ_REQ);
 
-  RLOG(5, "Connecting to tcp://localhost:5555");
-  socket.connect("tcp://localhost:5555");
+  RLOG_CPP(5, "Connecting to " << connection);
+  socket.connect(connection);
 
   // set receive timeout to 3 seconds
   int timeout_ms = this->socketTimeoutInMsec;
 
   RLOG(5, "Setting socket timeout");
-#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 2)
+#if ZMQ_VERSION <= ZMQ_MAKE_VERSION(4, 3, 1)
   socket.setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(int));
 #else
   socket.set(zmq::sockopt::rcvtimeo, timeout_ms);
@@ -272,7 +259,7 @@ void LandmarkZmqComponent::zmqThreadFunc()
     {
       RLOG(0, "Didn't receive message within timeout - quitting thread function");
       timedOut = true;
-      socket.disconnect("tcp://localhost:5555");
+      socket.disconnect(connection);
       socket.close();
       threadFunctionCompleted = true;
       return;
@@ -280,11 +267,61 @@ void LandmarkZmqComponent::zmqThreadFunc()
 
     if (!frozen)
     {
-      RLOG_CPP(5, "Parsing reply json");
+      /*
+      reply json:
+
+      {
+          "header": {
+              "frame_id": "",
+              "seq": 1769,
+              "timestamp": 1741691273.738978
+          },
+          "data": {
+              "aruco": {
+                  "aruco_10": [
+                      {
+                          "id": 10,
+                          "orientation": {
+                              "w": 0.1829875629933815,
+                              "x": 0.028557308472796805,
+                              "y": 0.8989100483042847,
+                              "z": 0.39706517976287165
+                          },
+                          "position": {
+                              "x": -5.260215610158375,
+                              "y": 1.28047442505508,
+                              "z": 16.066453031456977
+                          },
+                          "reprojection_error": 0.15712533543963342,
+                      }
+                  ],
+                  "aruco_3": [
+                      {
+                          "id": 3,
+                          "orientation": {
+                              "w": 0.022150579825356786,
+                              "x": 0.6953875885958379,
+                              "y": 0.49476124675710376,
+                              "z": 0.5207271475039713
+                          },
+                          "position": {
+                              "x": -5.878074040926496,
+                              "y": 1.6805983774038338,
+                              "z": 13.107461503432832
+                          },
+                          "reprojection_error": 0.13311420570088922,
+                      }
+                  ]
+              }
+          }
+      }
+
+       */
+      RLOG_CPP(5, "Parsing reply json: " << reply_str);
       nlohmann::json json = nlohmann::json::parse(reply_str);
       RLOG_CPP(5, "setJsonInput");
       setJsonInput(json);
-      RLOG_CPP(5, "done setJsonInput");
+      RLOG_CPP(5, "done setJsonInput: " << json.dump(4));
     }
 
     // Timing statistics
@@ -316,7 +353,7 @@ void LandmarkZmqComponent::startZmqThread()
   }
   else
   {
-    zmqThread = std::thread(&LandmarkZmqComponent::zmqThreadFunc, this);
+    zmqThread = std::thread(&LandmarkZmqComponent::zmqThreadFunc, this, connectionStr);
   }
 
   // Ideally, we should join it in the onStop() function. For some reasons,

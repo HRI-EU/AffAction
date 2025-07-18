@@ -39,8 +39,8 @@
 namespace aff
 {
 
-WebsocketActionComponent::WebsocketActionComponent(EntityBase* parent, unsigned int port_) :
-  ComponentBase(parent), port(port_)
+WebsocketActionComponent::WebsocketActionComponent(EntityBase* parent, unsigned int port_, std::string eventToPublish_) :
+  ComponentBase(parent), port(port_), eventToPublish(eventToPublish_)
 {
   getEntity()->subscribe("Stop", &WebsocketActionComponent::onStopWebSocket, this);
   getEntity()->subscribe("Start", &WebsocketActionComponent::onStartWebSocket, this);
@@ -69,16 +69,37 @@ void WebsocketActionComponent::onStopWebSocket()
   {
     this->connected = false;
     this->server.stop_listening();
-    this->server.close(this->hdl, websocketpp::close::status::going_away, "Robot shut down");
-    this->server.poll();   // must process the stop events submitted above
+
+    // Check if the connection handle (hdl) is valid before closing
+    if (!hdl.expired())
+    {
+      try
+      {
+        this->server.close(this->hdl, websocketpp::close::status::going_away, "Websocket server shutting down");
+        this->server.poll();  // Must process the stop events
+      }
+      catch (const std::exception& e)
+      {
+        RLOG(0, "WebSocket close error: %s", e.what());
+      }
+    }
+    else
+    {
+      RLOG(0, "WebSocket handle is invalid, skipping close()");
+    }
   }
 
   if (started)
   {
     started = false;
-    bgThread.join();
+    if (bgThread.joinable())
+    {
+      bgThread.join();
+    }
   }
+
 }
+
 
 void WebsocketActionComponent::onSendWebSocket(std::string textToSend)
 {
@@ -113,7 +134,7 @@ void WebsocketActionComponent::initWebsocket()
   this->server.set_message_handler([this](websocketpp::connection_hdl hdl, WebsocketServer::message_ptr msg)
   {
     RLOG(0, "Received msg: '%s'", msg->get_payload().c_str());
-    getEntity()->publish("ActionSequence", msg->get_payload());
+    getEntity()->publish(eventToPublish, msg->get_payload());
   });
   this->server.set_fail_handler([this](websocketpp::connection_hdl hdl)
   {

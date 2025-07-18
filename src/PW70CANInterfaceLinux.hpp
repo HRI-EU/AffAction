@@ -30,28 +30,28 @@
 
 *******************************************************************************/
 
-// g++ -std=c++11 -o test_pw70_can_interface PW70CANInterface.cpp -pthread -DMAIN
-
 #ifndef PW70CANINTERFACELINUX_H
 #define PW70CANINTERFACELINUX_H
+
+#include "PW70CANInterface.h"
 
 #include <cmath>
 #include <thread>
 #include <vector>
-#include <functional>
 #include <mutex>
 #include <linux/can.h>
 
 namespace aff
 {
 
-class PW70CANInterface
+class PW70CANInterfaceLinux : public PW70CANInterface
 {
 public:
-  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                   std::function<void(double, double, double, void*)> position_callback,
-                   void* param, int freq);
-  ~PW70CANInterface();
+  PW70CANInterfaceLinux();
+  PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
+                        std::function<void(double, double, double, void*)> position_callback,
+                        void* param, int freq);
+  ~PW70CANInterfaceLinux();
 
   void cleanup();
   bool send(const std::vector<struct can_frame>& frames);
@@ -77,11 +77,7 @@ private:
   std::thread recv_thread;
   bool running;
   void receive_messages();
-
-  std::function<void(double, double, void*)> limit_check_callback;
-  std::function<void(double, double, double, void*)> position_callback;
-
-  void* callbackParam;
+  int init_can() const;
 };
 
 }   // namespace
@@ -109,14 +105,41 @@ namespace aff
 {
 
 
-PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                                   std::function<void(double, double, double, void*)> position_callback,
-                                   void* param, int freq)
-  : limit_check_callback(limit_check_callback), position_callback(position_callback),
-    running(true), callbackParam(param)
+PW70CANInterfaceLinux::PW70CANInterfaceLinux()
+  : PW70CANInterface(nullptr, nullptr, nullptr, 0), running(false)
 {
+  this->s = init_can();
+}
+
+PW70CANInterfaceLinux::PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
+                                             std::function<void(double, double, double, void*)> position_callback,
+                                             void* param, int freq)
+  : PW70CANInterface(limit_check_callback, position_callback, param, freq), running(true)
+{
+  this->s = init_can();
+
+  // Start the receive thread
+  recv_thread = std::thread(&PW70CANInterfaceLinux::receive_messages, this);
+
+  // Enable regular status updates.
+  enable_frequent_position_update(freq);
+}
+
+// Destructor
+PW70CANInterfaceLinux::~PW70CANInterfaceLinux()
+{
+  if (running)
+  {
+    cleanup();
+  }
+}
+
+int PW70CANInterfaceLinux::init_can() const
+{
+  int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
   // Open CAN socket
-  if ((s = socket(PF_CAN, SOCK_RAW, CAN_RAW)) < 0)
+  if (s < 0)
   {
     RLOG(0, "Error while opening socket: %s (%d)", strerror(errno), errno);
     throw std::runtime_error("Error while opening socket");
@@ -141,30 +164,17 @@ PW70CANInterface::PW70CANInterface(std::function<void(double, double, void*)> li
     throw std::runtime_error("Error in socket bind");
   }
 
-  // Start the receive thread
-  recv_thread = std::thread(&PW70CANInterface::receive_messages, this);
-
-  // Enable regular status updates.
-  enable_frequent_position_update(freq);
-}
-
-// Destructor
-PW70CANInterface::~PW70CANInterface()
-{
-  if (running)
-  {
-    cleanup();
-  }
+  return s;
 }
 
 // Cleanup method
-void PW70CANInterface::cleanup()
+void PW70CANInterfaceLinux::cleanup()
 {
   disable_frequent_position_update();
 
   // Stop and fast stop to disable motor current and engage brakes.
-  stop();
-  // fast_stop();
+  //stop();
+  fast_stop();   // With brakes
 
   // Stop the receive thread
   std::cout << "Joining CAN receiver thread" << std::endl;
@@ -181,7 +191,7 @@ void PW70CANInterface::cleanup()
 }
 
 // Send method
-bool PW70CANInterface::send(const std::vector<struct can_frame>& frames)
+bool PW70CANInterfaceLinux::send(const std::vector<struct can_frame>& frames)
 {
   std::lock_guard<std::mutex> lock(socket_mutex);
   for (const auto& frame : frames)
@@ -189,7 +199,7 @@ bool PW70CANInterface::send(const std::vector<struct can_frame>& frames)
     int nbytes = write(s, &frame, sizeof(struct can_frame));
     if (nbytes != sizeof(struct can_frame))
     {
-      perror("Error sending CAN frame");
+      RLOG(0, "Error sending CAN frame: %s (%d)", strerror(errno), errno);
       return false;
     }
   }
@@ -197,7 +207,7 @@ bool PW70CANInterface::send(const std::vector<struct can_frame>& frames)
 }
 
 // Receive messages method
-void PW70CANInterface::receive_messages()
+void PW70CANInterfaceLinux::receive_messages()
 {
   struct can_frame frame = {};
   bool pan_updated = false;
@@ -293,7 +303,7 @@ void PW70CANInterface::receive_messages()
 }
 
 // Enable frequent position update method
-bool PW70CANInterface::enable_frequent_position_update(int frequency)
+bool PW70CANInterfaceLinux::enable_frequent_position_update(int frequency)
 {
   // Schunk Motion Protocol commands
   std::map<int, std::vector<uint8_t>> can_state_cmds =
@@ -333,7 +343,7 @@ bool PW70CANInterface::enable_frequent_position_update(int frequency)
 }
 
 // Disable frequent position update method
-bool PW70CANInterface::disable_frequent_position_update()
+bool PW70CANInterfaceLinux::disable_frequent_position_update()
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -351,7 +361,7 @@ bool PW70CANInterface::disable_frequent_position_update()
 }
 
 // Stop method
-bool PW70CANInterface::stop()
+bool PW70CANInterfaceLinux::stop()
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -369,7 +379,7 @@ bool PW70CANInterface::stop()
 }
 
 // Fast stop method
-bool PW70CANInterface::fast_stop()
+bool PW70CANInterfaceLinux::fast_stop()
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -387,7 +397,7 @@ bool PW70CANInterface::fast_stop()
 }
 
 // Reference pan method
-bool PW70CANInterface::reference_pan()
+bool PW70CANInterfaceLinux::reference_pan()
 {
   struct can_frame msg = {};
   msg.can_id = 0x50E;
@@ -399,7 +409,7 @@ bool PW70CANInterface::reference_pan()
 }
 
 // Reference tilt method
-bool PW70CANInterface::reference_tilt()
+bool PW70CANInterfaceLinux::reference_tilt()
 {
   struct can_frame msg = {};
   msg.can_id = 0x50D;
@@ -411,7 +421,7 @@ bool PW70CANInterface::reference_tilt()
 }
 
 // Reset stop method
-bool PW70CANInterface::reset_stop()
+bool PW70CANInterfaceLinux::reset_stop()
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -429,7 +439,7 @@ bool PW70CANInterface::reset_stop()
 }
 
 // Set target velocity method
-bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceLinux::set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -453,7 +463,7 @@ bool PW70CANInterface::set_target_velocity(double pan_velocity_radians, double t
 }
 
 // Set target position method
-bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radians)
+bool PW70CANInterfaceLinux::set_target_position(double pan_radians, double tilt_radians)
 {
   struct can_frame msg1 = {};
   msg1.can_id = 0x50D;
@@ -477,7 +487,7 @@ bool PW70CANInterface::set_target_position(double pan_radians, double tilt_radia
 }
 
 // Move position method
-bool PW70CANInterface::move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceLinux::move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
 {
   if (!set_target_velocity(pan_velocity_radians, tilt_velocity_radians))
   {
@@ -487,7 +497,7 @@ bool PW70CANInterface::move_position(double pan_radians, double tilt_radians, do
 }
 
 // Move velocity method
-bool PW70CANInterface::move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
+bool PW70CANInterfaceLinux::move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
 {
   struct can_frame msg1 = {}, msg2 = {};
 

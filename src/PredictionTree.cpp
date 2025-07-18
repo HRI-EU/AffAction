@@ -53,6 +53,8 @@
 #define TURBO_DURATION_SCALER (1.2)
 static double defaultTurboDurationScale = TURBO_DURATION_SCALER;
 
+// No action is shorter than this
+#define MINIMUM_ACTION_DURATION (3.0)
 
 
 namespace aff
@@ -217,6 +219,14 @@ size_t PredictionTree::getNumNodes() const
   return collection.size();
 }
 
+std::vector<PredictionTreeNode*> PredictionTree::getLeafNodes(bool onlySuccessfulOnes,
+                                                              PredictionTreeNode* node) const
+{
+  std::vector<PredictionTreeNode*> collection;
+  getLeafNodes(collection, onlySuccessfulOnes, node);
+  return collection;
+}
+
 void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, bool onlySuccessfulOnes, PredictionTreeNode* node) const
 {
   if (!node)
@@ -224,10 +234,15 @@ void PredictionTree::getLeafNodes(std::vector<PredictionTreeNode*>& collection, 
     node = root;
   }
 
-  if (node->children.empty())// && (node->level==incomingActionSequence.size()))
+  if (node->children.empty())
   {
-    if ((!onlySuccessfulOnes) || (onlySuccessfulOnes&&node->success))
+    if ((!onlySuccessfulOnes) || (onlySuccessfulOnes && node->success && (node->level == incomingActionSequence.size())))
     {
+      NLOG(0, "onlySuccessfulOnes=%s   noce->success=%s   node->level=%d   depth=%zu",
+           onlySuccessfulOnes ? "TRUE" : "FALSE",
+           node->success ? "TRUE" : "FALSE",
+           node->level,
+           incomingActionSequence.size());
       collection.push_back(node);
     }
   }
@@ -613,37 +628,31 @@ std::pair<double, std::vector<PredictionTreeNode*>> PredictionTree::findSmallest
 
 std::vector<PredictionTreeNode*> PredictionTree::findSolutionPath(size_t index, bool onlySuccessfulOnes) const
 {
-  std::vector<PredictionTreeNode*> leafs, bestPath;
+  std::vector<PredictionTreeNode*> leafs = getLeafNodes(onlySuccessfulOnes);
 
-  // Get all successful leaf nodes and order so that the best one is at the first index
-  getLeafNodes(leafs, onlySuccessfulOnes);
-  //RLOG_CPP(0, "Found " << leafs.size() << " leaf nodes for index " << index);
-
-  if (leafs.empty() || (index>=leafs.size()))
+  if (!leafs.empty() && (index < leafs.size()))
   {
-    //RLOG_CPP(0, "No leaf nodes found or index " << index << " >= leaf.size(): " << leafs.size());
-    return std::vector<PredictionTreeNode*>();
+    std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
+    return getPathToNode(leafs[index]);
   }
-  //RLOG_CPP(0, "Leafs size is now " << leafs.size());
-  std::sort(leafs.begin(), leafs.end(), PredictionTreeNode::lesser);
-  //RLOG_CPP(0, "Leafs size is now " << leafs.size());
 
-  if (!leafs.empty())
+  return std::vector<PredictionTreeNode*>();
+}
+
+std::vector<PredictionTreeNode*> PredictionTree::getPathToNode(PredictionTreeNode* nodePtr) const
+{
+  std::vector<PredictionTreeNode*> path{nodePtr};
+
+  while (nodePtr->parent)
   {
-    PredictionTreeNode* nodePtr = leafs[index];
-    bestPath.push_back(nodePtr);
-
-    while (nodePtr->parent)
-    {
-      nodePtr = nodePtr->parent;
-      bestPath.push_back(nodePtr);
-    }
-
-    bestPath.pop_back();   // Remove root
-    std::reverse(bestPath.begin(), bestPath.end());
+    nodePtr = nodePtr->parent;
+    path.push_back(nodePtr);
   }
-  //RLOG_CPP(0, "Best path has length " << bestPath.size());
-  return bestPath;
+
+  path.pop_back();   // Remove root
+  std::reverse(path.begin(), path.end());
+
+  return path;
 }
 
 std::vector<std::string> PredictionTree::findSolutionPathAsStrings(size_t index, bool onlySuccessfulOnes) const
@@ -1040,7 +1049,7 @@ static void expand(ActionScene& scene,
     duration = std::max(duration, action->getDefaultDuration());
   }
 
-  RLOG(1, "duration is %f", duration);
+  RLOG(1, "duration is %f (turboMode is %s)", duration, action->turboMode() ? "ON" : "OFF");
   auto res = action->predict(scene, node->graph, broadphase, duration, dt, earlyExitAction);
   res.idx = solutionIndex;
 
@@ -1050,16 +1059,17 @@ static void expand(ActionScene& scene,
   {
     double newDuration = duration*res.scaleJointSpeeds*defaultTurboDurationScale;
     newDuration -= std::fmod(newDuration, dt);
-    RLOG(1, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
+    newDuration = std::max(newDuration, MINIMUM_ACTION_DURATION);   // Make sure minimum duration is kept
+    RLOG(5, "scaleJointSpeeds is %f", res.scaleJointSpeeds);
 
     if (newDuration<duration)
     {
       action->setDuration(newDuration);
-      RLOG(0, "newDuration is %f", newDuration);
+      RLOG(1, "newDuration is %f", newDuration);
     }
     else
     {
-      RLOG(0, "newDuration unchanged: %f", duration);
+      RLOG(1, "newDuration unchanged: %f (%f)", newDuration, duration);
     }
 
   }

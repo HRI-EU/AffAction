@@ -33,6 +33,10 @@
 SET(PYBIND11_CPP_STANDARD -std=c++14)
 SET(PYBIND_DIR_HINT "${CMAKE_CURRENT_SOURCE_DIR}/../../pybind11")
 
+IF (WIN32)
+  SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # Put module where dlls are located
+ENDIF(WIN32)
+
 IF (EXISTS "${PYBIND_DIR_HINT}" AND IS_DIRECTORY "${PYBIND_DIR_HINT}")
 
   MESSAGE(STATUS "pybind11 found - creating python wrapper")

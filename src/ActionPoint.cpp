@@ -140,6 +140,19 @@ ActionPoint::ActionPoint(const ActionScene& scene,
     hands = robots[0]->getManipulatorsOfType(&scene, "hand");
   }
 
+  // In case the object is held in a hand, remove this hand for pointing
+  if (nttsToPointAt.size() == 1)
+  {
+    const AffordanceEntity* ntt = dynamic_cast<const AffordanceEntity*>(nttsToPointAt[0]);
+    const Manipulator* graspingHand = scene.getGraspingHand(graph, ntt);
+    auto it = hands.begin();
+    while (it != hands.end())
+    {
+      bool heldInHand = (*it)== graspingHand;
+      it = heldInHand ? hands.erase(it) : it+1;
+    }
+  }
+
   if (hands.empty())
   {
     throw ActionException(ActionException::ParamNotFound,

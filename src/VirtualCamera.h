@@ -46,22 +46,27 @@ class VirtualCamera
 {
 public:
 
-  VirtualCamera(osg::Node* node, int width=640, int height=480);
-  virtual ~VirtualCamera();
+  VirtualCamera(osg::Node* node, int width=640, int height=480,
+                double near=0.1, double far=10.0);
+  virtual ~VirtualCamera() = default;
 
-  void render(double x, double y, double z, double thx, double thy, double thz,
-              double* colorBuffer=nullptr, double* depthBuffer=nullptr);
-  void render(const HTr* A_camI, double* colorBuffer=nullptr, double* depthBuffer=nullptr);
+  void getColorImage(uint8_t* data, size_t size);
+  void getDepthImage(float* data, size_t size);
+  void capture(const HTr* A_camI);
+  static bool initCamera(const std::string& cameraName, int width, int height,
+                         double& fx, double& fy, double& cx, double& cy,
+                         double& near, double& far);
 
-  const int width;
-  const int height;
+  Rcs::DepthRenderer* getRenderer();
+
+  size_t getHeight() const;
+  size_t getWidth() const;
 
 private:
   VirtualCamera(const VirtualCamera&) = delete;
   VirtualCamera& operator=(const VirtualCamera&) = delete;
 
   Rcs::DepthRenderer virtualRenderer;
-  std::mutex virtualRendererLock;
 };
 
 } // aff

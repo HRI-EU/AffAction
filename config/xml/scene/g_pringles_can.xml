@@ -1,0 +1,62 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph>
+
+  <Body name="pringles" physics="dynamic" mass="0.2" >
+    <Shape type="SSL" color="RED" distance="true" graphics="false" radius="0.035" length="0.17" physics="false" transform="0 0 0.04 0 0 0" />
+    <Shape type="CYLINDER" distance="false" radius="0.038" length="0.255"  graphics="true" physics="true" transform="0 0 0.1275 0 0 0" />
+    <Shape type="FRAME" extents="0.04 0.04 0" marker="true" markerName="aruco_28" scale="0.1" transform="0.03 0 0.0275 90 90 0" />
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
+  
+  <Body name="pringles_top" prev="pringles" transform="0 0 0.265 0 0 0">
+    <Shape scale="0.1" type="FRAME"/>
+  </Body>
+  
+  <Body name="pringles_tip" prev="pringles" transform="0 0 0.3 0 0 0">
+    <Shape scale="0.1" type="FRAME"/>
+  </Body>
+  
+  <Body name="pringles_grip" prev="pringles" transform="0 0 0.15 0 0 0">
+    <Shape scale="0.1" type="FRAME"/>
+  </Body>
+  
+  <AffordanceModel body="pringles" types="glass">
+    <Supportable frame="pringles_top"/>
+    <Stackable frame="pringles"/>
+    <Pourable frame="pringles_tip"/>
+    <PowerGraspable frame="pringles_grip"/>
+    <Containable frame="pringles_tip" max_volume="0.4">
+      <Ingredient name="" volume="0"/>
+    </Containable>
+    <Openable open="true"/>
+  </AffordanceModel>
+
+</Graph>

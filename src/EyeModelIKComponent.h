@@ -49,12 +49,15 @@ class EyeModelIKComponent : public ComponentBase
 {
 public:
 
+  enum class GazeMode { HeadEyeApproximate,  // Coordinated head-eye with Jacobian approximation
+                        HeadEyePrecise,      // Coordinated head-eye with task constraints
+                        PupilDirection       // Individual pupil's gaze direction
+                      };
+
   EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph);
   virtual ~EyeModelIKComponent();
 
   static bool hasEyeModel(const RcsGraph* graph);
-  void setPanJointName(const std::string& name);
-  void setTiltJointName(const std::string& name);
   bool setPupilSpeedWeight(RcsGraph* graph, double weight);
 
 private:
@@ -66,10 +69,20 @@ private:
   void onRender();
   void onSetGazeTarget(std::string bdyName);
   void onStartGesture(std::string gestureName, double amplitude, int numTurns);
+  void onGestureThreeRepetitions(std::string gestureName, double gestureAmplitude);
   void onSetPupilWeight(double weight);
+  void onEyeDirCommand(std::string sixValues);
+  void onGazeFromString(std::string jsonString);
 
-  void setPanJointActivation(bool enable);
-  void setTiltJointActivation(bool enable);
+  bool setTaskActivation(const std::string& taskName, bool enable);
+  void computeIK_headEye(RcsGraph* desired, RcsGraph* current);
+  void computeIK_gazeDir(RcsGraph* desired, RcsGraph* current);
+
+  const RcsBody* rightPupil() const;
+  const RcsBody* leftPupil() const;
+  const RcsBody* rightEyeBall() const;
+  const RcsBody* leftEyeBall() const;
+  const RcsBody* screen() const;
 
   std::vector<std::string> createTasksXML() const;
   std::vector<int> jointIds;
@@ -82,14 +95,14 @@ private:
   MatNd* dH;
   MatNd* dq_des;
   std::string gazeTargetBody;
-  std::string panJointName;   // default: "ptu_pan_joint"
-  std::string tiltJointName;  // default: "ptu_tilt_joint"
   Rcs::RampFilterND goalFilt;
+  double leftEyeDirCommand[3], rightEyeDirCommand[3];
 
   bool eStop;
   double alpha;
   double lambda;
   double t_gesture;
+  GazeMode gazeMode;
 
   std::vector<std::unique_ptr<HeadGesture>> headGestures;
 

@@ -1,0 +1,249 @@
+<?xml version="1.0" ?>
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default_top" resourcePath="${SIT}/Data/RobotMeshes/1.0/data">
+
+  <Body name="default_camera_view" rigid_body_joints="-1.998433 -1.690323 2.355891   -11.362 18.636 42.816"/>
+  
+  <Body name="aruco_base"  color="PEWTER" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="-0.31 0.19 1.1 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true" transform="-0.31 0.19 1.1 0 0 0" textureFile="textures/4x4marker_1.jpg" />
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+  
+  <Body name="camera_0" prev="aruco_base" rigid_body_joints="-0.231 0.883 1.656  125.459 13.478 165.568" color="LIGHTGRAY" >
+    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="false" type="BOX"/>
+    <Shape boundingbox="false" distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
+    <Shape boundingbox="false" distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+  
+  <Body color="PEWTER" name="floor" physics="kinematic" prev="aruco_base">
+    <Shape distance="true" extents="4 4 0.02" graphics="true" physics="false" transform="0 0 -0.01 0 0 0" type="BOX"/>
+  </Body>
+
+  <Body name="table" physics="kinematic" prev="aruco_base" mass="0" rigid_body_joints="0 0 1.1 0 0 0" color="PEARLWHITE" >
+    <Shape type="BOX" distance="true" extents="0.8 1.2 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0"/>
+    <Shape scale="0.2" type="FRAME"/>
+  </Body>
+
+  
+  <Group prev="table" transform="-0.375 0.05 0 0 0 90" was_transform="0.32 0.5 0 0 0 -90">
+    <xi:include href="../SingleJaco6/kinova_ulw2_6dof.xml" />
+  </Group>
+
+  <!--
+	<Body name="table_grid" prev="table" transform="-0.1 0 0.041 0 0 0" />
+
+	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 -0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0" />
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+
+
+	
+	<Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+
+
+
+	<Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
+		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true" transform="0 0 -0.04 0 0 0"/>
+	</Body>
+
+
+	
+
+	
+	<AffordanceModel body="table" name="table" types="furniture">
+		<Supportable frame="table_grid_0_4"/>
+		<Supportable frame="table_grid_0_5"/>
+		<Supportable frame="table_grid_0_6"/>
+		<Supportable frame="table_grid_0_7"/>
+		
+		<Supportable frame="table_grid_1_4"/>
+		<Supportable frame="table_grid_1_5"/>
+		<Supportable frame="table_grid_1_6"/>
+		<Supportable frame="table_grid_1_7"/>
+
+		<Supportable frame="table_grid_2_4"/>
+		<Supportable frame="table_grid_2_5"/>
+		<Supportable frame="table_grid_2_6"/>
+		<Supportable frame="table_grid_2_7"/>
+	</AffordanceModel>
+-->
+
+  <Body name="hand" prev="hand_base" >
+    <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+           transform="0 0 0.1 180 0 0" color="RED"/>
+  </Body>
+
+  <Body name="hand_powergrasp" prev="hand" transform="0 0 -0.14  0 90 0">
+    <Shape type="FRAME" scale="0.1"/>
+  </Body>
+
+  <Body name="hand_pincergrasp" prev="hand" transform="0 0 -0.18 0 90 0">
+    <Shape type="FRAME" scale="0.1"/>
+  </Body>
+
+
+
+  <Manipulator body="hand" types="hand">
+    <Joints names="j2s7s300_joint_finger_1 j2s7s300_joint_finger_2 j2s7s300_joint_finger_3"/>
+    <PowergraspCapability frame="hand_powergrasp" />
+    <PincergraspCapability frame="hand_pincergrasp" />
+  </Manipulator>
+
+
+  <Agent body="table" types="robot" name="Johnnie" >
+    <Component manipulator="hand" />
+  </Agent>
+
+
+  
+  <!-- Apples -->
+  <Group name="_1" prev="table" rigid_body_joints="0 -0.15 -10.04 0 0 0" >
+    <xi:include href="g_apple.xml"/>
+  </Group>
+  <Group name="_2" prev="table" rigid_body_joints="0 0 -10.04 0 0 0" >
+    <xi:include href="g_apple.xml"/>
+  </Group>
+  <Group name="_3" prev="table" rigid_body_joints="0 0.15 -10.04  0 0 0" >
+    <xi:include href="g_apple.xml"/>
+  </Group>
+  <Group name="_4" prev="table" rigid_body_joints="0 0.3 -10.04  0 0 0" >
+    <xi:include href="g_apple.xml"/>
+  </Group>
+  <Group name="_5" prev="table" rigid_body_joints="0 0.4 -10.04  0 0 0" >
+    <xi:include href="g_apple.xml"/>
+  </Group>
+
+  <!-- Oranges
+  <Group name="_1" prev="table" rigid_body_joints="0.1 0 0.04  0 0 0" >
+    <xi:include href="../scene/g_orange.xml"/>
+  </Group>
+  <Group name="_2" prev="table" rigid_body_joints="0.1 0.2 0.04  0 0 0" >
+    <xi:include href="../scene/g_orange.xml"/>
+  </Group> -->
+
+  <!-- Bowls
+  <Group prev="table" name="bowl_1" color="RED" rigid_body_joints="-0.2 0.5 0 0 0 0" >
+    <xi:include href="../scene/g_bowl.xml"/>
+  </Group>
+  <Group prev="table" name="bowl_2" color="RED" rigid_body_joints="-0.2 0.3 0 0 0 0" >
+    <xi:include href="../scene/g_bowl.xml"/>
+  </Group>
+  <Group prev="table" name="bowl_3" color="RED" rigid_body_joints="-0.2 0.1 0 0 0 0" >
+    <xi:include href="../scene/g_bowl.xml"/>
+  </Group>
+  <Group prev="table" name="bowl_4" color="RED" rigid_body_joints="-0.2 -0.1 0 0 0 0" >
+    <xi:include href="../scene/g_bowl.xml"/>
+  </Group> -->
+
+
+
+
+<Group prev="table" name="bowl_1" color="RED" rigid_body_joints="0.0 0.5 0 0 0 0">
+  <Body name="bowl_1" physics="kinematic" transform="0 0 0 0 0 0">
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.08" graphics="true" physics="true" transform="-0.0 -0.08 0.04 0 0 0"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="-0.06381 0.03486 0.07 0 0 60"/>
+    <Shape type="BOX" distance="false" extents="0.26565 0.0105 0.14" graphics="true" physics="true" transform="0.06381 0.03486 0.07 0 0 -60"/>
+  </Body>
+</Group>
+
+<Group prev="table" name="bowl_2" color="RED" rigid_body_joints="0.21 0.15 0 0 0 -90" >
+		<Body name="bowl_2" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform="0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
+<Group prev="table" name="bowl_3" color="RED" rigid_body_joints="0.0 -0.2 0 0 0 180" >
+		<Body name="bowl_3" physics="kinematic" transform="0 0 0 0 0 0">
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.08" graphics="true" physics="true" transform=".0 -0.06972 0.04 0 0 0"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="-0.0580125 0.03486 0.07 0 0 60"/>
+			<Shape type="BOX" distance="false" extents="0.2415 0.0105 0.14" graphics="true" physics="true" transform="0.0580125 0.03486 0.07 0 0 -60"/>
+	  	</Body>
+</Group>
+
+
+  <model_state model="InitialPose" time_stamp="">
+    <joint_state joint="j2n6s300_joint_1" position="0" />
+    <joint_state joint="j2n6s300_joint_2" position="200" />
+    <joint_state joint="j2n6s300_joint_3" position="80" />
+    <joint_state joint="j2n6s300_joint_4" position="0" />
+    <joint_state joint="j2n6s300_joint_5" position="0"  />
+    <joint_state joint="j2n6s300_joint_6" position="0" />
+    <joint_state joint="j2n6s300_joint_finger_1" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_2" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_3" position="10" />
+  </model_state>
+
+  <model_state model="JacoDefaultPose" time_stamp="">
+    <joint_state joint="j2n6s300_joint_1" position="275.5" />
+    <joint_state joint="j2n6s300_joint_2" position="167.5" />
+    <joint_state joint="j2n6s300_joint_3" position="57.5" />
+    <joint_state joint="j2n6s300_joint_4" position="240.8" />
+    <joint_state joint="j2n6s300_joint_5" position="82.8"  />
+    <joint_state joint="j2n6s300_joint_6" position="75.8" />
+    <joint_state joint="j2n6s300_joint_finger_1" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_2" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_3" position="10" />
+  </model_state>
+
+  <model_state model="default_top" time_stamp="">
+    <joint_state joint="j2n6s300_joint_1" position="275.5" />
+    <joint_state joint="j2n6s300_joint_2" position="170" />
+    <joint_state joint="j2n6s300_joint_3" position="60" />
+    <joint_state joint="j2n6s300_joint_4" position="200" />
+    <joint_state joint="j2n6s300_joint_5" position="-70"  />
+    <joint_state joint="j2n6s300_joint_6" position="-60" />
+    <joint_state joint="j2n6s300_joint_finger_1" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_2" position="10" />
+    <joint_state joint="j2n6s300_joint_finger_3" position="10" />
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="" >
+    <joint_state joint="j2s7s300_joint_finger_1" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3" position="10" />
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="" >
+    <joint_state joint="j2s7s300_joint_finger_1" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3" position="50" />
+  </model_state>
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="j2n6s300_link_base" />
+  </BroadPhase>
+
+</Graph>

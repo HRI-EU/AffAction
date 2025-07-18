@@ -79,6 +79,8 @@ Manipulator::Manipulator(const xmlNodePtr node, const std::string& groupSuffix) 
     if (isXMLNodeNameNoCase(child, "Joints"))
     {
       fingerJoints = Rcs::getXMLNodePropertyVecSTLString(child, "names");
+      for (auto& j : fingerJoints)
+        j += groupSuffix;
     }
     else if (isXMLNodeNameNoCase(child, "PowergraspCapability"))
     {

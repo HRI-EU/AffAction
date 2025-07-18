@@ -32,7 +32,6 @@
 *******************************************************************************/
 
 #include <ExampleActionsECS.h>
-#include <LandmarkZmqComponent.h>
 #include <HardwareComponent.h>
 #include <StringParserTools.hpp>
 #include <Rcs_macros.h>
@@ -40,10 +39,13 @@
 #include <Rcs_cmdLine.h>
 #include <Rcs_typedef.h>
 #include <Rcs_timer.h>
+#include <ExampleGui.h>
 
 #include <SegFaultHandler.h>
 
-#if !defined(_MSC_VER)
+#include <QApplication>
+
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #include <X11/Xlib.h>
 #endif
 
@@ -73,12 +75,59 @@ void quit(int /*sig*/)
   }
 }
 
+static int testLLMSim_blocking(int argc, char** argv)
+{
+  auto ex = std::make_shared<aff::ExampleActionsECS>();
+  ex->blockingMainThread = true;
+
+  if (!ex->init(argc, argv))
+  {
+    RLOG(0, "Failed in initialize example");
+    return -1;
+  }
+
+  ex->getViewer()->setKeyCallback('q', [](char k)
+  {
+    RLOG(0, "Quitting");
+    QMetaObject::invokeMethod(qApp, []()
+    {
+      qDebug() << "Quitting from thread:" << QThread::currentThread();
+      QCoreApplication::quit();
+    }, Qt::QueuedConnection);
+  }, "Quit");
+
+  QApplication app(argc, argv);
+  std::setlocale(LC_ALL, "C");
+  QApplication::setQuitOnLastWindowClosed(false);
+
+  RLOG(0, "Starting example thread");
+  std::thread t(&aff::ExampleActionsECS::start, ex);
+
+  RLOG(0, "Start Qt");
+  QTimer* timer = new QTimer(&app);  // or any parent
+  QObject::connect(timer, &QTimer::timeout, [&]()
+  {
+    ex->updateUI();
+  });
+  timer->start(25);  // 40 fps
+
+  app.exec();
+
+  RLOG(0, "Stopping example");
+  ex->stop();
+  RLOG(0, "Joining example thread");
+  t.join();
+  RLOG(0, "Deleting example");
+
+  return 0;
+}
+
 // Run with tracking skeletons from file:
 //   bin/TestLLMSim -dir config/xml/Affaction/examples/ -f g_aruco.xml -tracking -jsonFile config/xml/Affaction/data/skeleton.json
 //   bin/TestLLMSim -dir config/xml/Affaction/unittest/ -f g_scenario_unittest_multiple_agents.xml
 static int testLLMSim(int argc, char** argv)
 {
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__APPLE__)
   // Avoid crashes when running remotely.
   XInitThreads();
 #endif
@@ -124,75 +173,7 @@ static int testLLMSim(int argc, char** argv)
 
 
   bool success = ex.init(argc, argv);
-#if 0
-  aff::LandmarkZmqComponent* lmc = nullptr;
-  std::string lmArgs;
 
-  // Assemble string containing all args
-  if (withTracking)
-  {
-    RLOG(0, "Enabling tracking");
-    std::string connection = "tcp://localhost:5555";
-    argP.getArgument("-jsonFile", &connection, "Json file instead of zmq connection (default: python_landmark_input.json)");
-    lmArgs += "-landmarks_connection " + connection + " -landmarks_camera head_kinect_lens ";
-    if (withFace)
-    {
-      lmArgs += "-face_tracking -face_bodyName face ";
-    }
-
-    // Create components
-    aff::ComponentBase* c = createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-landmarks_zmq", lmArgs);
-    ex.addComponent(c);
-    lmc = static_cast<aff::LandmarkZmqComponent*>(c);
-    if (withFace)
-    {
-      ex.addComponent(createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-face_gesture", lmArgs));
-      ex.addComponent(createComponent(ex.getEntity(), ex.getGraph(), ex.getScene(), "-camera_view", lmArgs));
-    }
-  }
-
-
-
-  if (withAruco)
-  {
-    RLOG(0, "Enabling aruco traker");
-    lmc->addArucoTracker("camera_0", "aruco_base");
-    RLOG(0, "Done adding aruco tracker");
-  }
-
-  if (withAzure)
-  {
-    RLOG(0, "Enabling Azure skeleton tracker");
-    //    RCHECK(cam);
-    size_t numSkeletons = 3;
-    double r_agent = DBL_MAX;
-    argP.getArgument("-numSkeletons", &numSkeletons,
-                     "Max. number of skeletons to be tracked (default: %zu)", numSkeletons);
-    argP.getArgument("-r_agent", &r_agent, "Radius around skeleton default position to start tracking (default: inf)");
-
-    // Add skeleton tracker and ALL agents in the scene
-    int nSkeletons = lmc->addSkeletonTrackerForAgents(r_agent);
-    RLOG(0, "Added skeleton tracker with %d agents", nSkeletons);
-
-    if (ex.getViewer())
-    {
-      ex.getViewer()->setKeyCallback('W', [&ex](char k)
-      {
-        RLOG(0, "Calibrate camera");
-        ex.getEntity().publish("EstimateCameraPose", 20);
-      }, "Calibrate camera");
-    }
-
-    RLOG(0, "Done adding skeleton tracker");
-  }
-
-  // Because initGraphics() has already been called
-  if (lmc)
-  {
-    RLOG(0, "Enabling lmc debug graphics");
-    lmc->createDebugGraphics(ex.viewer.get());
-  }
-#endif
 
   if (success)
   {
@@ -301,6 +282,17 @@ static int testStringParsing()
   return 0;
 }
 
+static int testExampleGui(int argc, char** argv)
+{
+  QApplication app(argc, argv);
+  std::setlocale(LC_ALL, "C");
+  Rcs::ExampleWidget* mainWindow = new Rcs::ExampleWidget(argc, argv, "External");
+  mainWindow->show();
+
+  // Now run the Qt event loop on the main thread
+  return app.exec();
+}
+
 int main(int argc, char** argv)
 {
   // Ctrl-C callback handler
@@ -327,6 +319,14 @@ int main(int argc, char** argv)
 
     case 3:
       res = testPTU(argc, argv);
+      break;
+
+    case 4:
+      res = testExampleGui(argc, argv);
+      break;
+
+    case 5:
+      res = testLLMSim_blocking(argc, argv);
       break;
 
     default:

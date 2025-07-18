@@ -30,6 +30,15 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 *******************************************************************************/
+#include <QTimer>
+#include <QApplication>
+#include <QMetaObject>
+#include <QThread>
+#include <QDebug>
+
+#ifdef slots
+#  undef slots
+#endif
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -41,6 +50,7 @@ namespace py = pybind11;
 
 #include <LandmarkBase.h>
 #include <ExampleActionsECS.h>
+#include <ExampleViapoints.h>
 #include <ActionFactory.h>
 #include <ActionSequence.h>
 #include <HardwareComponent.h>
@@ -48,10 +58,12 @@ namespace py = pybind11;
 #include <TTSComponent.h>
 #include <PredictionTree.h>
 #include <AzureSkeletonTracker.h>
-#include "ActionEyeGaze.h"
+#include <ActionEyeGaze.h>
+#include <SceneHelpers.h>
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
+#include <Rcs_quaternion.h>
 #include <Rcs_math.h>
 #include <Rcs_timer.h>
 #include <Rcs_typedef.h>
@@ -60,13 +72,17 @@ namespace py = pybind11;
 
 #include <SegFaultHandler.h>
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) && !defined(__APPLE__)
 #include <X11/Xlib.h>
 #endif
 
 #include <chrono>
 #include <vector>
 #include <tuple>
+#include <algorithm>
+#include <locale.h>
+
+
 
 RCS_INSTALL_ERRORHANDLERS
 
@@ -144,7 +160,7 @@ PYBIND11_MODULE(pyAffaction, m)
   py::class_<aff::ExampleActionsECS>(m, "LlmSim")
   .def(py::init<>([]()
   {
-#if !defined(_MSC_VER)// Avoid crashes when running remotely.
+#if !defined(_MSC_VER) && !defined(__APPLE__)// Avoid crashes when running remotely.
     static bool xInitialized = false;
     if (!xInitialized)
     {
@@ -157,6 +173,7 @@ PYBIND11_MODULE(pyAffaction, m)
     ex->initParameters();
     return std::move(ex);
   }))
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Initialization function, to be called after member variables have been
@@ -187,6 +204,102 @@ PYBIND11_MODULE(pyAffaction, m)
 
     return success;
   }, "Initializes algorithm, guis and graphics")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("initBlocking", [](aff::ExampleActionsECS& ex, bool headless, bool catch_keyboard_interrupt) -> int
+  {
+    // Release the GIL for the function's duration
+    pybind11::gil_scoped_release release_gil;
+
+    ex.blockingMainThread = true;
+    bool success = ex.initAlgo();
+
+    int argc = 1;
+    char* argv[] = { (char*)"AppName" };
+    QApplication app(argc, argv);
+
+    std::setlocale(LC_ALL, "C");
+    QApplication::setQuitOnLastWindowClosed(false);
+
+    if (!headless)
+    {
+      success = ex.initGraphics() && success;
+      success = ex.initGuis() && success;
+    }
+
+    std::thread t(&aff::ExampleActionsECS::start, &ex);
+    t.detach();
+
+    std::atomic<bool> kb_int{false};   // To be sure
+    const int dt_msec = 16;  // ~60fps
+    const int cycles_per_sec = 200/dt_msec;   // 5 Hz
+    int loopCount = 0;
+    QTimer* timer = new QTimer(&app);  // or any parent
+    QObject::connect(timer, &QTimer::timeout, [&]()
+    {
+      ex.updateUI();
+
+      // Safely check Python signals by acquiring the GIL first, once per second.
+      if (catch_keyboard_interrupt && (++loopCount%cycles_per_sec==0))
+      {
+        pybind11::gil_scoped_acquire guard;
+
+        if (PyErr_CheckSignals() != 0 &&
+            PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
+        {
+          // 1 clear so ~gil_scoped_acquire won't throw
+          PyErr_Clear();
+          kb_int.store(true, std::memory_order_relaxed);
+
+          // 2 quit Qt cleanly
+          QCoreApplication::quit();
+        }
+      }
+
+    });
+    timer->start(dt_msec);
+
+    int res = app.exec();
+
+    /* ---------- back in the outer C++ stack ---------- */
+    if (catch_keyboard_interrupt && kb_int.load())
+    {
+      pybind11::gil_scoped_acquire guard;       // need GIL
+      PyErr_SetNone(PyExc_KeyboardInterrupt);   // restore
+      throw pybind11::error_already_set();      // safe to throw now
+    }
+
+
+    return res;
+
+  },
+  "Initializes algorithm, guis and graphics",
+  py::arg("headless") = false,
+  py::arg("catch_keyboard_interrupt") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("quitBlocking", [](aff::ExampleActionsECS& ex) -> bool
+  {
+    ex.stop();
+
+    // This can be done in a standard std::thread, pthread, or any non-Qt thread
+    QMetaObject::invokeMethod(qApp, []()
+    {
+      RLOG_CPP(1, "Quitting from thread:" << QThread::currentThread());
+      QCoreApplication::quit();
+    }, Qt::QueuedConnection);
+
+    return true;
+
+  }, "Stops example")
+
+
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if the agent can see all objects or a json in the form:
@@ -371,14 +484,6 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     ex.getEntity().publish("Render");
   })
-  //////////////////////////////////////////////////////////////////////////////
-  // Sets the gaze target body for the eye gaze model. This only takes effect
-  // if the class has been initialized with the eyeIkEnabled flag set to true.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("setGazeTarget", [](aff::ExampleActionsECS& ex, std::string targetBody)
-  {
-    ex.getEntity().publish("SetGazeTarget", targetBody);
-  })
   .def("process", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().process();
@@ -408,6 +513,14 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Call tts event
+  //////////////////////////////////////////////////////////////////////////////
+  .def("speak", [](aff::ExampleActionsECS& ex, std::string text)
+  {
+    ex.getEntity().publish("Speak", text);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns the entire scene in a URDF format
   //////////////////////////////////////////////////////////////////////////////
   .def("get_state_urdf", [](aff::ExampleActionsECS& ex) -> std::string
@@ -417,32 +530,107 @@ PYBIND11_MODULE(pyAffaction, m)
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
+  // a = sim.captureImage(0, 0, 1, 0, 0, 0)
   //////////////////////////////////////////////////////////////////////////////
   .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
-                          double thx, double thy, double thz) -> std::tuple<py::array_t<double>, py::array_t<double>>
+                          double thx, double thy, double thz) -> std::tuple<py::array_t<uint8_t>, py::array_t<float>>
   {
     aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
-    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3}), depthImage({virtualCamera->height, virtualCamera->width});
-    virtualCamera->render(x, y, z, thx, thy, thz, colorImage.mutable_data(), depthImage.mutable_data());
-    return std::make_tuple(std::move(colorImage), std::move(depthImage));
-  }, "Renders the current state of the scene. The input is the camera origin and yrp rotation around that origin. Outputs the color and depth image.")
+
+    if (!virtualCamera)
+    {
+      RLOG(1, "Creating new virtual camera - not part of simulator");
+      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), 640, 480);
+      ex.setVirtualCamera(virtualCamera);
+    }
+
+    HTr A_camI;
+    double x6[6];
+    VecNd_set6(x6, x, y, z, thx, thy, thz);
+    HTr_from6DVector(&A_camI, x6);
+    virtualCamera->capture(&A_camI);
+
+    py::array_t<uint8_t> colorImageUint8({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 3 });
+    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
+
+    py::array_t<float> depthImageFloat({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 1 });
+    virtualCamera->getDepthImage(depthImageFloat.mutable_data(), depthImageFloat.size());
+
+    return std::make_tuple(colorImageUint8, depthImageFloat);
+
+  },
+  R"pbdoc(
+Renders the desired state of the scene. The input is the camera origin and yrp rotation
+around that origin. Outputs the color and depth image. If there is no virtual camera
+instantiated in the simulator, this will be done in this function. This leads to the
+first call being a bit more slow than the consecutive ones, since the camera construction
+takes 1-2 secs.
+Camera frame convention: x points forward, z point upward, and y points left
+
+Example
+-------
+import cv2
+import numpy as np
+
+color, depth = sim.captureImage(-0.77, 0.0, 1.66, 0.0, 1.0, 0.0)
+color_np = np.array(color)
+color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
+cv2.imwrite("color_image.jpg", color_bgr)
+
+depth_np = np.array(depth)
+depth_normalized = cv2.normalize(depth_np, None, 0, 255, cv2.NORM_MINMAX)
+depth_display = depth_normalized.astype(np.uint8)
+cv2.imwrite("depth_image.jpg", depth_display)
+)pbdoc")
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
   //////////////////////////////////////////////////////////////////////////////
-  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<double>
+  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<uint8_t>
   {
-    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-    RCHECK_MSG(virtualCamera, "Virtual camera has not been instantiated");
-    py::array_t<double> colorImage({virtualCamera->height, virtualCamera->width, 3});
     const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
-    RCHECK(cam);
+    if (!cam)
+    {
+      RLOG_CPP(1, "Camera body " << cameraName << " not found - returning empty array");
+      return py::array_t<double>({ 0, 0, 3 });
+    }
 
-    virtualCamera->render(&cam->A_BI, colorImage.mutable_data(), nullptr);
-    return std::move(colorImage);
-  }, "Renders the current state of the scene. The input is the camera body name. Outputs the color image.")
+    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
+    int width = 640, height = 480;
+    if (!virtualCamera)
+    {
+      RLOG(1, "Creating new virtual camera - not part of simulator");
+      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), width, height);
+      ex.setVirtualCamera(virtualCamera);
+    }
 
+    width = (int)virtualCamera->getWidth();
+    height = (int)virtualCamera->getHeight();
+
+    virtualCamera->capture(&cam->A_BI);
+
+    // Here width and height need to be reversed
+    py::array_t<uint8_t> colorImageUint8({height, width, 3});
+    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
+
+    return colorImageUint8;
+  }, R"pbdoc(
+Renders the desired state of the scene from the given camera. Outputs the color image.
+If there is no virtual camera instantiated in the simulator, this will be done in this
+function. This leads to the first call being a bit more slow than the consecutive ones,
+since the camera construction takes 1-2 secs.
+Camera frame convention: x points forward, z point upward, and y points left
+
+Example
+-------
+import cv2
+import numpy as np
+
+color = sim.captureColorImageFromFrame("camera_01")
+color_np = np.array(color)
+color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
+cv2.imwrite("color_image.jpg", color_bgr)
+)pbdoc")
   //////////////////////////////////////////////////////////////////////////////
   // Returns the entity of which child is a child of, or an empty string
   //////////////////////////////////////////////////////////////////////////////
@@ -663,76 +851,74 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Fill in the parameters of the action sequence,
-  // providing rich information about the reason for failure
   //
-  // return value: [(failure step, failure reason)] (empty if successful)
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
   {
-    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, std::move(sequenceCommand));
+    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
     std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
 
     auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
                                               0, true, ex.earlyExitAction);
 
+    nlohmann::json j_inner = {
+      {"actions",    nlohmann::json::array()},
+      {"success",    false},
+      {"error",      ""},
+      {"reason",     ""},
+      {"suggestion", ""},
+      {"developer",  ""},
+      {"cost",       0.0}
+    };
+
+    if (!tree)
+    {
+      j_inner["error"] = "Failed to compute prediction tree";
+      return nlohmann::json::array({ j_inner });
+    }
+
+    if (!tree->root->feedbackMsg.error.empty())
+    {
+      j_inner["error"] = "Error in Solution 0";
+      return nlohmann::json::array({ j_inner });
+    }
+
     // Handling a fatal error in the syntax for the first action
-    RCHECK(tree);
     std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
-    if (slnPath.empty() || !tree->root->feedbackMsg.error.empty())
+
+    if (slnPath.empty())
     {
-      if (tree->root->fatalError)
-      {
-        RLOG_CPP(0, "Fatal Error in Solution 0");
-      }
-      return {std::make_tuple(std::vector<std::string>(), tree->root->feedbackMsg.reason, tree->root->feedbackMsg.suggestion)};
+      j_inner["error"] = "Prediction tree contains no solutions";
+      return nlohmann::json::array({j_inner});
     }
 
-    // Checking for whether the search was successful
-    if (slnPath.back()->success && slnPath.size() == seq.size())
-    {
-      RLOG_CPP(0, "Solution 0 is SUCCESSFUL");
+    std::vector<aff::PredictionTreeNode*> leafs = tree->getLeafNodes(successes_only);
 
-      std::vector<std::string> predictedSeq;
-      predictedSeq.reserve(slnPath.size());
-      for (auto node : slnPath)
-      {
-        predictedSeq.push_back(node->actionCommand());
-      }
-
-      std::string detailedActionCommand = Rcs::String_concatenate(predictedSeq, ";");
-      RLOG_CPP(0, "Final action sequence: " + detailedActionCommand);
-
-      PollBlockerComponent blocker(&ex);
-      ex.getEntity().publish("ActionSequence", detailedActionCommand);
-      blocker.wait();
-
-      return std::vector<std::tuple<std::vector<std::string>, std::string, std::string>>();
-    }
-
-    // Checking the longest failure
-    std::vector<aff::PredictionTreeNode*> leafs;
-    tree->getLeafNodes(leafs, false);
-
+    // Find the deepest level of the leaf nodes
     int deepest_level = 0;
     for (auto leaf : leafs)
     {
       deepest_level = std::max(deepest_level, leaf->level);
     }
 
-    // Reporting only the nodes with the longest failure
-    std::vector<aff::ActionResult> actionResults;
-    std::vector<std::tuple<std::vector<std::string>, std::string, std::string>> searchResults;
-    for (size_t slnIdx = 0; !slnPath.empty(); ++slnIdx, slnPath = tree->findSolutionPath(slnIdx, false))
+    // Remove all nodes not at deepest level
+    leafs.erase(
+      std::remove_if(leafs.begin(), leafs.end(),
+                     [deepest_level](aff::PredictionTreeNode* node)
     {
-      RLOG_CPP(0, "Solution " << slnIdx << " is NOT SUCCESSFUL");
-      if (slnPath.back()->level < deepest_level)
-      {
-        RLOG_CPP(0, "Solution " << slnIdx << " skipped");
-        continue;
-      }
+      return node->level < deepest_level;
+    }),
+    leafs.end());
 
+
+    // Reporting only the nodes with the longest failure
+    nlohmann::json j_result = nlohmann::json::array();
+
+    for (auto leaf : leafs)
+    {
+      // Accumulate the grounded sequence command
+      auto slnPath = tree->getPathToNode(leaf);
       std::vector<std::string> predictedSeq;
       predictedSeq.reserve(slnPath.size());
       for (auto node : slnPath)
@@ -741,18 +927,87 @@ PYBIND11_MODULE(pyAffaction, m)
       }
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
-      actionResults.push_back(errMsg);
-      searchResults.emplace_back(std::move(predictedSeq), errMsg.reason, errMsg.suggestion);
+      j_result.push_back(
+      {
+        {"lifted_actions", actionSequence},
+        {"actions", predictedSeq},
+        {"success", slnPath.back()->success},
+        {"error", errMsg.error},
+        {"reason", errMsg.reason},
+        {"suggestion", errMsg.suggestion},
+        {"developer", errMsg.developer},
+        {"cost", slnPath.back()->cost}
+      });
+
     }
-    ex.getEntity().publish("ActionResult", false, 0.0, actionResults);
-    return searchResults;
-  })
+
+    return j_result;
+  },
+  py::arg("sequenceCommand"),
+  py::arg("successes_only") = true,
+  py::arg("max_threads") = 0,
+  R"pbdoc(
+Plans an action sequence and returns detailed feedback for each attempted solution.
+
+This function resolves a semicolon-separated string of action commands into a
+sequence of robot actions. It attempts to plan and evaluate possible execution paths using
+a depth-first search strategy. The result includes detailed feedback for the deepest (most
+complete) failed solution paths, or the successful path(s) if available.
+
+Parameters
+----------
+sequence_command : str
+    A semicolon-separated sequence of high-level action commands to execute.
+    Example: "get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_5"
+
+successes_only: bool
+    If true, only successful paths will be returned. Otherwise, all paths that reach the overall
+    deepest level will be returned.
+
+max_threads: int
+    The maximum number of threads used in the depth-firrst search. If max_threads is 0 (default),
+    the number of threads will be determined by the computer's thread affinity (as many as possible)
+
+Returns
+-------
+List[dict]
+    A list of result dictionaries, each containing:
+      - actions (List[str]): The list of action strings that were executed or planned.
+      - success (bool): Whether the plan was successful.
+      - error (str): Description of the failure or error ("SUCCESS" if successful).
+      - reason (str): More specific explanation of the failure, if available.
+      - suggestion (str): Suggested corrective action.
+      - developer (str): Developer-oriented debug message, if applicable.
+      - cost (float): Planning cost of the solution (lower is better).
+
+    The list is sorted according to the quality of the solution. The first entries are the
+    successful solutions, sorted by their accumulated cost (the first entry is the overall
+    best solution path). This is followed by solutions that contain the most number of steps.
+    If planning fails completely, a single-element list is returned with an error summary.
+    If multiple deepest failure paths exist, each found one is reported.
+
+Example
+-------
+>>> results = sim.plan_fb_rich("get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray")
+>>> for r in results:
+...     print("Actions:", r["actions"])
+...     print("Success:", r["success"])
+...     print("Error:", r["error"])
+...     print("Suggestion:", r["suggestion"])
+
+)pbdoc")
 
   //////////////////////////////////////////////////////////////////////////////
   // Predict action sequence as tree, non-blocking version
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
   {
+    if (ex.isProcessingAction())
+    {
+      RLOG_CPP(0, "Skipped " + sequenceCommand + ": AÍ am already doing something else");
+      return;
+    }
+
     ex.setProcessingAction(true);
     ex.getEntity().publish("FreezePerception", true);
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
@@ -782,6 +1037,12 @@ PYBIND11_MODULE(pyAffaction, m)
     for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
     {
       const aff::ActionResult& fb = ex.lastActionResult[i];
+
+      if (fb.error=="Actions interrupted")
+      {
+        return "INTERRUPT";
+      }
+
       fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
 
       if (fbLine!=fbLinePrev)
@@ -845,6 +1106,64 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     return aff::PredictionTree::getTurboDurationScaler();
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the gaze target body for the eye gaze model. This only takes effect
+  // if the class has been initialized with the eyeIkEnabled flag set to true.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setGazeTarget", [](aff::ExampleActionsECS& ex, std::string targetBody) -> std::string
+  {
+    std::vector<const aff::AffordanceEntity*> ntts = ex.getScene()->getAffordanceEntities(targetBody);
+
+    if (!ntts.empty())
+    {
+      if (ntts.size() != 1)
+      {
+        RLOG_CPP(1, "Found several object with the name " << targetBody << " - taking first one.");
+      }
+
+      targetBody = ntts[0]->bdyName;
+    }
+    else
+    {
+      const aff::Agent* agent = ex.getScene()->getAgent(targetBody);
+
+      if (agent)
+      {
+        // From here on, we have a valid agent. We look at its (first) head
+        auto m = agent->getManipulatorsOfType(ex.getScene(), "head");
+
+        if (m.empty())
+        {
+          RLOG_CPP(1, "Agent " << targetBody << " has no head to look at. Looking at body.");
+          targetBody = agent->bdyName;
+        }
+        else
+        {
+          targetBody = m[0]->bdyName;
+        }
+
+      }
+
+    }
+
+    ex.getEntity().publish("SetGazeTarget", targetBody);
+
+    return targetBody;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Head gestures: "yes", "no"
+  // "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
+  // "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setHeadGesture", [](aff::ExampleActionsECS& ex, std::string gestureName, double gestureAmplitude, int numTurns)
+  {
+    ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
+  },
+  py::arg("gestureName"),
+  py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
+  py::arg("numTurns") = 3)
 
   //////////////////////////////////////////////////////////////////////////////
   // Gaze model methods: 0: Neck only, 1: pupils only.
@@ -911,13 +1230,19 @@ PYBIND11_MODULE(pyAffaction, m)
   })
   .def("addRespeaker", [](aff::ExampleActionsECS& ex, bool listenWitHandRaisedOnly)
   {
-    // Adds a component to listen to the Respeaker ROS nose, and to acquire the
+    // Adds a component to listen to the Respeaker ROS node, and to acquire the
     // sound directions, ASR etc.
     ex.addComponentArgument("-respeaker");
     if (listenWitHandRaisedOnly)
     {
       ex.addComponentArgument("-respeaker_listenWithRaisedHandOnly");
     }
+  })
+  .def("addRespeaker_usb", [](aff::ExampleActionsECS& ex)
+  {
+    // Adds a component to listen to the Respeaker direction signal directly
+    // from the USB port.
+    ex.addComponentArgument("-respeaker_usb");
   })
   .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex,
                             const std::string& connection,
@@ -930,28 +1255,69 @@ PYBIND11_MODULE(pyAffaction, m)
                             double skeleton_radius)
   {
     ex.addComponentArgument("-landmarks_zmq");
-    ex.addComponentArgument("-landmarks_connection" + connection);
-    ex.addComponentArgument("-landmarks_camera" + camera_name);
+    ex.addComponentArgument("-landmarks_connection " + connection);
+    ex.addComponentArgument("-landmarks_camera " + camera_name);
 
     if (withFaceTracking)
     {
       ex.addComponentArgument("-face_tracking");
-      ex.addComponentArgument("-face_bodyName" + face_name);
+      ex.addComponentArgument("-face_bodyName " + face_name);
     }
 
     if (withArucoTracking)
     {
       ex.addComponentArgument("-aruco_tracking");
-      ex.addComponentArgument("-aruco_base" + base_marker);
+      ex.addComponentArgument("-aruco_base " + base_marker);
     }
 
     if (withSkeletonTracking)
     {
       ex.addComponentArgument("-skeleton_tracking");
-      ex.addComponentArgument("-skeleton_radius" + std::to_string(skeleton_radius));
+      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
     }
   },
   py::arg("connection") = "tcp://localhost:5555",
+  py::arg("camera_name") = "camera_0",
+  py::arg("withFaceTracking") = false,
+  py::arg("face_name") = "face",
+  py::arg("withArucoTracking") = false,
+  py::arg("base_marker") = "aruco_base",
+  py::arg("withSkeletonTracking") = false,
+  py::arg("skeleton_radius") = DBL_MAX
+      )
+  .def("addLandmarkRouter", [](aff::ExampleActionsECS& ex,
+                               const std::string& connection,
+                               const std::string& camera_name,
+                               bool withFaceTracking,
+                               const std::string& face_name,
+                               bool withArucoTracking,
+                               const std::string& base_marker,
+                               bool withSkeletonTracking,
+                               double skeleton_radius)
+  {
+    ex.addComponentArgument("-landmarks_router");
+    ex.addComponentArgument("-landmarks_connection " + connection);
+    ex.addComponentArgument("-landmarks_camera " + camera_name);
+
+    if (withFaceTracking)
+    {
+      ex.addComponentArgument("-face_tracking -face_gesture");
+      ex.addComponentArgument("-face_bodyName " + face_name);
+    }
+
+    if (withArucoTracking)
+    {
+      ex.addComponentArgument("-aruco_tracking");
+      ex.addComponentArgument("-aruco_base " + base_marker);
+    }
+
+    if (withSkeletonTracking)
+    {
+      ex.addComponentArgument("-skeleton_tracking");
+      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
+    }
+  },
+  py::arg("connection") = "tcp://*:40000",
   py::arg("camera_name") = "camera_0",
   py::arg("withFaceTracking") = false,
   py::arg("face_name") = "face",
@@ -1038,7 +1404,10 @@ PYBIND11_MODULE(pyAffaction, m)
   py::arg("voice") = "kathleen")
   .def("addVirtualCamera", [](aff::ExampleActionsECS& ex, int width, int height, bool withGui)
   {
+    ex.virtualCameraWidth = width;
+    ex.virtualCameraHeight = height;
     ex.virtualCameraEnabled = true;
+    ex.virtualCameraWindowEnabled = withGui;
   },
   py::arg("width") = 640,
   py::arg("height") = 480,
@@ -1064,8 +1433,118 @@ PYBIND11_MODULE(pyAffaction, m)
   .def_readwrite("virtualCameraWindowEnabled", &aff::ExampleActionsECS::virtualCameraWindowEnabled)
   .def_readwrite("turbo", &aff::ExampleActionsECS::turbo)
   .def_readwrite("maxNumThreads", &aff::ExampleActionsECS::maxNumThreads)
+  .def_readwrite("numSceneQueries", &aff::ExampleActionsECS::numSceneQueries)
   .def_readwrite("eyeIkEnabled", &aff::ExampleActionsECS::eyeIkEnabled)
   .def_readwrite("eventQueue", &aff::ExampleActionsECS::eventQueue)
+  .def_readwrite("dt", &aff::ExampleActionsECS::dt)
+  .def_readwrite("enableWireframeToggle", &aff::ExampleActionsECS::enableWireframeToggle)
+  .def_readwrite("enableRealGraphVisualization", &aff::ExampleActionsECS::enableRealGraphVisualization)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // GazeDisambiguation
+  //////////////////////////////////////////////////////////////////////////////
+  .def_readwrite("sceneTransformationDataRecorderEnabled", &aff::ExampleActionsECS::sceneTransformationDataRecorderEnabled)
+  .def_readwrite("sceneTransformationDataPlayerEnabled", &aff::ExampleActionsECS::sceneTransformationDataPlayerEnabled)
+  .def_readwrite("usersGazeComponentEnabled", &aff::ExampleActionsECS::usersGazeComponentEnabled)
+
+  //////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////
+  .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> std::string
+  {
+    py::gil_scoped_release release;  // Unblock waiting period
+    return aff::recognize_faces(ex.getEntity(), n_iterations, timeout_in_seconds);
+  },
+  py::arg("n_iterations") = 5,
+  py::arg("timeout_in_seconds") = 2.5)
+
+  //////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////
+  .def("track_facemesh", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> bool
+  {
+    py::gil_scoped_release release;  // Unblock waiting period
+    return aff::track_facemesh(ex.getEntity(), n_iterations, timeout_in_seconds);
+  },
+  py::arg("n_iterations") = 5,
+  py::arg("timeout_in_seconds") = 2.5)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // viaPoint action
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getControls", [](aff::ExampleActionsECS& ex, std::vector<std::string> endeffectors) -> nlohmann::json
+  {
+    nlohmann::json controls;
+
+    RCSGRAPH_TRAVERSE_JOINTS(ex.getGraph())
+    {
+      if (!JNT->constrained)
+      {
+        controls["Joints"][JNT->name] = ex.getGraph()->q->ele[JNT->jointIndex];
+      }
+    }
+
+    for (const auto& ee : endeffectors)
+    {
+      const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), ee.c_str());
+      if (bdy)
+      {
+        std::vector<double> position = std::vector<double>(bdy->A_BI.org, bdy->A_BI.org+3);
+        std::vector<double> rotation(4, 0.0);
+        Quat_fromRotationMatrix(rotation.data(), MAT3D_CAST bdy->A_BI.rot);
+
+        controls["Endeffector"][ee]["position"] = position;
+        controls["Endeffector"][ee]["quaternion"] = rotation;
+      }
+      else
+      {
+        RLOG_CPP(0, "Body '" << ee << "' not found in graph");
+      }
+    }
+
+    return controls;
+  },
+  py::arg("endeffectors") = std::vector<std::string>())
+
+  //////////////////////////////////////////////////////////////////////////////
+  // viaPoint action
+  //////////////////////////////////////////////////////////////////////////////
+  .def("createActionFile", [](aff::ExampleActionsECS& ex, std::string inputFile)
+  {
+    RLOG(0, "Creating action file");
+
+    const bool pickAndPlace = false;
+    bool success = aff::ExamplePlayBackViapoints::createActionFile(inputFile, "action_iros.xml", pickAndPlace);
+
+    if (!success)
+    {
+      RLOG(0, "Failed to create action file");
+    }
+    else
+    {
+      RLOG(0, "Successfully created action file");
+    }
+
+  },
+  py::arg("inputFile") = "test_robot_traj.txt")
+  .def("createViaPointAction", [](aff::ExampleActionsECS& ex, std::string inputFile)
+  {
+    RLOG(0, "Creating action file");
+
+    const bool pickAndPlace = false;
+    bool success = aff::ExamplePlayBackViapoints::createActionFile(inputFile, "action_iros.xml", pickAndPlace);
+
+    if (!success)
+    {
+      RLOG(0, "Failed to create action file");
+    }
+    else
+    {
+      ex.getEntity().publish("PlanDFSEE", std::string("load action_iros.xml; pose default_top"));
+    }
+
+  },
+  py::arg("inputFile") = "test_robot_traj.txt")
   ;
 
 
@@ -1083,7 +1562,7 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     RLOG_CPP(1, sim->help());
-    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase(sim->getGraph()));
+    auto lm = std::unique_ptr<aff::LandmarkBase>(new aff::LandmarkBase());
 
     sim->getEntity().subscribe("UpdateScene", &aff::LandmarkBase::onUpdateScene, lm.get());
     sim->getEntity().subscribe("FreezePerception", &aff::LandmarkBase::onFreezePerception, lm.get());
@@ -1091,7 +1570,7 @@ PYBIND11_MODULE(pyAffaction, m)
     return std::move(lm);
   }))
   .def("addArucoTracker", &aff::LandmarkBase::addArucoTracker)
-  .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r) -> int
+  .def("addSkeletonTrackerForAgents", [](aff::LandmarkBase& lm, py::object sim_, double r, std::string camera) -> int
   {
     aff::ExampleActionsECS* sim = sim_.cast<aff::ExampleActionsECS*>();
     if (!sim->getScene())
@@ -1115,7 +1594,7 @@ PYBIND11_MODULE(pyAffaction, m)
       return 0;
     }
 
-    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents);
+    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents, camera);
     lm.addTracker(std::unique_ptr<aff::AzureSkeletonTracker>(tracker));
     tracker->addAgents(sim->getScene());
     tracker->setSkeletonDefaultPositionRadius(r);
@@ -1138,11 +1617,11 @@ PYBIND11_MODULE(pyAffaction, m)
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     lm.enableDebugGraphics(sim->getViewer());
   })
-  .def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
-  {
-    const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
-    lm.setCameraTransform(&cam->A_BI);
-  })
+  //.def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
+  //{
+  //  const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
+  //  lm.setCameraTransform(&cam->A_BI);
+  //})
   .def("getAffordanceFrame", [](aff::LandmarkBase& lm, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
   {
     nlohmann::json data;

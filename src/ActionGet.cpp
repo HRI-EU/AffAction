@@ -53,9 +53,6 @@
 #include <algorithm>
 
 
-#define fingersOpen   (0.01)
-#define fingersHalfClosed (0.7)
-#define fingersClosed (0.7)   // Powergrasp for bottle etc
 #define t_fingerMove  (2.0)
 #define DEFAULT_LIFTHEIGHT (0.12)
 #define DEFAULT_PREGRASPDIST (0.2)
@@ -252,6 +249,7 @@ void ActionGet::init(const ActionScene& domain,
   else
   {
     Vec3d_copy(castFrom, objBdy->A_BI.org);   // Body origin in case no AABB can be determined.
+    castFrom[2] += 1.0e-3;
   }
 
   const RcsBody* surfaceBdy = RcsBody_closestRigidBodyInDirection(graph, castFrom, Vec3d_ez(), surfPt, &dMin);
@@ -465,8 +463,16 @@ bool ActionGet::initialize(const ActionScene& domain,
   RCHECK(hand);   // Never happens since already checked in constructor
 
   // Initialize hand open and close with defaults. We currently update it for the BallGrasp
-  handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);
-  handClosed = std::vector<double>(hand->getNumFingers(), fingersClosed);
+  // handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);
+  // handClosed = std::vector<double>(hand->getNumFingers(), fingersClosed);
+  handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
+  handClosed = hand->getFingerAnglesFromModelState(graph, "close_fingers");
+
+  if (handOpen.size() != hand->getNumFingers())
+  {
+    RLOG_CPP(0, "Wrong number of fingers: " << handOpen.size() << " should be " << hand->getNumFingers());
+    //return false;
+  }
 
   // Get the frame of the affordance from the second capability
   Affordance* winningAff = std::get<0>(affordanceMap[solutionRank]);
@@ -479,14 +485,18 @@ bool ActionGet::initialize(const ActionScene& domain,
   else if (dynamic_cast<BallGraspable*>(winningAff))
   {
     BallGraspable* bg = dynamic_cast<BallGraspable*>(winningAff);
-    handOpen = std::vector<double>(hand->getNumFingers(), fingersHalfClosed);
+    //handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);//fingersHalfClosed);
+    handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
     handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*bg->radius);
     graspType = GraspType::BallGrasp;
+    const double* pt = bg->getFrame(graph)->A_BI.org;
+    I_graspPoint = std::vector<double>(pt, pt+3);
+    RLOG(0, "I_graspPoint = %f %f %f", I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]);
   }
   else if (dynamic_cast<TwistGraspable*>(winningAff))   // This is true for Twistables as well
   {
     TwistGraspable* tg = dynamic_cast<TwistGraspable*>(winningAff);
-    handClosed = hand->fingerAnglesFromFingerTipDistance(2.0 * tg->radius);
+    handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*tg->radius);
     graspType = GraspType::TopGrasp;
   }
   else if (dynamic_cast<CircularGraspable*>(winningAff))
@@ -607,8 +617,20 @@ tropic::TCS_sptr ActionGet::createTrajectory(double t_start, double t_end) const
   if ((!handOpen.empty()) && (!handClosed.empty()))
   {
     a1->addActivation(t_start, true, 0.5, taskFingers);
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp-0.5*t_fingerMove, handOpen, taskFingers));
-    a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp+0.5*t_fingerMove, handClosed, taskFingers));
+
+    if (graspType == GraspType::BallGrasp)
+    {
+      const double t_there = t_start + 0.6*(t_grasp-t_start);
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_there, handOpen, taskFingers));
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp, handClosed, taskFingers));
+    }
+    else
+    {
+      const double t_fingerOpen = 0.5*(t_start + t_grasp);
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_fingerOpen, handOpen, taskFingers));
+      a1->add(std::make_shared<tropic::VectorConstraint>(t_grasp, handClosed, taskFingers));
+    }
+
   }
 
   if (isObjCollidable)
@@ -721,11 +743,13 @@ ActionGet::createTrajectoryBallGrasp(double t_start,
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
   // Hand position with respect to object
-  const double t_pregrasp = t_start + 0.5*(t_grasp-t_start);
+  const double t_pregrasp = t_start + 0.4*(t_grasp-t_start);
+  const double t_there = t_start + 0.6*(t_grasp-t_start);
   a1->addActivation(t_start, true, 0.5, taskObjHandPos);
   a1->addActivation(t_grasp, false, 0.5, taskObjHandPos);
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, 0.0, 0.0, preGraspDist, taskObjHandPos));
-  a1->add(std::make_shared<tropic::PositionConstraint>(t_grasp, 0.0, 0.0, 0.0, taskObjHandPos));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_pregrasp, I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]+0.5*preGraspDist, taskObjHandPos, 1));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_there, I_graspPoint.data(), taskObjHandPos));
+  a1->add(std::make_shared<tropic::PositionConstraint>(t_grasp, I_graspPoint.data(), taskObjHandPos));
 
   // Hand orientation with respect to object for the approach motion
   a1->addActivation(t_start, true, 0.5, taskHandObjOri);
@@ -933,9 +957,11 @@ std::vector<std::string> ActionGet::createTasksXML() const
       graspType == GraspType::TopGrasp)
   {
     // Relative to the object
+    //xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
+    //          "controlVariable=\"XYZ\" effector=\"" + capabilityFrame +
+    //          "\" " + "refBdy=\"" + affordanceFrame + "\" />";
     xmlTask = "<Task name=\"" + taskObjHandPos + "\" " +
-              "controlVariable=\"XYZ\" effector=\"" + capabilityFrame +
-              "\" " + "refBdy=\"" + affordanceFrame + "\" />";
+              "controlVariable=\"XYZ\" effector=\"" + capabilityFrame + "\" />";
   }
   else if (graspType == GraspType::RimGrasp)
   {

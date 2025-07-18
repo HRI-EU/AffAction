@@ -47,26 +47,27 @@ class LandmarkBase
 {
 public:
 
-  LandmarkBase(RcsGraph* graph);
+  LandmarkBase();
 
   virtual ~LandmarkBase();
 
   void setJsonInput(const nlohmann::json& json);
 
   void addTracker(std::unique_ptr<TrackerBase> tracker);
-  void setCameraTransform(const HTr* A_CI);
+  //void setCameraTransform(const HTr* A_CI);
   void addArucoTracker(const std::string& camera="camera",
                        const std::string& baseMarker="aruco_base");
-  TrackerBase* addSkeletonTracker(size_t numSkeletons);
-  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius);
+  TrackerBase* addSkeletonTracker(size_t numSkeletons, const std::string& camera);
+  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius, const std::string& camera);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 
-  TrackerBase* addFaceTracker(const ActionScene* scene, const std::string& agent, const std::string& camera);
+  TrackerBase* addFaceTracker(const std::string& agent, const std::string& camera);
+  TrackerBase* addYoloTracker(const std::string& camera);
 
   void startCalibration(const std::string& camera, size_t numFrames);
   bool isCalibrating(const std::string& camera) const;
-  //void setScenePtr(RcsGraph* graph, ActionScene* scene);
+  void estimateCameraPose(int numFrames);
 
   void onFreezePerception(bool freeze);
   bool isFrozen() const;
@@ -74,12 +75,12 @@ public:
   void setSyncInputWithWallclock(bool freeze);
   bool getSyncInputWithWallclock() const;
 
-  const RcsGraph* getGraph() const;
+
   virtual void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   std::vector<std::unique_ptr<TrackerBase>>& getTrackers();
 
   // Graphics debug
-  void createDebugGraphics(Rcs::Viewer* viewer);
+  void createDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
   void enableDebugGraphics(bool enable);
 
   template<typename T>
@@ -104,7 +105,6 @@ protected:
   virtual double getCurrentTime() const;
 
   std::vector<std::unique_ptr<TrackerBase>> trackers;
-  RcsGraph* graphPtr;
   bool frozen;
   bool syncInputJsonWithWallclockTime;
 };

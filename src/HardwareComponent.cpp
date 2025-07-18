@@ -36,9 +36,11 @@
 #include "PhysicsComponent.h"
 #include "WebsocketActionComponent.h"
 #include "LandmarkZmqComponent.h"
+#include "ZmqRouterComponent.h"
 #include "CameraViewComponent.h"
 #include "FaceGestureComponent.h"
 #include "PW70Component.h"
+#include "PW70ZmqComponent.hpp"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
@@ -52,6 +54,7 @@
 #include "ros/LandmarkROSComponent.hpp"
 #include "ros/HololensConnection.hpp"
 #include "ros/MirrorEyeComponent.h"
+#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 #endif
 
 #include <Rcs_typedef.h>
@@ -62,8 +65,6 @@
 
 #include <thread>
 
-
-#define HWC_DEFAULT_ROS_SPIN_DT (0.02)  // 20 msec = 50Hz
 
 
 
@@ -118,17 +119,25 @@ static void initROS(double rosDt)
 #endif
 }
 
+enum class LandmarkParentClass
+{
+  LandmarkZmqComponent,
+  LandmarkROSComponent,
+  ZmqRouterComponent
+};
+
 static ComponentBase* createLandmarkComponent(EntityBase& entity,
                                               const RcsGraph* graph,
                                               const ActionScene* scene,
                                               std::string extraArgs,
-                                              bool zmq_true_ros_false=true)
+                                              LandmarkParentClass parentClass,
+                                              const std::string& suffix="")
 {
   auto argsVec = Rcs::String_split(extraArgs, " ");
   std::string connection = "tcp://localhost:5555";
   std::string landmarksCamera = "camera_0";
-  getKeyValuePair<std::string>(argsVec, "-landmarks_camera", landmarksCamera);
-  getKeyValuePair<std::string>(argsVec, "-landmarks_connection", connection);
+  getKeyValuePair<std::string>(argsVec, "-landmarks_camera"+suffix, landmarksCamera);
+  getKeyValuePair<std::string>(argsVec, "-landmarks_connection"+suffix, connection);
   RcsBody* cam = RcsGraph_getBodyByName(graph, landmarksCamera.c_str());
   if (!cam)
   {
@@ -142,15 +151,24 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
   {
     LandmarkBase* lmc = nullptr;
 
-    if (zmq_true_ros_false)
+    if (parentClass==LandmarkParentClass::LandmarkZmqComponent)
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
-      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, (RcsGraph*)graph, connection);
+      LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, connection);
+      lmc = lmcz;
+      ret = lmcz;
+    }
+    else if (parentClass==LandmarkParentClass::ZmqRouterComponent)
+    {
+      RLOG_CPP(0, "Creating ZmqRouterComponent with camera "
+               << landmarksCamera << " and connection " << connection);
+      RLOG_CPP(0, "Extra-args: " << extraArgs);
+      ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
     }
 #if defined USE_ROS
-    else
+    else if (parentClass==LandmarkParentClass::LandmarkROSComponent)
     {
       RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
       LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity, (RcsGraph*)graph);
@@ -159,33 +177,35 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     }
 #endif
 
-    if (getKey(argsVec, "-face_tracking"))
+    if (getKey(argsVec, "-yolo_tracking" + suffix))
     {
-      std::string faceBdyName = "face";
-      getKeyValuePair<std::string>(argsVec, "-face_bodyName", faceBdyName);
-      auto ft = lmc->addFaceTracker(scene, faceBdyName, landmarksCamera);
+      lmc->addYoloTracker(landmarksCamera);
     }
 
-    if (getKey(argsVec, "-aruco_tracking"))
+    if (getKey(argsVec, "-face_tracking" + suffix))
+    {
+      std::string faceBdyName = "face";
+      getKeyValuePair<std::string>(argsVec, "-face_bodyName" + suffix, faceBdyName);
+      lmc->addFaceTracker(faceBdyName, landmarksCamera);
+    }
+
+    if (getKey(argsVec, "-aruco_tracking" + suffix))
     {
       std::string arucoBaseBdyName = "aruco_base";
-      getKeyValuePair<std::string>(argsVec, "-aruco_base", arucoBaseBdyName);
+      getKeyValuePair<std::string>(argsVec, "-aruco_base" + suffix, arucoBaseBdyName);
       lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
     }
 
-    if (getKey(argsVec, "-skeleton_tracking"))
+    if (getKey(argsVec, "-skeleton_tracking" + suffix))
     {
       RLOG(0, "Enabling Azure skeleton tracker");
       double r_agent = DBL_MAX;
-      getKeyValuePair<double>(argsVec, "-skeleton_radius", r_agent);
+      getKeyValuePair<double>(argsVec, "-skeleton_radius" + suffix, r_agent);
 
       // Add skeleton tracker and ALL agents in the scene
-      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent);
+      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent, landmarksCamera);
       RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
     }
-
-    // Initialize all tracker camera transforms from the xml file
-    lmc->setCameraTransform(&cam->A_BI);
 
   }
 
@@ -257,6 +277,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     argP.addDescription("-jacoShm7r", "Start with Jaco7 Shm right");
     argP.addDescription("-jacoShm7l", "Start with Jaco7 Shm left");
+    argP.addDescription("-jacoShm6", "Start with Jaco6 Shm (right)");
   }
   else
   {
@@ -269,6 +290,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoShm7l"))
     {
       ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco7_left);
+      components.push_back(c);
+    }
+
+    if (getKey(argvStrVec, "-jacoShm6"))
+    {
+      ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco6);
       components.push_back(c);
     }
   }
@@ -294,6 +321,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       RCHECK_MSG(!getKey(argvStrVec, "-pw70_pos"), "Can't start PW70 component both in position and velocity mode");
       components.push_back(createPW70Component(entity, graph, scene, "-pw70_vel", argvString));
     }
+    else if (getKey(argvStrVec, "-pw70_zmq"))
+    {
+      components.push_back(new PW70ZmqComponent(&entity));
+    }
   }
 
   if (dryRun)
@@ -305,17 +336,29 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
     {
-      components.push_back(new aff::KortexComponent(&entity, "left"));
+      std::string suffix = "_left";
+      std::string otherRecv="tcp://localhost:40004";// was 5557
+      std::string otherSend="tcp://localhost:40005";// was 5558
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
     {
-      components.push_back(new aff::KortexComponent(&entity, "right"));
+      std::string suffix = "_right";
+      std::string otherRecv="tcp://localhost:40002";// was 5555
+      std::string otherSend="tcp://localhost:40003";// was 5556
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
     {
-      components.push_back(new aff::KortexComponent(&entity));
+      std::string suffix = "";
+      std::string otherRecv="tcp://localhost:5555";
+      std::string otherSend="tcp://localhost:5556";
+      components.push_back(new aff::KortexComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
     }
   }
 
@@ -414,29 +457,67 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
 
   if (dryRun)
   {
-    argP.hasArgument("-websocket", "Start with websocket connection on port 35000");
+    argP.hasArgument("-websocket", "Start with websocket connection");
+    argP.hasArgument("-websocket_port", "Websocket port (default: 35000)");
+    argP.hasArgument("-websocket_eventToPublish", "Name of published event (default: ActionSequence)");
   }
   else if (getKey(argvStrVec, "-websocket"))
   {
-    components.push_back(new WebsocketActionComponent(&entity));
+    int port = 35000;
+    std::string eventToPublish = "ActionSequence";
+    getKeyValuePair(argvStrVec, "-websocket_port", port);
+    getKeyValuePair(argvStrVec, "-websocket_eventToPublish", eventToPublish);
+    components.push_back(new WebsocketActionComponent(&entity, port, eventToPublish));
   }
 
   // The debug graphics will be handled in initGraphics.
   if (dryRun)
   {
-    argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:5555");
+    argP.addDescription("-landmarks_connection", "Connection string, default is tcp://localhost:40000");
     argP.addDescription("-landmarks_zmq", "Start with ZMQ landmarks component");
+    argP.addDescription("-landmarks_router", "Start with ZMQ landmarks router-dealer network component");
     argP.addDescription("-landmarks_camera", "For '-landmarks_zmq': Body name of camera in which the landmarks are assumed to be represented. Default: camera_0");
     argP.addDescription("-face_tracking", "For '-landmarks_zmq': Start with Mediapipe face tracking");
     argP.addDescription("-face_bodyName", "For '-face_tracking' and '-face_gesture': Name of the face's RcsBody (Default: face)");
     argP.addDescription("-aruco_tracking", "For '-landmarks_zmq': Start with Aruco marker tracking");
+    argP.addDescription("-yolo_tracking", "For '-landmarks_zmq': Start with Yolo tracking");
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, ""));
+  }
+  else if (getKey(argvStrVec, "-landmarks_router"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::ZmqRouterComponent, ""));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq2"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "2"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq3"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "3"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq4"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "4"));
+  }
+
+  if (getKey(argvStrVec, "-landmarks_zmq5"))
+  {
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkZmqComponent, "5"));
   }
 
   if (dryRun)
@@ -514,7 +595,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   else if (getKey(argvStrVec, "-landmarks_ros"))
   {
     initROS(HWC_DEFAULT_ROS_SPIN_DT);
-    components.push_back(createLandmarkComponent(entity, graph, scene, argvString, false));
+    components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
+                                                 LandmarkParentClass::LandmarkROSComponent));
   }
 
   if (dryRun)

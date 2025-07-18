@@ -46,6 +46,7 @@
 #include <EventGui.h>
 #include <ConstraintFactory.h>
 #include <ActivationSet.h>
+#include <CollisionModelConstraint.h>
 
 #include <ForceDragger.h>
 #include <ExampleFactory.h>
@@ -243,7 +244,11 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   eyeIkEnabled = true;
   speedUp = 1;
   loopCount = 0;
+  blockingMainThread = false;
+  enableWireframeToggle = true;   // Show wireframe if collisions are deactivated
+  enableRealGraphVisualization = false;
   maxNumThreads = 0;
+  numSceneQueries = NUM_SCENEQUERIES;
 
   pause = false;
   noSpeedCheck = false;
@@ -306,7 +311,7 @@ ExampleActionsECS::~ExampleActionsECS()
 
   Rcs_removeResourcePath(configDirectory.c_str());
   RcsGraph_destroy(graphToInitializeWith);
-  RLOG_CPP(0, "Done deleting ExampleActionsECS");
+  RLOG_CPP(5, "Done deleting ExampleActionsECS");
 }
 
 bool ExampleActionsECS::initParameters()
@@ -357,6 +362,9 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-enableUsersGazeComponent", &usersGazeComponentEnabled, "Start with users gaze component");
   parser->getArgument("-enableSceneTransformationsDataRecorder", &sceneTransformationDataRecorderEnabled, "Enable recording of scene transformations");
   parser->getArgument("-enableSceneTransformationPlayer", &sceneTransformationDataPlayerEnabled, "Enable playing of scene transformations");
+  parser->getArgument("-blockingMainThread", &blockingMainThread, "Let the UIs run in the main thread (blocking)");
+  parser->getArgument("-numSceneQueries", &numSceneQueries, "Initial number og scene queries (default: %d)", numSceneQueries);
+
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
   const bool dryRun = true;
@@ -496,22 +504,23 @@ bool ExampleActionsECS::initAlgo()
     gazeC->addSceneToAttend(*getScene(), getGraph());
     addComponent(gazeC);
   }
-  
-  if (usersGazeComponentEnabled){
+
+  if (usersGazeComponentEnabled)
+  {
     // Retrieve all agents from the scene
     std::vector<const Agent*> agents = getScene()->getAgents<Agent>();
 
     // Iterate over all agents and add the GazeComponent to all agents except the robot called "Johnnie"
     for (const auto& agent : agents)
     {
-      if (agent->name != "Johnnie") 
+      if (agent->name != "Johnnie")
       {
-          // Create a new GazeComponent for the agent
-          // The GazeComponent tracks the agent's gazing objects using the following parameters:
-          // - parent: Reference to the entity managing events (here, 'entity')
-          // - agentName: Name of the agent
-          // - gazingBody: The part of the agent used for gaze tracking (e.g., "Head_Elisabeth")
-          // - dirIdx: Index indicating gaze direction (default: 1 for the y-axis)
+        // Create a new GazeComponent for the agent
+        // The GazeComponent tracks the agent's gazing objects using the following parameters:
+        // - parent: Reference to the entity managing events (here, 'entity')
+        // - agentName: Name of the agent
+        // - gazingBody: The part of the agent used for gaze tracking (e.g., "Head_Elisabeth")
+        // - dirIdx: Index indicating gaze direction (default: 1 for the y-axis)
         GazeComponent* gC = new GazeComponent(&entity, agent->name, "Head_"+agent->name, 1);
 
         // Add current scene and graph to the GazeComponent
@@ -523,7 +532,7 @@ bool ExampleActionsECS::initAlgo()
         // Add the GazeComponent to the entity
         addComponent(gC);
       }
-      
+
     }
   }
 
@@ -536,7 +545,7 @@ bool ExampleActionsECS::initAlgo()
     }
     else
     {
-      RLOG(1, "Eye model enabled, but not existent int he graph - skipping eye IK");
+      RLOG(1, "Eye model enabled, but not existent in the graph - skipping eye IK");
       eyeIkEnabled = false;
     }
   }
@@ -635,10 +644,10 @@ bool ExampleActionsECS::initAlgo()
 
   if (virtualCameraEnabled)
   {
-    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getCurrentGraph()),
+    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getGraph()),
                                                     virtualCameraWidth, virtualCameraHeight);
   }
-    // Add the SceneTransformationDataRecorder
+  // Add the SceneTransformationDataRecorder
   if (sceneTransformationDataRecorderEnabled)
   {
     double timeRecording = 30.0;
@@ -712,7 +721,11 @@ bool ExampleActionsECS::initGraphics()
       RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
       HTr_copy(&A_CI, &camBdy->A_BI);
     }
-    addComponent(new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI));
+
+    VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI);
+    vcam->setBlockingMainThread(this->blockingMainThread);
+    vcam->setEnabled(true);
+    addComponent(vcam);
   }
 
   // Optional graphics window. We don't use a static instance since this will
@@ -723,8 +736,8 @@ bool ExampleActionsECS::initGraphics()
     return true;
   }
 
-  bool viewerStartsWithStartEvent = true;
-  viewer = new GraphicsWindow(&entity, viewerStartsWithStartEvent);
+  auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
+  viewer = new GraphicsWindow(&entity, syncMode);
   addComponent(viewer);
 
   // Add a physics node if physics is enabled
@@ -751,7 +764,7 @@ bool ExampleActionsECS::initGraphics()
   const RcsBody* camera_body = RcsGraph_getBodyByName(getCurrentGraph(), "default_camera_view");
   if (camera_body)
   {
-    RLOG(1, "Setting initial view based on body 'initial_camera_view'.");
+    RLOG(5, "Setting initial view based on body 'initial_camera_view'.");
     HTr_to6DVector(q_cam, &camera_body->A_BI);
   }
 
@@ -840,13 +853,22 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('f', [this](char k)
   {
-    RLOG(0, "Test occlusions");
-    nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
-                                                     getGraph());
-    RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
+    {
+      RLOG(0, "Test objects in camera");
+      std::vector<std::string> objectNames = {"bottle_of_cola", "bottle_of_coke_zero", "bottle_of_fanta"};
+      nlohmann::json json = getObjectsInCamera(objectNames, "camera_0", getScene(), getGraph(), false);
+      RLOG_CPP(0, "getObjectsInCamera():\n" << json.dump(4));
+    }
 
-    json = getOccludedObjectsForAgent("Daniel", getScene(), getGraph());
-    RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
+    {
+      RLOG(0, "Test occlusions");
+      nlohmann::json json = getObjectOccludersForAgent("Daniel", "fanta_bottle", getScene(),
+                                                       getGraph());
+      RLOG_CPP(0, "getOccludersForAgent(Daniel, fanta_bottle):\n" << json.dump(4));
+
+      json = getOccludedObjectsForAgent("Daniel", getScene(), getGraph());
+      RLOG_CPP(0, "getOccludedObjectsForAgent(Daniel):\n" << json.dump(4));
+    }
 
   }, "Test occlusions");
 
@@ -870,7 +892,15 @@ bool ExampleActionsECS::initGraphics()
 
   viewer->setKeyCallback('e', [this](char k)
   {
-    new aff::EventGui(&entity);
+    if (blockingMainThread)
+    {
+      auto ew = new aff::EventWidget(&entity);
+      ew->show();
+    }
+    else
+    {
+      new aff::EventGui(&entity);
+    }
   }, "Launch event gui");
 
   viewer->setKeyCallback('k', [this](char k)
@@ -906,13 +936,27 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Launching ControllerGui");
     controller->toXML("onPressedButtonO.xml");
-    new Rcs::ControllerGui(controller.get(),
-                           (MatNd*) trajC->getActivationPtr(),
-                           (MatNd*) trajC->getTaskCommandPtr(),
-                           (const MatNd*) trajC->getTaskCommandPtr(),
-                           NULL,
-                           true);
 
+    if (blockingMainThread)
+    {
+      auto w = new Rcs::ControllerWidgetBase(controller.get(),
+                                             (MatNd*) trajC->getActivationPtr(),
+                                             (MatNd*) trajC->getActivationPtr(),
+                                             (MatNd*) trajC->getTaskCommandPtr(),
+                                             (const MatNd*) trajC->getTaskCommandPtr(),
+                                             NULL,
+                                             true);
+      w->show();
+    }
+    else
+    {
+      new Rcs::ControllerGui(controller.get(),
+                             (MatNd*) trajC->getActivationPtr(),
+                             (MatNd*) trajC->getTaskCommandPtr(),
+                             (const MatNd*) trajC->getTaskCommandPtr(),
+                             NULL,
+                             true);
+    }
   }, "Launch ControllerGui (passive)");
 
   viewer->setKeyCallback('d', [this](char k)
@@ -993,6 +1037,27 @@ bool ExampleActionsECS::initGraphics()
 
   }, "Get body under mouse");
 
+  viewer->setKeyCallback('n', [this](char k)
+  {
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (bn)
+    {
+      auto textCmd = "get " + std::string(bn->body()->name);
+      entity.publish("PlanDFSEE", textCmd);
+    }
+  }, "Get body under mouse");
+
+  viewer->setKeyCallback('N', [this](char k)
+  {
+    auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
+    if (bn)
+    {
+      auto textCmd = "put " + std::string(bn->body()->name);
+      entity.publish("PlanDFSEE", textCmd);
+    }
+
+  }, "Put body under mouse");
+
   viewer->setKeyCallback('l', [this](char k)
   {
     auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
@@ -1013,9 +1078,16 @@ bool ExampleActionsECS::initGraphics()
       entity.publish("PlanDFSEE", textCmd);
     }
 
-
-
   }, "Get body under mouse");
+
+  if (!getRobotEnabled())
+  {
+    viewer->setKeyCallback('L', [this](char k)
+    {
+      entity.publish("ActionSequence", std::string("reset"));
+    }, "Reset scene (without robot components only)");
+
+  }
 
   viewer->setKeyCallback('a', [this](char k)
   {
@@ -1091,6 +1163,15 @@ bool ExampleActionsECS::initGraphics()
     getEntity().publish("EstimateCameraPose", 20);
   }, "Calibrate camera");
 
+  viewer->setKeyCallback('y', [this](char k)
+  {
+    static bool enable_stt = false;
+    enable_stt = !enable_stt;
+    RLOG(0, "%s speech-to-text", enable_stt ? "Starting" : "Stopping");
+    int repetitions = enable_stt ? 1 : 0;
+    getEntity().publish("SetPerceptionCommand", std::string("speech_to_text"), repetitions);
+  }, "Toggle STT");
+
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
@@ -1110,7 +1191,24 @@ bool ExampleActionsECS::initGraphics()
   for (auto& c : lmbs)
   {
     RLOG_CPP(0, "Adding debug graphics to LandmarkComponent");
-    c->createDebugGraphics(viewer);
+    c->createDebugGraphics(viewer, getGraph());
+  }
+
+  // Do not show wireframes when collision model is changed
+  tropic::CollisionModelConstraint::setEnableWireframeToggle(enableWireframeToggle);
+
+  // Show the graph of the GraphComponent (updated from hardware)
+  if (enableRealGraphVisualization)
+  {
+    graphC->setEnableRender(true);
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+    entity.process();
+    Timer_waitDT(0.5);
+    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+    entity.process();
   }
 
 
@@ -1127,14 +1225,22 @@ bool ExampleActionsECS::initGuis()
   // Gui for manually triggering events with basic data types.
   if (withEventGui)
   {
-    new aff::EventGui(&entity);
+    if (blockingMainThread)
+    {
+      EventWidget* w = new EventWidget(&entity);
+      w->show();
+    }
+    else
+    {
+      new aff::EventGui(&entity);
+    }
   }
 
-  if (!noTextGui)
-  {
-    textGui = new aff::TextEditComponent(&entity);
-    addComponent(textGui);
-  }
+  // if (!noTextGui)
+  // {
+  //   textGui = new aff::TextEditComponent(&entity);
+  //   addComponent(textGui);
+  // }
 
   return true;
 }
@@ -1380,6 +1486,15 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
       {
         actionResults.push_back(errMsg);
       }
+    }
+
+    if (actionResults.empty())
+    {
+      ActionResult errMsg;
+      errMsg.error = "ERROR";
+      errMsg.reason = "Could not find any solution path.";
+      errMsg.developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
+      actionResults.push_back(errMsg);
     }
 
     ex->getEntity().publish("ActionResult", false, 0.0, actionResults);
@@ -1862,6 +1977,11 @@ VirtualCamera* ExampleActionsECS::getVirtualCamera()
   return virtualCamera.get();
 }
 
+void ExampleActionsECS::setVirtualCamera(VirtualCamera* camera)
+{
+  virtualCamera = std::unique_ptr<VirtualCamera>(camera);
+}
+
 void ExampleActionsECS::startThreaded()
 {
   std::thread t1([&]
@@ -1932,6 +2052,8 @@ void ExampleActionsECS::onClearTrajectory()
   explanation[0].developer = std::string(__FILENAME__) + " line " + std::to_string(__LINE__);
   explanation[0].actionCommand = actionStack.empty() ? std::string() : actionStack[0];
   entity.publish("ActionResult", false, 0.0, explanation);
+
+  actionStack.clear();
 }
 
 void ExampleActionsECS::onSetPupilSpeedWeight(double weight)
@@ -1997,104 +2119,127 @@ std::string ExampleActionsECS::getComponentArguments() const
 
 nlohmann::json ExampleActionsECS::getUsersGazeData() const
 {
-    nlohmann::json gazeDataJson = nlohmann::json::array();  // Create an empty JSON array
-    // Loop through all gaze components
-    for (const auto gC: gazeComponents){
-        nlohmann::json userGazeDataJson;
-        userGazeDataJson["agent_name"] = gC->getAgentName(); // Add the agent name to the JSON 
- 
-        const std::deque<GazeDataPoint>* gazeData = gC->getGazeData();
-        // Create a JSON array for gaze data points of the current user
-        nlohmann::json dataJson = nlohmann::json::array();
+  nlohmann::json gazeDataJson = nlohmann::json::array();  // Create an empty JSON array
+  // Loop through all gaze components
+  for (const auto gC: gazeComponents)
+  {
+    nlohmann::json userGazeDataJson;
+    userGazeDataJson["agent_name"] = gC->getAgentName(); // Add the agent name to the JSON
 
-        // Iteterate over the gaze data deque
-        for(const auto& dataPoint : *gazeData){
-            nlohmann::json dataPointJson;
-            dataPointJson["time"] = dataPoint.time; // Add the time of the data point to the JSON 
-            dataPointJson["gaze_velocity"] = dataPoint.gazeVel; // Add the head velocity to the JSON 
+    const std::deque<GazeDataPoint>* gazeData = gC->getGazeData();
+    // Create a JSON array for gaze data points of the current user
+    nlohmann::json dataJson = nlohmann::json::array();
 
-            // Create a JSON array for objects and their associated data
-            nlohmann::json objectsJson = nlohmann::json::array();
-            for (size_t i = 0; i < dataPoint.objectNames.size(); ++i) {
-                nlohmann::json objectJson;
-                objectJson["name"] = dataPoint.objectNames[i]; // Object name
-                objectJson["angle_diff"] = dataPoint.angleDiffs[i]; // Angular difference
-                objectJson["distance"] = dataPoint.distances[i]; // Distance to the object
-                objectJson["angle_diffXY"] = dataPoint.angleDiffsXY[i]; // Angular difference in XY plane
-                objectJson["angle_diffXZ"] = dataPoint.angleDiffsXZ[i]; // Angular difference in XZ plane
-                objectsJson.push_back(objectJson);
-            }
-            dataPointJson["objects"] = objectsJson; // Add the objects array to the data point JSON
-            dataJson.push_back(dataPointJson); // Add the data point JSON to the array
-        }
-        userGazeDataJson["gaze_data"] = dataJson; // Add the data array to the user JSON
-        gazeDataJson.push_back(userGazeDataJson); // Add user JSON to the main JSON array
+    // Iteterate over the gaze data deque
+    for (const auto& dataPoint : *gazeData)
+    {
+      nlohmann::json dataPointJson;
+      dataPointJson["time"] = dataPoint.time; // Add the time of the data point to the JSON
+      dataPointJson["gaze_velocity"] = dataPoint.gazeVel; // Add the head velocity to the JSON
+
+      // Create a JSON array for objects and their associated data
+      nlohmann::json objectsJson = nlohmann::json::array();
+      for (size_t i = 0; i < dataPoint.objectNames.size(); ++i)
+      {
+        nlohmann::json objectJson;
+        objectJson["name"] = dataPoint.objectNames[i]; // Object name
+        objectJson["angle_diff"] = dataPoint.angleDiffs[i]; // Angular difference
+        objectJson["distance"] = dataPoint.distances[i]; // Distance to the object
+        objectJson["angle_diffXY"] = dataPoint.angleDiffsXY[i]; // Angular difference in XY plane
+        objectJson["angle_diffXZ"] = dataPoint.angleDiffsXZ[i]; // Angular difference in XZ plane
+        objectsJson.push_back(objectJson);
+      }
+      dataPointJson["objects"] = objectsJson; // Add the objects array to the data point JSON
+      dataJson.push_back(dataPointJson); // Add the data point JSON to the array
     }
+    userGazeDataJson["gaze_data"] = dataJson; // Add the data array to the user JSON
+    gazeDataJson.push_back(userGazeDataJson); // Add user JSON to the main JSON array
+  }
 
-    return gazeDataJson;  // Return the JSON array of all gaze data points for all users
+  return gazeDataJson;  // Return the JSON array of all gaze data points for all users
 }
 
 //---------------------------- SceneTransformationDataRecorder component ------------------------------------------------ //
-nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, double end_time) const{
-    nlohmann::json recordedTransformationsJson = nlohmann::json::array();  // Create an empty JSON array
-    const std::deque<TransformationRecord> recordedTransformations = sceneTransformationDataRecorder->getRecordedTransformations();
+nlohmann::json ExampleActionsECS::getRecordedTransformations(double start_time, double end_time) const
+{
+  nlohmann::json recordedTransformationsJson = nlohmann::json::array();  // Create an empty JSON array
+  const std::deque<TransformationRecord> recordedTransformations = sceneTransformationDataRecorder->getRecordedTransformations();
 
 
 
-    // Iterate through the recorded transformations in the deque
-    for (const auto& record : recordedTransformations)
+  // Iterate through the recorded transformations in the deque
+  for (const auto& record : recordedTransformations)
+  {
+    // Only process records within the specified time range
+    if (record.time >= start_time && record.time <= end_time)
     {
-        // Only process records within the specified time range
-        if (record.time >= start_time && record.time <= end_time)
+      // Create a JSON object for the current record
+      nlohmann::json recordJson;
+      recordJson["time"] = record.time;
+
+      // Create an array of transformations for this record
+      nlohmann::json transformationsJson = nlohmann::json::array();
+
+      for (const auto& transformation : record.transformations)
+      {
+        nlohmann::json transformationJson;
+        transformationJson["parent"] = transformation.parent;
+        transformationJson["child"] = transformation.child;
+
+        // Store the relative transformation matrix
+        nlohmann::json relativeTransformationJson;
+        for (int i = 0; i < 3; ++i)
         {
-            // Create a JSON object for the current record
-            nlohmann::json recordJson;
-            recordJson["time"] = record.time;
-
-            // Create an array of transformations for this record
-            nlohmann::json transformationsJson = nlohmann::json::array();
-
-            for (const auto& transformation : record.transformations)
-            {
-                nlohmann::json transformationJson;
-                transformationJson["parent"] = transformation.parent;
-                transformationJson["child"] = transformation.child;
-
-                // Store the relative transformation matrix
-                nlohmann::json relativeTransformationJson;
-                for (int i = 0; i < 3; ++i)
-                {
-                    relativeTransformationJson["position"].push_back(transformation.relativeTransformation.org[i]);
-                }
-
-                // Store the rotation matrix as a 3x3 array
-                nlohmann::json rotationJson = nlohmann::json::array();
-                for (int i = 0; i < 3; ++i)
-                {
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        rotationJson.push_back(transformation.relativeTransformation.rot[i][j]);
-                    }
-                }
-                relativeTransformationJson["rotation"] = rotationJson;
-
-                // Add the transformation JSON to the list of transformations
-                transformationJson["relative_transformation"] = relativeTransformationJson;
-                transformationsJson.push_back(transformationJson);
-            }
-
-            // Add the transformations array to the record JSON object
-            recordJson["transformations"] = transformationsJson;
-
-            // Add this record to the final JSON array
-            recordedTransformationsJson.push_back(recordJson);
+          relativeTransformationJson["position"].push_back(transformation.relativeTransformation.org[i]);
         }
+
+        // Store the rotation matrix as a 3x3 array
+        nlohmann::json rotationJson = nlohmann::json::array();
+        for (int i = 0; i < 3; ++i)
+        {
+          for (int j = 0; j < 3; ++j)
+          {
+            rotationJson.push_back(transformation.relativeTransformation.rot[i][j]);
+          }
+        }
+        relativeTransformationJson["rotation"] = rotationJson;
+
+        // Add the transformation JSON to the list of transformations
+        transformationJson["relative_transformation"] = relativeTransformationJson;
+        transformationsJson.push_back(transformationJson);
+      }
+
+      // Add the transformations array to the record JSON object
+      recordJson["transformations"] = transformationsJson;
+
+      // Add this record to the final JSON array
+      recordedTransformationsJson.push_back(recordJson);
     }
+  }
 
-    return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
-
+  return recordedTransformationsJson;  // Return the JSON array of all recorded transformation data points
 }
 
+void ExampleActionsECS::updateUI()
+{
+  if (!getViewer())
+  {
+    return;
+  }
+
+  getViewer()->frame();
+  handleKeys();
+}
+
+void ExampleActionsECS::setSyncMode(std::string syncMode)
+{
+  ExampleBase::setSyncMode(syncMode);
+
+  if (syncMode=="External")
+  {
+    blockingMainThread = true;
+  }
+}
 
 /*******************************************************************************
  *
@@ -2168,8 +2313,59 @@ public:
   {
     ExampleActionsECS::initParameters();
     xmlFileName = "g_example_curiosity_cocktails_gen3.xml";
+    enableRealGraphVisualization = true;
     return true;
   }
+
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+  //   entity.process();
+
+  //   return success;
+  // }
+
+  std::string help()
+  {
+    std::stringstream s;
+
+    RcsBody* base = RcsGraph_getBodyByName(getGraph(), "base_link_left");
+    if (base)
+    {
+      double base_gravity[3], I_gravity[3];
+      Vec3d_set(I_gravity, 0.0, 0.0, -9.81);
+      Vec3d_rotate(base_gravity, base->A_BI.rot, I_gravity);
+      s << "base left gravity: "
+        <<  base_gravity[0] << " "
+        <<  base_gravity[1] << " "
+        <<  base_gravity[2] << std::endl;
+    }
+
+    base = RcsGraph_getBodyByName(getGraph(), "base_link_right");
+    if (base)
+    {
+      double base_gravity[3], I_gravity[3];
+      Vec3d_set(I_gravity, 0.0, 0.0, -9.81);
+      Vec3d_rotate(base_gravity, base->A_BI.rot, I_gravity);
+      s << "base right gravity: "
+        <<  base_gravity[0] << " "
+        <<  base_gravity[1] << " "
+        <<  base_gravity[2] << std::endl;
+    }
+
+
+    s << std::endl << std::endl << ExampleActionsECS::help() << std::endl;
+    return s.str();
+  }
+
 };
 
 RCS_REGISTER_EXAMPLE(ExampleCocktailGen3, "Actions", "Cocktails Gen3");
@@ -2282,24 +2478,25 @@ public:
     configDirectory = "config/xml/examples";
     xmlFileName = "g_example_pizza.xml";
     speedUp = 1;
+    enableRealGraphVisualization = true;
     componentArgs = "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }
 
-  virtual bool initGraphics()
-  {
-    bool success = ExampleActionsECS::initGraphics();
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
-    entity.process();
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
+  //   entity.process();
 
-    return success;
-  }
+  //   return success;
+  // }
 
   bool initAlgo()
   {
@@ -2491,24 +2688,25 @@ public:
     configDirectory = "config/xml/JacoGen3";
     speedUp = 1;
     addComponentArgument("-jacoGen3Zmq");
+    enableRealGraphVisualization = true;
     return true;
   }
 
-  virtual bool initGraphics()
-  {
-    bool success = ExampleActionsECS::initGraphics();
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
-    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-    entity.process();
+  // virtual bool initGraphics()
+  // {
+  //   bool success = ExampleActionsECS::initGraphics();
+  //   graphC->setEnableRender(true);
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
+  //   entity.process();
+  //   Timer_waitDT(0.5);
+  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
+  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
+  //   entity.process();
 
-    return success;
-  }
+  //   return success;
+  // }
 
   std::string help()
   {
@@ -2520,5 +2718,40 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleJacoGen3, "Actions", "Jaco Gen3 test");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleGazeWebsocket : public ExampleActionsECS
+{
+public:
+
+  ExampleGazeWebsocket(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start python program to send websocket gaze command: python smile_websocket.py");
+  }
+
+  virtual ~ExampleGazeWebsocket()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    componentArgs = "-websocket  -websocket_eventToPublish SetGazeFromString";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start python program to send websocket gaze command: python smile_websocket.py\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleGazeWebsocket, "Actions", "Gaze with websocket");
 
 }   // namespace aff

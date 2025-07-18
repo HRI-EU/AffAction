@@ -50,12 +50,11 @@ class TrackerBase
 {
 public:
 
-  TrackerBase();
+  TrackerBase(const std::string& cameraName);
   virtual ~TrackerBase() = default;
   virtual std::string getRequestKeyword() const = 0;
-  virtual void parse(const nlohmann::json& json, double time, const std::string& cameraFrame) = 0;
+  virtual void parse(const nlohmann::json& header, const nlohmann::json& data, double time) = 0;
   virtual void update(ActionScene* scene, RcsGraph* graph) = 0;
-  virtual void setCameraTransform(const HTr* A_camI) = 0;
   virtual void setCurrentTime(double time);
   virtual void setFrozen(bool frozen);
   virtual double getCurrentTime() const;
@@ -64,8 +63,13 @@ public:
 
 protected:
 
+  HTr getCameraTransform(const RcsGraph* graph) const;
+  std::string getCameraName() const;
+  static RcsBody* getBody(const RcsGraph* graph, std::pair<std::string, int>& bdyIdPair);
+
   double currentTime;
   bool frozen;
+  mutable std::pair<std::string, int> cameraNamedId;
 };
 
 }   // namespace

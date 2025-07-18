@@ -32,7 +32,10 @@
 *******************************************************************************/
 
 #include "TrackerBase.h"
+
 #include <Rcs_macros.h>
+#include <Rcs_Mat3d.h>
+#include <Rcs_typedef.h>
 
 #include <chrono>
 
@@ -40,7 +43,8 @@
 namespace aff
 {
 
-TrackerBase::TrackerBase() : currentTime(0.0), frozen(false)
+TrackerBase::TrackerBase(const std::string& cameraName) :
+  currentTime(0.0), frozen(false), cameraNamedId(cameraName, -1)
 {
 }
 
@@ -77,5 +81,31 @@ bool TrackerBase::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   return false;
 }
+
+/*static*/ RcsBody* TrackerBase::getBody(const RcsGraph* graph, std::pair<std::string, int>& bdyIdPair)
+{
+  if ((bdyIdPair.second == -1) || (bdyIdPair.first != graph->bodies[bdyIdPair.second].name))
+  {
+    RcsBody* bdy = RcsGraph_getBodyByName(graph, bdyIdPair.first.c_str());
+    bdyIdPair.second = bdy ? bdy->id : -1;
+    return bdy;
+  }
+
+  return &graph->bodies[bdyIdPair.second];
+}
+
+HTr TrackerBase::getCameraTransform(const RcsGraph* graph) const
+{
+  RcsBody* cam = getBody(graph, this->cameraNamedId);
+  HTr A_CI;
+  HTr_copy(&A_CI, cam ? &cam->A_BI : HTr_identity());
+  return A_CI;
+}
+
+std::string TrackerBase::getCameraName() const
+{
+  return cameraNamedId.first;
+}
+
 
 }   // namespace

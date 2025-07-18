@@ -30,118 +30,46 @@
 
 *******************************************************************************/
 
-#if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
-#include "PW70CANInterfaceWin.hpp"
-#elif defined(__linux__) && !defined(__APPLE__)
-#include "PW70CANInterfaceLinux.hpp"
-#else
-#include <cmath>
-#include <thread>
-#include <vector>
-#include <functional>
-#include <mutex>
-#include <iostream>
+// #if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
+// #include "PW70CANInterfaceWin.hpp"
+// #elif defined(__linux__) && !defined(__APPLE__)
+// #include "PW70CANInterfaceLinux.hpp"
+// #else
+// #include "PW70CANInterfaceDummy.hpp"
+// #endif
 
-namespace aff
-{
+// namespace aff
+// {
 
-class PW70CANInterface
-{
-public:
-  // Constructor and Destructor
-  PW70CANInterface(std::function<void(double, double, void*)> limit_check_callback,
-                   std::function<void(double, double, double, void*)> position_callback,
-                   void* param, int freq) {}
-  ~PW70CANInterface() {}
+// void PW70CANInterface::limit_check(double pan, double tilt, void* param)
+// {
+//   std::cout << "Limit check" << std::endl;
+//   // Your limit checking logic here
+// }
 
-  // Public Methods
-  void cleanup() {}
-  bool enable_frequent_position_update(int frequency)
-  {
-    return true;
-  }
-  bool disable_frequent_position_update()
-  {
-    return true;
-  }
-  bool stop()
-  {
-    return true;
-  }
-  bool fast_stop()
-  {
-    return true;
-  }
-  bool reference_pan()
-  {
-    return true;
-  }
-  bool reference_tilt()
-  {
-    return true;
-  }
-  bool reset_stop()
-  {
-    return true;
-  }
-  bool set_target_velocity(double pan_velocity_radians, double tilt_velocity_radians)
-  {
-    return true;
-  }
-  bool set_target_position(double pan_radians, double tilt_radians)
-  {
-    return true;
-  }
-  bool move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians)
-  {
-    return true;
-  }
-  bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians)
-  {
-    return true;
-  }
+// void PW70CANInterface::position_update(double pan, double tilt, double timestamp, void* param)
+// {
+//   // Your position update logic here
+//   std::cout << "Position update" << std::endl;
+// }
 
-  static void limit_check(double pan, double tilt, void* param);
-  static void position_update(double pan, double tilt, double timestamp, void* param);
-  static int test();
-};
+// int PW70CANInterface::test()
+// {
+//   PW70CANInterface ptu(limit_check, position_update, nullptr, 50);
 
-}   // namespace
+//   // Wait a moment to allow the interface to initialize
+//   std::this_thread::sleep_for(std::chrono::seconds(2));
 
-#endif
+//   // Example commands
+//   ptu.move_position(-45.0, -30.0, 10.0, 10.0);
+//   std::this_thread::sleep_for(std::chrono::seconds(5));
 
-namespace aff
-{
+//   ptu.stop();
+//   ptu.cleanup();
+//   return 0;
+// }
 
-void PW70CANInterface::limit_check(double pan, double tilt, void* param)
-{
-  std::cout << "Limit check" << std::endl;
-  // Your limit checking logic here
-}
-
-void PW70CANInterface::position_update(double pan, double tilt, double timestamp, void* param)
-{
-  // Your position update logic here
-  std::cout << "Position update" << std::endl;
-}
-
-int PW70CANInterface::test()
-{
-  PW70CANInterface ptu(limit_check, position_update, nullptr, 50);
-
-  // Wait a moment to allow the interface to initialize
-  std::this_thread::sleep_for(std::chrono::seconds(2));
-
-  // Example commands
-  ptu.move_position(-45.0, -30.0, 10.0, 10.0);
-  std::this_thread::sleep_for(std::chrono::seconds(5));
-
-  ptu.stop();
-  ptu.cleanup();
-  return 0;
-}
-
-}   // namespace
+// }   // namespace
 
 
 
@@ -159,6 +87,8 @@ int PW70CANInterface::test()
 
 #include <iostream>
 #include <iomanip>
+#include <memory>
+#include <thread>
 
 // Angular limits (conservative)
 #define PAN_MIN_RAD           (-80.0*(M_PI/180.0))
@@ -233,7 +163,7 @@ void PW70Component::onStart()
   }
 
   // Create an instance of PW70CANInterface with the callbacks
-  this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdate, this, controlFrequency);
+  this->pw70 = PW70CANInterface::create(limitCheck, positionUpdate, this, controlFrequency);
   this->pw70->reset_stop();
 
   // Wait a moment to allow the interface to initialize
@@ -367,6 +297,16 @@ void PW70Component::onMovePosition(double pan_in_degrees, double tilt_in_degrees
        success ? "SUCCESS" : "FAILURE", pan_in_degrees, tilt_in_degrees);
 }
 
+void PW70Component::getSensorData(double& pan_position, double& tilt_position, double& pan_velocity, double& tilt_velocity, double& time_stamp) const
+{
+  std::lock_guard<std::mutex> lock(panTiltUpdateMtx);
+  pan_position = this->current_pan_position;
+  tilt_position = this->current_tilt_position;
+  pan_velocity = this->current_pan_velocity;
+  tilt_velocity = this->current_tilt_velocity;
+  time_stamp = this->current_time_stamp;
+}
+
 
 
 
@@ -431,7 +371,7 @@ void PW70VelocityComponent::onStart()
   // Create an instance of PW70CANInterface with the callbacks
   try
   {
-    this->pw70 = std::make_unique<PW70CANInterface>(limitCheck, positionUpdateVel, this, controlFrequency);
+    this->pw70 = PW70CANInterface::create(limitCheck, positionUpdateVel, this, controlFrequency);
     this->pw70->reset_stop();
   }
   catch (...)
@@ -441,23 +381,40 @@ void PW70VelocityComponent::onStart()
 
   // Wait a moment to allow the interface to initialize
   std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  // We return only if the sensor data and command filters are initialized.
+  bool isInitialized = false;
+  int initCount = 0;
+
+  do
+  {
+    std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
+    initCount++;
+
+    if (initCount > 30)   // 5 sec
+    {
+      RLOG(0, "Waiting for PW70CANInterface to finish initialization: %d", initCount);
+    }
+
+    std::lock_guard<std::mutex> lock(filtMtx);
+    isInitialized = this->filterInitialized;
+  }
+  while (!isInitialized);
 }
 
 void PW70VelocityComponent::onSetJointPosition(const MatNd* q_des)
 {
-  if (enableCommands)
+  if (enableCommands && filterInitialized && (panJointIdx!=-1) && (tiltJointIdx != -1))
   {
-    if ((panJointIdx!=-1) && (tiltJointIdx != -1)  && filterInitialized)
-    {
-      // We clip the filtr goal to the permissable limits
-      double panTiltTarget[2];
-      panTiltTarget[0] = Math_clip(MatNd_get(q_des, panJointIdx, 0), PAN_MIN_RAD, PAN_MAX_RAD);
-      panTiltTarget[1] = Math_clip(MatNd_get(q_des, tiltJointIdx, 0), TILT_MIN_RAD, TILT_MAX_RAD);
-      std::lock_guard<std::mutex> lock(filtMtx);
-      panTiltFilt.setTarget(panTiltTarget);
-      RLOG(1, "Setting target to %.2f %.2f degrees",
-           RCS_RAD2DEG(panTiltTarget[0]), RCS_RAD2DEG(panTiltTarget[1]));
-    }
+    // We clip the filtr goal to the permissable limits
+    double panTiltTarget[2];
+    panTiltTarget[0] = Math_clip(MatNd_get(q_des, panJointIdx, 0), PAN_MIN_RAD, PAN_MAX_RAD);
+    panTiltTarget[1] = Math_clip(MatNd_get(q_des, tiltJointIdx, 0), TILT_MIN_RAD, TILT_MAX_RAD);
+
+    std::lock_guard<std::mutex> lock(filtMtx);
+    panTiltFilt.setTarget(panTiltTarget);
+    RLOG(1, "Setting target to %.2f %.2f degrees",
+         RCS_RAD2DEG(panTiltTarget[0]), RCS_RAD2DEG(panTiltTarget[1]));
   }
 
 }
@@ -470,6 +427,7 @@ void PW70VelocityComponent::onSetJointPositionInDegrees(double pan_in_deg, doubl
     double panTiltTarget[2];
     panTiltTarget[0] = Math_clip(RCS_DEG2RAD(pan_in_deg), PAN_MIN_RAD, PAN_MAX_RAD);
     panTiltTarget[1] = Math_clip(RCS_DEG2RAD(tilt_in_deg), TILT_MIN_RAD, TILT_MAX_RAD);
+
     std::lock_guard<std::mutex> lock(filtMtx);
     panTiltFilt.setTarget(panTiltTarget);
   }
@@ -477,28 +435,28 @@ void PW70VelocityComponent::onSetJointPositionInDegrees(double pan_in_deg, doubl
 
 void PW70VelocityComponent::positionUpdateVel(double pan_angle, double tilt_angle, double timestamp, void* params)
 {
-  RLOG(1, "positionUpdateVel");
-
-  PW70VelocityComponent* self = static_cast<PW70VelocityComponent*>(params);
-  std::lock_guard<std::mutex> lock(self->filtMtx);
-
-  if (!self->filterInitialized)
-  {
-    self->filterInitialized = true;
-    double q_init[2];
-    q_init[0] = pan_angle;
-    q_init[1] = tilt_angle;
-    self->panTiltFilt.init(q_init);
-  }
-
-
+  // Computes current positions and velocities
   PW70Component::positionUpdate(pan_angle, tilt_angle, timestamp, params);
 
-  self->panTiltFilt.iterate();
-
+  PW70VelocityComponent* self = static_cast<PW70VelocityComponent*>(params);
   double filtPos[2], filtVel[2];
-  self->panTiltFilt.getPosition(filtPos);
-  self->panTiltFilt.getVelocity(filtVel);
+
+  {
+    std::lock_guard<std::mutex> lock(self->filtMtx);
+    if (!self->filterInitialized)
+    {
+      self->filterInitialized = true;
+      double q_init[2];
+      q_init[0] = pan_angle;
+      q_init[1] = tilt_angle;
+      self->panTiltFilt.init(q_init);
+    }
+
+    self->panTiltFilt.iterate();
+    self->panTiltFilt.getPosition(filtPos);
+    self->panTiltFilt.getVelocity(filtVel);
+  }
+
   RLOG(2, "Filtered: pos[deg]: %.2f %.2f   vel[deg]: %.2f %.2f",
        RCS_RAD2DEG(filtPos[0]), RCS_RAD2DEG(filtPos[1]),
        RCS_RAD2DEG(filtVel[0]), RCS_RAD2DEG(filtVel[1]));
@@ -523,11 +481,11 @@ void PW70VelocityComponent::velocityControlStep(double desired_pan_position, dou
   double corrected_pan_velocity, corrected_tilt_velocity;
   {
     std::lock_guard<std::mutex> lock(panTiltUpdateMtx);
-    double pan_velocity_correction = Kp * (desired_pan_position - current_pan_position);
+    double pan_velocity_correction = Kp * (desired_pan_position - this->current_pan_position);
     corrected_pan_velocity = desired_pan_velocity + pan_velocity_correction;
     corrected_pan_velocity = Math_clip(corrected_pan_velocity, -PAN_VELOCITY_MAX_RAD, PAN_VELOCITY_MAX_RAD);
 
-    double tilt_velocity_correction = Kp * (desired_tilt_position - current_tilt_position);
+    double tilt_velocity_correction = Kp * (desired_tilt_position - this->current_tilt_position);
     corrected_tilt_velocity = desired_tilt_velocity + tilt_velocity_correction;
     corrected_tilt_velocity = Math_clip(corrected_tilt_velocity, -TILT_VELOCITY_MAX_RAD, TILT_VELOCITY_MAX_RAD);
   }
@@ -538,8 +496,8 @@ void PW70VelocityComponent::velocityControlStep(double desired_pan_position, dou
        success ? "SUCCESS" : "FAILURE",
        RCS_RAD2DEG(corrected_pan_velocity),
        RCS_RAD2DEG(corrected_tilt_velocity),
-       RCS_RAD2DEG(desired_pan_position - current_pan_position),
-       RCS_RAD2DEG(desired_tilt_position - current_tilt_position));
+       RCS_RAD2DEG(desired_pan_position - this->current_pan_position),
+       RCS_RAD2DEG(desired_tilt_position - this->current_tilt_position));
 }
 
 void PW70VelocityComponent::sinusoidalvelocityStep()

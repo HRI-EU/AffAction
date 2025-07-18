@@ -87,6 +87,49 @@ static HTr parsePose(const nlohmann::json& json)
   return trf;
 }
 
+static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const std::string& key)
+{
+  try
+  {
+    // Check if key exists and is structured correctly
+    if (!entry.contains(key))
+    {
+      std::cerr << "Missing key: " << key << std::endl;
+      return std::vector<int>();
+    }
+
+    const auto& box_array = entry.at(key).at("bounding_box");
+    if (!box_array.is_array() || box_array.size() != 4)
+    {
+      RLOG_CPP(1, "Invalid bounding_box format for key: " << key);
+      return std::vector<int>();
+    }
+
+    // Safely extract and validate all 4 integers
+    for (size_t i = 0; i < 4; ++i)
+    {
+      if (!box_array[i].is_number_integer())
+      {
+        RLOG_CPP(1, "Non-integer value in bounding box at index " << i);
+        return std::vector<int>();
+      }
+    }
+
+    std::vector<int> bb_vec;
+    bb_vec.push_back(box_array[0].get<int>());
+    bb_vec.push_back(box_array[1].get<int>());
+    bb_vec.push_back(box_array[2].get<int>());
+    bb_vec.push_back(box_array[3].get<int>());
+    return bb_vec;
+  }
+  catch (const std::exception& e)
+  {
+    RLOG_CPP(1, "Exception while parsing bounding box: " << e.what());
+    return std::vector<int>();
+  }
+}
+
+
 typedef enum
 {
   PELVIS = 0,
@@ -314,6 +357,19 @@ struct Skeleton
   std::string agentName;
   std::vector<std::string> agentTypes;
 
+  // That is the bounding box:
+  // x_min: Left edge of the box
+  // y_min: Top edge of the box
+  // x_max: Right edge
+  // y_max: Bottom edge
+  struct BoundingBox
+  {
+    int x_min, y_min, x_max, y_max;
+    std::string camera;
+  };
+
+  BoundingBox bb_head;
+
   // Only graphics from here
   Rcs::Viewer* viewer;
   osg::ref_ptr<osg::Switch> sw;
@@ -510,8 +566,8 @@ void Skeleton::setAlphaRecursive(osg::Node* node, double newAlpha)
 /*******************************************************************************
  *
  *******************************************************************************/
-AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons) :
-  newAzureUpdate(false), defaultPosRadius(DBL_MAX)
+AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons, const std::string& camera) :
+  TrackerBase(camera), newAzureUpdate(false), defaultPosRadius(DBL_MAX)
 {
   HTr_setIdentity(&A_CI);
   for (size_t i=0; i<numSkeletons; ++i)
@@ -531,6 +587,11 @@ std::string AzureSkeletonTracker::getRequestKeyword() const
 
 void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    this->A_CI = getCameraTransform(graph);
+  }
+
   updateSkeletons(graph);
   updateAgents(scene, graph);
   newAzureUpdate = false;
@@ -563,6 +624,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 
         human->setVisibility(skeletons[i]->isVisible);
         human->setLastTimeSeen(skeletons[i]->age);
+        //human->setHeadBoundingBox(skeletons[i]->bb_head);
       }
 
     }
@@ -690,11 +752,18 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
 
 }
 
-void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const std::string& cameraFrame)
+void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
-  std::map<int, std::vector<HTr>> markerMap;
+  HTr A_camI;
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    A_camI = this->A_CI;
+  }
 
-  for (auto& entry : json.items())
+  std::map<int, std::vector<HTr>> markerMap;
+  std::map<int, std::vector<int>> boundingBoxMap;
+
+  for (auto& entry : jsonData.items())
   {
     RCHECK(entry.value().size()==NUM_FRAMES);
 
@@ -702,49 +771,73 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     std::vector<HTr> markers(NUM_FRAMES);
     RLOG_CPP(5, "json: " << nlohmann::to_string(entry.value()));
 
-    markers[PELVIS] = parsePose(entry.value()["pelvis"]);
+    const nlohmann::json& pose = entry.value();
+    markers[PELVIS] = parsePose(pose["pelvis"]);
 
-    markers[SPINE_NAVEL] = parsePose(entry.value()["spine_navel"]);
-    markers[SPINE_CHEST] = parsePose(entry.value()["spine_chest"]);
-    markers[NECK] = parsePose(entry.value()["neck"]);
+    markers[SPINE_NAVEL] = parsePose(pose["spine_navel"]);
+    markers[SPINE_CHEST] = parsePose(pose["spine_chest"]);
+    markers[NECK] = parsePose(pose["neck"]);
 
-    markers[CLAVICLE_LEFT] = parsePose(entry.value()["clavicle_left"]);
-    markers[SHOULDER_LEFT] = parsePose(entry.value()["shoulder_left"]);
-    markers[ELBOW_LEFT] = parsePose(entry.value()["elbow_left"]);
-    markers[WRIST_LEFT] = parsePose(entry.value()["wrist_left"]);
-    markers[HAND_LEFT] = parsePose(entry.value()["hand_left"]);
-    markers[HANDTIP_LEFT] = parsePose(entry.value()["handtip_left"]);
-    markers[THUMB_LEFT] = parsePose(entry.value()["thumb_left"]);
+    markers[CLAVICLE_LEFT] = parsePose(pose["clavicle_left"]);
+    markers[SHOULDER_LEFT] = parsePose(pose["shoulder_left"]);
+    markers[ELBOW_LEFT] = parsePose(pose["elbow_left"]);
+    markers[WRIST_LEFT] = parsePose(pose["wrist_left"]);
+    markers[HAND_LEFT] = parsePose(pose["hand_left"]);
+    markers[HANDTIP_LEFT] = parsePose(pose["handtip_left"]);
+    markers[THUMB_LEFT] = parsePose(pose["thumb_left"]);
 
-    markers[CLAVICLE_RIGHT] = parsePose(entry.value()["clavicle_right"]);
-    markers[SHOULDER_RIGHT] = parsePose(entry.value()["shoulder_right"]);
-    markers[ELBOW_RIGHT] = parsePose(entry.value()["elbow_right"]);
-    markers[WRIST_RIGHT] = parsePose(entry.value()["wrist_right"]);
-    markers[HAND_RIGHT] = parsePose(entry.value()["hand_right"]);
-    markers[HANDTIP_RIGHT] = parsePose(entry.value()["handtip_right"]);
-    markers[THUMB_RIGHT] = parsePose(entry.value()["thumb_right"]);
+    markers[CLAVICLE_RIGHT] = parsePose(pose["clavicle_right"]);
+    markers[SHOULDER_RIGHT] = parsePose(pose["shoulder_right"]);
+    markers[ELBOW_RIGHT] = parsePose(pose["elbow_right"]);
+    markers[WRIST_RIGHT] = parsePose(pose["wrist_right"]);
+    markers[HAND_RIGHT] = parsePose(pose["hand_right"]);
+    markers[HANDTIP_RIGHT] = parsePose(pose["handtip_right"]);
+    markers[THUMB_RIGHT] = parsePose(pose["thumb_right"]);
 
-    markers[HIP_LEFT] = parsePose(entry.value()["hip_left"]);
-    markers[KNEE_LEFT] = parsePose(entry.value()["knee_left"]);
-    markers[ANKLE_LEFT] = parsePose(entry.value()["ankle_left"]);
-    markers[FOOT_LEFT] = parsePose(entry.value()["foot_left"]);
+    markers[HIP_LEFT] = parsePose(pose["hip_left"]);
+    markers[KNEE_LEFT] = parsePose(pose["knee_left"]);
+    markers[ANKLE_LEFT] = parsePose(pose["ankle_left"]);
+    markers[FOOT_LEFT] = parsePose(pose["foot_left"]);
 
-    markers[HIP_RIGHT] = parsePose(entry.value()["hip_right"]);
-    markers[KNEE_RIGHT] = parsePose(entry.value()["knee_right"]);
-    markers[ANKLE_RIGHT] = parsePose(entry.value()["ankle_right"]);
-    markers[FOOT_RIGHT] = parsePose(entry.value()["foot_right"]);
+    markers[HIP_RIGHT] = parsePose(pose["hip_right"]);
+    markers[KNEE_RIGHT] = parsePose(pose["knee_right"]);
+    markers[ANKLE_RIGHT] = parsePose(pose["ankle_right"]);
+    markers[FOOT_RIGHT] = parsePose(pose["foot_right"]);
 
-    markers[HEAD] = parsePose(entry.value()["head"]);
-    markers[NOSE] = parsePose(entry.value()["nose"]);
-    markers[EYE_LEFT] = parsePose(entry.value()["eye_left"]);
-    markers[EAR_LEFT] = parsePose(entry.value()["ear_left"]);
-    markers[EYE_RIGHT] = parsePose(entry.value()["eye_right"]);
-    markers[EAR_RIGHT] = parsePose(entry.value()["ear_right"]);
+    markers[HEAD] = parsePose(pose["head"]);
+    markers[NOSE] = parsePose(pose["nose"]);
+    markers[EYE_LEFT] = parsePose(pose["eye_left"]);
+    markers[EAR_LEFT] = parsePose(pose["ear_left"]);
+    markers[EYE_RIGHT] = parsePose(pose["eye_right"]);
+    markers[EAR_RIGHT] = parsePose(pose["ear_right"]);
+
+    // Bounding boxes
+    //"head": {
+    //    "bounding_box": [
+    //        477,
+    //            86,
+    //            520,
+    //            520
+    //    ] , ...
+    //}
+    std::vector<int> bb = parse_bounding_box(pose, "head");
+
+    REXEC(1)
+    {
+      if (!bb.empty())
+      {
+        RLOG_CPP(0, "bb: ");
+        for (const auto& bbi : bb)
+        {
+          std::cout << bbi << " ";
+        }
+      }
+    }
 
     for (auto& marker : markers)
     {
       HTr tmp = marker;
-      HTr_transform(&marker, &A_CI, &tmp);
+      HTr_transform(&marker, &A_camI, &tmp);
     }
 
     REXEC(5)
@@ -757,6 +850,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
     }
 
     markerMap[skeletonId] = markers;
+    boundingBoxMap[skeletonId] = bb;
 
     newAzureUpdate = true;
   }
@@ -778,8 +872,18 @@ void AzureSkeletonTracker::parse(const nlohmann::json& json, double time, const 
   {
     if (corrMap[i] != -1)
     {
-      skeletons[i]->markers = markerMap[corrMap[i]];
       skeletons[i]->lastUpdate = time;
+      skeletons[i]->markers = markerMap[corrMap[i]];
+
+      if (jsonHeader.contains("frame_id"))
+      {
+        skeletons[i]->bb_head.x_min = boundingBoxMap[corrMap[i]][0];
+        skeletons[i]->bb_head.y_min = boundingBoxMap[corrMap[i]][1];
+        skeletons[i]->bb_head.x_max = boundingBoxMap[corrMap[i]][2];
+        skeletons[i]->bb_head.y_max = boundingBoxMap[corrMap[i]][3];
+        skeletons[i]->bb_head.camera = jsonHeader["frame_id"];
+      }
+
     }
 
     NLOG(0, "corrMap[%zu] = %d", i, corrMap[i]);
@@ -888,11 +992,6 @@ bool AzureSkeletonTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph
   }
 
   return true;
-}
-
-void AzureSkeletonTracker::setCameraTransform(const HTr* A_camI)
-{
-  HTr_copy(&A_CI, A_camI);
 }
 
 void AzureSkeletonTracker::setSkeletonDefaultPosition(size_t skeletonIdx, double x, double y, double z)

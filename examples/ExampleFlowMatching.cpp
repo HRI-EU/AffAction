@@ -209,6 +209,7 @@ public:
     subscribe("ToggleRecording", &SampleRecorder::toggleRecording);
     subscribe("Save", &SampleRecorder::save);
     subscribe("TogglePixelGui", &SampleRecorder::toggle);
+    createDirectory("training_data");
   }
 
   void update(const std::vector<double>& controls)
@@ -218,7 +219,7 @@ public:
     if (recordImages)
     {
       static size_t runningIdx = 0;
-      osg::ref_ptr<osg::Image> img = vectorToOsgImage(colorBuffer, virtualCamera->width, virtualCamera->height);
+      osg::ref_ptr<osg::Image> img = vectorToOsgImage(colorBuffer, virtualCamera->getWidth(), virtualCamera->getHeight());
 
       // Create a stringstream to build the filename with padding
       std::ostringstream ss;
@@ -307,7 +308,8 @@ public:
     if (!tmp.empty())
     {
       //saveThread(tmp);
-      std::thread t(saveThread, std::move(tmp), getCurrentTimeString());
+      std::string saveDir = std::string("training_data/") + getCurrentTimeString();
+      std::thread t(saveThread, std::move(tmp), saveDir);
       t.detach();
     }
     else
@@ -479,7 +481,7 @@ bool ExampleFlowMatching::initGraphics()
   }
 
   // Create GraphicsWindow
-  viewer = std::make_unique<aff::GraphicsWindow>(&entity, true, true);
+  viewer = std::make_unique<aff::GraphicsWindow>(&entity, aff::GraphicsWindow::SyncMode::RenderEvent);
   viewer->setTitle("ExampleFlowMatching");
   viewer->setCameraTransform(q_cam[0], q_cam[1], q_cam[2], q_cam[3], q_cam[4], q_cam[5]);
 

@@ -31,6 +31,7 @@
 
 *******************************************************************************/
 
+#include "RoboNetworkInterface.hpp"
 #include "ComponentBase.h"
 #include "json.hpp"
 
@@ -39,14 +40,9 @@
 #include <Rcs_timer.h>
 #include <Rcs_math.h>
 #include <Rcs_dynamics.h>
+#include <Rcs_utilsCPP.h>
 
-#include <zmq.hpp>
-
-#include <string>
-#include <iostream>
-#include <thread>
 #include <mutex>
-#include <chrono>
 
 
 
@@ -54,67 +50,27 @@ namespace aff
 {
 
 
-class JointNameIndexPair
+class KortexComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
-
-  JointNameIndexPair() : jointId(-1)
+  KortexComponent(EntityBase* parent,
+                  std::string suffix="",
+                  std::string otherRecv="tcp://localhost:5555",
+                  std::string otherSend="tcp://localhost:5556")
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
   {
-  }
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_1"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_2"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_3"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_4"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_5"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_6"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_7"+suffix));
 
-  JointNameIndexPair(const std::string& name, int id=-1) : jointName(name), jointId(id)
-  {
-  }
+    gripperNameIdPairs.push_back(Rcs::JointNameIndexPair("finger_joint"+suffix));
 
-  RcsJoint* getJoint(RcsGraph* graph)
-  {
-    RcsJoint* jnt = nullptr;
-
-    if ((jointId==-1) || (!STREQ(graph->joints[jointId].name, jointName.c_str())))
-    {
-      jnt = RcsGraph_getJointByName(graph, jointName.c_str());
-      if (!jnt)
-      {
-        return nullptr;
-      }
-      else
-      {
-        jointId = jnt->jointIndex;
-      }
-
-    }
-    else
-    {
-      jnt = &graph->joints[jointId];
-    }
-
-    return jnt;
-  }
-
-  //private:
-  std::string jointName;
-  int jointId;
-};
-
-class KortexComponent : public ComponentBase
-{
-public:
-  KortexComponent(EntityBase* parent, std::string suffix="")
-    : ComponentBase(parent)
-  {
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_1"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_2"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_3"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_4"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_5"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_6"+suffix));
-    jntNameIdPairs.push_back(JointNameIndexPair("joint_7"+suffix));
-
-    gripperNameIdPairs.push_back(JointNameIndexPair("finger_joint"+suffix));
-
-    RLOG(0, "Subscribing to events");
-    subscribe("Start", &KortexComponent::onStart);
-    subscribe("Stop", &KortexComponent::onStop);
+    subscribe("Start", &RoboNetworkInterface::start);
+    subscribe("Stop", &RoboNetworkInterface::stop);
     subscribe("UpdateGraph", &KortexComponent::onUpdateGraph);
     subscribe("SetJointCommand", &KortexComponent::onSetJointPosition);
     subscribe("InitFromState", &KortexComponent::onInitFromState);
@@ -128,28 +84,6 @@ public:
 
   ~KortexComponent()
   {
-    onStop();
-  }
-
-  void onStart()
-  {
-    if (runLoop)
-    {
-      RLOG(0, "KortexComponent already started - doing nothing");
-      return;
-    }
-
-    runLoop = true;
-    recv_thread = std::thread(&KortexComponent::recvThreadFunc, this);
-    recv_thread.detach();   // Needed, otherwise crashes
-
-    while (!initialized())
-    {
-      fprintf(stderr, ".");
-      fflush(stderr);
-      Timer_waitDT(0.1);
-    }
-
   }
 
   void estimateTouch(const RcsGraph* graph)
@@ -166,7 +100,8 @@ public:
 
     if (T_robo->m!=T_gravity->m)
     {
-      RLOG(0, "Mismatch in torque vector dimensions: robo: %d   gravity: %d", T_robo->m, T_gravity->m);
+      RLOG(0, "Mismatch in torque vector dimensions: robo: %d   gravity: %d",
+           T_robo->m, T_gravity->m);
       return;
     }
 
@@ -205,14 +140,16 @@ public:
   void onUpdateGraph(RcsGraph* graph)
   {
     std::vector<double> jntPosTmp, jntVelTmp;
+    double gripper_angle = 0.0;
 
     {
-      std::lock_guard<std::mutex> lock(recvMtx);
-      jntPosTmp = jointPosition;
-      jntVelTmp = jointVelocity;
+      std::lock_guard<std::mutex> lock(this->recvMtx);
+      jntPosTmp = this->jointPosition;
+      jntVelTmp = this->jointVelocity;
+      gripper_angle = RCS_DEG2RAD(0.4*this->gripper_position);
     }
 
-    if (jntPosTmp.size()!=jntNameIdPairs.size())
+    if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
     {
       RLOG(0, "No data yet received");
       return;
@@ -221,82 +158,69 @@ public:
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
-      RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph", jntNameIdPairs[i].jointName.c_str());
-
-      if (i<jntPosTmp.size())
-      {
-        MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
-      }
-
-      if (i<jntVelTmp.size())
-      {
-        MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
-      }
+      RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph",
+                 jntNameIdPairs[i].jointName.c_str());
+      MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
+      MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
     }
 
     for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
     {
       RcsJoint* jnt = gripperNameIdPairs[i].getJoint(graph);
-      RCHECK_MSG(jnt, "Gripper joint '%s' not found in graph", gripperNameIdPairs[i].jointName.c_str());
-      const double gripper_angle = RCS_DEG2RAD(0.4*gripper_position);
+      RCHECK_MSG(jnt, "Gripper joint '%s' not found in graph",
+                 gripperNameIdPairs[i].jointName.c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, gripper_angle);
     }
 
-    estimateTouch(graph);
-  }
-
-  void onStop()
-  {
-    runLoop = false;
-
-    if (recv_thread.joinable())
-    {
-      recv_thread.join();
-    }
-
-  }
-
-  bool initialized() const
-  {
-    return jointPosition.size()==jntNameIdPairs.size() ? true : false;
+    //estimateTouch(graph);
   }
 
 private:
 
   void onSetJointPosition(const MatNd* q_des)
   {
-    if ((enableCommands) && (!eStop))
+    if ((!enableCommands) || eStop)
     {
-      std::vector<double> q7;
-      for (size_t i=0; i<jntNameIdPairs.size(); ++i)
-      {
-        RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                   jntNameIdPairs[i].jointName.c_str());
-        double qi = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
-        q7.push_back(qi);
-      }
-
-      double gripper_des = 0.0;
-      for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
-      {
-        RCHECK_MSG(gripperNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                   gripperNameIdPairs[i].jointName.c_str());
-        gripper_des = MatNd_get(q_des, gripperNameIdPairs[i].jointId, 0);
-      }
-
-
-
-      std::lock_guard<std::mutex> lock(cmdMtx);
-      jointCommands = q7;
-      gripper_command = gripper_des;
+      return;
     }
 
+    std::vector<double> q7(jntNameIdPairs.size());
+    for (size_t i=0; i<jntNameIdPairs.size(); ++i)
+    {
+      RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
+                 jntNameIdPairs[i].jointName.c_str());
+      q7[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
+    }
+
+    double gripper_des = 0.0;
+    for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
+    {
+      RCHECK_MSG(gripperNameIdPairs[i].jointId!=-1, "Joint: '%s'",
+                 gripperNameIdPairs[i].jointName.c_str());
+      gripper_des = MatNd_get(q_des, gripperNameIdPairs[i].jointId, 0);
+    }
+
+
+
+    std::lock_guard<std::mutex> lock(cmdMtx);
+    jointCommands = q7;
+    gripper_command = gripper_des;
   }
 
   void onInitFromState(const RcsGraph* target)
   {
-    RLOG(0, "RoboJacoComponent::onInitFromState()");
+    RLOG(0, "KortexComponent::onInitFromState()");
+    //MatNd_printCommentDigits("q_des:", target->q, 4);
     onSetJointPosition(target->q);
+    jointCommandsPrev = jointCommands;
+
+    for (size_t i = 0; i < jntNameIdPairs.size(); ++i)
+    {
+      const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
+      RCHECK_MSG(jnt, "Robot joint '%s' not found in graph",
+                 jntNameIdPairs[i].jointName.c_str());
+      RLOG(0, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
+    }
   }
 
   void onEmergencyStop()
@@ -328,115 +252,10 @@ private:
     gripper_force = force;
   }
 
-  void recvThreadFunc()
+  bool process_incoming_message(const std::string& recv_msg)
   {
-    RLOG_CPP(0, "Creating zmq context");
-    zmq::context_t context(1);
-
-    RLOG_CPP(0, "Creating recv_socket");
-    zmq::socket_t recv_socket(context, zmq::socket_type::sub);
-
-    // Set up the socket for receiving joint angles
-    try
-    {
-      // Attempt to connect the socket
-      RLOG_CPP(0, "Connecting to tcp://localhost:5555");
-      recv_socket.connect("tcp://localhost:5555");
-      if (!recv_socket)
-      {
-        RLOG(0, "Failed to connect recv_socket to tcp://localhost:5555");
-        throw std::runtime_error("Failed to connect recv_socket to tcp://localhost:5555");
-      }
-      else
-      {
-        RLOG(0, "Success to connect recv_socket to tcp://localhost:5555");
-      }
-
-      // Set socket option to subscribe to all messages (ZMQ_SUBSCRIBE with an empty filter)
-      RLOG_CPP(0, "Setting ZMQ_SUBSCRIBE option");
-      recv_socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-
-      RLOG_CPP(0, "recv_socket successfully set up");
-    }
-    catch (const zmq::error_t& e)
-    {
-      RLOG_CPP(0, "ZeroMQ error: " << e.what());
-      throw;
-    }
-    catch (const std::exception& e)
-    {
-      RLOG_CPP(0, "Error: " << e.what());
-      throw;
-    }
-
-
-
-    // Set up the socket for sending motor commands
-    RLOG_CPP(0, "Creating send_socket");
-    zmq::socket_t send_socket(context, zmq::socket_type::pub);
-
-    // Set up the socket for receiving joint angles
-    try
-    {
-      // Attempt to connect the socket
-      RLOG_CPP(0, "Connecting to tcp://localhost:5556");
-      send_socket.connect("tcp://localhost:5556");
-      if (!send_socket)
-      {
-        RLOG(0, "Failed to connect send_socket to tcp://localhost:5556");
-        throw std::runtime_error("Failed to connect send_socket to tcp://localhost:5556");
-      }
-      else
-      {
-        RLOG(0, "Success to connect send_socket to tcp://localhost:5556");
-      }
-
-      RLOG_CPP(0, "send_socket successfully set up");
-    }
-    catch (const zmq::error_t& e)
-    {
-      RLOG_CPP(0, "ZeroMQ error: " << e.what());
-      throw;
-    }
-    catch (const std::exception& e)
-    {
-      RLOG_CPP(0, "Error: " << e.what());
-      throw;
-    }
-
-
-    RLOG_CPP(0, "Entering while loop");
-
-    while (runLoop)
-    {
-      // Check for motor commands (non-blocking)
-      zmq::pollitem_t items[] = {{recv_socket, 0, ZMQ_POLLIN, 0}};
-      zmq::poll(items, 1, 0); // Poll with a 0 timeout (non-blocking)
-      if (items[0].revents & ZMQ_POLLIN)
-      {
-        receive_joint_angles(recv_socket);
-      }
-
-      // Send motor commands
-      if (enableCommands)
-      {
-        send_motor_commands(send_socket);
-      }
-
-
-
-      Timer_waitDT(0.01);
-    }
-
-    RLOG(0, "Quitting run thread");
-  }
-
-  void receive_joint_angles(zmq::socket_t& recv_socket)
-  {
-    zmq::message_t message;
-    recv_socket.recv(message, zmq::recv_flags::none);
-    std::string recv_msg(static_cast<char*>(message.data()), message.size());
     nlohmann::json recv_json;
+    bool membersInitialized = false;
 
     try
     {
@@ -444,36 +263,46 @@ private:
       recv_json = nlohmann::json::parse(recv_msg);
 
       // If successful, process the parsed JSON data
-      RLOG_CPP(1, "Parsed joint angles: " << recv_json.dump(4));
+      RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
-      std::lock_guard<std::mutex> lock(recvMtx);
+      std::vector<double> q, qd, tor;
+      double q_grip = -1.0;
 
       if (recv_json.contains("position"))
       {
-        jointPosition = recv_json["position"].get<std::vector<double>>();
-      }
-
-      if (recv_json.contains("velocity"))
-      {
-        jointVelocity = recv_json["velocity"].get<std::vector<double>>();
-      }
-
-      if (recv_json.contains("torque"))
-      {
-        jointTorque = recv_json["torque"].get<std::vector<double>>();
+        q = recv_json["position"].get<std::vector<double>>();
       }
 
       if (recv_json.contains("gripper_position"))
       {
-        gripper_position = recv_json["gripper_position"].get<double>();
+        q_grip = recv_json["gripper_position"].get<double>();
       }
 
+      if (recv_json.contains("velocity"))
+      {
+        qd = recv_json["velocity"].get<std::vector<double>>();
+      }
+
+      if (recv_json.contains("torque"))
+      {
+        tor = recv_json["torque"].get<std::vector<double>>();
+      }
 
       // Further processing of joint angles here...
-      std::vector<double> tool_wrench;
-      if (recv_json.contains("tool_wrench"))
+      // std::vector<double> tool_wrench;
+      // if (recv_json.contains("tool_wrench"))
+      // {
+      //   tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
+      // }
+
+      if ((q.size()==7) && (qd.size()==7) && (tor.size()==7) && (q_grip!=-1))
       {
-        tool_wrench = recv_json["tool_wrench"].get<std::vector<double>>();
+        std::lock_guard<std::mutex> lock(this->recvMtx);
+        this->jointPosition = q;
+        this->jointVelocity = qd;
+        this->jointTorque = tor;
+        this->gripper_position = q_grip;
+        membersInitialized = true;
       }
 
     }
@@ -483,66 +312,51 @@ private:
       RLOG_CPP(0, "Invalid JSON string: " << recv_json);
     }
 
-
+    return membersInitialized;
   }
 
-  void send_motor_commands(zmq::socket_t& send_socket)
+  std::string compile_outgoing_message()
   {
-
-    if (jointCommands.empty() || (jointCommands==jointCommandsPrev))
-    {
-      return;
-    }
-
-    RLOG_CPP(0, "Sending motor commands");
-
-    bool isNewCommand = false;
+    Timer_waitDT(0.01);               // 100 Hz command rate
     nlohmann::json cmdJson;
+
+    if (!enableCommands || jointCommands.empty() || (jointCommands==jointCommandsPrev))
+    {
+      return std::string();
+    }
 
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
       if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
       {
         cmdJson["q_des"] = jointCommands;
-        isNewCommand = true;
       }
 
       if (gripper_command!=gripper_command_prev)
       {
         cmdJson["gripper_command"] = RCS_RAD2DEG(gripper_command)/0.4;
         cmdJson["gripper_force"] = gripper_force;
-        isNewCommand = true;
       }
-    }
-
-    if (isNewCommand)
-    {
-      std::string message_str = cmdJson.dump();
-      zmq::message_t message(message_str.size());
-      memcpy(message.data(), message_str.c_str(), message_str.size());
-
-      send_socket.send(message, zmq::send_flags::none);
-      RLOG_CPP(0, "Sent motor commands: " << message_str);
     }
 
     jointCommandsPrev = jointCommands;
     gripper_command_prev = gripper_command;
+
+    return cmdJson.dump();
   }
 
 
 
-  std::thread recv_thread;
   bool enableCommands = false;
-  bool runLoop = false;
   bool eStop = false;
   int torqueTic = -1;
-  std::vector<JointNameIndexPair> jntNameIdPairs;
-  std::vector<JointNameIndexPair> gripperNameIdPairs;
+  std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
+  std::vector<Rcs::JointNameIndexPair> gripperNameIdPairs;
   std::vector<double> jointPosition, jointVelocity, jointTorque, gravityTorque;
   double gripper_position = 0.0;   // 0: open, 100: closed
   double gripper_command = 0.0;
   double gripper_command_prev = 0.0;
-  double gripper_force = 10.0;
+  double gripper_force = 100.0;
   std::vector<double> jointCommands, jointCommandsPrev;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;

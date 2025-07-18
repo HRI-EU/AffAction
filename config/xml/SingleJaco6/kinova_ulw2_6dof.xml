@@ -7,7 +7,12 @@
        36° per second for joints 1,2,3 and 48° per second for joints 4,5,6.
   -->
 
-  <Body name="jaco_mount_link" transform="0 0 0.049 0 0 0" >
+  <Body name="jaco_mount_plate" >
+    <Shape type="BOX" extents="0.2 0.15 0.02" distance="false" physics="false" graphics="true" color="BLACK_RUBBER" transform="0 0 0.01 0 0 0" />
+    <Shape type="FRAME" scale="0.3" />
+  </Body>
+
+  <Body name="jaco_mount_link" prev="jaco_mount_plate" transform="0 0 0.049 0 0 0" >
     <Shape type="BOX" extents="0.04 0.04 0.07" distance="false" physics="false" graphics="true" />
   </Body>
 
@@ -51,10 +56,10 @@
     <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.04" length="0.05" transform="0 0 0 180 0 0" color="RED" />
   </Body>
 
-  <Body name="hand_base" prev="wrist" physics="dynamic" mass="0.727" xinertia="0.000345324 0 0   -0 0.000345324 0   -0 -0 0.0005816" >
+  <Body name="hand_base" prev="wrist" physics="kinematic" mass="0.727" xinertia="0.000345324 0 0   -0 0.000345324 0   -0 -0 0.0005816" >
     <Joint name="j2n6s300_joint_6" range="-720 0 720" type="RotZ" transform="0 -0.03703 -0.06414 -60 0 -180" torqueLimit="2000" speedLimit="52.5"/>
     <xShape type="SPHERE" distance="false" physics="true" graphics="true" radius="0.04" color="#cad1edff" transform="0 0 -0.05 0 0 0" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="hri_scitos_description/hand_3finger.dae.stl" color="#cad1edff" />
+    <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="hri_scitos_description/hand_3finger.dae.stl" color="#cad1edff" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="hri_scitos_description/ring_small.STL" />
   </Body>
 

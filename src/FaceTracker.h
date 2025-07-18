@@ -61,26 +61,13 @@ class FaceTracker : public TrackerBase
 {
 public:
 
-  FaceTracker(const std::string& nameOfFaceBody);
+  FaceTracker(const std::string& nameOfFaceBody, const std::string& cameraName);
   virtual ~FaceTracker();
 
   // Inherited methods
   std::string getRequestKeyword() const;
-  void parse(const nlohmann::json& json, double time, const std::string& cameraFrame);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
   void update(ActionScene* scene, RcsGraph* graph);
-  void setCameraTransform(const HTr* A_CI);
-
-
-
-  bool addGraphics(Rcs::Viewer* viewer, const RcsBody* cameraFrame);
-
-  // These methods are onl used for adding the debug graphics,
-  // where the face mesh is transformed into world coordinates.
-  // \todo: Make this more consistent.
-  void setCameraName(const std::string& cameraFrame);
-  std::string getCameraName() const;
-  const RcsMeshData* getMesh() const;
-
 
   bool isVisible() const;
   void enableDebugGraphics(bool enable);
@@ -99,13 +86,14 @@ private:
   static bool estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A_FC,
                                     HTr* leftIris, HTr* rightIris);
 
+  bool addGraphics(Rcs::Viewer* viewer, const HTr* cameraFrame);
+
+  bool newFaceUpdate;
   RcsMeshData* mesh;
   MatNd* landmarks;
   Rcs::Viewer* viewer;
-  HTr A_camI;
   HTr faceTrf;
   std::mutex landmarksMtx;
-  std::string cameraName;
   std::string faceName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;
   osg::ref_ptr<Rcs::MeshNode> faceMeshNode;

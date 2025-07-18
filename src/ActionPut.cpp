@@ -51,9 +51,7 @@
 
 
 
-#define fingersOpen   (0.01)
-#define fingersClosed (0.7)
-#define t_fingerMove  (2.0)
+#define t_fingerMove  (1.0+2.0)
 
 #define IS_NEAR_THRESHOLD  (0.4)
 #define DEFAULT_ABOVE_DIST (0.2)
@@ -266,14 +264,14 @@ void ActionPut::parseArgs(const ActionScene& domain,
     putOri3d[2] = RCS_DEG2RAD(alignAngleInRad);
   }
 
-  res = getAndEraseKeyValuePair(params, "height", heightAboveGoal);
-  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
-
   if (getAndEraseKey(params, "above"))
   {
     above = true;
     heightAboveGoal = DEFAULT_ABOVE_DIST;
   }
+
+  res = getAndEraseKeyValuePair(params, "height", heightAboveGoal);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
   if (getAndEraseKey(params, "putDown"))
   {
@@ -696,7 +694,8 @@ bool ActionPut::initialize(const ActionScene& domain,
       fingerJoints += " ";
     }
 
-    handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+    //handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+    handOpen = graspingHand->getFingerAnglesFromModelState(graph, "open_fingers");
   }
 
   // Task naming
@@ -727,7 +726,7 @@ bool ActionPut::initialize(const ActionScene& domain,
     detailedActionCommand += " above";
   }
 
-  if (heightAboveGoal != 0.0)
+  if ((heightAboveGoal!=0.0) && (heightAboveGoal!=DEFAULT_ABOVE_DIST))
   {
     detailedActionCommand += " height " + std::to_string(heightAboveGoal);
   }
@@ -1290,7 +1289,8 @@ public:
         fingerJoints += " ";
       }
 
-      handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+      //handOpen = std::vector<double>(graspingHand->getNumFingers(), fingersOpen);
+      handOpen = graspingHand->getFingerAnglesFromModelState(graph, "open_fingers");
     }
 
     auto ntt = domain.getAffordanceEntities(objName);
