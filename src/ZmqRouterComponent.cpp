@@ -68,6 +68,7 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   subscribe("Start", &ZmqRouterComponent::startZmqThread);
   subscribe("Stop", &ZmqRouterComponent::stopZmqThread);
   subscribe("SetPerceptionCommand", &ZmqRouterComponent::onSetPerceptionCommand);
+  subscribe("TriggerPerception", &ZmqRouterComponent::onTriggerPerception);
 
   subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
@@ -85,9 +86,16 @@ ZmqRouterComponent::~ZmqRouterComponent()
 
 void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetitions)
 {
-  RLOG_CPP(0, "command: " << command << " repetitions: " << repetitions);
+  RLOG_CPP(1, "command: " << command << " repetitions: " << repetitions);
   std::lock_guard<std::mutex> lock(commandMtx);
-  commandQueue.push({command, repetitions});
+  commandQueue.push({command, repetitions, ""});
+}
+
+void ZmqRouterComponent::onTriggerPerception(std::string target_id, int repetitions, std::string jsonString)
+{
+  RLOG_CPP(1, "target_id: " << target_id << " repetitions: " << repetitions << " json: " << jsonString);
+  std::lock_guard<std::mutex> lock(commandMtx);
+  commandQueue.push({ target_id, repetitions, jsonString });
 }
 
 std::string ZmqRouterComponent::getName() const
@@ -241,7 +249,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         if (workers.find(id) == workers.end())
         {
           // Found first occurrence
-          RLOG_CPP(0, "*************************************************** Worker found for the first time: " << id);
+          RLOG_CPP(0, "Worker found for the first time: " << id);
         }
         workers[id] = Clock::now();              // refresh liveness
 
@@ -270,11 +278,11 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         if (!commandQueue.empty())
         {
-          std::pair<std::string, int> cmdPair = commandQueue.front();
+          std::tuple<std::string, int, std::string> cmdPair = commandQueue.front();
           nlohmann::json cmd =
           {
-            { "type", cmdPair.first },
-            { "repetitions", cmdPair.second },
+            { "type", std::get<0>(cmdPair)},
+            { "repetitions", std::get<1>(cmdPair) },
             {
               "no_bounding_box", {
                 { "left", 222 },
@@ -285,9 +293,16 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
             },
             { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
           };
+
+          if (!std::get<2>(cmdPair).empty())
+          {
+            auto bbJson = nlohmann::json::parse(std::get<2>(cmdPair));
+            cmd["bounding_box"] = bbJson["bounding_box"];
+          }
           cmdStr = cmd.dump();
-          id_str = cmdPair.first;
+          id_str = std::get<0>(cmdPair);
           commandQueue.pop();
+          RLOG_CPP(1, "cmsjson:\n" << cmdStr);
         }
 
       }
@@ -322,7 +337,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
             }
             else
             {
-              RLOG_CPP(0, "[SEND] to   " << id + " -> " << cmdStr);
+              RLOG_CPP(1, "[SEND] to   " << id + " -> " << cmdStr);
             }
           }
           catch (const zmq::error_t& e)

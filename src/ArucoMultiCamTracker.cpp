@@ -32,6 +32,7 @@
 *******************************************************************************/
 
 #include "ArucoMultiCamTracker.h"
+#include "SceneHelpers.h"
 
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>

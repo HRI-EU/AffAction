@@ -36,6 +36,7 @@
 #include "AzureSkeletonTracker.h"
 #include "FaceTracker.h"
 #include "YoloTracker.h"
+#include "SceneHelpers.h"
 #include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
@@ -73,7 +74,7 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
 
   if (syncInputJsonWithWallclockTime)
   {
-    time = TrackerBase::getWallclockTime();
+    time = getWallclockTime();
   }
   else
   {
@@ -85,8 +86,6 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
   {
     for (auto& entry : json_data["data"].items())
     {
-      RLOG_CPP(1, entry.key());
-
       for (const auto& tracker : trackers)
       {
         if (entry.key() == tracker->getRequestKeyword())
@@ -243,7 +242,7 @@ void LandmarkBase::onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionSce
 
 double LandmarkBase::getCurrentTime() const
 {
-  return TrackerBase::getWallclockTime();
+  return getWallclockTime();
 }
 
 bool LandmarkBase::isFrozen() const

@@ -118,6 +118,7 @@ public:
   bool computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
   bool computeAABBHead(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
   bool check(const ActionScene* scene, const RcsGraph* graph) const;
+  std::vector<int> bb_head;
 
 private:
   double lastTimeSeen;

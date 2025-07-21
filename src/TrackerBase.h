@@ -59,7 +59,6 @@ public:
   virtual void setFrozen(bool frozen);
   virtual double getCurrentTime() const;
   virtual bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
-  static double getWallclockTime();
 
 protected:
 

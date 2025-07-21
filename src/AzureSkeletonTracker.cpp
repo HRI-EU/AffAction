@@ -613,6 +613,16 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
       continue;
     }
 
+    //if (!human->bb_head.empty())
+    //{
+    //  RLOG_CPP(0, "Human agent: " << human->name << " bb: ");
+    //  for (const auto& bb : human->bb_head)
+    //  {
+    //    std::cout << bb << " ";
+    //  }
+    //  std::cout << std::endl;
+    //}
+
     for (size_t i=0; i< skeletons.size(); ++i)
     {
       if (skeletons[i]->agentName==human->name)
@@ -620,11 +630,19 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
         if (skeletons[i]->isVisible)
         {
           human->setMarkers(skeletons[i]->markers);
+          human->bb_head.resize(4);
+          human->bb_head[0] = skeletons[i]->bb_head.x_min;
+          human->bb_head[1] = skeletons[i]->bb_head.y_min;
+          human->bb_head[2] = skeletons[i]->bb_head.x_max;
+          human->bb_head[3] = skeletons[i]->bb_head.y_max;
+        }
+        else
+        {
+          human->bb_head.clear();
         }
 
         human->setVisibility(skeletons[i]->isVisible);
         human->setLastTimeSeen(skeletons[i]->age);
-        //human->setHeadBoundingBox(skeletons[i]->bb_head);
       }
 
     }

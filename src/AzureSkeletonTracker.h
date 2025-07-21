@@ -62,7 +62,7 @@ public:
 
   bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
 
-  // Process aruco frames. Called from control loop (100Hz or so)
+  // Process skeleton data. Called from control loop (100Hz or so)
   void update(ActionScene* scene, RcsGraph* graph);
 
   std::string getRequestKeyword() const;

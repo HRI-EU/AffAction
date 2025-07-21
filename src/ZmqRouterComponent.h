@@ -40,6 +40,7 @@
 #include <thread>
 #include <mutex>
 #include <queue>
+#include <tuple>
 
 
 namespace aff
@@ -59,13 +60,14 @@ private:
   void startZmqThread();
   void stopZmqThread();
   void onSetPerceptionCommand(std::string command, int repetitions);
+  void onTriggerPerception(std::string target_id, int repetitions, std::string jsonString);
 
   std::string connectionStr;
   bool threadRunning;
   bool threadFunctionCompleted;
   std::thread zmqThread;
   std::mutex commandMtx;
-  std::queue<std::pair<std::string,int>> commandQueue;
+  std::queue<std::tuple<std::string,int,std::string>> commandQueue;
 };
 
 } // namespace

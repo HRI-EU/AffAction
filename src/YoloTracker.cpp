@@ -32,6 +32,7 @@
 *******************************************************************************/
 
 #include "YoloTracker.h"
+#include "SceneHelpers.h"
 
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>

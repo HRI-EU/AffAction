@@ -58,20 +58,6 @@ double TrackerBase::getCurrentTime() const
   return currentTime;
 }
 
-/*static*/ double TrackerBase::getWallclockTime()
-{
-  // Get the current time point
-  auto currentTime = std::chrono::system_clock::now();
-
-  // Convert the time point to a duration since the epoch
-  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
-
-  // Convert the duration to seconds as a floating-point number
-  double seconds = durationSinceEpoch.count();
-
-  return seconds;
-}
-
 void TrackerBase::setFrozen(bool freeze)
 {
   this->frozen = freeze;

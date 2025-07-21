@@ -37,6 +37,9 @@
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>
 
+static const size_t FACEMESH_SIMPLE_NUM_VERTICES = 468;
+static const size_t FACEMESH_IRIS_NUM_VERTICES   = 478;
+
 static const size_t upperLeftLidIdx  = 3 * 386;
 static const size_t lowerLeftLidIdx  = 3 * 374;
 static const size_t upperRightLidIdx = 3 * 159;
@@ -49,6 +52,7 @@ static const size_t leftMouthCorner  = 3 * 291;
 static const size_t betweenEyes      = 3 * 6;
 static const size_t foreheadTop      = 3 * 10;
 static const size_t chinCenter       = 3 * 152;
+
 
 static int isNodding(std::vector<double> angle, double dt,
                      double minAmplitude)
@@ -99,24 +103,23 @@ FaceGestureComponent::~FaceGestureComponent()
 {
 }
 
-
 void FaceGestureComponent::onUpdateGraph(RcsGraph* graph)
 {
   RcsBody* face = RcsGraph_getBodyByName(graph, faceName.c_str());
-  RCHECK(face);
+  RCHECK_MSG(face, "%s", faceName.c_str());
   RcsMeshData* faceMesh = nullptr;
 
   for (unsigned int i = 0; i < face->nShapes; ++i)
   {
     const RcsShape* sh = &face->shapes[i];
-    if (sh->type != RCSSHAPE_MESH)
+    if ((sh->type != RCSSHAPE_MESH) || (!sh->mesh))
     {
       continue;
     }
 
-    // Number of vertices: Face only: 468, face + iris: 478
-    RCHECK(sh->mesh);
-    if (sh->mesh->nVertices == 468 || sh->mesh->nVertices == 478)
+    // Number of vertices match
+    if ((sh->mesh->nVertices == FACEMESH_SIMPLE_NUM_VERTICES) ||
+        (sh->mesh->nVertices == FACEMESH_IRIS_NUM_VERTICES))
     {
       faceMesh = sh->mesh;
       break;
@@ -124,7 +127,11 @@ void FaceGestureComponent::onUpdateGraph(RcsGraph* graph)
 
   }
 
-  RCHECK(faceMesh);
+  if (!faceMesh)
+  {
+    RLOG_CPP(0, "No face mesh found for body '" << faceName << "'");
+    return;
+  }
 
   const double faceHeight = Vec3d_distance(&faceMesh->vertices[foreheadTop],
                                            &faceMesh->vertices[chinCenter]);

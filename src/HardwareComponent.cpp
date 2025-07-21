@@ -46,6 +46,7 @@
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
 #include "RespeakerSoundDirComponent.h"
+#include "AzureSkeletonTracker.h"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -204,6 +205,20 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
       // Add skeleton tracker and ALL agents in the scene
       int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent, landmarksCamera);
+
+      auto skeletonTrackers = lmc->getTrackers<AzureSkeletonTracker>();
+      if (skeletonTrackers.size()==1)
+      {
+        RLOG(0, "Registering AgentChanged event");
+        skeletonTrackers[0]->registerAgentAppearDisappearCallback([ret](const std::string& agentName, bool appear)
+        {
+          std::string appearStr = appear ? " appeared" : " disappered";
+          RLOG_CPP(0, "Agent " << agentName << appearStr);
+          ret->getEntity()->publish("AgentChanged", agentName, appear);
+        });
+      }
+
+
       RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
     }
 

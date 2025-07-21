@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 #include "LandmarkZmqComponent.h"
-#include "ArucoTracker.h"
+#include "SceneHelpers.h"
 
 #include <ComponentBase.h>
 #include <Rcs_macros.h>
@@ -233,7 +233,7 @@ void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
   RLOG(5, "Starting thread loop");
   while (this->threadRunning && !timedOut)
   {
-    double t_mp = TrackerBase::getWallclockTime();
+    double t_mp = getWallclockTime();
 
     nlohmann::json request;
 
@@ -325,7 +325,7 @@ void LandmarkZmqComponent::zmqThreadFunc(const std::string& connection)
     }
 
     // Timing statistics
-    t_mp = TrackerBase::getWallclockTime() - t_mp;
+    t_mp = getWallclockTime() - t_mp;
     frameRate = (frameRate == 0.0) ? 1.0 / t_mp : 0.99 * frameRate + 0.01 * (1.0 / t_mp);
 
     RLOG(5, "Framerate: %.2f Hz", this->frameRate);
