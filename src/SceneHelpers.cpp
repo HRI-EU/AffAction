@@ -40,6 +40,7 @@
 #include <condition_variable>
 #include <memory>
 #include <atomic>
+#include <chrono>
 
 
 
@@ -47,9 +48,26 @@ namespace aff
 {
 
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+double getWallclockTime()
+{
+  // Get the current time point
+  auto currentTime = std::chrono::system_clock::now();
 
+  // Convert the time point to a duration since the epoch
+  std::chrono::duration<double> durationSinceEpoch = currentTime.time_since_epoch();
 
+  // Convert the duration to seconds as a floating-point number
+  double seconds = durationSinceEpoch.count();
 
+  return seconds;
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout_in_seconds)
 {
   auto sub = std::make_shared<ES::ScopedSubscription>();
@@ -150,9 +168,13 @@ std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout
 
 
 
-
-
-bool track_facemesh(EntityBase& entity, int n_iterations, double timeout_in_seconds)
+/*******************************************************************************
+ *
+ ******************************************************************************/
+bool track_facemesh(EntityBase& entity,
+                    const std::string& boundingBox,
+                    int n_iterations,
+                    double timeout_in_seconds)
 {
   auto sub = std::make_shared<ES::ScopedSubscription>();
   auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
@@ -160,7 +182,7 @@ bool track_facemesh(EntityBase& entity, int n_iterations, double timeout_in_seco
   std::condition_variable cv;
   int counter = 0;
 
-  auto callback = [sub=sub, n=n_iterations, active=active, &mtx, &cv, &counter]
+  auto callback = [&sub, n=n_iterations, active=active, &mtx, &cv, &counter]
                   (std::string id, std::string data) mutable
   {
     if (!*active)
@@ -174,47 +196,144 @@ bool track_facemesh(EntityBase& entity, int n_iterations, double timeout_in_seco
     if (id=="mediapipe")
     {
       counter++;
-      RLOG_CPP(0, "Received mediapipe reply: " << counter);
+      RLOG_CPP(1, "Received mediapipe reply: " << counter);
+      //RLOG_CPP(0, "data: " << data);
     }
 
     if (counter >= n)
     {
       *active = false;  // prevent further callback execution
-      sub.reset();
+      if (sub)
+      {
+        sub->unsubscribe();
+      }
+      sub.reset();       // explicitly unsubscribe
       cv.notify_one();   // wake calling context
     }
   };
 
-  RLOG(0, "Subscribing ZmqDealerMessage");
+  RLOG(1, "Subscribing ZmqDealerMessage");
   *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
 
-  RLOG(0, "Publishing PerceptionCommand");
-  entity.publish("SetPerceptionCommand", std::string("mediapipe"), n_iterations);
 
+  if (boundingBox.empty())
+  {
+    RLOG(1, "Publishing PerceptionCommand");
+    entity.publish("SetPerceptionCommand", std::string("mediapipe"), n_iterations);
+  }
+  else
+  {
+    RLOG_CPP(1, "Publishing TriggerPerception with bounding box " << boundingBox);
+    entity.publish("TriggerPerception", std::string("mediapipe"), n_iterations, boundingBox);
+  }
+
+
+  bool success = true;
   {
     std::unique_lock<std::mutex> lk(mtx);
-    RLOG(0, "cv.wait");
+    RLOG(1, "cv.wait");
 
-    bool success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
+    success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
     {
       return counter >= n_iterations;
     });
 
     if (!success)
     {
-      RLOG_CPP(0, "Timeout reached while waiting for face mesh.");
+      RLOG_CPP(1, "Timeout reached while waiting for face mesh.");
     }
 
     *active = false;  // ensure no more callbacks after return
+    if (sub)
+    {
+      sub->unsubscribe();
+    }
     sub.reset();      // explicitly unsubscribe
-    RLOG(0, "done cv.wait");
+    RLOG(1, "done cv.wait");
   }
 
-  RLOG(0, "done track_facemesh");
-  return true;
+  RLOG(1, "done track_facemesh");
+  return success;
 }
 
 
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+bool track_agent_facemesh(EntityBase& entity,
+                          const ActionScene* scene,
+                          const std::string& agentName,
+                          int n_iterations,
+                          double timeout_in_seconds)
+{
+  double t_calc = getWallclockTime();
+  const Agent* agent = nullptr;
+
+  if (agentName.empty())
+  {
+    auto humanAgents = scene->getAgents<HumanAgent>();
+    if (!humanAgents.empty())
+    {
+      agent = humanAgents[0];
+    }
+  }
+  else
+  {
+    agent = scene->getAgent(agentName);
+  }
+
+  if (!agent)
+  {
+    RLOG_CPP(1, "Agent '" << agentName << "' not found in scene");
+    return false;
+  }
+
+  auto humanAgent = dynamic_cast<const HumanAgent*>(agent);
+
+  if (!humanAgent)
+  {
+    RLOG_CPP(1, "Agent '" << agentName << "' is not a human agent");
+    return false;
+  }
+
+  for (size_t i = 0; i < n_iterations; ++i)
+  {
+    nlohmann::json bb_json;
+
+    bb_json["bounding_box"] =
+    {
+      { "left",   humanAgent->bb_head[0]},
+      { "top",    humanAgent->bb_head[1]},
+      { "right",  humanAgent->bb_head[2]},
+      { "bottom", humanAgent->bb_head[3]}
+    };
+
+    RLOG_CPP(1, "track_agent_facemesh iteration " << i
+             << " with bounding box " << bb_json.dump());
+    REXEC(0)
+    {
+      std::cout << ".";
+    }
+    bool success = track_facemesh(entity, bb_json.dump(), 1, timeout_in_seconds);
+    if (!success)
+    {
+      RLOG(1, "Failed - returning");
+      return false;
+    }
+    RLOG(1, "Success - continuing");
+  }
+
+  t_calc = getWallclockTime() - t_calc;
+
+  REXEC(0)
+  {
+    std::cout << std::endl;
+  }
+
+  RLOG(0, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
+
+  return true;
+}
 
 }   // namespace aff
