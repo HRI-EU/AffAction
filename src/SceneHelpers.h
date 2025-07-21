@@ -41,12 +41,22 @@
 namespace aff
 {
 
-std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout_in_seconds);
+double getWallclockTime();
+
+std::string recognize_faces(EntityBase& entity,
+                            const std::string& boundingBox,
+                            int n_iterations,
+                            double timeout_in_seconds);
+std::string recognize_agent_face(EntityBase& entity,
+                                 const ActionScene* scene,
+                                 const std::string& agentName,
+                                 int n_iterations,
+                                 double timeout_in_seconds);
+
 bool track_facemesh(EntityBase& entity, const std::string& boundingBox,
                     int n_iterations, double timeout_in_seconds);
 bool track_agent_facemesh(EntityBase& entity, const ActionScene* scene,
                           const std::string& agentName, int n_iterations, double timeout_in_seconds);
-double getWallclockTime();
 
 }   // namespace aff
 

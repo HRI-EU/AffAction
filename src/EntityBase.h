@@ -126,6 +126,11 @@ public:
    */
   bool initialize(RcsGraph* graph);
 
+  /*! \brief Convenience function to pass lambda that must be executed outside
+   *         the process() call.
+   */
+  void withProcessLock(std::function<void()> func);
+
 private:
 
   void onTogglePause();

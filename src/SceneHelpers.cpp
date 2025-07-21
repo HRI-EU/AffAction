@@ -68,7 +68,10 @@ double getWallclockTime()
 /*******************************************************************************
  *
  ******************************************************************************/
-std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout_in_seconds)
+std::string recognize_faces(EntityBase& entity,
+                            const std::string& boundingBox,
+                            int n_iterations,
+                            double timeout_in_seconds)
 {
   auto sub = std::make_shared<ES::ScopedSubscription>();
   auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
@@ -83,12 +86,10 @@ std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout
     if (!*active)
     {
       RLOG_CPP(1, "Callback skipped because function is no longer active.");
-      sub.reset();
       return;
     }
 
     std::lock_guard<std::mutex> lk(mtx);
-    RLOG_CPP(1, "id: " << id << " data: " << data);
 
     if (id=="face_recog")
     {
@@ -133,7 +134,6 @@ std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout
     if (counter >= n)
     {
       *active = false;  // prevent further callback execution
-      sub.reset();      // explicitly unsubscribe
       cv.notify_one();   // wake calling context
     }
   };
@@ -142,26 +142,26 @@ std::string recognize_faces(EntityBase& entity, int n_iterations, double timeout
   *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
 
   RLOG(1, "Publishing PerceptionCommand");
-  entity.publish("SetPerceptionCommand", std::string("face_recog"), n_iterations);
+  //entity.publish("SetPerceptionCommand", std::string("face_recog"), n_iterations);
+  entity.publish("TriggerPerception", std::string("face_recog"), n_iterations, boundingBox);
 
+  std::unique_lock<std::mutex> lk(mtx);
+  RLOG(1, "cv.wait");
+
+  bool success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
   {
-    std::unique_lock<std::mutex> lk(mtx);
-    RLOG(1, "cv.wait");
+    return counter >= n_iterations;
+  });
 
-    bool success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
-    {
-      return counter >= n_iterations;
-    });
+  *active = false;  // ensure no more callbacks after return
+  entity.withProcessLock([&]()
+  {
+    sub->unsubscribe();
+  });
 
-    if (!success)
-    {
-      RLOG_CPP(0, "Timeout reached while waiting for face recognition.");
-    }
-
-    *active = false;  // ensure no more callbacks after return
-    sub.reset();      // explicitly unsubscribe
-    RLOG(1, "done cv.wait");
-  }
+  RLOG(1, "%s recognize_faces%s",
+       success ? "SUCCESS" : "FAIL",
+       success ? "" : ": Timeout reached while waiting for face recognition.");
 
   return faceName;
 }
@@ -182,12 +182,12 @@ bool track_facemesh(EntityBase& entity,
   std::condition_variable cv;
   int counter = 0;
 
-  auto callback = [&sub, n=n_iterations, active=active, &mtx, &cv, &counter]
+  auto callback = [n=n_iterations, active=active, &mtx, &cv, &counter]
                   (std::string id, std::string data) mutable
   {
     if (!*active)
     {
-      RLOG_CPP(0, "Callback skipped because function is no longer active.");
+      RLOG_CPP(1, "Callback skipped because function is no longer active.");
       return;
     }
 
@@ -197,62 +197,40 @@ bool track_facemesh(EntityBase& entity,
     {
       counter++;
       RLOG_CPP(1, "Received mediapipe reply: " << counter);
-      //RLOG_CPP(0, "data: " << data);
     }
 
     if (counter >= n)
     {
       *active = false;  // prevent further callback execution
-      if (sub)
-      {
-        sub->unsubscribe();
-      }
-      sub.reset();       // explicitly unsubscribe
-      cv.notify_one();   // wake calling context
+      cv.notify_one();  // wake calling context
     }
   };
 
   RLOG(1, "Subscribing ZmqDealerMessage");
   *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
 
+  RLOG_CPP(1, "Publishing TriggerPerception with bounding box " << boundingBox);
+  entity.publish("TriggerPerception", std::string("mediapipe"), n_iterations, boundingBox);
 
-  if (boundingBox.empty())
+
+  std::unique_lock<std::mutex> lk(mtx);
+  RLOG(1, "cv.wait");
+  bool success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
   {
-    RLOG(1, "Publishing PerceptionCommand");
-    entity.publish("SetPerceptionCommand", std::string("mediapipe"), n_iterations);
-  }
-  else
+    return counter >= n_iterations;
+  });
+  RLOG(1, "done cv.wait");
+
+  *active = false;  // ensure no more callbacks after return
+  entity.withProcessLock([&]()
   {
-    RLOG_CPP(1, "Publishing TriggerPerception with bounding box " << boundingBox);
-    entity.publish("TriggerPerception", std::string("mediapipe"), n_iterations, boundingBox);
-  }
+    sub->unsubscribe();
+  });
 
+  RLOG(1, "%s track_facemesh%s",
+       success ? "SUCCESS" : "FAIL",
+       success ? "" : ": Timeout reached while waiting for face mesh.");
 
-  bool success = true;
-  {
-    std::unique_lock<std::mutex> lk(mtx);
-    RLOG(1, "cv.wait");
-
-    success = cv.wait_for(lk, std::chrono::duration<double>(timeout_in_seconds), [&]()
-    {
-      return counter >= n_iterations;
-    });
-
-    if (!success)
-    {
-      RLOG_CPP(1, "Timeout reached while waiting for face mesh.");
-    }
-
-    *active = false;  // ensure no more callbacks after return
-    if (sub)
-    {
-      sub->unsubscribe();
-    }
-    sub.reset();      // explicitly unsubscribe
-    RLOG(1, "done cv.wait");
-  }
-
-  RLOG(1, "done track_facemesh");
   return success;
 }
 
@@ -315,7 +293,12 @@ bool track_agent_facemesh(EntityBase& entity,
     {
       std::cout << ".";
     }
-    bool success = track_facemesh(entity, bb_json.dump(), 1, timeout_in_seconds);
+
+    // In the last iteration, we set the repetitions to continusous update (-2), so
+    // that the face is tracked without bounding box updates.
+    int n_times = (i==n_iterations-1) ? -2 : 1;
+
+    bool success = track_facemesh(entity, bb_json.dump(), n_times, timeout_in_seconds);
     if (!success)
     {
       RLOG(1, "Failed - returning");
@@ -334,6 +317,105 @@ bool track_agent_facemesh(EntityBase& entity,
   RLOG(0, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
 
   return true;
+}
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+std::string recognize_agent_face(EntityBase& entity,
+                                 const ActionScene* scene,
+                                 const std::string& agentName,
+                                 int n_iterations,
+                                 double timeout_in_seconds)
+{
+  double t_calc = getWallclockTime();
+  const Agent* agent = nullptr;
+
+  if (agentName.empty())
+  {
+    auto humanAgents = scene->getAgents<HumanAgent>();
+    if (!humanAgents.empty())
+    {
+      agent = humanAgents[0];
+    }
+  }
+  else
+  {
+    agent = scene->getAgent(agentName);
+  }
+
+  if (!agent)
+  {
+    RLOG_CPP(1, "Agent '" << agentName << "' not found in scene");
+    return std::string();
+  }
+
+  auto humanAgent = dynamic_cast<const HumanAgent*>(agent);
+
+  if (!humanAgent)
+  {
+    RLOG_CPP(1, "Agent '" << agentName << "' is not a human agent");
+    return std::string();
+  }
+
+  std::map<std::string,int> detections;
+
+  for (size_t i = 0; i < n_iterations; ++i)
+  {
+    nlohmann::json bb_json;
+
+    bb_json["bounding_box"] =
+    {
+      { "left",   humanAgent->bb_head[0]},
+      { "top",    humanAgent->bb_head[1]},
+      { "right",  humanAgent->bb_head[2]},
+      { "bottom", humanAgent->bb_head[3]}
+    };
+
+    RLOG_CPP(1, "track_agent_facemesh iteration " << i
+             << " with bounding box " << bb_json.dump());
+    REXEC(0)
+    {
+      std::cout << ".";
+    }
+
+    std::string recognized = recognize_faces(entity, bb_json.dump(), 1, timeout_in_seconds);
+
+    if (!recognized.empty())
+    {
+      detections[recognized]++;
+    }
+
+  }
+
+  t_calc = getWallclockTime() - t_calc;
+
+  REXEC(0)
+  {
+    std::cout << std::endl;
+  }
+
+  RLOG(0, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
+
+  int winnerCount = 0;
+  std::string winnerName;
+  for (const auto& detection : detections)
+  {
+    std::cout << "Key: " << detection.first << ", Value: " << detection.second << "\n";
+
+    if (detection.second>winnerCount)
+    {
+      winnerName = detection.first;
+      winnerCount = detection.second;
+    }
+  }
+
+  RLOG(0, "Winner is '%s' with %d out of %d detections",
+       winnerName.c_str(), winnerCount, n_iterations);
+
+  return winnerName;
 }
 
 }   // namespace aff

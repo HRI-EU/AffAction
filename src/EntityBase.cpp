@@ -214,5 +214,9 @@ bool EntityBase::initialize(RcsGraph* graph)
   return true;
 }
 
+void EntityBase::withProcessLock(std::function<void()> func)
+{
+  dynamicQueue.withProcessLock(func);
+}
 
 }   // namespace aff

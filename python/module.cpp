@@ -1454,8 +1454,20 @@ Example
   .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> std::string
   {
     py::gil_scoped_release release;  // Unblock waiting period
-    return aff::recognize_faces(ex.getEntity(), n_iterations, timeout_in_seconds);
+    return aff::recognize_faces(ex.getEntity(), std::string(), n_iterations, timeout_in_seconds);
   },
+  py::arg("n_iterations") = 5,
+  py::arg("timeout_in_seconds") = 2.5)
+
+  //////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////
+  .def("recognize_agent_face", [](aff::ExampleActionsECS& ex, std::string agentName, int n_iterations, double timeout_in_seconds) -> std::string
+  {
+      py::gil_scoped_release release;  // Unblock waiting period
+      return aff::recognize_agent_face(ex.getEntity(), ex.getScene(), agentName, n_iterations, timeout_in_seconds);
+  },
+  py::arg("agentName") = std::string(),
   py::arg("n_iterations") = 5,
   py::arg("timeout_in_seconds") = 2.5)
 

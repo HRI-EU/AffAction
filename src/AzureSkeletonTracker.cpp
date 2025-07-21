@@ -840,7 +840,7 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     //}
     std::vector<int> bb = parse_bounding_box(pose, "head");
 
-    REXEC(1)
+    REXEC(2)
     {
       if (!bb.empty())
       {

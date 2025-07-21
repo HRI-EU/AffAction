@@ -151,7 +151,7 @@ static int testLLMSim(int argc, char** argv)
 
   if (withTracking)
   {
-    ex.addComponentArgument("-landmarks_zmq -landmarks_connection tcp://localhost:5555 -landmarks_camera head_kinect_lens");
+    ex.addComponentArgument("-landmarks_zmq -landmarks_connection tcp://localhost:5555 -landmarks_camera camera_0");
   }
 
   if (withFace)
