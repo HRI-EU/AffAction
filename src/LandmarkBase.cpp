@@ -64,8 +64,8 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
 {
   if (!json_data.contains("header"))
   {
-    RLOG(1, "No 'header' found in json - returning");
-    RLOG_CPP(2, "This is the json:\n" << json_data.dump(2));
+    RLOG(2, "No 'header' found in json - returning");
+    RLOG_CPP(3, "This is the json:\n" << json_data.dump(2));
     return;
   }
 

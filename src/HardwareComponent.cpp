@@ -45,6 +45,7 @@
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
+#include "SceneHelpers.h"
 #include "RespeakerSoundDirComponent.h"
 #include "AzureSkeletonTracker.h"
 
@@ -167,6 +168,8 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
+
+      add_agent_welcome_subscriber(entity, scene);
     }
 #if defined USE_ROS
     else if (parentClass==LandmarkParentClass::LandmarkROSComponent)

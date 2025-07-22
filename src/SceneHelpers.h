@@ -58,6 +58,8 @@ bool track_facemesh(EntityBase& entity, const std::string& boundingBox,
 bool track_agent_facemesh(EntityBase& entity, const ActionScene* scene,
                           const std::string& agentName, int n_iterations, double timeout_in_seconds);
 
+void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene);
+
 }   // namespace aff
 
 #endif   // AFF_FACETRACKER_H

@@ -1302,7 +1302,7 @@ Example
     if (withFaceTracking)
     {
       ex.addComponentArgument("-face_tracking");
-      //ex.addComponentArgument("-face_gesture");
+      ex.addComponentArgument("-face_gesture");
       ex.addComponentArgument("-face_bodyName " + face_name);
     }
 

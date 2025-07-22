@@ -73,77 +73,66 @@ std::string recognize_faces(EntityBase& entity,
                             int n_iterations,
                             double timeout_in_seconds)
 {
+  double t_calc = getWallclockTime();
   auto sub = std::make_shared<ES::ScopedSubscription>();
-  auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
+  auto active = std::make_shared<std::atomic<bool>>(true);
   std::mutex mtx;
   std::condition_variable cv;
   int counter = 0;
   std::string faceName;
 
-  auto callback = [sub=sub, n=n_iterations, active=active, &mtx, &cv, &counter, &faceName]
+  auto callback = [n=n_iterations, active=active, &mtx, &cv, &counter, &faceName]
                   (std::string id, std::string data) mutable
   {
-    if (!*active)
+    if ((!*active) || (id != "face_recog"))
     {
-      RLOG_CPP(1, "Callback skipped because function is no longer active.");
       return;
     }
 
-    std::lock_guard<std::mutex> lk(mtx);
-
-    if (id=="face_recog")
+    nlohmann::json j;
+    try
     {
-      // Parse the JSON
-      nlohmann::json j = nlohmann::json::parse(data);
-
-      // Check existence and type of "face_recog"
-      if (j.contains("data") &&
-          j["data"].contains("face_recog") &&
-          j["data"]["face_recog"].is_array())
+      j = nlohmann::json::parse(data);
+      if (!j.contains("data") || !j["data"].contains("face_recog") || !j["data"]["face_recog"].is_array())
       {
-        counter++;
-        const auto& faces = j["data"]["face_recog"];
-        RLOG_CPP(1, "Iteration " << counter << ": number of recognized faces: " << faces.size());
-
-        if (!faces.empty())
-        {
-          const nlohmann::json& first_face = faces[0];
-
-          faceName = first_face["recognized_face"];
-          auto& bbox = first_face["bounding_box"];
-
-          RLOG_CPP(1, "First recognized face: " << faceName);
-          RLOG_CPP(1, "Bounding box: left=" << bbox["left"]
-                   << ", top=" << bbox["top"]
-                   << ", right=" << bbox["right"]
-                   << ", bottom=" << bbox["bottom"]);
-        }
-        else
-        {
-          RLOG_CPP(1, "No faces found!");
-        }
-
+        throw std::runtime_error("JSON missing required ['data']['face_recog'] array.");
       }
-      else
-      {
-        RLOG_CPP(1, "\"face_recog\" array not found.");
-      }
-
+    }
+    catch (const std::exception& e)
+    {
+      RLOG_CPP(1, "Invalid JSON: " << e.what());
+      return;
     }
 
-    if (counter >= n)
+    const auto& faces = j["data"]["face_recog"];
+    RLOG_CPP(1, "Iteration " << counter+1 << ": number of recognized faces: " << faces.size());
+
+    bool done = false;
+    {
+      std::lock_guard<std::mutex> lk(mtx);
+      counter++;
+      done = (counter >= n);
+      if (!faces.empty())
+      {
+        faceName = faces[0]["recognized_face"];
+      }
+    }
+
+    RLOG_CPP(1, "First recognized face: " << faceName);
+
+    if (done)
     {
       *active = false;  // prevent further callback execution
       cv.notify_one();   // wake calling context
     }
   };
 
-  RLOG(1, "Subscribing ZmqDealerMessage");
-  *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
+  entity.withProcessLock([&]()
+  {
+    *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
+  });
 
-  RLOG(1, "Publishing PerceptionCommand");
-  //entity.publish("SetPerceptionCommand", std::string("face_recog"), n_iterations);
-  entity.publish("TriggerPerception", std::string("face_recog"), n_iterations, boundingBox);
+  entity.publish("TriggerPerception", std::string("face_recog"), n_iterations+25, boundingBox);
 
   std::unique_lock<std::mutex> lk(mtx);
   RLOG(1, "cv.wait");
@@ -153,15 +142,16 @@ std::string recognize_faces(EntityBase& entity,
     return counter >= n_iterations;
   });
 
-  *active = false;  // ensure no more callbacks after return
+  *active = false;  // handle cv timeouts with this
   entity.withProcessLock([&]()
   {
     sub->unsubscribe();
   });
 
-  RLOG(1, "%s recognize_faces%s",
-       success ? "SUCCESS" : "FAIL",
-       success ? "" : ": Timeout reached while waiting for face recognition.");
+  t_calc = getWallclockTime() - t_calc;
+  RLOG(0, "%s recognize_faces after %.3f sec%s",
+       (success ? "SUCCESS" : "FAIL"), t_calc,
+       (success ? "" : ": Timeout reached while waiting for face recognition."));
 
   return faceName;
 }
@@ -177,7 +167,7 @@ bool track_facemesh(EntityBase& entity,
                     double timeout_in_seconds)
 {
   auto sub = std::make_shared<ES::ScopedSubscription>();
-  auto active = std::make_shared<std::atomic<bool>>(true);  // Shared active flag
+  auto active = std::make_shared<std::atomic<bool>>(true);
   std::mutex mtx;
   std::condition_variable cv;
   int counter = 0;
@@ -185,19 +175,17 @@ bool track_facemesh(EntityBase& entity,
   auto callback = [n=n_iterations, active=active, &mtx, &cv, &counter]
                   (std::string id, std::string data) mutable
   {
-    if (!*active)
+    if ((!*active) || (id!="mediapipe"))
     {
-      RLOG_CPP(1, "Callback skipped because function is no longer active.");
       return;
     }
 
-    std::lock_guard<std::mutex> lk(mtx);
-
-    if (id=="mediapipe")
     {
+      std::lock_guard<std::mutex> lk(mtx);
       counter++;
-      RLOG_CPP(1, "Received mediapipe reply: " << counter);
     }
+
+    RLOG_CPP(1, "Received mediapipe reply: " << counter);
 
     if (counter >= n)
     {
@@ -207,7 +195,10 @@ bool track_facemesh(EntityBase& entity,
   };
 
   RLOG(1, "Subscribing ZmqDealerMessage");
-  *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
+  entity.withProcessLock([&]()
+  {
+    *sub = entity.subscribe("ZmqDealerMessage", std::move(callback));
+  });
 
   RLOG_CPP(1, "Publishing TriggerPerception with bounding box " << boundingBox);
   entity.publish("TriggerPerception", std::string("mediapipe"), n_iterations, boundingBox);
@@ -416,6 +407,30 @@ std::string recognize_agent_face(EntityBase& entity,
        winnerName.c_str(), winnerCount, n_iterations);
 
   return winnerName;
+}
+
+
+
+/*******************************************************************************
+ * Must be called after init (entity and scene are captured and must exist)
+ ******************************************************************************/
+void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
+{
+  entity.subscribe("AgentChanged", [&entity, scene](std::string agentName, bool appeared) mutable
+  {
+    std::thread([](EntityBase& entity, const ActionScene* scene, std::string agentName, bool appeared)
+    {
+      RLOG_CPP(0, "Agent " << agentName << (appeared ? " appeared" : " disappeared"));
+
+      if (appeared)
+      {
+        std::string agent = recognize_agent_face(entity, scene, agentName, 3, 2.0);
+        std::string text = agent.empty() ? "Hello, I don't think we met before." : "Hello " + agent + " nice to see you!";
+        entity.publish("Speak", text);
+      }
+    },
+    std::ref(entity), scene, std::move(agentName), appeared).detach();
+  });
 }
 
 }   // namespace aff
