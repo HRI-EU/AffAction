@@ -239,7 +239,7 @@ void FaceGestureComponent::estimateSmile(const RcsMeshData* faceMesh, double fac
   {
     smiling = true;
     RLOG(5, "Start smiling");
-    getEntity()->publish("Speak", std::string("Smiling"));
+    //getEntity()->publish("Speak", std::string("Smiling"));
 
   }
   else if ((smiling) && ((smile<0.6*smileThreshold) ||
@@ -247,7 +247,7 @@ void FaceGestureComponent::estimateSmile(const RcsMeshData* faceMesh, double fac
   {
     smiling = false;
     RLOG(5, "Stop smiling");
-    getEntity()->publish("Speak", std::string("Not smiling"));
+    //getEntity()->publish("Speak", std::string("Not smiling"));
   }
 
   debugMsg += (smiling ? "Smiling       " : "Not smiling   ");
@@ -272,13 +272,13 @@ void FaceGestureComponent::estimateNodding(double tiltAngle, size_t windowSize, 
   if (!nodding && (nods > 3))
   {
     nodding = true;
-    getEntity()->publish("Speak", std::string("Nodding"));
+    //getEntity()->publish("Speak", std::string("Nodding"));
   }
 
   if (nodding && (nods == 0))
   {
     nodding = false;
-    getEntity()->publish("Speak", std::string("Not nodding"));
+    //getEntity()->publish("Speak", std::string("Not nodding"));
   }
 
   if (nods>3)
@@ -312,13 +312,13 @@ void FaceGestureComponent::estimateHeadshaking(double panAngle, size_t windowSiz
   if (!headShaking && (headShakes > 3))
   {
     headShaking = true;
-    getEntity()->publish("Speak", std::string("Headshaking"));
+    //getEntity()->publish("Speak", std::string("Headshaking"));
   }
 
   if (headShaking && (headShakes == 0))
   {
     headShaking = false;
-    getEntity()->publish("Speak", std::string("Not headshaking"));
+    //getEntity()->publish("Speak", std::string("Not headshaking"));
   }
 
   if (headShakes > 3)

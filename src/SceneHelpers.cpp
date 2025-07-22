@@ -41,6 +41,7 @@
 #include <memory>
 #include <atomic>
 #include <chrono>
+#include <thread>
 
 
 
@@ -315,11 +316,11 @@ bool track_agent_facemesh(EntityBase& entity,
 /*******************************************************************************
  *
  ******************************************************************************/
-std::string recognize_agent_face(EntityBase& entity,
-                                 const ActionScene* scene,
-                                 const std::string& agentName,
-                                 int n_iterations,
-                                 double timeout_in_seconds)
+std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
+                                                        const ActionScene* scene,
+                                                        const std::string& agentName,
+                                                        int n_iterations,
+                                                        double timeout_in_seconds)
 {
   double t_calc = getWallclockTime();
   const Agent* agent = nullptr;
@@ -340,7 +341,7 @@ std::string recognize_agent_face(EntityBase& entity,
   if (!agent)
   {
     RLOG_CPP(1, "Agent '" << agentName << "' not found in scene");
-    return std::string();
+    return std::pair<std::string,std::string>();
   }
 
   auto humanAgent = dynamic_cast<const HumanAgent*>(agent);
@@ -348,7 +349,7 @@ std::string recognize_agent_face(EntityBase& entity,
   if (!humanAgent)
   {
     RLOG_CPP(1, "Agent '" << agentName << "' is not a human agent");
-    return std::string();
+    return std::pair<std::string,std::string>();
   }
 
   std::map<std::string,int> detections;
@@ -406,7 +407,7 @@ std::string recognize_agent_face(EntityBase& entity,
   RLOG(0, "Winner is '%s' with %d out of %d detections",
        winnerName.c_str(), winnerCount, n_iterations);
 
-  return winnerName;
+  return std::make_pair(winnerName, agentName);
 }
 
 
@@ -424,7 +425,9 @@ void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
 
       if (appeared)
       {
-        std::string agent = recognize_agent_face(entity, scene, agentName, 3, 2.0);
+        std::pair<std::string,std::string> res;
+        res = recognize_agent_face(entity, scene, agentName, 3, 2.0);
+        std::string agent = res.first;
         std::string text = agent.empty() ? "Hello, I don't think we met before." : "Hello " + agent + " nice to see you!";
         entity.publish("Speak", text);
       }

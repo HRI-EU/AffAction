@@ -1462,7 +1462,7 @@ Example
   //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
-  .def("recognize_agent_face", [](aff::ExampleActionsECS& ex, std::string agentName, int n_iterations, double timeout_in_seconds) -> std::string
+  .def("recognize_agent_face", [](aff::ExampleActionsECS& ex, std::string agentName, int n_iterations, double timeout_in_seconds) -> std::pair<std::string, std::string>
   {
       py::gil_scoped_release release;  // Unblock waiting period
       return aff::recognize_agent_face(ex.getEntity(), ex.getScene(), agentName, n_iterations, timeout_in_seconds);

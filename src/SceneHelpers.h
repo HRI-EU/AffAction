@@ -38,6 +38,9 @@
 #include "EntityBase.h"
 #include "ActionScene.h"
 
+#include <utility>
+
+
 namespace aff
 {
 
@@ -47,11 +50,11 @@ std::string recognize_faces(EntityBase& entity,
                             const std::string& boundingBox,
                             int n_iterations,
                             double timeout_in_seconds);
-std::string recognize_agent_face(EntityBase& entity,
-                                 const ActionScene* scene,
-                                 const std::string& agentName,
-                                 int n_iterations,
-                                 double timeout_in_seconds);
+std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
+                                                        const ActionScene* scene,
+                                                        const std::string& agentName,
+                                                        int n_iterations,
+                                                        double timeout_in_seconds);
 
 bool track_facemesh(EntityBase& entity, const std::string& boundingBox,
                     int n_iterations, double timeout_in_seconds);
