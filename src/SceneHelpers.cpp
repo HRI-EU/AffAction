@@ -427,9 +427,10 @@ void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
       {
         std::pair<std::string,std::string> res;
         res = recognize_agent_face(entity, scene, agentName, 3, 2.0);
-        std::string agent = res.first;
-        std::string text = agent.empty() ? "Hello, I don't think we met before." : "Hello " + agent + " nice to see you!";
+        std::string recognized = res.first;
+        std::string text = recognized.empty() ? "Hello, I don't think we met before." : "Hello " + recognized + " nice to see you!";
         entity.publish("Speak", text);
+        entity.publish("RenameAgent", res.second, recognized);
       }
     },
     std::ref(entity), scene, std::move(agentName), appeared).detach();

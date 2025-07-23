@@ -66,6 +66,7 @@ private:
 
   void onPrint();
   void onStop();
+  void onRenameAgent(std::string from_name, std::string to_name);
 
   ActionScene domain;
   const RcsGraph* graph;

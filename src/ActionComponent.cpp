@@ -67,6 +67,7 @@ ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
 {
   subscribe("Print", &ActionComponent::onPrint);
   subscribe("Stop", &ActionComponent::onStop);
+  subscribe("RenameAgent", &ActionComponent::onRenameAgent);
 
   domain.initializeKinematics(graph);
   RCHECK(domain.check(graph));
@@ -321,6 +322,21 @@ void ActionComponent::setEarlyExitPrediction(bool enable)
 bool ActionComponent::getEarlyExitPrediction() const
 {
   return this->earlyExitPrediction;
+}
+
+void ActionComponent::onRenameAgent(std::string from_name, std::string to_name)
+{
+  RLOG_CPP(0, "Renaming agent from " << from_name << " to " << to_name);
+
+  Agent* agent = domain.getAgent(from_name);
+
+  if (!agent)
+  {
+    RLOG_CPP(0, "Can't find agent " << from_name << " - skipping renaming to " << to_name);
+    return;
+  }
+
+  agent->name = to_name;
 }
 
 }   // namespace aff
