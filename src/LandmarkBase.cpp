@@ -115,30 +115,22 @@ int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r
 {
   if (!scene)
   {
-    RLOG(0, "Can't add skeleton tracker for agents - scene has not been set");
+    RLOG(1, "Can't add skeleton tracker for agents - scene has not been set");
     return 0;
   }
 
-  size_t numHumanAgents = 0;
-  for (const auto& agent : scene->agents)
-  {
-    if (dynamic_cast<HumanAgent*>(agent))
-    {
-      numHumanAgents++;
-    }
-  }
+  const size_t numHumanAgents = scene->getAgents<HumanAgent>().size();
 
   if (numHumanAgents==0)
   {
-    RLOG(0, "Can't add skeleton tracker for agents - no human agent found");
+    RLOG(1, "Can't add skeleton tracker for agents - no human agent found");
     return 0;
   }
 
-  auto tracker = new AzureSkeletonTracker(numHumanAgents, camera);
+  auto tracker = std::make_unique<AzureSkeletonTracker>(numHumanAgents, camera);
   tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
-  addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
-  RLOG(0, "Added SkeletonTracker");
+  addTracker(std::move(tracker));
 
   return numHumanAgents;
 }

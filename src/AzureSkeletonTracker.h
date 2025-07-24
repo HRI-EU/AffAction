@@ -60,24 +60,23 @@ public:
 
   virtual ~AzureSkeletonTracker();
 
-  bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
-
-  // Process skeleton data. Called from control loop (100Hz or so)
-  void update(ActionScene* scene, RcsGraph* graph);
-
-  std::string getRequestKeyword() const;
-
-  bool isSkeletonVisible(size_t idx) const;
+  //bool isSkeletonVisible(size_t idx) const;
 
   void setSkeletonDefaultPosition(size_t skeletonIdx, double x, double y, double z);
 
   void setSkeletonDefaultPositionRadius(double r);
 
-  void setSkeletonName(size_t skeletonIdx, const std::string& name);
-
   void addAgents(const ActionScene* scene);
 
   void registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback);
+
+  // Inherited overwritten methods
+  bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph) override;
+
+  // Process skeleton data. Called from control loop (100Hz or so)
+  void update(ActionScene* scene, RcsGraph* graph) override;
+
+  std::string getRequestKeyword() const override;
 
 private:
 
@@ -86,9 +85,7 @@ private:
 
   void updateAgents(ActionScene* scene, RcsGraph* graph);
 
-  void updateSkeletons(RcsGraph* graph);
-
-  void addAgent(const ActionScene* scene, const std::string& agentName);
+  void updateSkeletons(ActionScene* scene, RcsGraph* graph);
 
   std::vector<int> findCorrespondences(std::map<int, std::vector<HTr>> markerMap) const;
   std::vector<std::unique_ptr<Skeleton>> skeletons;

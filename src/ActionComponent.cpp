@@ -326,17 +326,24 @@ bool ActionComponent::getEarlyExitPrediction() const
 
 void ActionComponent::onRenameAgent(std::string from_name, std::string to_name)
 {
-  RLOG_CPP(0, "Renaming agent from " << from_name << " to " << to_name);
+  RLOG_CPP(0, "Renaming agent from '" << from_name << "' to '" << to_name << "'");
 
   Agent* agent = domain.getAgent(from_name);
 
   if (!agent)
   {
-    RLOG_CPP(0, "Can't find agent " << from_name << " - skipping renaming to " << to_name);
+    RLOG_CPP(0, "Can't find agent '" << from_name << "' - skipping renaming to '" << to_name << "'");
     return;
   }
 
   agent->name = to_name;
+
+  // Remove old name from types, and add new one
+  RLOG_CPP(1, "Erasing from_name: " << from_name);
+  agent->types.erase(std::remove(agent->types.begin(), agent->types.end(), from_name), agent->types.end());
+
+  RLOG_CPP(1, "Adding to_name: " << to_name);
+  agent->types.push_back(to_name);
 }
 
 }   // namespace aff

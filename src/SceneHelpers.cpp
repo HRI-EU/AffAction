@@ -366,7 +366,7 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
       { "bottom", humanAgent->bb_head[3]}
     };
 
-    RLOG_CPP(1, "track_agent_facemesh iteration " << i
+    RLOG_CPP(1, "recognize_faces iteration " << i
              << " with bounding box " << bb_json.dump());
     REXEC(0)
     {
@@ -428,9 +428,29 @@ void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
         std::pair<std::string,std::string> res;
         res = recognize_agent_face(entity, scene, agentName, 3, 2.0);
         std::string recognized = res.first;
-        std::string text = recognized.empty() ? "Hello, I don't think we met before." : "Hello " + recognized + " nice to see you!";
+        RLOG_CPP(0, "recognized: " << recognized << " old: " << res.second);
+        std::string text;
+        if (recognized.empty())
+        {
+          recognized = "unknown_person";
+          text = "Hello, I don't think we met before.";
+        }
+        else if (recognized != res.second)
+        {
+          text = "Hello " + recognized + " nice to see you!";
+        }
+        else
+        {
+          text = "Hello again," + recognized;
+        }
+
         entity.publish("Speak", text);
         entity.publish("RenameAgent", res.second, recognized);
+      }
+      else
+      {
+        std::string text = "Bye " + agentName;
+        entity.publish("Speak", text);
       }
     },
     std::ref(entity), scene, std::move(agentName), appeared).detach();

@@ -772,6 +772,11 @@ Agent* ActionScene::getAgent(const std::string& name)
 {
   for (size_t i=0; i<agents.size(); ++i)
   {
+    if (agents[i]->name == name || agents[i]->bdyName == name)
+    {
+      return agents[i];
+    }
+
     if (std::find(agents[i]->types.begin(), agents[i]->types.end(), name) != agents[i]->types.end())
     {
       return agents[i];

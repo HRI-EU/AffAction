@@ -206,7 +206,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       double r_agent = DBL_MAX;
       getKeyValuePair<double>(argsVec, "-skeleton_radius" + suffix, r_agent);
 
-      // Add skeleton tracker and ALL agents in the scene
+      // Add skeleton tracker and all human agents in the scene
       int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent, landmarksCamera);
 
       auto skeletonTrackers = lmc->getTrackers<AzureSkeletonTracker>();
@@ -215,10 +215,11 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
         RLOG(0, "Registering AgentChanged event");
         skeletonTrackers[0]->registerAgentAppearDisappearCallback([ret](const std::string& agentName, bool appear)
         {
-          std::string appearStr = appear ? " appeared" : " disappered";
-          RLOG_CPP(0, "Agent " << agentName << appearStr);
+          std::string appearStr = appear ? "' appeared" : "' disappered";
+          RLOG_CPP(0, "Agent '" << agentName << appearStr);
           ret->getEntity()->publish("AgentChanged", agentName, appear);
         });
+
       }
 
 

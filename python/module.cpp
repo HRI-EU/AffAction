@@ -1315,7 +1315,10 @@ Example
     if (withSkeletonTracking)
     {
       ex.addComponentArgument("-skeleton_tracking");
-      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
+      if (skeleton_radius != DBL_MAX)   // inhibit polluting log
+      {
+        ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
+      }
     }
   },
   py::arg("connection") = "tcp://*:40000",

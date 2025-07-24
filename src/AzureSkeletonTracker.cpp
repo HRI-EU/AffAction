@@ -344,7 +344,6 @@ struct Skeleton
   void setAgent(const HumanAgent* agent);
   void setAlphaRecursive(osg::Node* node, double alpha);
 
-  int trackerId;
   double lastUpdate;
   double age;
   double maxAge;
@@ -354,8 +353,7 @@ struct Skeleton
   double alpha;
   std::vector<HTr> markers;
   HTr expectedInitialPose;
-  std::string agentName;
-  std::vector<std::string> agentTypes;
+  std::string agentBdyName;
 
   // That is the bounding box:
   // x_min: Left edge of the box
@@ -382,7 +380,7 @@ struct Skeleton
 
 
 
-Skeleton::Skeleton() : trackerId(-1), lastUpdate(0.0), age(DBL_MAX), maxAge(DEFAULT_MAX_AGE),
+Skeleton::Skeleton() : lastUpdate(0.0), age(DBL_MAX), maxAge(DEFAULT_MAX_AGE),
   wasVisible(false), isVisible(false), alphaPrev(1.0), alpha(1.0), viewer(NULL)
 {
   markers.resize(NUM_FRAMES);
@@ -407,10 +405,9 @@ void Skeleton::setExpectedInitialPose(const HTr* pose)
 
 void Skeleton::setAgent(const HumanAgent* human)
 {
-  agentName = human->name;
-  agentTypes = human->types;
+  agentBdyName = human->bdyName;
   visualBodies = human->manipulators;
-  visualBodies.push_back(agentName);
+  visualBodies.push_back(agentBdyName);
 }
 
 void Skeleton::initGraphics(const RcsGraph* graph, Rcs::Viewer* viewer_, const std::string& color)
@@ -502,7 +499,6 @@ void Skeleton::updateGraphics()
   {
     visualNodes.clear();
     // Get all graph nodes for transparency
-    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualBodies.size() << " bodies");
     for (const auto& manipulator : visualBodies)
     {
       viewer->lock();
@@ -510,11 +506,9 @@ void Skeleton::updateGraphics()
       viewer->unlock();
       visualNodes.insert(visualNodes.end(), nodes.begin(), nodes.end());
     }
-    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualNodes.size() << " nodes");
   }
   else
   {
-    RLOG_CPP(5, "Skeleton " << agentName << " has " << visualNodes.size() << " osg nodes and alpha " << alpha);
     for (auto& nd : visualNodes)
     {
       //setAlphaRecursive(nd, alpha);
@@ -592,7 +586,7 @@ void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
     this->A_CI = getCameraTransform(graph);
   }
 
-  updateSkeletons(graph);
+  updateSkeletons(scene, graph);
   updateAgents(scene, graph);
   newAzureUpdate = false;
 }
@@ -625,7 +619,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 
     for (size_t i=0; i< skeletons.size(); ++i)
     {
-      if (skeletons[i]->agentName==human->name)
+      if (skeletons[i]->agentBdyName==human->bdyName)
       {
         if (skeletons[i]->isVisible)
         {
@@ -709,7 +703,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 }
 
 // Process aruco frames. Called from control loop (100Hz or so)
-void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
+void AzureSkeletonTracker::updateSkeletons(ActionScene* scene, RcsGraph* graph)
 {
   const double currTime = getCurrentTime();
 
@@ -738,20 +732,32 @@ void AzureSkeletonTracker::updateSkeletons(RcsGraph* graph)
 
     if ((!skeletons[i]->wasVisible) && skeletons[i]->isVisible)
     {
-      NLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " appeared");
       for (const auto& cb : agentAppearDisappearCb)
       {
-        cb(skeletons[i]->agentName, true);
+        Agent* namedAgent = scene->getAgent(skeletons[i]->agentBdyName);
+        if (!namedAgent)
+        {
+          RLOG_CPP(0, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
+          continue;
+        }
+        RLOG_CPP(0, "scene->getAgent(skeletons[i]->agentBdyName)->name: " << namedAgent->name);
+        cb(namedAgent->name, true);
       }
 
       updateSkeletonGraphics = true;
     }
     else if (skeletons[i]->wasVisible && (!skeletons[i]->isVisible))
     {
-      NLOG_CPP(0, "Skeleton " << skeletons[i]->agentName << " (index " << i << ")" << " disappeared");
       for (const auto& cb : agentAppearDisappearCb)
       {
-        cb(skeletons[i]->agentName, false);
+        Agent* namedAgent = scene->getAgent(skeletons[i]->agentBdyName);
+        if (!namedAgent)
+        {
+          RLOG_CPP(0, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
+          continue;
+        }
+        RLOG_CPP(0, "scene->getAgent(skeletons[i]->agentBdyName)->name: " << namedAgent->name);
+        cb(namedAgent->name, false);
       }
       updateSkeletonGraphics = true;
     }
@@ -982,17 +988,6 @@ std::vector<int> AzureSkeletonTracker::findCorrespondences(std::map<int, std::ve
   return res;
 }
 
-bool AzureSkeletonTracker::isSkeletonVisible(size_t idx) const
-{
-  if (idx < skeletons.size())
-  {
-    return skeletons[idx]->isVisible;
-  }
-
-  RLOG_CPP(1, "Index out of range: " << idx << " (should be < " << skeletons.size() << ")");
-  return false;
-}
-
 bool AzureSkeletonTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
 {
   if (!viewer)
@@ -1018,73 +1013,28 @@ void AzureSkeletonTracker::setSkeletonDefaultPosition(size_t skeletonIdx, double
   Vec3d_set(skeletons[skeletonIdx]->expectedInitialPose.org, x, y, z);
 }
 
-void AzureSkeletonTracker::setSkeletonName(size_t skeletonIdx, const std::string& name)
-{
-  RCHECK(skeletonIdx<skeletons.size());
-  skeletons[skeletonIdx]->agentName = name;
-}
-
 void AzureSkeletonTracker::setSkeletonDefaultPositionRadius(double r)
 {
   this->defaultPosRadius = r;
 }
 
-// Map an agent (defined in the config) to a skeleton
-void AzureSkeletonTracker::addAgent(const ActionScene* scene, const std::string& agentName)
-{
-  if (skeletonIndex >= skeletons.size())
-  {
-    RLOG(0, "ERROR: Cannot add agent! There are no free skeletons!");
-    return;
-  }
-
-  if (!agentName.empty())
-  {
-    for (auto agent : scene->agents)
-    {
-      if (agent->name == agentName)
-      {
-        aff::HumanAgent* humanAgent = dynamic_cast<aff::HumanAgent*>(agent);
-
-        if (humanAgent)
-        {
-          skeletons[skeletonIndex]->setAgent(humanAgent);
-
-          setSkeletonDefaultPosition(skeletonIndex,
-                                     humanAgent->getDefaultPosition(0),
-                                     humanAgent->getDefaultPosition(1),
-                                     humanAgent->getDefaultPosition(2));
-
-          RLOG(0, "Matched agent `%s` with skeleton %zu", agentName.c_str(), skeletonIndex);
-
-          skeletonIndex++;
-
-          return;
-        }
-        else
-        {
-          RLOG(0, "Agent `%s` has invalid type, cannot add to skeleton!", agentName.c_str());
-          return;
-        }
-      }
-    }
-
-    RLOG(0, "ERROR: Cannot add agent! Agent `%s` not found in scene!", agentName.c_str());
-  }
-  else
-  {
-    RLOG(0, "ERROR: Cannot add agent! Invalid agent name provided!");
-  }
-}
-
-// Map ALL agents (defined in the config) to available skeletons
 void AzureSkeletonTracker::addAgents(const ActionScene* scene)
 {
   RCHECK(scene);
-  for (size_t i = 0; i < scene->agents.size(); i++)
+  auto humanAgents = scene->getAgents<HumanAgent>();
+  RCHECK_MSG(skeletonIndex + humanAgents.size() <= skeletons.size(), "%zu + %zu < %zu",
+             skeletonIndex, humanAgents.size(), skeletons.size());
+
+  for (const auto& humanAgent : humanAgents)
   {
-    addAgent(scene, scene->agents[i]->name);
+    skeletons[skeletonIndex]->setAgent(humanAgent);
+    setSkeletonDefaultPosition(skeletonIndex,
+                               humanAgent->getDefaultPosition(0),
+                               humanAgent->getDefaultPosition(1),
+                               humanAgent->getDefaultPosition(2));
+    this->skeletonIndex++;
   }
+
 }
 
 void AzureSkeletonTracker::registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback)
