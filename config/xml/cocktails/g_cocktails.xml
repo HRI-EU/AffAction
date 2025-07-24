@@ -62,189 +62,71 @@ Cocktail:
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
-
-
-	<!-- The model for the dining table. -->
-	<Body name="table" physics="kinematic"  rigid_body_joints="-0.22 0 0.7 0 0 0" >
-		<Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true" transform="0 0 -0.013 0 0 0" textureFile="textures/table.jpg"/>
-		<Shape scale="0.2" type="FRAME"/>
-	</Body>
-	<Body name="table_grid" prev="table" transform="-0.1 0 0.001 0 0 0" />
-	<Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-
-	<Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<!--
--->
-	<Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-
-	<xxBody color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</xxBody>
-	<Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</Body>
-	<xxBody color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
-		<Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
-	</xxBody>
-
-
-	<AffordanceModel body="table" name="table" types="furniture">
-		<Supportable frame="table_grid_0_0"/>
-		<Supportable frame="table_grid_0_1"/>
-		<Supportable frame="table_grid_0_2"/>
-		<Supportable frame="table_grid_0_3"/>
-		<Supportable frame="table_grid_0_4"/>
-		<Supportable frame="table_grid_0_5"/>
-		<Supportable frame="table_grid_0_6"/>
-		<Supportable frame="table_grid_0_7"/>
-		<Supportable frame="table_grid_0_8"/>
-
-		 <Supportable frame="table_grid_1_0"/> 
-		 <Supportable frame="table_grid_1_1"/> 
-		 <Supportable frame="table_grid_1_2"/> 
-		 <Supportable frame="table_grid_1_3"/> 
-		 <Supportable frame="table_grid_1_4"/> 
-		 <Supportable frame="table_grid_1_5"/> 
-		 <Supportable frame="table_grid_1_6"/> 
-		 <Supportable frame="table_grid_1_7"/> 
-		 <Supportable frame="table_grid_1_8"/> 
-
-		 <xxSupportable frame="table_grid_2_0"/> 
-		 <Supportable frame="table_grid_2_1"/> 
-		 <Supportable frame="table_grid_2_2"/> 
-		 <Supportable frame="table_grid_2_3"/> 
-		 <Supportable frame="table_grid_2_4"/> 
-		 <Supportable frame="table_grid_2_5"/> 
-		 <Supportable frame="table_grid_2_6"/> 
-		 <Supportable frame="table_grid_2_7"/> 
-		 <xxSupportable frame="table_grid_2_8"/> 
-	</AffordanceModel>
-
+	<!-- Table with grid -->
+	<Group transform="-0.22 0 0.7 0 0 0" >
+	  <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
+	</Group>
+	
 	<!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.20 0 0.01 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+    <Body name="shelf" prev="table" rigid_body_joints="0.15 0 0.41 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
-        <!-- bottom shelf -->
-        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.04 0 0 0" graphics="true"
-               distance="true" physics="true" textureFile="textures/table.jpg"/>
-        <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 0.34 0 0 0" graphics="true"
-               distance="true" physics="true" textureFile="textures/table.jpg"/>
     </Body>
 	
     <!-- bottom shelf frames-->
-    <Body name="shelf_pos1" prev="shelf" transform="0 +0.6 0.051 0 0 0" >
+	<Body name="shelf_bottom" prev="shelf" transform="-0.08 0 0.051 0 0 0" >
+		<Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
+               distance="true" physics="true" textureFile="textures/table.jpg"/>
+	</Body>		
+    <Body name="shelf_pos1" prev="shelf_bottom" transform="0 +0.6 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos2" prev="shelf" transform="0 +0.4 0.051 0 0 0" >
+    <Body name="shelf_pos2" prev="shelf_bottom" transform="0 +0.4 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos3" prev="shelf" transform="0 +0.2 0.051 0 0 0" >
+    <Body name="shelf_pos3" prev="shelf_bottom" transform="0 +0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos4" prev="shelf" transform="0 0 0.051 0 0 0" >
+    <Body name="shelf_pos4" prev="shelf_bottom" transform="0 0 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos5" prev="shelf" transform="0 -0.2 0.051 0 0 0" >
+    <Body name="shelf_pos5" prev="shelf_bottom" transform="0 -0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos6" prev="shelf" transform="0 -0.4 0.051 0 0 0" >
+    <Body name="shelf_pos6" prev="shelf_bottom" transform="0 -0.4 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos7" prev="shelf" transform="0 -0.6 0.051 0 0 0" >
+    <Body name="shelf_pos7" prev="shelf_bottom" transform="0 -0.6 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
+	
     <!-- top shelf frames-->
-    <Body name="shelf_pos8" prev="shelf" transform="0 +0.6 0.351 0 0 0" >
+	<Body name="shelf_top" prev="shelf" transform="0.05 0  0.351 0 0 0" >
+		<Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
+               distance="true" physics="true" textureFile="textures/table.jpg"/>
+	</Body>
+	<Body name="shelf_pos8" prev="shelf_top" transform="0 +0.6 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos9" prev="shelf" transform="0 +0.4 0.351 0 0 0" >
+    <Body name="shelf_pos9" prev="shelf_top" transform="0 +0.4 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos10" prev="shelf" transform="0 +0.2 0.351 0 0 0" >
+    <Body name="shelf_pos10" prev="shelf_top" transform="0 +0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos11" prev="shelf" transform="0 0 0.351 0 0 0" >
+    <Body name="shelf_pos11" prev="shelf_top" transform="0 0 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos12" prev="shelf" transform="0 -0.2 0.351 0 0 0" >
+    <Body name="shelf_pos12" prev="shelf_top" transform="0 -0.2 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos13" prev="shelf" transform="0 -0.4 0.351 0 0 0" >
+    <Body name="shelf_pos13" prev="shelf_top" transform="0 -0.4 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
-    <Body name="shelf_pos14" prev="shelf" transform="0 -0.6 0.351 0 0 0" >
+    <Body name="shelf_pos14" prev="shelf_top" transform="0 -0.6 0 0 0 0" >
         <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
     </Body>
 
-    <AffordanceModel body="shelf" >
+    <AffordanceModel body="shelf_bottom" >
         <Supportable frame="shelf_pos1" />
         <Supportable frame="shelf_pos2" />
         <Supportable frame="shelf_pos3" />
@@ -252,16 +134,19 @@ Cocktail:
         <Supportable frame="shelf_pos5" />
         <Supportable frame="shelf_pos6" />
         <Supportable frame="shelf_pos7" />
-        <Supportable frame="shelf_pos8" />
-        <Supportable frame="shelf_pos9" />
-        <Supportable frame="shelf_pos10" />
-        <Supportable frame="shelf_pos11" />
-        <Supportable frame="shelf_pos12" />
-        <Supportable frame="shelf_pos13" />
-        <Supportable frame="shelf_pos14" />
     </AffordanceModel>
 
-    <!-- 
+	<AffordanceModel body="shelf_top" >
+		<Supportable frame="shelf_pos8" />
+		<Supportable frame="shelf_pos9" />
+		<Supportable frame="shelf_pos10" />
+		<Supportable frame="shelf_pos11" />
+		<Supportable frame="shelf_pos12" />
+		<Supportable frame="shelf_pos13" />
+		<Supportable frame="shelf_pos14" />
+	</AffordanceModel>
+
+	<!-- 
 
     ===========================================================================
 

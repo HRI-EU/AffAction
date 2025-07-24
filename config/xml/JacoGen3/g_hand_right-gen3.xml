@@ -29,29 +29,29 @@
 
 <Graph>
 
-    <Body name="hand_base_right" prev="end_effector_link_right" transform="0 0 0 180 0 -90" >
+    <Body name="hand_base" prev="end_effector_link" transform="0 0 0 180 0 -90" >
       <Shape type="FRAME" scale="0.1" />
     </Body>
 
-    <Body name="hand_right_robot" prev="hand_base_right" transform="0 0 -0.1 0 0 0" >
+    <Body name="hand_robot" prev="hand_base" transform="0 0 -0.1 0 0 0" >
         <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
                transform="0 0 0.2 180 0 0" color="RED"/>
         <Shape type="FRAME" scale="0.3"/>
     </Body>
 
-    <Body name="hand_right_pincergrasp" prev="hand_right_robot" transform="0 0 -0.09 0 90 0">
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0 0 -0.09 0 90 0">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-    <Body name="hand_right_point" prev="hand_right_robot" transform="0 0 -0.13 -90 0 90">
+    <Body name="hand_point" prev="hand_robot" transform="0 0 -0.13 -90 0 90">
         <Shape type="FRAME" scale="0.1"/>
     </Body>
 
-  <Manipulator body="hand_right_robot" types="hand ROBOTIQ-2F140" >
-    <Joints names="finger_joint_right"/>
-    <PowergraspCapability frame="hand_right_pincergrasp" />
-    <TwistgraspCapability frame="hand_right_pincergrasp" />
-    <FingerpushCapability frame="hand_right_point" />
+  <Manipulator body="hand_robot" types="hand ROBOTIQ-2F140" >
+    <Joints names="finger_joint"/>
+    <PowergraspCapability frame="hand_pincergrasp" />
+    <TwistgraspCapability frame="hand_pincergrasp" />
+    <FingerpushCapability frame="hand_point" />
   </Manipulator>
 
 </Graph>
