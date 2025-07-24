@@ -70,12 +70,12 @@
   <Group prev="table" >
     <xi:include href="../cocktails/g_spezi_with_agent.xml"/>
   </Group>
-
-	<!-- The agent sitting in front of the robot. -->
+ 
+	<!-- The agent sitting in front of the robot.
   <Group prev="aruco_base" name="unknown_person" color="ORANGE" transform="0.7 0 0.5 0 0 0" >
     <xi:include href="g_human_agent.xml"/>
   </Group>
-
+-->
 
   <model_state model="kinova_home" time_stamp="0">
       <joint_state joint="joint_1_right" position="0"/>

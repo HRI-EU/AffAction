@@ -56,16 +56,18 @@ base right gravity: -9.64772 -0.793742 -1.58981
 
   <Group name="_right" prev="adapter_shoulder_right_2" transform="0 0 0 90 0 90" >
     <xi:include href="gJacoGen3_7dof.xml"/>
+	<xi:include href="g_hand_right-gen3.xml"/>
   </Group>
 
   <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.073 0.072 0.058 10 -3 -10" xxxrigid_body_joints="0 0 0 5 0 -10" />
 
   <Group name="_left" prev="adapter_shoulder_left_2" transform="0 0 0 -90 0 -90" >
     <xi:include href="gJacoGen3_7dof.xml"/>
+	<xi:include href="g_hand_left-gen3.xml"/>
   </Group>
 
-  <xi:include href="g_hand_left-gen3.xml"/>
-  <xi:include href="g_hand_right-gen3.xml"/>
+  
+  
 
 
 
@@ -91,8 +93,8 @@ base right gravity: -9.64772 -0.793742 -1.58981
   </Manipulator>
 
   <Agent body="Johnnie" types="robot" name="Johnnie" >
-    <Component manipulator="hand_left_robot" />
-    <Component manipulator="hand_right_robot" />
+    <Component manipulator="hand_robot_left" />
+    <Component manipulator="hand_robot_right" />
     <Component manipulator="head_kinect_link" />
   </Agent>
 
