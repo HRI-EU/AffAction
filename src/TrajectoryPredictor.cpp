@@ -492,7 +492,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
         {
           controller->decompressFromActiveSelf(dx_err, a_des);
           unsigned int errIdx = MatNd_maxAbsEleIndex(dx_err);
-          RLOG(0, "errIdx = %d", errIdx);
+          //RLOG(0, "errIdx = %d", errIdx);
 
           result.feedbackMsg.error = "Reachability problem";
           // result.feedbackMsg.suggestion = "Try another object that is closer, or try to get it closer with a tool";
