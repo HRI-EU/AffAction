@@ -221,7 +221,7 @@ ActionPut::ActionPut(const ActionScene& domain,
                      const RcsGraph* graph,
                      std::vector<std::string> params) : ActionPut()
 {
-  RLOG_CPP(0, "Calling ActionPut with params: " << Rcs::String_concatenate(params, " "));
+  //RLOG_CPP(0, "Calling ActionPut with params: " << Rcs::String_concatenate(params, " "));
   parseArgs(domain, graph, params);
 
   std::string objectToPut = params[0];
