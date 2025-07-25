@@ -286,8 +286,8 @@ bool track_agent_facemesh(EntityBase& entity,
       std::cout << ".";
     }
 
-    // In the last iteration, we set the repetitions to continusous update (-2), so
-    // that the face is tracked without bounding box updates.
+    // In the last iteration, we set the repetitions to continusous update
+    // (-2), so that the face is tracked without bounding box updates.
     int n_times = (i==n_iterations-1) ? -2 : 1;
 
     bool success = track_facemesh(entity, bb_json.dump(), n_times, timeout_in_seconds);
@@ -415,13 +415,22 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
 /*******************************************************************************
  * Must be called after init (entity and scene are captured and must exist)
  ******************************************************************************/
-void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
+void add_agent_welcome_subscriber(EntityBase& entity, ActionScene* scene)
 {
-  entity.subscribe("AgentChanged", [&entity, scene](std::string agentName, bool appeared) mutable
+  //////////////////////////////////////////////////////////////////////////////
+  // On an agent appearing, this callback launches a thread that triggers and
+  // waits for face recognition and emits an event to change the agent's name
+  // if recognized.
+  //////////////////////////////////////////////////////////////////////////////
+  entity.subscribe("AgentChanged", [&entity, scene]
+                   (std::string agentName, bool appeared) mutable
   {
-    std::thread([](EntityBase& entity, const ActionScene* scene, std::string agentName, bool appeared)
+    std::thread([](EntityBase& entity,
+                   const ActionScene* scene,
+                   std::string agentName,
+                   bool appeared)
     {
-      RLOG_CPP(0, "Agent " << agentName << (appeared ? " appeared" : " disappeared"));
+      std::string text;
 
       if (appeared)
       {
@@ -429,7 +438,6 @@ void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
         res = recognize_agent_face(entity, scene, agentName, 3, 2.0);
         std::string recognized = res.first;
         RLOG_CPP(0, "recognized: " << recognized << " old: " << res.second);
-        std::string text;
         if (recognized.empty())
         {
           recognized = "unknown_person";
@@ -441,20 +449,57 @@ void add_agent_welcome_subscriber(EntityBase& entity, const ActionScene* scene)
         }
         else
         {
-          text = "Hello again," + recognized;
+          text = "Hello again, " + recognized;
         }
 
-        entity.publish("Speak", text);
+        // It is better to publish it, because otherwise we might face
+        // concurrency issues with reading and writing agent names.
         entity.publish("RenameAgent", res.second, recognized);
       }
       else
       {
-        std::string text = "Bye " + agentName;
-        entity.publish("Speak", text);
+        text = "Bye " + agentName;
       }
+
+      RLOG_CPP(0, "Speaking: " << text);
+      entity.publish("Speak", text);
     },
     std::ref(entity), scene, std::move(agentName), appeared).detach();
   });
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Renames an agent with a new name
+  //////////////////////////////////////////////////////////////////////////////
+  entity.subscribe("RenameAgent", [&entity, scene]
+                   (std::string from_name, std::string to_name) mutable
+  {
+    Agent* agent = scene->getAgent(from_name);
+
+    if (!agent)
+    {
+      RLOG_CPP(0, "Can't find agent '" << from_name
+               << "' - skipping renaming to '" << to_name << "'");
+      return;
+    }
+
+    RLOG_CPP(0, "Renaming agent from '" << from_name << "' to '"
+             << to_name << "'");
+
+    agent->name = to_name;
+
+    // Remove old name from types, and add new one
+    RLOG_CPP(1, "Erasing from_name: " << from_name);
+    agent->types.erase(std::remove(agent->types.begin(),
+                                   agent->types.end(),
+                                   from_name), agent->types.end());
+
+    RLOG_CPP(1, "Adding to_name: " << to_name);
+    agent->types.push_back(to_name);
+  });
+
 }
+
+
 
 }   // namespace aff

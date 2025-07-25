@@ -45,9 +45,9 @@
 #include "KortexComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
-#include "SceneHelpers.h"
 #include "RespeakerSoundDirComponent.h"
 #include "AzureSkeletonTracker.h"
+#include "AgentWelcomeComponent.hpp"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -168,8 +168,6 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
-
-      add_agent_welcome_subscriber(entity, scene);
     }
 #if defined USE_ROS
     else if (parentClass==LandmarkParentClass::LandmarkROSComponent)
@@ -503,6 +501,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-aruco_base", "For '-landmarks_zmq' and '-aruco_tracking': Name of aruco base marker (default: \"aruco_base\")");
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
+    argP.addDescription("-agent_welcome", "For '-landmarks_router' and '-skeleton_tracking': Callback for agent appearing and disappearing");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
@@ -513,6 +512,12 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   {
     components.push_back(createLandmarkComponent(entity, graph, scene, argvString,
                                                  LandmarkParentClass::ZmqRouterComponent, ""));
+
+    if (getKey(argvStrVec, "-agent_welcome"))
+    {
+      components.push_back(new AgentWelcomeComponent(&entity, scene));
+    }
+
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq2"))
