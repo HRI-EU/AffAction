@@ -470,7 +470,8 @@ bool ActionGet::initialize(const ActionScene& domain,
 
   if (handOpen.size() != hand->getNumFingers())
   {
-    RLOG_CPP(0, "Wrong number of fingers: " << handOpen.size() << " should be " << hand->getNumFingers());
+    RLOG_CPP(0, "Wrong number of fingers: hand '" << hand->name << "' has "
+             << handOpen.size() << " fingers, but should be " << hand->getNumFingers());
     //return false;
   }
 

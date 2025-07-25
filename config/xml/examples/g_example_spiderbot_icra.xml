@@ -35,7 +35,7 @@
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
     <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
     <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
-            graphics="true" physics="true" distance="false"/>
+           graphics="true" physics="true" distance="false"/>
     <Shape scale="0.5" type="FRAME"/>
   </Body>
 
@@ -47,10 +47,10 @@
     <Shape graphics="true" scale="0.2" type="FRAME"/>
   </Body>
 
-   <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" >
+  <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" >
     <Shape scale="0.2" type="FRAME"/>
   </Body>
- 
+  
 
   <!-- The model of the robot. -->
   <Group prev="aruco_base" transform="-0.87 0 0 0 0 0">
@@ -62,56 +62,74 @@
     <xi:include href="../cocktails/g_cocktails.xml"/>
   </Group>
 
-	<model_state model="default" time_stamp="0">
-		<joint_state joint="joint_1_right3" position="210"/>
-		<joint_state joint="joint_2_right3" position="70"/>
-		<joint_state joint="joint_3_right3" position="80"/>
-		<joint_state joint="joint_4_right3" position="-90"/>
-		<joint_state joint="joint_5_right3" position="0"/>
-		<joint_state joint="joint_6_right3" position="-30"/>
-		<joint_state joint="joint_7_right3" position="-120"/>
-		<joint_state joint="finger_joint_right3" position="0"/>
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="joint_1_right3" position="210"/>
+    <joint_state joint="joint_2_right3" position="70"/>
+    <joint_state joint="joint_3_right3" position="80"/>
+    <joint_state joint="joint_4_right3" position="-90"/>
+    <joint_state joint="joint_5_right3" position="0"/>
+    <joint_state joint="joint_6_right3" position="-30"/>
+    <joint_state joint="joint_7_right3" position="-120"/>
+    <joint_state joint="finger_joint_right3" position="0"/>
 
-		<joint_state joint="joint_1_left3" position="-40"/>
-		<joint_state joint="joint_2_left3" position="-70"/>
-		<joint_state joint="joint_3_left3" position="-80"/>
-		<joint_state joint="joint_4_left3" position="90"/>
-		<joint_state joint="joint_5_left3" position="0"/>
-		<joint_state joint="joint_6_left3" position="30"/>
-		<joint_state joint="joint_7_left3" position="120"/>
-		<joint_state joint="finger_joint_left3" position="0"/>
-
-
-		<joint_state joint="j2s7s300_joint_1_right" position="20"/>
-		<joint_state joint="j2s7s300_joint_2_right" position="280"/>
-		<joint_state joint="j2s7s300_joint_3_right" position="-90"/>
-		<joint_state joint="j2s7s300_joint_4_right" position="70"/>
-		<joint_state joint="j2s7s300_joint_5_right" position="0"/>
-		<joint_state joint="j2s7s300_joint_6_right" position="200"/>
-		<joint_state joint="j2s7s300_joint_7_right" position="0"/>
-
-		<joint_state joint="j2s7s300_joint_1_left" position="-20"/>
-		<joint_state joint="j2s7s300_joint_2_left" position="80"/>
-		<joint_state joint="j2s7s300_joint_3_left" position="90"/>
-		<joint_state joint="j2s7s300_joint_4_left" position="290"/>
-		<joint_state joint="j2s7s300_joint_5_left" position="0"/>
-		<joint_state joint="j2s7s300_joint_6_left" position="160"/>
-		<joint_state joint="j2s7s300_joint_7_left" position="0"/>
+    <joint_state joint="joint_1_left3" position="-40"/>
+    <joint_state joint="joint_2_left3" position="-70"/>
+    <joint_state joint="joint_3_left3" position="-80"/>
+    <joint_state joint="joint_4_left3" position="90"/>
+    <joint_state joint="joint_5_left3" position="0"/>
+    <joint_state joint="joint_6_left3" position="30"/>
+    <joint_state joint="joint_7_left3" position="120"/>
+    <joint_state joint="finger_joint_left3" position="0"/>
 
 
-	</model_state>
+    <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right" position="0"/>
 
-<BroadPhase DistanceThreshold="0.001">
-	<Tree root="upperarm_left"/>
-	<Tree root="upperarm_right"/>
-	<Tree root="upperarm_left3"/>
-	<Tree root="upperarm_right3"/>
+    <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
+    <joint_state joint="finger_joint_left3" position="0"/>
+    <joint_state joint="finger_joint_right3" position="0"/>
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left"  position="50" />
+    <joint_state joint="finger_joint_left3"  position="40"/>
+    <joint_state joint="finger_joint_right3" position="40"/>
+  </model_state>
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="upperarm_left"/>
+    <Tree root="upperarm_right"/>
+    <Tree root="upperarm_left3"/>
+    <Tree root="upperarm_right3"/>
     <Body name="center_post_link_1"/>
-	<Body name="adapter3_shoulder_left"/>
-	<Body name="adapter3_shoulder_right"/>
-	<Body name="head_kinect_link"/>
-</BroadPhase>
-
-<xi:include href="../TwoArmJaco7/g_modelstates.xml"/>
+    <Body name="adapter3_shoulder_left"/>
+    <Body name="adapter3_shoulder_right"/>
+    <Body name="head_kinect_link"/>
+  </BroadPhase>
 
 </Graph>
