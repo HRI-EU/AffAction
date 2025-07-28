@@ -77,23 +77,11 @@ public:
    * \return          New ComponentBase instance or nullptr in
    *                  case of failure
    */
-  static std::shared_ptr<ComponentBase> create(std::string parseArg,
-                                               EntityBase* entity,
-                                               const RcsGraph* graph,
-                                               const ActionScene* scene,
-                                               std::string extraArgs);
-
-  /*! \brief Creates a new component by name using the registered
-   *         construction function.
-   *
-   * \param node      Xml configuration
-   * \return          New ComponentBase instance or nullptr in
-   *                  case of failure
-   */
-  static std::shared_ptr<ComponentBase> create(std::string parseArg,
-                                               EntityBase* entity,
-                                               const RcsGraph* graph,
-                                               std::string extraArgs);
+  static ComponentBase* create(std::string parseArg,
+                               EntityBase* entity,
+                               const RcsGraph* graph=nullptr,
+                               const ActionScene* scene=nullptr,
+                               std::string extraArgs=std::string());
 
   /*! \brief Prints out all registered components to the console
    */
@@ -107,10 +95,10 @@ private:
 
   /*! \brief Signature of component creation function.
    */
-  typedef std::shared_ptr<ComponentBase> (*ComponentMaker)(EntityBase* entity,
-                                                           const RcsGraph* graph,
-                                                           const ActionScene* scene,
-                                                           std::string extraArgs);
+  typedef ComponentBase* (*ComponentMaker)(EntityBase* entity,
+                                           const RcsGraph* graph,
+                                           const ActionScene* scene,
+                                           std::string extraArgs);
 
   /*! \brief Registers a new function for creating components. You can not
    *        call this function directly. Instead us the above macro.
@@ -164,12 +152,12 @@ private:
    * \param node    xml configuration
    * \return        New ComponentBase of type T
    */
-  static std::shared_ptr<ComponentBase> create(EntityBase* entity,
-                                               const RcsGraph* graph,
-                                               const ActionScene* scene,
-                                               std::string extraArgs)
+  static ComponentBase* create(EntityBase* entity,
+                               const RcsGraph* graph,
+                               const ActionScene* scene,
+                               std::string extraArgs)
   {
-    return std::make_shared<T>(entity, graph, scene, extraArgs);
+    return new T(entity, graph, scene, extraArgs);
   }
 };
 

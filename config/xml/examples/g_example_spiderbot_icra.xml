@@ -29,6 +29,12 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
+  <ActionSequence name="0" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green" />
+  <ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="3" text="get glass_green; put glass_green table; get bottle_of_gin; pour bottle_of_gin glass_green; put bottle_of_gin table; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+
+  
   <Body name="default_camera_view" transform="0.5 3.7 2.6 25 -10 -100" />
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->

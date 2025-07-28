@@ -89,6 +89,7 @@ protected:
   double tiltAngleAbs;
   double tiltAngle;
   size_t numSolutions;
+  double initRelPosZ;
 };
 
 }   // namespace aff

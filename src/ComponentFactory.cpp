@@ -64,38 +64,13 @@ void ComponentFactory::print()
 /*******************************************************************************
  * Creates the component for className and the given args
  ******************************************************************************/
-std::shared_ptr<ComponentBase> ComponentFactory::create(std::string parseArg,
-                                                        EntityBase* entity,
-                                                        const RcsGraph* graph,
-                                                        const ActionScene* scene,
-                                                        std::string extraArgs)
+ComponentBase* ComponentFactory::create(std::string parseArg,
+                                        EntityBase* entity,
+                                        const RcsGraph* graph,
+                                        const ActionScene* scene,
+                                        std::string extraArgs)
 {
-  std::shared_ptr<ComponentBase> newComponent;
-
-  std::map<std::string, ComponentMaker>::iterator it;
-  it = constructorMap().find(parseArg);
-
-  if (it != constructorMap().end())
-  {
-    newComponent = it->second(entity, graph, scene, extraArgs);
-  }
-  else
-  {
-    RLOG(1, "Couldn't find constructor for class \"%s\"", parseArg.c_str());
-  }
-
-  return newComponent;
-}
-
-/*******************************************************************************
- * Creates the component for className and the given args
- ******************************************************************************/
-std::shared_ptr<ComponentBase> ComponentFactory::create(std::string parseArg,
-                                                        EntityBase* entity,
-                                                        const RcsGraph* graph,
-                                                        std::string extraArgs)
-{
-  std::shared_ptr<ComponentBase> newComponent;
+  ComponentBase* newComponent = nullptr;
 
   std::map<std::string, ComponentMaker>::iterator it;
   it = constructorMap().find(parseArg);

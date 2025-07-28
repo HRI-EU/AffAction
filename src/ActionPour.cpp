@@ -213,6 +213,8 @@ void ActionPour::init(const ActionScene& domain,
   RCHECK(glasBdy);
   this->glas = std::string(glasBdy->name);
 
+  this->initRelPosZ = bottleBdy->A_BI.org[2] - glasBdy->A_BI.org[2];
+
   const RcsBody* roboBaseBdy = RcsGraph_getBodyByName(graph, roboBaseFrame.c_str());
   RCHECK_MSG(roboBaseBdy, "%s", roboBaseFrame.c_str());
   this->roboBaseFrame = std::string(roboBaseBdy->name);
@@ -326,9 +328,8 @@ std::vector<std::string> ActionPour::createTasksXML() const
  * - t_prep: At this time point, the bottle tip is aligned with the glas rim
  *           but the bottle is only a little bit inclined. The bottle tip is
  *           still a bit above the glas rim.
- * - t_up:   The bottle tip is aligned exactly with the glas rim, and the
- *           bottle has been tilted so that the contents of it run into the
- *           glas.
+ * - t_up:   The bottle tip is aligned exactly with the glas rim, and the bottle
+ *           has been tilted so that the contents of it run into the glas.
  * - t_down: Like t_prep
  * - t_end:  The bottle separates sideways from the glas.
  * - t_afterTime: All tasks are deactivated.
@@ -368,6 +369,7 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   a1->add(t_prep, 0.6 * d_separate, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep + 0.5*(t_up-t_prep), 0.0, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep, heightAboveGlas, 0.0, 0.0, 7, taskRelPos + " 2");
+  a1->add(t_start + 0.5*(t_prep-t_start), this->initRelPosZ, 0.0, 0.0, 7, taskRelPos + " 2");
 
   a1->add(std::make_shared<tropic::PositionConstraint>(t_up, 0.0, 0.0, 0.0, taskRelPos));
   a1->add(std::make_shared<tropic::PositionConstraint>(t_up + 0.5*(t_down-t_up), 0.0, 0.0,

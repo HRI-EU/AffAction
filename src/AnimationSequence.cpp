@@ -62,7 +62,7 @@ AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_)
   subscribe("AnimateSequence", &AnimationSequence::onAnimateSequence);
   subscribe("ZapAnimation", &AnimationSequence::onZapAnimation);
 
-  RLOG(0, "AnomationSequence created");
+  RLOG(0, "AnimationSequence created");
 }
 
 AnimationSequence::~AnimationSequence()

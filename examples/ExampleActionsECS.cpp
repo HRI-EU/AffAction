@@ -622,9 +622,8 @@ bool ExampleActionsECS::initAlgo()
   cTmp = createComponents(entity, getGraph(), getScene(), false, componentArgs);
   this->components.insert(components.end(), cTmp.begin(), cTmp.end());
 
-  auto animationSequence = ComponentFactory::create("-animation", &entity, getGraph(),
-                                                    getScene(), std::string());
-  addComponent(animationSequence.get());
+  addComponent(ComponentFactory::create("-animation", &entity, getGraph()));
+
   if (!hwc.empty())
   {
     setEnableRobot(true);
