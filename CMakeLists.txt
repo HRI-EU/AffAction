@@ -248,6 +248,7 @@ src/SceneTransformationDataPlayer.cpp
 )
 
 SET(ECS_SRCS
+src/ComponentFactory.cpp
 src/EntityBase.cpp
 src/GraphicsWindow.cpp
 src/GraphComponent.cpp

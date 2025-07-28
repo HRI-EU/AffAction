@@ -31,15 +31,23 @@
 *******************************************************************************/
 
 #include "AnimationSequence.h"
+#include "ComponentFactory.h"
 
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
+
 
 #define NUM_ANIMATION_CHANNELS (3)
 
 
 namespace aff
 {
+REGISTER_COMPONENT(AnimationSequence, "-animation");
+
+AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_, const ActionScene* scene,
+                                     std::string extraArgs) : AnimationSequence(parent, graph_)
+{
+}
 
 AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_) :
   ComponentBase(parent), animationGraph(NULL), animationTic(0), animationIncrement(3),
@@ -53,6 +61,8 @@ AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_)
   subscribe("SetDebugRendering", &AnimationSequence::onSetDebugRendering);
   subscribe("AnimateSequence", &AnimationSequence::onAnimateSequence);
   subscribe("ZapAnimation", &AnimationSequence::onZapAnimation);
+
+  RLOG(0, "AnomationSequence created");
 }
 
 AnimationSequence::~AnimationSequence()

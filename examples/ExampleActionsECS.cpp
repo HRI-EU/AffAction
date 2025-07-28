@@ -33,7 +33,7 @@
 #include "ExampleActionsECS.h"
 #include "ActionFactory.h"
 #include "ActionSequence.h"
-#include "AnimationSequence.h"
+//#include "AnimationSequence.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
 #include "PhysicsComponent.h"
@@ -42,6 +42,7 @@
 #include "GazeComponent.h"
 #include "LandmarkBase.h"
 #include "EyeModelIKComponent.h"
+#include "ComponentFactory.h"
 
 #include <EventGui.h>
 #include <ConstraintFactory.h>
@@ -621,7 +622,9 @@ bool ExampleActionsECS::initAlgo()
   cTmp = createComponents(entity, getGraph(), getScene(), false, componentArgs);
   this->components.insert(components.end(), cTmp.begin(), cTmp.end());
 
-  addComponent(new AnimationSequence(&entity, getGraph()));
+  auto animationSequence = ComponentFactory::create("-animation", &entity, getGraph(),
+                                                    getScene(), std::string());
+  addComponent(animationSequence.get());
   if (!hwc.empty())
   {
     setEnableRobot(true);
