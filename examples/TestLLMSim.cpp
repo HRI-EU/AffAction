@@ -299,7 +299,7 @@ int main(int argc, char** argv)
   signal(SIGINT, quit);
 
   Rcs::CmdLineParser argP(argc, argv);
-  int mode = 0, res = 0;
+  int mode = 5, res = 0;
 
   argP.getArgument("-m", &mode, "Test mode (default: %d)", mode);
 
