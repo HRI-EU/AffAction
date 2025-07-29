@@ -63,17 +63,17 @@ Cocktail:
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
 	<!-- Table with grid -->
-	<Group transform="-0.22 0 0.7 0 0 0" >
+	<Group prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" >
 	  <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
 	</Group>
 	
 	<!-- shelf -->
-    <Body name="shelf" prev="table" rigid_body_joints="0.15 0 0.41 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
+    <Body name="shelf" prev="table" rigid_body_joints="0.15 0 0.31 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
         <Shape type="FRAME" scale="0.2"/>
     </Body>
 	
     <!-- bottom shelf frames-->
-	<Body name="shelf_bottom" prev="shelf" transform="-0.08 0 0.051 0 0 0" >
+	<Body name="shelf_bottom" prev="shelf" transform="-0.08 0 0.001 0 0 0" >
 		<Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
 	</Body>		
@@ -100,7 +100,7 @@ Cocktail:
     </Body>
 	
     <!-- top shelf frames-->
-	<Body name="shelf_top" prev="shelf" transform="0.05 0  0.351 0 0 0" >
+	<Body name="shelf_top" prev="shelf" transform="0.05 0  0.301 0 0 0" >
 		<Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
                distance="true" physics="true" textureFile="textures/table.jpg"/>
 	</Body>
@@ -241,7 +241,7 @@ Cocktail:
     </AffordanceModel> -->
 
     <!-- vermouth_bottle -->
-	<Group prev="table_grid_0_0" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
+	<Group prev="shelf_pos7" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
 		<xi:include href="../scene/g_bottle_cocktail.xml"/>
 	</Group>
 
@@ -267,7 +267,7 @@ Cocktail:
     -->
 
     <!-- electric_shaker -->
-    <Body name="electric_shaker" prev="table" rigid_body_joints="-0.05 -0.6 0.06 0 0 70" physics="kinematic" color="OBSIDIAN" >
+    <Body name="electric_shaker" prev="table" rigid_body_joints="0.25 -0.6 0.06 0 0 70" physics="kinematic" color="OBSIDIAN" >
         <Shape type="FRAME" scale="0.1"/>
         <Shape type="BOX" extents="0.2 0.2 0.12" transform="0 0 -0.01 0 0 0" graphics="true"
                distance="true" physics="true"/>

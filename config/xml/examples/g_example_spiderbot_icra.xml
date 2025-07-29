@@ -30,8 +30,11 @@
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
   <ActionSequence name="0" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green" />
-  <ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
-  <ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="0b" text="get glass_green + get bottle_of_gin; put glass_green table; pour bottle_of_gin glass_green; put bottle_of_gin table; pose default" />
+  <ActionSequence name="0c" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table + put glass_green table" />
+	<ActionSequence name="0d" text="get glass_green;get bottle_of_gin; get bottle_of_tonic_water; pour bottle_of_gin glass_green ; put glass_green table; put bottle_of_tonic_water table; put bottle_of_gin table ; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+	<ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+	<ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
   <ActionSequence name="3" text="get glass_green; put glass_green table; get bottle_of_gin; pour bottle_of_gin glass_green; put bottle_of_gin table; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
 
   
@@ -69,8 +72,10 @@
   </Group>
 
   <model_state model="default" time_stamp="0">
-    <joint_state joint="joint_1_right3" position="210"/>
-    <joint_state joint="joint_2_right3" position="70"/>
+	<joint_state joint="DofPoleZ" position="-0.1"/>
+	  
+	<joint_state joint="joint_1_right3" position="210"/>
+    <joint_state joint="joint_2_right3" position="60"/>
     <joint_state joint="joint_3_right3" position="80"/>
     <joint_state joint="joint_4_right3" position="-90"/>
     <joint_state joint="joint_5_right3" position="0"/>
@@ -79,7 +84,7 @@
     <joint_state joint="finger_joint_right3" position="0"/>
 
     <joint_state joint="joint_1_left3" position="-40"/>
-    <joint_state joint="joint_2_left3" position="-70"/>
+    <joint_state joint="joint_2_left3" position="-60"/>
     <joint_state joint="joint_3_left3" position="-80"/>
     <joint_state joint="joint_4_left3" position="90"/>
     <joint_state joint="joint_5_left3" position="0"/>
@@ -135,7 +140,68 @@
     <Body name="center_post_link_1"/>
     <Body name="adapter3_shoulder_left"/>
     <Body name="adapter3_shoulder_right"/>
-    <Body name="head_kinect_link"/>
+	<Body name="head_kinect_link"/>
+	<Body name="shelf_bottom"/>
+	<Body name="shelf_bottom"/>
   </BroadPhase>
+
+	<CollisionModel  DistanceThreshold="0.05" >
+
+		<!--		-->
+		<CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />			
+		<CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />	
+		<CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
+		<CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />
+
+
+		<CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
+		<CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
+		
+		<CollisionPair body1="hand_robot_left" body2="hand_robot_left3" />
+		<CollisionPair body1="hand_robot_left" body2="forearm_left3" />
+		<CollisionPair body1="hand_robot_left" body2="elbow_left3" />
+		<CollisionPair body1="hand_robot_left" body2="upperarm_left3" />
+
+		<CollisionPair body1="forearm_left" body2="hand_robot_left3" />
+		<CollisionPair body1="forearm_left" body2="forearm_left3" />
+		<CollisionPair body1="forearm_left" body2="elbow_left3" />
+		<CollisionPair body1="forearm_left" body2="upperarm_left3" />
+
+		<CollisionPair body1="upperarm_left" body2="hand_robot_left3" />
+		<CollisionPair body1="upperarm_left" body2="forearm_left3" />
+		<CollisionPair body1="upperarm_left" body2="elbow_left3" />
+		<CollisionPair body1="upperarm_left" body2="upperarm_left3" />
+
+		
+		
+		<CollisionPair body1="hand_robot_right" body2="hand_robot_right3" />
+		<CollisionPair body1="hand_robot_right" body2="forearm_right3" />
+		<CollisionPair body1="hand_robot_right" body2="elbow_right3" />
+		<CollisionPair body1="hand_robot_right" body2="upperarm_right3" />
+
+		<CollisionPair body1="forearm_right" body2="hand_robot_right3" />
+		<CollisionPair body1="forearm_right" body2="forearm_right3" />
+		<CollisionPair body1="forearm_right" body2="elbow_right3" />
+		<CollisionPair body1="forearm_right" body2="upperarm_right3" />
+
+		<CollisionPair body1="upperarm_right" body2="hand_robot_right3" />
+		<CollisionPair body1="upperarm_right" body2="forearm_right3" />
+		<CollisionPair body1="upperarm_right" body2="elbow_right3" />
+		<CollisionPair body1="upperarm_right" body2="upperarm_right3" />
+
+
+
+		<CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
+		<CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
+		<CollisionPair body1="center_post_link" body2="forearm_right"  DistanceThreshold="0.15" />
+		<CollisionPair body1="center_post_link" body2="forearm_left"  DistanceThreshold="0.15" />
+		<CollisionPair body1="center_post_link" body2="hand_robot_right"  DistanceThreshold="0.2" />
+		<CollisionPair body1="center_post_link" body2="hand_robot_left"  DistanceThreshold="0.2" />
+
+
+
+
+	</CollisionModel>
+
 
 </Graph>

@@ -47,7 +47,7 @@
                transform="0.2 0 0.131 0 0 0" color="GRAY" />
         <Shape type="MESH" meshFile="item24/item_roman_pole.stl" transform="0.04 0.04 -0.373 0 0 -90" scale="0.001" />
 	
-        <Shape type="SSL" radius="0.06" length="0.633" distance="true" physics="false" graphics="false" color="RED" />
+        <Shape type="SSL" radius="0.06" length="1.2" distance="true" physics="false" graphics="false" transform="0 0 -0.4 0 0 0" color="RED" />
         <Shape type="FRAME" scale="0.2" transform="-0.05 0 1.3 0 40 0" />
     </Body>
 

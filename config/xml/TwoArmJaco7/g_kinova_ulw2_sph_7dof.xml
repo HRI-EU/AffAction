@@ -46,7 +46,7 @@
     <Body name="shoulder" prev="shoulder_blade" not_physics="dynamic" mass="0.7477"
           inertia="0.00152032 0 0 -0 0.00152032 0 -0 -0 0.00059816">
         <Joint name="j2s7s300_joint_1" range="-720 0 720" type="RotZ" transform="0 0 0.15675 180 0 180" torqueLimit="40"
-               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2"/>
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2" weightCA="0"/>
         <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/shoulder.STL"
                color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" not_physics="false" graphics="true"
@@ -56,7 +56,7 @@
     <Body name="upperarm" prev="shoulder" not_physics="dynamic" mass="0.8447"
           inertia="0.00247074 0 0 -0 0.000380115 0 -0 -0 0.00247074">
         <Joint name="j2s7s300_joint_2" range="30 180 330" type="RotZ" transform="0 0.0016 -0.11875 90 0 -180"
-               torqueLimit="80" speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2" />
+               torqueLimit="80" speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="2" weightCA="1" />
         <Shape type="MESH" distance="false" meshFile="kinova_description/meshes/arm_half_1.STL" color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" meshFile="kinova_description/meshes/ring_big.STL" color="GRAY"/>
         <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.05" length="0.42"
@@ -66,7 +66,7 @@
     <Body name="elbow" prev="upperarm" mass="0.8447"
           inertia="0.00247074 0 0 -0 0.00247074 0 -0 -0 0.000380115">
         <Joint name="j2s7s300_joint_3" range="-360 0 360" type="RotZ" transform="0 -0.205 0 -90 0 0" torqueLimit="40"
-               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="4" constraint="false"/>
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="4" constraint="false" weightCA="0"/>
         <Shape type="MESH" distance="false" meshFile="kinova_description/meshes/arm_half_2.STL" color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_big.STL" color="GRAY" />
     </Body>
@@ -74,7 +74,7 @@
     <Body name="forearm" prev="elbow" not_physics="dynamic" mass="0.6763"
           inertia="0.00142022 0 0 -0 0.000304335 0 -0 -0 0.00142022">
         <Joint name="j2s7s300_joint_4" range="30 180 330" type="RotZ" transform="0 0 -0.205 -90 0 -180" torqueLimit="40"
-               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25"/>
+               speedLimit="39.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightCA="0"/>
         <Shape type="MESH" distance="false" not_physics="true" meshFile="kinova_description/meshes/forearm.STL"
                color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_small.STL" color="GRAY" />
@@ -86,7 +86,7 @@
           inertia="0.000432132 0 0 -0 0.000432132 0 -0 -0 9.26e-05">
         <Joint name="j2s7s300_joint_5" range="-720 0 720" type="RotZ" transform="0 0.2073 -0.0114 90 0 -180"
                torqueLimit="20" speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25"
-               weightJL="4"/>
+               weightJL="4" weightCA="0"/>
         <Shape type="MESH" distance="false" meshFile="kinova_description/meshes/wrist_spherical_1.STL" color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" meshFile="kinova_description/meshes/ring_small.STL" color="GRAY" />
     </Body>
@@ -95,7 +95,7 @@
           inertia="0.000432132 0 0 -0 9.26e-05 0 -0 -0 0.000432132">
         <Joint name="j2s7s300_joint_6" range="50 180 310" type="RotZ" transform="0 0 -0.10375 -90 0 -180"
                torqueLimit="20" speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.5"
-               weightJL="1"/>
+               weightJL="1" weightCA="0"/>
         <Shape type="MESH" distance="false" not_physics="true"
                meshFile="kinova_description/meshes/wrist_spherical_2.STL" color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" not_physics="false" meshFile="kinova_description/meshes/ring_small.STL" color="GRAY" />
@@ -105,7 +105,7 @@
     <Body name="hand_base" prev="wrist" physics="kinematic" mass="0.99"
           not_inertia="0.000345324 0 0 -0 0.000345324 0 -0 -0 0.0005816">
         <Joint name="j2s7s300_joint_7" range="-720 0 720" type="RotZ" transform="0 0.10375 0 90 0 -180" torqueLimit="20"
-               speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="1"/>
+               speedLimit="52.5" accelerationLimit="50" decelerationLimit="100" weightMetric="0.25" weightJL="1" weightCA="0"/>
         <Shape type="MESH" distance="false" physics="true" meshFile="kinova_description/meshes/hand_3finger.STL"
                color="BLACK_PLASTIC"/>
         <Shape type="MESH" distance="false" physics="false" meshFile="kinova_description/meshes/ring_small.STL" color="GRAY" />
