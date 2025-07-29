@@ -41,6 +41,15 @@ namespace aff
 /*******************************************************************************
  *
  ******************************************************************************/
+static std::map<std::string, ComponentFactory::CreatorFcn>& constructorMap()
+{
+  static std::map<std::string, ComponentFactory::CreatorFcn> cm;
+  return cm;
+}
+
+/*******************************************************************************
+*
+******************************************************************************/
 ComponentFactory::ComponentFactory()
 {
 }
@@ -67,17 +76,31 @@ void ComponentFactory::print()
 ComponentBase* ComponentFactory::create(std::string parseArg,
                                         EntityBase* entity,
                                         const RcsGraph* graph,
+                                        std::string extraArgs)
+{
+  return create(parseArg, entity, graph, nullptr, extraArgs);
+}
+
+ComponentBase* ComponentFactory::create(std::string parseArg,
+                                        EntityBase* entity,
+                                        const RcsGraph* graph,
                                         const ActionScene* scene,
                                         std::string extraArgs)
 {
+  ComponentContext ctx;
+  ctx.entity = entity;
+  ctx.graph = graph;
+  ctx.scene = scene;
+  ctx.extraArgs = extraArgs;
+
   ComponentBase* newComponent = nullptr;
 
-  std::map<std::string, ComponentMaker>::iterator it;
+  std::map<std::string, CreatorFcn>::iterator it;
   it = constructorMap().find(parseArg);
 
   if (it != constructorMap().end())
   {
-    newComponent = it->second(entity, graph, scene, extraArgs);
+    newComponent = it->second(ctx);
   }
   else
   {
@@ -93,7 +116,7 @@ ComponentBase* ComponentFactory::create(std::string parseArg,
  * since the debug level has at that point not yet been parsed.
  ******************************************************************************/
 void ComponentFactory::registerComponent(std::string name,
-                                         ComponentMaker createFunction)
+                                         CreatorFcn createFunction)
 {
   auto it = constructorMap().find(name);
   if (it != constructorMap().end())
@@ -104,17 +127,6 @@ void ComponentFactory::registerComponent(std::string name,
 
   constructorMap()[name] = createFunction;
 }
-
-/*******************************************************************************
- *
- ******************************************************************************/
-std::map<std::string, ComponentFactory::ComponentMaker>&
-ComponentFactory::constructorMap()
-{
-  static std::map<std::string, ComponentFactory::ComponentMaker> cm;
-  return cm;
-}
-
 
 
 }   // namespace

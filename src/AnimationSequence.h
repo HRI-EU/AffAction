@@ -46,9 +46,6 @@ namespace aff
 class AnimationSequence : public ComponentBase
 {
 public:
-  AnimationSequence(EntityBase* parent, const RcsGraph* graph_, const ActionScene* scene,
-                    std::string extraArgs);
-
   AnimationSequence(EntityBase* parent, const RcsGraph* graph);
   ~AnimationSequence();
 

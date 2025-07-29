@@ -34,7 +34,6 @@
 #define AFF_COMPONENTFACTORY_H
 
 #include "ComponentBase.h"
-#include "ActionScene.h"
 
 
 /*! \brief Convenience macro to register components in the factory. Here is an
@@ -46,20 +45,21 @@
 
 namespace aff
 {
+class ActionScene;
 
-/*! \brief Factory class for ComponentBase classes and its
+/*! \brief Factory class for ComponentBase and its
  *         derieved classes. The factory implements methods to construct
- *         classes of type ComponentBase (and derieved from them)
- *         from an xml node or file containing an xml description. It is based
- *         on a registrar class that registers methods for reading and writing
- *         xml descriptions of such components. In order to enable a
+ *         classes of type ComponentBase (and derieved from them). It is based
+ *         on a registrar class. In order to enable a
  *         class derived from ComponentBase to be used with this
  *         factory class, the following needs to be provided:
  *
- *         - A constructor that constructs an instance from an xml node: e.g.
- *           MyNewComponent::MyNewComponent(xmlNode* node);
+ *         - A constructor that constructs an instance from the below signatures:
+ *           - new MyComponent(EntityBase*, const RcsGraph*)
+ *           - new MyComponent(EntityBase*, const RcsGraph*, std::string)
+ *           - new MyComponentEntityBase*, const RcsGraph*, const ActionScene*, std::string);
  *         - Inserting a macro to register the new set in the implementation
- *           file: REGISTER_COMPONENT(MyNewSet);
+ *           file: REGISTER_COMPONENT(MyComponent);
  *
  *         Most of the classes in this library have been implemented like this.
  *         See for instance \ref AnimationComponent.
@@ -72,20 +72,34 @@ public:
 
   /*! \brief Creates a new component by name using the registered
    *         construction function.
-   *
-   * \param node      Xml configuration
-   * \return          New ComponentBase instance or nullptr in
-   *                  case of failure
    */
   static ComponentBase* create(std::string parseArg,
                                EntityBase* entity,
-                               const RcsGraph* graph=nullptr,
-                               const ActionScene* scene=nullptr,
-                               std::string extraArgs=std::string());
+                               const RcsGraph* graph,
+                               std::string extraArgs = std::string());
+
+  static ComponentBase* create(std::string parseArg,
+                               EntityBase* entity,
+                               const RcsGraph* graph,
+                               const ActionScene* scene,
+                               std::string extraArgs = std::string());
 
   /*! \brief Prints out all registered components to the console
    */
   static void print();
+
+  /*! \brief Signature of component creation function.
+  */
+  struct ComponentContext
+  {
+    EntityBase* entity = nullptr;
+    const RcsGraph* graph = nullptr;
+    const ActionScene* scene = nullptr;
+    std::string extraArgs;
+  };
+
+  using CreatorFcn = std::function<ComponentBase*(const ComponentContext& ctx)>;
+
 
 private:
 
@@ -93,34 +107,23 @@ private:
    */
   ComponentFactory();
 
-  /*! \brief Signature of component creation function.
-   */
-  typedef ComponentBase* (*ComponentMaker)(EntityBase* entity,
-                                           const RcsGraph* graph,
-                                           const ActionScene* scene,
-                                           std::string extraArgs);
-
   /*! \brief Registers a new function for creating components. You can not
    *        call this function directly. Instead us the above macro.
    */
-  static void registerComponent(std::string name,
-                                ComponentMaker createFunction);
-
-  static std::map<std::string, ComponentFactory::ComponentMaker>& constructorMap();
+  static void registerComponent(std::string name, CreatorFcn createFunction);
 };
 
 
 
 
 
-/*! \brief Registrar class for component classes. Here is how to use
- *        it:
+/*! \brief Registrar class for component classes. Here is how to use it:
  *        - Implement a component derieved from ComponentBase
  *        - In the implementation of this class on the global scope, add:<br>
  *          REGISTER_COMPONENT(MyCoolNewComponent);
  *        - This registers a component of type MyCoolNewComponent that can be
  *          instantiated : <br>
- *          auto c = ComponentFactory::create(node);
+ *          auto c = ComponentFactory::create(args);
  */
 template<class T>
 class ComponentFactoryRegistrar
@@ -139,26 +142,62 @@ public:
    */
   ComponentFactoryRegistrar(std::string className)
   {
-    // Register the function to create the component
-    ComponentFactory::registerComponent(className,
-                                        &ComponentFactoryRegistrar::create);
+    ComponentFactory::registerComponent(className, &ComponentFactoryRegistrar::create);
   }
 
 private:
 
-  /*! \brief This function creates a new component instance of type T
-   *         passing the given variables to the respective constructor.
-   *
-   * \param node    xml configuration
-   * \return        New ComponentBase of type T
-   */
-  static ComponentBase* create(EntityBase* entity,
-                               const RcsGraph* graph,
-                               const ActionScene* scene,
-                               std::string extraArgs)
+  // Helper overload when (EntityBase*, const RcsGraph*, const ActionScene*, std::string) constructor is available
+  template <typename U = T>
+  static typename std::enable_if<std::is_constructible<U, EntityBase*, const RcsGraph*, const ActionScene*, std::string>::value, ComponentBase*>::type
+  tryConstruct(const ComponentFactory::ComponentContext& ctx)
   {
-    return new T(entity, graph, scene, extraArgs);
+    if (ctx.scene)
+    {
+      return new U(ctx.entity, ctx.graph, ctx.scene, ctx.extraArgs);
+    }
+    return nullptr;
   }
+
+  // Helper overload when (EntityBase*, const RcsGraph*, std::string) constructor is available
+  template <typename U = T>
+  static typename std::enable_if<std::is_constructible<U, EntityBase*, const RcsGraph*, std::string>::value, ComponentBase*>::type
+  tryConstruct(const ComponentFactory::ComponentContext& ctx)
+  {
+    return new U(ctx.entity, ctx.graph, ctx.extraArgs);
+  }
+
+  // Helper overload when (EntityBase*, const RcsGraph*) constructor is available
+  template <typename U = T>
+  static typename std::enable_if<std::is_constructible<U, EntityBase*, const RcsGraph*>::value, ComponentBase*>::type
+  tryConstruct(const ComponentFactory::ComponentContext& ctx)
+  {
+    return new U(ctx.entity, ctx.graph);
+  }
+
+  // Fallback if neither is constructible
+  template <typename U = T>
+  static typename std::enable_if<
+  !std::is_constructible<U, EntityBase*, const RcsGraph*>::value &&
+  !std::is_constructible<U, EntityBase*, const RcsGraph*, std::string>::value &&
+  !std::is_constructible<U, EntityBase*, const RcsGraph*, const ActionScene*, std::string>::value,
+  ComponentBase*>::type
+  tryConstruct(const ComponentFactory::ComponentContext&)
+  {
+    throw std::runtime_error("No usable constructor for component");
+  }
+
+  /*! \brief This function creates a new component instance of type T
+  *         passing the given variables to the respective constructor.
+  *
+  * \param ctx     Context with arguments
+  * \return        New ComponentBase of type T
+  */
+  static ComponentBase* create(const ComponentFactory::ComponentContext& ctx)
+  {
+    return tryConstruct(ctx);
+  }
+
 };
 
 }

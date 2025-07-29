@@ -44,16 +44,11 @@ namespace aff
 {
 REGISTER_COMPONENT(AnimationSequence, "-animation");
 
-AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_, const ActionScene* scene,
-                                     std::string extraArgs) : AnimationSequence(parent, graph_)
-{
-}
-
-AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_) :
+AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph) :
   ComponentBase(parent), animationGraph(NULL), animationTic(0), animationIncrement(3),
   predictionIdx(-1), channel(0)
 {
-  this->animationGraph = RcsGraph_clone(graph_);
+  this->animationGraph = RcsGraph_clone(graph);
   predictions.resize(NUM_ANIMATION_CHANNELS);
 
   subscribe("Render", &AnimationSequence::onRender);
@@ -61,8 +56,6 @@ AnimationSequence::AnimationSequence(EntityBase* parent, const RcsGraph* graph_)
   subscribe("SetDebugRendering", &AnimationSequence::onSetDebugRendering);
   subscribe("AnimateSequence", &AnimationSequence::onAnimateSequence);
   subscribe("ZapAnimation", &AnimationSequence::onZapAnimation);
-
-  RLOG(0, "AnimationSequence created");
 }
 
 AnimationSequence::~AnimationSequence()
