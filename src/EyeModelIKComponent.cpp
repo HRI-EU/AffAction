@@ -32,6 +32,7 @@
 
 #include "EyeModelIKComponent.h"
 #include "ActionEyeGaze.h"
+#include "SceneJsonHelpers.h"
 #include "json.hpp"
 
 #include <TaskFactory.h>
@@ -108,12 +109,12 @@ static std::vector<int> getEyeModelJoints(const RcsGraph* graph, std::vector<std
 namespace aff
 {
 
-EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph) :
+EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph, std::string cameraName) :
   ComponentBase(parent), controller(nullptr), ikSolver(nullptr),
   a_des(nullptr), x_des(nullptr), dx_des(nullptr), dH(nullptr), dq_des(nullptr),
   goalFilt(0.1, 1.0, parent->getDt(), 3),
   eStop(false), alpha(0.05), lambda(1.0e-8), t_gesture(-1.0),
-  gazeMode(GazeMode::HeadEyeApproximate)
+  gazeMode(GazeMode::HeadEyeApproximate), cameraBody(cameraName)
 {
   this->controller = new Rcs::ControllerBase(RcsGraph_clone(graph));
   controller->setGraphOwnership(true);
@@ -175,6 +176,7 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   subscribe("GestureThreeRepetitions", &EyeModelIKComponent::onGestureThreeRepetitions);
   subscribe("SetEyeBallDirection", &EyeModelIKComponent::onEyeDirCommand);
   subscribe("SetGazeFromString", &EyeModelIKComponent::onGazeFromString);
+  subscribe("UpdateScene", &EyeModelIKComponent::onUpdateScene);
   //subscribe("Render", &EyeModelIKComponent::onRender);
 
   // Generic checks
@@ -681,6 +683,75 @@ const RcsBody* EyeModelIKComponent::screen() const
   const RcsBody* bdy = RcsGraph_getBodyByName(controller->getGraph(), ActionEyeGaze::getScreenName().c_str());
   RCHECK(bdy);
   return bdy;
+}
+
+void EyeModelIKComponent::onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene)
+{
+  double p_right[3], p_left[3];
+  const RcsGraph* graph = desired;
+
+  bool success = ActionEyeGaze::computePupilCoordinates(graph, p_right, p_left);
+
+  const RcsBody* screen = RcsGraph_getBodyByName(graph, ActionEyeGaze::getScreenName().c_str());
+  const RcsBody* rightPupil = RcsGraph_getBodyByName(graph, ActionEyeGaze::getRightPupilName().c_str());
+  const RcsBody* leftPupil = RcsGraph_getBodyByName(graph, ActionEyeGaze::getLeftPupilName().c_str());
+  const RcsBody* rightGazePoint = RcsGraph_getBodyByName(graph, ActionEyeGaze::getRightGazePointName().c_str());
+  const RcsBody* leftGazePoint = RcsGraph_getBodyByName(graph, ActionEyeGaze::getLeftGazePointName().c_str());
+  const RcsBody* gazePoint = RcsGraph_getBodyByName(graph, ActionEyeGaze::getGazePointName().c_str());
+
+  if ((!screen) || (!rightPupil) || (!leftPupil) || (!rightGazePoint) || (!leftGazePoint) || (!gazePoint))
+  {
+    success = false;
+  }
+
+  if (!success)
+  {
+    RLOG(1, "Couldn't compute gaze screen coordinates");
+    return;
+  }
+
+
+  nlohmann::json eyeJsonL;
+  eyeJsonL["screen_coordinates"] = std::vector<double>(p_left, p_left + 3);
+  eyeJsonL["gaze_distance"] = Vec3d_distance(leftPupil->A_BI.org, leftGazePoint->A_BI.org);
+
+  nlohmann::json eyeJsonR;
+  eyeJsonR["screen_coordinates"] = std::vector<double>(p_right, p_right + 3);
+  eyeJsonR["gaze_distance"] = Vec3d_distance(rightPupil->A_BI.org, rightGazePoint->A_BI.org);
+
+  nlohmann::json gazeJson;
+  gazeJson["left_eye"] = eyeJsonL;
+  gazeJson["right_eye"] = eyeJsonR;
+  gazeJson["screen_distance"] = Vec3d_distance(screen->A_BI.org, gazePoint->A_BI.org);
+
+  // Coordinates of bounding box in camera coordinates
+  if ((!gazeTargetBody.empty()) && (!cameraBody.empty()))
+  {
+    bool useHeadAABB = true;
+    nlohmann::json bb = getObjectInCamera(gazeTargetBody, cameraBody, scene, graph, useHeadAABB);
+    gazeJson["bounding_box"] = bb;
+  }
+  else
+  {
+    RLOG_CPP(1, "Failed to determine object bounding box: camera is '" << cameraBody
+             << "' and gaze target is '" << gazeTargetBody << "'");
+  }
+
+  RLOG_CPP(4, "Gaze JSON: '" << gazeJson.dump(2) << "'");
+
+  std::lock_guard<std::mutex> lock(this->mirrorEyesMtx);
+  mirrorEyesJsonString = gazeJson.dump();
+}
+
+std::string EyeModelIKComponent::getMirrorEyesJsonString() const
+{
+  std::lock_guard<std::mutex> lock(this->mirrorEyesMtx);
+  return this->mirrorEyesJsonString;
+}
+
+void EyeModelIKComponent::setCameraBody(const std::string camBodyName)
+{
+  this->cameraBody = camBodyName;
 }
 
 }   // namespace aff

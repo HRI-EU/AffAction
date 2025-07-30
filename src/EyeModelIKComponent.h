@@ -35,10 +35,13 @@
 
 #include "ComponentBase.h"
 #include "HeadGesture.h"
+#include "ActionScene.h"
 
 #include <IkSolverRMR.h>
 #include <Rcs_filters.h>
+
 #include <memory>
+#include <mutex>
 
 
 
@@ -54,7 +57,7 @@ public:
                         PupilDirection       // Individual pupil's gaze direction
                       };
 
-  EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph);
+  EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph, std::string cameraName=std::string());
   virtual ~EyeModelIKComponent();
 
   static bool hasEyeModel(const RcsGraph* graph);
@@ -105,6 +108,18 @@ private:
   GazeMode gazeMode;
 
   std::vector<std::unique_ptr<HeadGesture>> headGestures;
+
+  // Mirror eyes section
+public:
+  std::string getMirrorEyesJsonString() const;
+  void setCameraBody(const std::string camBodyName);
+private:
+  void onUpdateScene(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
+  std::string cameraBody;   // For getObjectsInCamera() inside onUpdateScene()
+  std::string mirrorEyesJsonString;
+  mutable std::mutex mirrorEyesMtx;
+
+
 
   /*! \brief We disallow copying and assigning this class.
    */

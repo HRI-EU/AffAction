@@ -529,13 +529,32 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   nlohmann::json json;
 
   // Check for exactly one camera with the given name
+  const RcsBody* cameraBdy = nullptr;
   std::vector<const AffordanceEntity*> cameraEntities = scene->getAffordanceEntities(cameraName);
 
-  if (cameraEntities.size() != 1)
+  if (cameraEntities.size() == 1)
   {
-    RLOG_CPP(0, "Expect 1 match for camera '" << cameraName << "' but got " << cameraEntities.size());
+    cameraBdy = cameraEntities[0]->body(graph);
+  }
+  else
+  {
+    if (!cameraEntities.empty())
+    {
+      RLOG_CPP(0, "Expect 1 match for camera '" << cameraName << "' but got " << cameraEntities.size());
+    }
+
+    cameraBdy = RcsGraph_getBodyByName(graph, cameraName.c_str());
+  }
+
+  if (!cameraBdy)
+  {
+    RLOG_CPP(0, "Could not find camera in scene or graph: " << cameraName);
     return json;
   }
+
+
+
+
 
   std::vector<const SceneEntity*> objectEntities = scene->getSceneEntities(objectName);
 
@@ -546,7 +565,6 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
   }
 
   const RcsBody* objectBdy = objectEntities[0]->body(graph);
-  const RcsBody* cameraBdy = cameraEntities[0]->body(graph);
 
   HTr objectInCamera;   // From camera to object frame: A_CO
   HTr_invTransform(&objectInCamera, &cameraBdy->A_BI, &objectBdy->A_BI);

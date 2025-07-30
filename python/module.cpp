@@ -60,6 +60,9 @@ namespace py = pybind11;
 #include <AzureSkeletonTracker.h>
 #include <ActionEyeGaze.h>
 #include <SceneHelpers.h>
+#include <EyeModelIKComponent.h>
+#include "ZmqRouterComponent.h"
+#include "ImageTracker.h"
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -1151,6 +1154,61 @@ Example
 
     return targetBody;
   })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns the json with all relevant coordinates for the pupils etc.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getMirrorEyesData", [](aff::ExampleActionsECS& ex) -> nlohmann::json
+  {
+    nlohmann::json j;
+    auto eyeComponents = aff::getComponents<aff::EyeModelIKComponent>(ex.getComponentsRef());
+
+    if (eyeComponents.size() != 1)
+    {
+      RLOG(0, "Found %zu EyeModelIKComponent instances - must be 1", eyeComponents.size());
+      return j;
+    }
+
+    std::string eyeStr = eyeComponents[0]->getMirrorEyesJsonString();
+
+    try 
+    {
+      j = nlohmann::json::parse(eyeStr);
+    }
+    catch (const nlohmann::json::parse_error& e) 
+    {
+      RLOG_CPP(0, "Parse error for '" << eyeStr << "' : " << e.what());
+    }
+
+    return j;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns the most recent camera image if newer than the given frame count
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getCameraImage", [](aff::ExampleActionsECS& ex, int frame_count) -> std::pair<int,std::string>
+  {
+    nlohmann::json j;
+    auto lmrs = aff::getComponents<aff::ZmqRouterComponent>(ex.getComponentsRef());
+
+    if (lmrs.size() != 1)
+    {
+      RLOG(0, "Found %zu ZmqRouterComponent instances - must be 1", lmrs.size());
+      return std::pair<int, std::string>(0, "");
+    }
+
+    auto imgTracker = lmrs[0]->getTrackers<aff::ImageTracker>();
+
+    if (imgTracker.size() != 1)
+    {
+      RLOG(0, "Found %zu ImageTracker instances - must be 1", imgTracker.size());
+      return std::pair<int, std::string>(0, "");
+    }
+
+    return imgTracker[0]->getStampedImage(frame_count);
+  },
+  "Return image if more recent than frame_count",
+  py::arg("frame_count") = -1)
 
   //////////////////////////////////////////////////////////////////////////////
   // Head gestures: "yes", "no"

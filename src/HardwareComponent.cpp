@@ -48,7 +48,7 @@
 #include "RespeakerSoundDirComponent.h"
 #include "AzureSkeletonTracker.h"
 #include "AgentWelcomeComponent.hpp"
-#include "ImageTracker.hpp"
+#include "ImageTracker.h"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
