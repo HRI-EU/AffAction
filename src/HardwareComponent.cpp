@@ -48,6 +48,7 @@
 #include "RespeakerSoundDirComponent.h"
 #include "AzureSkeletonTracker.h"
 #include "AgentWelcomeComponent.hpp"
+#include "ImageTracker.hpp"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -182,6 +183,12 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
     if (getKey(argsVec, "-yolo_tracking" + suffix))
     {
       lmc->addYoloTracker(landmarksCamera);
+    }
+
+    if (getKey(argsVec, "-image_tracking" + suffix))
+    {
+      auto imgTracker = std::make_unique<ImageTracker>(landmarksCamera);
+      lmc->addTracker(std::move(imgTracker));
     }
 
     if (getKey(argsVec, "-face_tracking" + suffix))
