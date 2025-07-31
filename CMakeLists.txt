@@ -30,6 +30,12 @@
 #
 ################################################################################
 CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+
+IF (APPLE)
+  CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
+  CMAKE_POLICY(SET CMP0142 NEW)   # Skip duplicate build type library paths 
+ENDIF(APPLE)
+
 SET(BST_INSTALL_CATEGORY Libraries)
 STRING (REPLACE "\\" "/" PIPER_PATH "$ENV{SIT}/External/piper")
 SET(AFFACTION_PIPER_PATH "${PIPER_PATH}" CACHE STRING "Path to piper executable")

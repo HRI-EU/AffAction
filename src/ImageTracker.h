@@ -50,11 +50,11 @@ public:
 
   virtual ~ImageTracker() = default;
 
-  virtual std::string getRequestKeyword() const;
+  std::string getRequestKeyword() const override;
 
-  virtual void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time) override;
 
-  void update(ActionScene* scene, RcsGraph* graph);
+  void update(ActionScene* scene, RcsGraph* graph) override;
 
   std::pair<int, std::string> getStampedImage(int frame_count=-1);
 

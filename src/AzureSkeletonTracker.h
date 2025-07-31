@@ -81,7 +81,7 @@ public:
 private:
 
   // Process landmark frames. Called from perception thread (30Hz or so)
-  void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time) override;
 
   void updateAgents(ActionScene* scene, RcsGraph* graph);
 
