@@ -458,7 +458,6 @@ bool ExampleActionsECS::initAlgo()
       {
         RCHECK_MSG(!selfCA, "Can't have several collision models");
         selfCA = RcsCollisionModel_createFromXML(getGraph(), child);
-        //controller->setCollisionMdl(cMdl);
       }
 
 
@@ -476,12 +475,7 @@ bool ExampleActionsECS::initAlgo()
         }
         RcsBroadPhase_updateBoundingVolumes(bp);
         controller->setBroadPhase(bp);
-        controller->setCollisionMdl(RcsCollisionModel_create(getGraph()));
-        //if (!controller->getCollisionMdl())
-        //{
-        //  RcsCollisionMdl* cMdl = RcsCollisionModel_create(getGraph());
-        //  controller->setCollisionMdl(cMdl);
-        //}
+        controller->setNarrowPhase(RcsCollisionModel_create(getGraph()));
       }
       else
       {
@@ -1620,7 +1614,7 @@ void ExampleActionsECS::onActionSequence(std::string text)
 
 void ExampleActionsECS::onPrint()
 {
-  RcsCollisionModel_fprint(stderr, controller->getCollisionMdl());
+  RcsCollisionModel_fprint(stderr, controller->getNarrowPhase());
   ActionFactory::print();
   getScene()->print();
   std::cout << help();

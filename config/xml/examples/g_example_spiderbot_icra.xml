@@ -132,6 +132,7 @@
     <joint_state joint="finger_joint_right3" position="40"/>
   </model_state>
 
+  <!-- For collision checking -->
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>
     <Tree root="upperarm_right"/>
@@ -145,63 +146,55 @@
 	<Body name="shelf_bottom"/>
   </BroadPhase>
 
-	<CollisionModel  DistanceThreshold="0.05" >
+  <!-- Self-collision model -->
+  <CollisionModel  DistanceThreshold="0.05" >
 
-		<!--		-->
-		<CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />			
-		<CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />	
-		<CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
-		<CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />			
+    <CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />	
+    <CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />
 
+    <CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
+    <CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
+    
+    <CollisionPair body1="hand_robot_left" body2="hand_robot_left3" />
+    <CollisionPair body1="hand_robot_left" body2="forearm_left3" />
+    <CollisionPair body1="hand_robot_left" body2="elbow_left3" />
+    <CollisionPair body1="hand_robot_left" body2="upperarm_left3" />
 
-		<CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
-		<CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
-		
-		<CollisionPair body1="hand_robot_left" body2="hand_robot_left3" />
-		<CollisionPair body1="hand_robot_left" body2="forearm_left3" />
-		<CollisionPair body1="hand_robot_left" body2="elbow_left3" />
-		<CollisionPair body1="hand_robot_left" body2="upperarm_left3" />
+    <CollisionPair body1="forearm_left" body2="hand_robot_left3" />
+    <CollisionPair body1="forearm_left" body2="forearm_left3" />
+    <CollisionPair body1="forearm_left" body2="elbow_left3" />
+    <CollisionPair body1="forearm_left" body2="upperarm_left3" />
 
-		<CollisionPair body1="forearm_left" body2="hand_robot_left3" />
-		<CollisionPair body1="forearm_left" body2="forearm_left3" />
-		<CollisionPair body1="forearm_left" body2="elbow_left3" />
-		<CollisionPair body1="forearm_left" body2="upperarm_left3" />
+    <CollisionPair body1="upperarm_left" body2="hand_robot_left3" />
+    <CollisionPair body1="upperarm_left" body2="forearm_left3" />
+    <CollisionPair body1="upperarm_left" body2="elbow_left3" />
+    <CollisionPair body1="upperarm_left" body2="upperarm_left3" />
 
-		<CollisionPair body1="upperarm_left" body2="hand_robot_left3" />
-		<CollisionPair body1="upperarm_left" body2="forearm_left3" />
-		<CollisionPair body1="upperarm_left" body2="elbow_left3" />
-		<CollisionPair body1="upperarm_left" body2="upperarm_left3" />
+    <CollisionPair body1="hand_robot_right" body2="hand_robot_right3" />
+    <CollisionPair body1="hand_robot_right" body2="forearm_right3" />
+    <CollisionPair body1="hand_robot_right" body2="elbow_right3" />
+    <CollisionPair body1="hand_robot_right" body2="upperarm_right3" />
 
-		
-		
-		<CollisionPair body1="hand_robot_right" body2="hand_robot_right3" />
-		<CollisionPair body1="hand_robot_right" body2="forearm_right3" />
-		<CollisionPair body1="hand_robot_right" body2="elbow_right3" />
-		<CollisionPair body1="hand_robot_right" body2="upperarm_right3" />
+    <CollisionPair body1="forearm_right" body2="hand_robot_right3" />
+    <CollisionPair body1="forearm_right" body2="forearm_right3" />
+    <CollisionPair body1="forearm_right" body2="elbow_right3" />
+    <CollisionPair body1="forearm_right" body2="upperarm_right3" />
 
-		<CollisionPair body1="forearm_right" body2="hand_robot_right3" />
-		<CollisionPair body1="forearm_right" body2="forearm_right3" />
-		<CollisionPair body1="forearm_right" body2="elbow_right3" />
-		<CollisionPair body1="forearm_right" body2="upperarm_right3" />
+    <CollisionPair body1="upperarm_right" body2="hand_robot_right3" />
+    <CollisionPair body1="upperarm_right" body2="forearm_right3" />
+    <CollisionPair body1="upperarm_right" body2="elbow_right3" />
+    <CollisionPair body1="upperarm_right" body2="upperarm_right3" />
 
-		<CollisionPair body1="upperarm_right" body2="hand_robot_right3" />
-		<CollisionPair body1="upperarm_right" body2="forearm_right3" />
-		<CollisionPair body1="upperarm_right" body2="elbow_right3" />
-		<CollisionPair body1="upperarm_right" body2="upperarm_right3" />
+    <CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="forearm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="forearm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="hand_robot_right"  DistanceThreshold="0.2" />
+    <CollisionPair body1="center_post_link" body2="hand_robot_left"  DistanceThreshold="0.2" />
 
-
-
-		<CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
-		<CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
-		<CollisionPair body1="center_post_link" body2="forearm_right"  DistanceThreshold="0.15" />
-		<CollisionPair body1="center_post_link" body2="forearm_left"  DistanceThreshold="0.15" />
-		<CollisionPair body1="center_post_link" body2="hand_robot_right"  DistanceThreshold="0.2" />
-		<CollisionPair body1="center_post_link" body2="hand_robot_left"  DistanceThreshold="0.2" />
-
-
-
-
-	</CollisionModel>
+  </CollisionModel>
 
 
 </Graph>

@@ -196,10 +196,10 @@ void IKComponent::onRender()
   getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "IK",
                                                     controller->getGraph());
 
-  if (controller->getCollisionMdl())
+  if (controller->getNarrowPhase())
   {
     getEntity()->publish<const MatNd*>("RenderLines",
-                                       controller->getCollisionMdl()->cp);
+                                       controller->getNarrowPhase()->cp);
   }
 
   if (this->renderSolid == false)
@@ -232,7 +232,7 @@ void IKComponent::setCollisionCheck(bool enable)
 
 void IKComponent::print() const
 {
-  RcsCollisionModel_fprintCollisions(stdout, controller->getCollisionMdl(), 1000.0);
+  RcsCollisionModel_fprintCollisions(stdout, controller->getNarrowPhase(), 1000.0);
   RcsGraph_fprintModelState(stdout, controller->getGraph(),
                             controller->getGraph()->q, NULL, 0);
 }

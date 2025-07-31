@@ -290,7 +290,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
   // intitialization time. It may be that there are no collisions, and
   // therefore minDist=DBL_MAX and the minDistBdy1 and 2 are "NULL"
   int minDistPair = -1;
-  const RcsCollisionMdl* cmdl = controller->getCollisionMdl();
+  const RcsCollisionMdl* cmdl = controller->getNarrowPhase();
   result.minDist = RcsCollisionMdl_getMinDistPair(cmdl, &minDistPair);
   result.minDistBdy1 = (minDistPair==-1) ? "NULL" : RCSBODY_NAME_BY_ID(cmdl->graph, cmdl->pair[minDistPair].b1);
   result.minDistBdy2 = (minDistPair==-1) ? "NULL" : RCSBODY_NAME_BY_ID(cmdl->graph, cmdl->pair[minDistPair].b2);
@@ -1160,10 +1160,10 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
   }
 
   // Collision check
-  if (collisionCheck && controller->getCollisionMdl())
+  if (collisionCheck && controller->getNarrowPhase())
   {
     const double distLimit = 0.001;
-    const RcsCollisionMdl* cmdl = controller->getCollisionMdl();
+    const RcsCollisionMdl* cmdl = controller->getNarrowPhase();
     int min_i = -1;
     double minDist = RcsCollisionMdl_getMinDistPair(cmdl, &min_i);
 
@@ -1222,9 +1222,7 @@ int TrajectoryPredictor::checkState(const Rcs::ControllerBase* controller,
         RLOG(1, "Found collision distance of %f (must be >%f)", minDist, distLimit);
         REXEC(2)
         {
-          RcsCollisionModel_fprintCollisions(stdout,
-                                             controller->getCollisionMdl(),
-                                             distLimit);
+          RcsCollisionModel_fprintCollisions(stdout, controller->getNarrowPhase(), distLimit);
         }
       }
 

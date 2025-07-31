@@ -180,7 +180,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   RcsBroadPhase_updateBoundingVolumes(bp);
   controller.setBroadPhase(bp);
   RcsCollisionMdl* cMdl = RcsCollisionModel_create(graph);
-  controller.setCollisionMdl(cMdl);
+  controller.setNarrowPhase(cMdl);
 
   t_clone = Timer_getSystemTime() - t_clone;
   RLOG(5, "Graph cloning took %.2f msec", 1.0e3 * t_clone);
