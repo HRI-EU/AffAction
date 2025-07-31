@@ -172,6 +172,7 @@ public:
   virtual TrajectoryPredictor::PredictionResult predict(ActionScene& scene,
                                                         const RcsGraph* graph,
                                                         const RcsBroadPhase* broadphase,
+                                                        const RcsCollisionMdl* selfCA,
                                                         double duration,
                                                         double dt,
                                                         bool earlyExit) const;

@@ -48,12 +48,14 @@
 #include <ExampleBase.h>
 #include <IkSolverRMR.h>
 #include <ActionBase.h>
-
-#include <atomic>
+#include <BodyPointDragger.h>
 
 #include "GazeComponent.h"
 #include "SceneTransformationDataRecorder.h"
 #include "SceneTransformationDataPlayer.h"
+
+#include <atomic>
+
 
 
 extern "C" {
@@ -93,6 +95,7 @@ public:
   const RcsGraph* getCurrentGraph() const;
   RcsBroadPhase* getBroadPhase();
   const RcsBroadPhase* getBroadPhase() const;
+  const RcsCollisionMdl* getSelfCollisionModel() const;
   std::shared_ptr<ConcurrentSceneQuery> getQuery();
   GraphicsWindow* getViewer();
   bool eraseViewer();
@@ -104,7 +107,7 @@ public:
   void addComponentArgument(const std::string& arg);
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;
-
+  const std::vector<ComponentBase*>& getComponentsRef() const;
   void addComponent(ComponentBase* component);
   void addHardwareComponent(ComponentBase* component);
   bool isFinalPoseRunning() const;
@@ -180,6 +183,10 @@ protected:
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<SceneQueryPool> sceneQuery;
 
+
+  osg::ref_ptr<Rcs::BodyPointDragger> dragger;
+
+
   void setEnableRobot(bool enable);
   bool getRobotEnabled() const;
   void addToCompletedActionStack(std::string action, std::string result);
@@ -219,7 +226,6 @@ protected:
   mutable std::mutex stepMtx;
   std::vector<ComponentBase*> hwc;
   std::vector<ComponentBase*> components;
-
   RcsGraph* graphToInitializeWith;
 
   /*! \brief List of gaze components.

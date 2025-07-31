@@ -42,13 +42,16 @@
 namespace aff
 {
 
-IKComponent::IKComponent(EntityBase* parent,
-                         Rcs::ControllerBase* controller_, IkSolverType ik) :
-  ComponentBase(parent), controller(controller_), ikSolver(NULL), a_prev(NULL),
+IKComponent::IKComponent(EntityBase* parent, Rcs::ControllerBase* controller_,
+                         RcsCollisionMdl* selfCollisionAvoidance, IkSolverType ik) :
+  ComponentBase(parent), controller(controller_), ikSolver(nullptr),
+  collisionAvoidanceModel(selfCollisionAvoidance),  a_prev(nullptr), draggerTorque(nullptr),
   eStop(false), alphaMax(0.05), alpha(0.0), lambda(1.0e-4), blending(1.0), phase(0.0),
   qFilt(0.0), renderSolid(false), speedLimitCheck(true), jointLimitCheck(true),
   collisionCheck(true), applySpeedAndAccLimits(true)
 {
+  RcsCollisionModel_fprint(stderr, collisionAvoidanceModel);
+  this->draggerTorque = MatNd_create(1, controller->getGraph()->dof);   // largest possible alloc
   switch (ik)
   {
     case RMR:
@@ -70,6 +73,8 @@ IKComponent::~IKComponent()
 {
   delete this->ikSolver;
   MatNd_destroy(this->a_prev);
+  MatNd_destroy(this->draggerTorque);
+  RcsCollisionModel_destroy(this->collisionAvoidanceModel);
 }
 
 void IKComponent::subscribeAll()
@@ -120,15 +125,16 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
 
 
   ActionResult resMsg;
-  int ikOk = TrajectoryPredictor::computeIK(ikSolver, a, x, getEntity()->getDt(), alpha*blending,
+  int ikOk = TrajectoryPredictor::computeIK(ikSolver, collisionAvoidanceModel, a, x, this->draggerTorque, getEntity()->getDt(), alpha*blending,
                                             lambda, qFilt, phase, speedLimitCheck, jointLimitCheck,
                                             collisionCheck, applySpeedAndAccLimits, true, NULL, resMsg);
 
   // We only print this once after the e-stop being triggered, therefore the second comparison
   if ((ikOk<0) && (eStop==false))
   {
-    RLOG_CPP(1, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
+    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
     getEntity()->publish("EmergencyStop");
+    RcsCollisionModel_fprint(stderr, collisionAvoidanceModel);
   }
 
   // Gradually activate null space so that it takes 1 second from 0 to alphaMax.
@@ -152,6 +158,11 @@ const RcsGraph* IKComponent::getGraph() const
 RcsGraph* IKComponent::getGraph()
 {
   return controller->getGraph();
+}
+
+const RcsCollisionMdl* IKComponent::getSelfCollisionModel() const
+{
+  return this->collisionAvoidanceModel;
 }
 
 void IKComponent::onEmergencyStop()
@@ -282,6 +293,11 @@ double IKComponent::getLambda() const
 void IKComponent::renderSolidModel()
 {
   this->renderSolid = true;
+}
+
+void IKComponent::setExternalNullspaceVelocity(const MatNd* dq_ns)
+{
+  MatNd_reshapeCopy(this->draggerTorque, dq_ns);
 }
 
 

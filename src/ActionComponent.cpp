@@ -60,9 +60,10 @@ namespace aff
 {
 
 ActionComponent::ActionComponent(EntityBase* parent, const RcsGraph* graph_,
-                                 const RcsBroadPhase* broadphase_) :
+                                 const RcsBroadPhase* broadphase_,
+                                 const RcsCollisionMdl* selfCA_) :
   ComponentBase(parent), domain(graph_->cfgFile), graph(graph_),
-  broadphase(broadphase_), limitsEnabled(true), multiThreaded(true),
+  broadphase(broadphase_), selfCA(selfCA_), limitsEnabled(true), multiThreaded(true),
   startingFinalPose(false), earlyExitPrediction(true)
 {
   subscribe("Print", &ActionComponent::onPrint);
@@ -146,7 +147,7 @@ void ActionComponent::actionThread(std::string text)
         RLOGS(1, "Starting prediction %zu from %zu: %s", i, localAction->getNumSolutions() - 1,
               localAction->getActionCommand().c_str());
         double dt_predict = Timer_getSystemTime();
-        predictions[i] = localAction->predict(domain, graph, broadphase, localAction->getDuration(),
+        predictions[i] = localAction->predict(domain, graph, broadphase, selfCA, localAction->getDuration(),
                                               getEntity()->getDt(), earlyExitPrediction);
         predictions[i].idx = i;
         dt_predict = Timer_getSystemTime() - dt_predict;
@@ -176,7 +177,7 @@ void ActionComponent::actionThread(std::string text)
       RLOG_CPP(1, "Starting single-threaded prediction " << i << " from " << action->getNumSolutions());
       action->initialize(domain, graph, i);
       double dt_predict = Timer_getSystemTime();
-      predictions[i] = action->predict(domain, graph, broadphase, action->getDuration(),
+      predictions[i] = action->predict(domain, graph, broadphase, selfCA, action->getDuration(),
                                        getEntity()->getDt(), earlyExitPrediction);
       predictions[i].idx = i;
       dt_predict = Timer_getSystemTime() - dt_predict;

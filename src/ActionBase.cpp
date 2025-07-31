@@ -165,6 +165,7 @@ size_t ActionBase::addTasks(Rcs::ControllerBase* controller) const
 TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
                                                           const RcsGraph* graph_,
                                                           const RcsBroadPhase* broadphase,
+                                                          const RcsCollisionMdl* selfCA,
                                                           double duration,
                                                           double dt,
                                                           bool earlyExit) const
@@ -188,7 +189,7 @@ TrajectoryPredictor::PredictionResult ActionBase::predict(ActionScene& scene,
   auto tc = std::make_unique<tropic::TrajectoryController<tropic::ViaPointTrajectory1D>>(&controller, 1.0);
   const double delay = 5.0*dt;
   auto tSet = createTrajectory(delay, duration+delay);
-  aff::TrajectoryPredictor pred(tc.get());
+  aff::TrajectoryPredictor pred(tc.get(), selfCA);
   bool trajSuccess = pred.setTrajectory(tSet);   // also clears it
   aff::TrajectoryPredictor::PredictionResult result;
 

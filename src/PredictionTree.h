@@ -307,6 +307,7 @@ public:
                                                         ActionScene& scene,
                                                         RcsGraph* graph,
                                                         const RcsBroadPhase* broadphase,
+                                                        const RcsCollisionMdl* selfCA,
                                                         std::vector<std::string> actionCommands,
                                                         double dt,
                                                         size_t maxNumThreads=0,

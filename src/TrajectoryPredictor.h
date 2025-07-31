@@ -81,7 +81,8 @@ public:
   /*! \brief Constructs class with TrajectoryController instance cloned from
    *         the passed controller.
    */
-  TrajectoryPredictor(const tropic::TrajectoryControllerBase* controller);
+  TrajectoryPredictor(const tropic::TrajectoryControllerBase* controller,
+                      const RcsCollisionMdl* selfCA);
 
   /*! \brief Destroys the instance and frees all internal memory.
    */
@@ -104,7 +105,7 @@ public:
    *  \return 0: success, -1: singular IK, -2: speed limit violation,
    *          -3: joint limit violation, -4: collision
    */
-  static int computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, const MatNd* x,
+  static int computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* selfCA, const MatNd* a, const MatNd* x, const MatNd* dh_ns_ext,
                        double dt, double alpha, double lambda,
                        double qFilt, double phase, bool speedLimitCheck, bool jointLimitCheck,
                        bool collisionCheck, bool withSpeedAccLimit,
@@ -115,6 +116,7 @@ public:
 
   tropic::TrajectoryControllerBase* tc;
   Rcs::IkSolverRMR* ikSolver;
+  RcsCollisionMdl* selfCA;
 
 private:
 

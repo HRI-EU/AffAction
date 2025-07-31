@@ -687,6 +687,7 @@ std::vector<ActionResult> PredictionTree::getSolutionErrorStrings(size_t index) 
 static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
                                                          RcsGraph* graph,
                                                          const RcsBroadPhase* broadphase,
+                                                         const RcsCollisionMdl* selfCA,
                                                          std::vector<std::string> actions,
                                                          size_t stepsToPlan,
                                                          size_t maxNumThreads,
@@ -783,7 +784,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
         // Create a new unique_ptr<ActionBase> for each lambda
         const ActionBase* aPtr = action.get();
 
-        futures.push_back(predictExecutor.enqueue([i, &domain, broadphase, lookaheadGraph, aPtr, dt, earlyExit, &predResults]
+        futures.push_back(predictExecutor.enqueue([i, &domain, broadphase, selfCA, lookaheadGraph, aPtr, dt, earlyExit, &predResults]
         {
           auto localAction = aPtr->clone();
           RLOG_CPP(1, "Starting prediction " << i + 1 << " from " << localAction->getNumSolutions());
@@ -794,7 +795,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
           {
             duration = std::max(duration, localAction->getDefaultDuration());
           }
-          predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase,
+          predResults[i] = localAction->predict(domain, lookaheadGraph, broadphase, selfCA,
                                                 duration, dt, earlyExit);
           predResults[i].idx = i;
           dt_predict = Timer_getSystemTime() - dt_predict;
@@ -876,6 +877,7 @@ static std::unique_ptr<PredictionTree> planActionTreeBFS(ActionScene& domain,
 
 static void DFS(ActionScene& scene,
                 const RcsBroadPhase* broadphase,
+                const RcsCollisionMdl* selfCA,
                 std::vector<std::string> actionSequenceStrings,
                 double dt,
                 size_t nThreads,
@@ -905,7 +907,7 @@ static void DFS(ActionScene& scene,
       duration = std::max(duration, action->getDefaultDuration());
     }
 
-    auto res = action->predict(scene, node->graph, broadphase, duration, dt, actionEarlyExit);
+    auto res = action->predict(scene, node->graph, broadphase, selfCA, duration, dt, actionEarlyExit);
 
     // Scale duration to make motion as fast as possible
     //double merk = action->getDurationHint();
@@ -932,7 +934,7 @@ static void DFS(ActionScene& scene,
     // Descent to next recursion level
     if (child->level<actionSequenceStrings.size() && child->success)
     {
-      DFS(scene, broadphase, actionSequenceStrings, dt, nThreads, earlyExit, child, finished);
+      DFS(scene, broadphase, selfCA, actionSequenceStrings, dt, nThreads, earlyExit, child, finished);
       if (finished)
       {
         break;
@@ -947,6 +949,7 @@ static void DFS(ActionScene& scene,
 static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
                                                          RcsGraph* graph,
                                                          const RcsBroadPhase* broadphase,
+                                                         const RcsCollisionMdl* selfCA,
                                                          std::vector<std::string> actions,
                                                          size_t stepsToPlan,
                                                          size_t maxNumThreads,
@@ -976,7 +979,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT(ActionScene& domain,
   tree->root->graph = RcsGraph_clone(graph);
 
   bool isFinished = false;
-  DFS(domain, broadphase, actions, dt, nThreads, earlyExitSearch, tree->root, isFinished);
+  DFS(domain, broadphase, selfCA, actions, dt, nThreads, earlyExitSearch, tree->root, isFinished);
   tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
   REXEC(0)
@@ -1009,6 +1012,7 @@ std::mutex staticLock;
 
 static void DFSMT(ActionScene& scene,
                   const RcsBroadPhase* broadphase,
+                  const RcsCollisionMdl* selfCA,
                   PredictionTreeNode* node,
                   const std::vector<std::string>& levelCommands,
                   double dt,
@@ -1018,6 +1022,7 @@ static void DFSMT(ActionScene& scene,
 
 static void expand(ActionScene& scene,
                    const RcsBroadPhase* broadphase,
+                   const RcsCollisionMdl* selfCA,
                    PredictionTreeNode* node,
                    const std::vector<std::string>& levelCommands,
                    double dt,
@@ -1050,7 +1055,7 @@ static void expand(ActionScene& scene,
   }
 
   RLOG(1, "duration is %f (turboMode is %s)", duration, action->turboMode() ? "ON" : "OFF");
-  auto res = action->predict(scene, node->graph, broadphase, duration, dt, earlyExitAction);
+  auto res = action->predict(scene, node->graph, broadphase, selfCA, duration, dt, earlyExitAction);
   res.idx = solutionIndex;
 
   // Scale duration to make motion as fast as possible. We also force it to the lower multiple of dt,
@@ -1095,7 +1100,7 @@ static void expand(ActionScene& scene,
   // Descent to next recursion level
   if ((child->level < levelCommands.size()) && child->success)
   {
-    DFSMT(scene, broadphase, child, levelCommands, dt, earlyExitSearch, earlyExitAction, finished);
+    DFSMT(scene, broadphase, selfCA, child, levelCommands, dt, earlyExitSearch, earlyExitAction, finished);
     if (finished)
     {
       return;
@@ -1106,6 +1111,7 @@ static void expand(ActionScene& scene,
 
 void DFSMT(ActionScene& scene,
            const RcsBroadPhase* broadphase,
+           const RcsCollisionMdl* selfCA,
            PredictionTreeNode* node,
            const std::vector<std::string>& levelCommands,
            double dt,
@@ -1145,13 +1151,13 @@ void DFSMT(ActionScene& scene,
 
     if (!threadMe)
     {
-      expand(scene, broadphase, node, levelCommands, dt, earlyExitSearch, earlyExitAction, finished, i,
+      expand(scene, broadphase, selfCA, node, levelCommands, dt, earlyExitSearch, earlyExitAction, finished, i,
              std::unique_ptr<ActionBase>(action->clone()), false);
     }
     else
     {
       launchedThreads++;
-      workers.push_back(std::thread(expand, std::ref(scene), broadphase, node, levelCommands, dt,
+      workers.push_back(std::thread(expand, std::ref(scene), broadphase, selfCA, node, levelCommands, dt,
                                     earlyExitSearch, earlyExitAction, std::ref(finished), (int)i,
                                     std::unique_ptr<ActionBase>(action->clone()), true));
     }
@@ -1185,6 +1191,7 @@ void DFSMT(ActionScene& scene,
 static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
                                                             RcsGraph* graph,
                                                             const RcsBroadPhase* broadphase,
+                                                            const RcsCollisionMdl* selfCA,
                                                             std::vector<std::string> actions,
                                                             size_t stepsToPlan,
                                                             size_t maxNumThreads,
@@ -1211,7 +1218,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
   tree->root->graph = RcsGraph_clone(graph);
 
   bool isFinished = false;
-  DFSMT(domain, broadphase, tree->root, actions, dt, earlyExitSearch, earlyExitAction, isFinished);
+  DFSMT(domain, broadphase, selfCA, tree->root, actions, dt, earlyExitSearch, earlyExitAction, isFinished);
   tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
   RLOG_CPP(0, "Started threads: " << startedThreads << " stopped threads: " << stoppedThreads);
@@ -1227,6 +1234,7 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
                                                                ActionScene& scene,
                                                                RcsGraph* graph,
                                                                const RcsBroadPhase* bp,
+                                                               const RcsCollisionMdl* selfCA,
                                                                std::vector<std::string> actions,
                                                                double dt,
                                                                size_t maxNumThreads,
@@ -1239,17 +1247,17 @@ std::unique_ptr<PredictionTree> PredictionTree::planActionTree(SearchType sType,
   switch (sType)
   {
     case SearchType::BFS:
-      tree = planActionTreeBFS(scene, graph, bp, actions, numStepsToPlan,
+      tree = planActionTreeBFS(scene, graph, bp, selfCA, actions, numStepsToPlan,
                                maxNumThreads, dt, earlyExitAction);
       break;
 
     case SearchType::DFS:
-      tree = planActionTreeDFT(scene, graph, bp, actions, numStepsToPlan,
+      tree = planActionTreeDFT(scene, graph, bp, selfCA, actions, numStepsToPlan,
                                maxNumThreads, dt, earlyExitSearch, earlyExitAction);
       break;
 
     case SearchType::DFSMT:
-      tree = planActionTreeDFT_MT(scene, graph, bp, actions, numStepsToPlan,
+      tree = planActionTreeDFT_MT(scene, graph, bp, selfCA, actions, numStepsToPlan,
                                   maxNumThreads, dt, earlyExitSearch, earlyExitAction);
       break;
 

@@ -102,10 +102,11 @@ public:
    *
    * \param[in] parent     Entity class responsible for event subscriptions
    * \param[in] controller Controller with all task variables and (possibly)
-   *                       a collision model. It will be cloned.
+   *                       a collision model. It is a pointer and not owned
+   *                       by this class.
    */
   IKComponent(EntityBase* parent, Rcs::ControllerBase* controller,
-              IkSolverType ik=ConstraintRMR);
+              RcsCollisionMdl* selfCollisionAvoidance, IkSolverType ik);
 
   /*! \brief Destroys the IkSolverRMR and all other allocated memory.
    */
@@ -129,6 +130,8 @@ public:
    * \return Const pointer to internal RcsGraph data structure.
    */
   const RcsGraph* getGraph() const;
+
+  const RcsCollisionMdl* getSelfCollisionModel() const;
 
   /*! \brief Enable or disable speed and acceleration limits. If it is enabled,
    *         the IK solver function will scale the resulting speeds and
@@ -199,6 +202,11 @@ public:
    */
   virtual void renderSolidModel();
 
+  /*! \brief Sets the velocity that is added to the IK null space velocity. That's
+   *         for instance useful for adding a graphics mouse dragger etc.
+   */
+  virtual void setExternalNullspaceVelocity(const MatNd* dq_ns);
+
 private:
 
   void onTaskCommand(const MatNd* a_des, const MatNd* x_des);
@@ -216,7 +224,9 @@ private:
 
   Rcs::ControllerBase* controller;
   Rcs::IkSolverRMR* ikSolver;
+  RcsCollisionMdl* collisionAvoidanceModel;
   MatNd* a_prev;
+  MatNd* draggerTorque;
   bool eStop;
   double alphaMax;
   double alpha;

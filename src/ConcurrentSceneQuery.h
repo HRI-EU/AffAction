@@ -218,6 +218,7 @@ private:
   const ExampleActionsECS* sim;
   RcsGraph* graph;
   RcsBroadPhase* broadphase;
+  RcsCollisionMdl* selfCA;
   ActionScene scene;
   std::mutex reentrancyLock;
 };

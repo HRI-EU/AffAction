@@ -47,7 +47,8 @@ class ActionComponent : public ComponentBase
 public:
 
   ActionComponent(EntityBase* parent, const RcsGraph* graph,
-                  const RcsBroadPhase* broadphase);
+                  const RcsBroadPhase* broadphase,
+                  const RcsCollisionMdl* selfCA);
   ~ActionComponent();
 
   const ActionScene* getScene() const;
@@ -70,6 +71,7 @@ private:
   ActionScene domain;
   const RcsGraph* graph;
   const RcsBroadPhase* broadphase;
+  const RcsCollisionMdl* selfCA;
   bool limitsEnabled;
   bool multiThreaded;
   bool startingFinalPose;

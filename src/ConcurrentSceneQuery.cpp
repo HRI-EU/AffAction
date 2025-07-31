@@ -114,7 +114,7 @@ bool SceneQueryPool::test(const ExampleActionsECS* sim)
 
 
 ConcurrentSceneQuery::ConcurrentSceneQuery(const ExampleActionsECS* sim_) :
-  sim(sim_), graph(NULL), broadphase(NULL)
+  sim(sim_), graph(NULL), broadphase(nullptr), selfCA(nullptr)
 {
   RCHECK(sim);
   sim->lockStepMtx();
@@ -127,6 +127,7 @@ ConcurrentSceneQuery::~ConcurrentSceneQuery()
 {
   RcsGraph_destroy(graph);
   RcsBroadPhase_destroy(this->broadphase);
+  RcsCollisionModel_destroy(this->selfCA);
 }
 
 void ConcurrentSceneQuery::update(bool withBroadphase)
@@ -145,6 +146,8 @@ void ConcurrentSceneQuery::updateNoMutex(bool withBroadphase)
   {
     RcsBroadPhase_destroy(this->broadphase);
     this->broadphase = RcsBroadPhase_clone(sim->getBroadPhase(), graph);
+    RcsCollisionModel_destroy(this->selfCA);
+    this->selfCA = RcsCollisionModel_clone(sim->getSelfCollisionModel(), this->graph);
   }
 }
 
@@ -296,7 +299,7 @@ ConcurrentSceneQuery::planActionTree(PredictionTree::SearchType searchType,
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
 
-  return PredictionTree::planActionTree(searchType, scene, graph, broadphase, actions,
+  return PredictionTree::planActionTree(searchType, scene, graph, broadphase, nullptr, actions,
                                         dt, maxThreads,
                                         earlyExitSearch, earlyExitAction);
 }

@@ -218,12 +218,14 @@ void TrajectoryPredictor::PredictionResult::print(int verbosityLevel) const
 /*******************************************************************************
  *
  ******************************************************************************/
-TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_) :
-  tc(NULL), ikSolver(NULL), tStack(NULL)
+TrajectoryPredictor::TrajectoryPredictor(const TrajectoryControllerBase* tc_,
+                                         const RcsCollisionMdl* selfCA_) :
+  tc(nullptr), ikSolver(nullptr), selfCA(nullptr), tStack(nullptr)
 {
   RCHECK(12 == N_DOUBLES_IN_HTR);   // Should be 12, just to be sure
   this->tc = new TrajectoryControllerBase(*tc_);
   this->ikSolver = new Rcs::IkSolverRMR(tc->getInternalController());
+  this->selfCA = RcsCollisionModel_clone(selfCA_, tc->getController()->getGraph());
   this->tStack = MatNd_create(1, tc->getController()->getGraph()->nBodies*N_DOUBLES_IN_HTR);
 }
 
@@ -231,6 +233,7 @@ TrajectoryPredictor::~TrajectoryPredictor()
 {
   delete this->tc;
   delete this->ikSolver;
+  RcsCollisionModel_destroy(this->selfCA);
   MatNd_destroy(this->tStack);
 }
 
@@ -369,7 +372,7 @@ TrajectoryPredictor::PredictionResult TrajectoryPredictor::predict(double dt, bo
     const double phase = (motionDuration > 0.0) ? 1.0 - (endTime / motionDuration) : 0.0;
     const double phaseScale = sin(M_PI * phase);
 
-    int ikRes = computeIK(ikSolver, a_des, x_des,
+    int ikRes = computeIK(this->ikSolver, this->selfCA, a_des, x_des, nullptr,
                           dt, blending*alpha, lambda, qFilt, phaseScale,
                           speedLimitCheck, jointLimitCheck,
                           collisionCheck, withSpeedAccLimit,
@@ -834,7 +837,7 @@ void TrajectoryPredictor::addWristNullspace(const RcsGraph* graph, MatNd* dH)
 }
 
 
-int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, const MatNd* x,
+int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* selfCA, const MatNd* a, const MatNd* x, const MatNd* dh_ns_ext,
                                    double dt, double alpha, double lambda, double qFilt, double phase,
                                    bool speedLimitCheck, bool jointLimitCheck,
                                    bool collisionCheck, bool withSpeedAccLimit,
@@ -932,6 +935,45 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, const MatNd* a, con
     MatNd_transposeSelf(aMask);
     MatNd_eleMulSelf(dH, aMask);
     MatNd_destroyN(3, eMask, aMask, tmpMask);
+  }
+
+  // Add external nullspace terms here, like mouse draggers etc.
+  if (dh_ns_ext)
+  {
+    MatNd_addSelf(dH, dh_ns_ext);
+  }
+
+  // Add self collision avoidance here. We do it after the joint weight
+  // strategy, since we prioritize self collision avoidance against keeping
+  // a pose.
+  if (selfCA)
+  {
+    MatNd* dH_ca = MatNd_createLike(graph->q);
+
+    RcsCollisionModel_compute(selfCA);
+    RcsCollisionMdl_gradient(selfCA, dH_ca);
+
+    RCHECK(MatNd_isFinite(dH_ca));
+
+    MatNd_constMulSelf(dH_ca, 0.001);
+
+    double scale = RcsGraph_checkJointSpeeds(graph, dH_ca, dt, RcsStateIK);
+
+    if (scale < 1.0)
+    {
+      RLOG(0, "Scaling down joint speeds by factor %f", scale);
+      MatNd_constMulSelf(dH_ca, 0.99999 * scale);
+    }
+
+    REXEC(2)
+    {
+      double dCost = RcsCollisionMdl_testGrad(selfCA, 1.0e-3);
+      RLOG(2, "dCost: %f   d: %f", dCost, RcsCollisionMdl_getMinDist(selfCA));
+    }
+
+    //MatNd_constMulSelf(dH_ca, phase);
+    MatNd_addSelf(dH, dH_ca);
+    MatNd_destroy(dH_ca);
   }
 
   // The right inverse is the method of choice here, since we have less task

@@ -84,6 +84,7 @@ public:
    */
   TrajectoryComponent(EntityBase* parent,
                       Rcs::ControllerBase* controller,
+                      const RcsCollisionMdl* selfCA,
                       bool viaPtTrj=true,
                       double horizon=1.0,
                       bool checkTrajectory=true);
@@ -129,6 +130,7 @@ private:
 
 
   tropic::TrajectoryControllerBase* tc;
+  const RcsCollisionMdl* selfCA;
   double motionEndTime;
   double lastMotionEndTime;
   double motionDuration;

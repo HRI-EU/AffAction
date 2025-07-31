@@ -54,11 +54,12 @@ namespace aff
 
 TrajectoryComponent::TrajectoryComponent(EntityBase* parent,
                                          Rcs::ControllerBase* controller,
+                                         const RcsCollisionMdl* selfCA_,
                                          bool via,
                                          double horizon,
                                          bool checkTrajectory_) :
-  ComponentBase(parent), tc(NULL), motionEndTime(0.0),
-  lastMotionEndTime(0.0), motionDuration(0.0), a_des(NULL), x_des(NULL),
+  ComponentBase(parent), tc(nullptr), selfCA(selfCA_), motionEndTime(0.0),
+  lastMotionEndTime(0.0), motionDuration(0.0), a_des(nullptr), x_des(nullptr),
   enableTrajectoryCheck(checkTrajectory_), eStop(false)
 {
   this->a_des = MatNd_create((int) controller->getNumberOfTasks(), 1);
@@ -207,7 +208,7 @@ void TrajectoryComponent::onSimulateTrajectory(TCS_sptr tSet)
 {
   // We always predict over the full trajectory, regardless if the check has
   // been disabled or not.
-  std::shared_ptr<TrajectoryPredictor> pred = std::make_shared<TrajectoryPredictor>(tc);
+  std::shared_ptr<TrajectoryPredictor> pred = std::make_shared<TrajectoryPredictor>(tc, this->selfCA);
   pred->setTrajectory(tSet);   // also clears it
   std::thread t1(&TrajectoryComponent::checkerThread, this, tSet, true, pred);
   t1.detach();
@@ -315,7 +316,7 @@ void TrajectoryComponent::onCheckAndSetTrajectory(TCS_sptr tSet)
   //        is provided with a separate graph (e.g. instantiated during
   //        construction) that will only be linked. However, this requires
   //        touching the ControllerBase and TrajectoryController classes.
-  auto pred = std::make_shared<TrajectoryPredictor>(tc);
+  auto pred = std::make_shared<TrajectoryPredictor>(tc, this->selfCA);
 
   // Clears the predictor's trajectories and copies tSet
   pred->setTrajectory(tSet);

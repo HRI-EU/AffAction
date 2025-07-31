@@ -33,7 +33,6 @@
 #include "ExampleActionsECS.h"
 #include "ActionFactory.h"
 #include "ActionSequence.h"
-//#include "AnimationSequence.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
 #include "PhysicsComponent.h"
@@ -67,8 +66,6 @@
 #include <ControllerWidgetBase.h>
 #include <CmdLineWidget.h>
 
-#include <BodyPointDragger.h>
-#include <MouseDragger.h>
 #include <AABBNode.h>
 #include <SphereNode.h>
 #include <BodyNode.h>
@@ -125,11 +122,18 @@ static RcsBody* getBodyUnderMousePointer(RcsGraph* graph,
   return bdy;
 }
 
-class NamedMouseDragger: public Rcs::BodyPointDragger//MouseDragger
+class NamedMouseDragger: public Rcs::BodyPointDragger
 {
 public:
-  NamedMouseDragger(RcsGraph* graph_) : graph(graph_)
+  NamedMouseDragger(RcsGraph* graph_) : graph(graph_), draggerTorque(nullptr)
   {
+    this->draggerTorque = MatNd_create(1, graph->dof);
+    MatNd_reshape(this->draggerTorque, 1, graph->nJ);
+  }
+
+  ~NamedMouseDragger()
+  {
+    MatNd_destroy(this->draggerTorque);
   }
 
   RcsBody* getBodyUnderMouse(const osgGA::GUIEventAdapter& ea,
@@ -169,42 +173,45 @@ public:
   {
     double F[3];
     getDragForce(F);
+    /*    MatNd_reshapeAndSetZero(this->draggerTorque, 1, graph->nJ);
+        addJointTorque(this->draggerTorque, graph)*/;
     return Rcs::BodyPointDragger::callback(ea, aa);
   }
 
-private:
+  //private:
 
   RcsGraph* graph;
+  MatNd* draggerTorque;
 };
 
 /*******************************************************************************
  *
  ******************************************************************************/
-class NamedBodyForceDragger : public Rcs::ForceDragger
-{
-public:
-
-  NamedBodyForceDragger(Rcs::PhysicsBase* sim) : Rcs::ForceDragger(sim)
-  {
-  }
-
-  virtual void update()
-  {
-    double f[3];
-    Vec3d_sub(f, _I_mouseTip, _I_anchor);
-    Vec3d_constMulSelf(f, getForceScaling() * (_leftControlPressed ? 10.0 : 1.0));
-
-    RcsBody* simBdy = NULL;
-    if (_draggedBody)
-    {
-      simBdy = RcsGraph_getBodyByName(physics->getGraph(), _draggedBody->name);
-      NLOG(0, "Graph addy: 0x%x", physics->getGraph());
-      NLOG(0, "Dragging %s to: [%f, %f, %f]", simBdy->name, f[0], f[1], f[2]);
-    }
-    physics->applyForce(simBdy, f, _k_anchor);
-
-  }
-};
+//class NamedBodyForceDragger : public Rcs::ForceDragger
+//{
+//public:
+//
+//  NamedBodyForceDragger(Rcs::PhysicsBase* sim) : Rcs::ForceDragger(sim)
+//  {
+//  }
+//
+//  virtual void update()
+//  {
+//    double f[3];
+//    Vec3d_sub(f, _I_mouseTip, _I_anchor);
+//    Vec3d_constMulSelf(f, getForceScaling() * (_leftControlPressed ? 10.0 : 1.0));
+//
+//    RcsBody* simBdy = NULL;
+//    if (_draggedBody)
+//    {
+//      simBdy = RcsGraph_getBodyByName(physics->getGraph(), _draggedBody->name);
+//      NLOG(0, "Graph addy: 0x%x", physics->getGraph());
+//      NLOG(0, "Dragging %s to: [%f, %f, %f]", simBdy->name, f[0], f[1], f[2]);
+//    }
+//    physics->applyForce(simBdy, f, _k_anchor);
+//
+//  }
+//};
 
 
 
@@ -438,6 +445,8 @@ bool ExampleActionsECS::initAlgo()
     controller = std::make_unique<Rcs::ControllerBase>(graph);
   }
 
+  RcsCollisionMdl* selfCA = nullptr;
+
   // Extract the collision model
   {
     xmlDocPtr doc = NULL;
@@ -447,8 +456,9 @@ bool ExampleActionsECS::initAlgo()
       xmlNodePtr child = getXMLChildByName(node, "CollisionModel");
       if (child)
       {
-        RcsCollisionMdl* cMdl = RcsCollisionModel_createFromXML(getGraph(), child);
-        controller->setCollisionMdl(cMdl);
+        RCHECK_MSG(!selfCA, "Can't have several collision models");
+        selfCA = RcsCollisionModel_createFromXML(getGraph(), child);
+        //controller->setCollisionMdl(cMdl);
       }
 
 
@@ -466,12 +476,12 @@ bool ExampleActionsECS::initAlgo()
         }
         RcsBroadPhase_updateBoundingVolumes(bp);
         controller->setBroadPhase(bp);
-
-        if (!controller->getCollisionMdl())
-        {
-          RcsCollisionMdl* cMdl = RcsCollisionModel_create(getGraph());
-          controller->setCollisionMdl(cMdl);
-        }
+        controller->setCollisionMdl(RcsCollisionModel_create(getGraph()));
+        //if (!controller->getCollisionMdl())
+        //{
+        //  RcsCollisionMdl* cMdl = RcsCollisionModel_create(getGraph());
+        //  controller->setCollisionMdl(cMdl);
+        //}
       }
       else
       {
@@ -493,7 +503,7 @@ bool ExampleActionsECS::initAlgo()
   //RcsGraph_getModelStateFromXML(graph->q, graph, "JacoDefaultPose", 0);
   //RcsGraph_setState(graph, NULL, NULL);
 
-  actionC = new aff::ActionComponent(&entity, getGraph(), controller->getBroadPhase());
+  actionC = new aff::ActionComponent(&entity, getGraph(), controller->getBroadPhase(), selfCA);
   actionC->setLimitCheck(!noLimits);
   actionC->setMultiThreaded(!singleThreaded);
   actionC->setEarlyExitPrediction(true);
@@ -541,7 +551,7 @@ bool ExampleActionsECS::initAlgo()
   {
     if (EyeModelIKComponent::hasEyeModel(getGraph()))
     {
-      auto eyeIK = new EyeModelIKComponent(&entity, getGraph());
+      auto eyeIK = new EyeModelIKComponent(&entity, getGraph(), "camera_0");
       addComponent(eyeIK);
     }
     else
@@ -592,12 +602,12 @@ bool ExampleActionsECS::initAlgo()
   graphC->setEnableRender(false);
   addComponent(graphC);
 
-  trajC = new aff::TrajectoryComponent(&entity, controller.get(), !zigzag, 1.0,
+  trajC = new aff::TrajectoryComponent(&entity, controller.get(), selfCA, !zigzag, 1.0,
                                        !noTrajCheck);
   addComponent(trajC);
 
   // Inverse kinematics controller, no constraints, right inverse
-  ikc = new aff::IKComponent(&entity, controller.get(), ikType);
+  ikc = new aff::IKComponent(&entity, controller.get(), selfCA, ikType);
   ikc->setEnableSpeedAccelerationLimit(!noSpeedCheck);
   ikc->setSpeedLimitCheck(!noSpeedCheck);
   ikc->setJointLimitCheck(!noJointCheck);
@@ -755,7 +765,9 @@ bool ExampleActionsECS::initGraphics()
   }
   else
   {
-    viewer->add(new NamedMouseDragger(getGraph()));
+    this->dragger = new NamedMouseDragger(getGraph());
+    dragger->scaleDragForce(dt);
+    viewer->add(dragger.get());
   }
 
   viewer->setTitle("ExampleActionsECS");
@@ -1269,12 +1281,18 @@ void ExampleActionsECS::run()
 
 void ExampleActionsECS::step()
 {
+  MatNd* dH = MatNd_create(1, ikc->getGraph()->nJ);
   dtProcess = Timer_getSystemTime();
 
   stepMtx.lock();
   updateGraph->call(getCurrentGraph());
   computeKinematics->call(getCurrentGraph());
   postUpdateGraph->call(ikc->getGraph(), getCurrentGraph());
+
+  dragger->addJointTorque(dH, ikc->getGraph());
+  ikc->setExternalNullspaceVelocity(dH);
+  //ikc->setExternalNullspaceVelocity(static_cast<NamedMouseDragger*>(dragger.get())->draggerTorque);
+
   updateScene->call(ikc->getGraph(), getCurrentGraph(), getScene());
   computeTrajectory->call(trajTimeScaling*entity.getDt());
   setTaskCommand->call(trajC->getActivationPtr(), trajC->getTaskCommandPtr());
@@ -1286,6 +1304,8 @@ void ExampleActionsECS::step()
   stepMtx.unlock();
 
   dtProcess = Timer_getSystemTime() - dtProcess;
+
+  MatNd_destroy(dH);
 
   if (entity.getTime() > 3.0)
   {
@@ -1943,6 +1963,11 @@ const RcsBroadPhase* ExampleActionsECS::getBroadPhase() const
   return controller ? controller->getBroadPhase() : nullptr;
 }
 
+const RcsCollisionMdl* ExampleActionsECS::getSelfCollisionModel() const
+{
+  return ikc->getSelfCollisionModel();
+}
+
 std::shared_ptr<ConcurrentSceneQuery> ExampleActionsECS::getQuery()
 {
   return sceneQuery ? sceneQuery->instance() : nullptr;
@@ -2118,6 +2143,11 @@ void ExampleActionsECS::addComponentArgument(const std::string& arg)
 std::string ExampleActionsECS::getComponentArguments() const
 {
   return componentArgs;
+}
+
+const std::vector<ComponentBase*>& ExampleActionsECS::getComponentsRef() const
+{
+  return components;
 }
 
 nlohmann::json ExampleActionsECS::getUsersGazeData() const
@@ -2320,22 +2350,6 @@ public:
     return true;
   }
 
-  // virtual bool initGraphics()
-  // {
-  //   bool success = ExampleActionsECS::initGraphics();
-  //   graphC->setEnableRender(true);
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-  //   entity.process();
-  //   Timer_waitDT(0.5);
-  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-  //   entity.process();
-
-  //   return success;
-  // }
-
   std::string help()
   {
     std::stringstream s;
@@ -2485,21 +2499,6 @@ public:
     componentArgs = "-pw70_vel -pw70_pan_joint_name ptu_pan_joint -pw70_tilt_joint_name ptu_tilt_joint -pw70_control_frequency 50";
     return true;
   }
-
-  // virtual bool initGraphics()
-  // {
-  //   bool success = ExampleActionsECS::initGraphics();
-  //   graphC->setEnableRender(true);
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-  //   entity.process();
-  //   Timer_waitDT(0.5);
-  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-  //   entity.publish("RenderCommand", std::string("IK"), std::string("hide"));
-  //   entity.process();
-
-  //   return success;
-  // }
 
   bool initAlgo()
   {
@@ -2694,22 +2693,6 @@ public:
     enableRealGraphVisualization = true;
     return true;
   }
-
-  // virtual bool initGraphics()
-  // {
-  //   bool success = ExampleActionsECS::initGraphics();
-  //   graphC->setEnableRender(true);
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-  //   entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", ikc->getGraph());
-  //   entity.process();
-  //   Timer_waitDT(0.5);
-  //   entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-  //   entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-  //   getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-  //   entity.process();
-
-  //   return success;
-  // }
 
   std::string help()
   {

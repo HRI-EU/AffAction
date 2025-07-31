@@ -369,7 +369,13 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   a1->add(t_prep, 0.6 * d_separate, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep + 0.5*(t_up-t_prep), 0.0, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep, heightAboveGlas, 0.0, 0.0, 7, taskRelPos + " 2");
-  a1->add(t_start + 0.5*(t_prep-t_start), this->initRelPosZ, 0.0, 0.0, 7, taskRelPos + " 2");
+
+  if (initRelPosZ > 0.4)
+  {
+    //a1->add(t_start + 0.5 * (t_prep - t_start), this->initRelPosZ, 0.0, 0.0, 7, taskRelPos + " 2");
+    a1->add(std::make_shared<tropic::PositionConstraint>(t_start + 0.5 * (t_prep - t_start), 0.0, 0.0, initRelPosZ, taskRelPos, 7));
+
+  }
 
   a1->add(std::make_shared<tropic::PositionConstraint>(t_up, 0.0, 0.0, 0.0, taskRelPos));
   a1->add(std::make_shared<tropic::PositionConstraint>(t_up + 0.5*(t_down-t_up), 0.0, 0.0,
