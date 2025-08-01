@@ -572,6 +572,7 @@ int main(int argc, char** argv)
       printf("\t-m 2   Initialize pan motor\n");
       printf("\t-m 3   Initialize tilt motor\n");
       printf("\t-m 4   Move to pan and tilt position (in degrees)\n");
+      printf("\t-m 5   Reset PTU\n");
       printf("\n");
       argP.print();
       break;
@@ -591,6 +592,15 @@ int main(int argc, char** argv)
     case 4:
       movePanTilt(argc, argv);
       break;
+
+    case 5:
+    {
+      auto pw70 = aff::PW70CANInterface::create();
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      pw70->reset_stop();
+      std::this_thread::sleep_for(std::chrono::seconds(1));
+      break;
+    }
 
 
     default:
