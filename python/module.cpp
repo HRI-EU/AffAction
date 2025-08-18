@@ -62,7 +62,6 @@ namespace py = pybind11;
 #include <SceneHelpers.h>
 #include <EyeModelIKComponent.h>
 #include "ZmqRouterComponent.h"
-#include "ImageTracker.h"
 
 #include <Rcs_resourcePath.h>
 #include <Rcs_macros.h>
@@ -85,36 +84,14 @@ namespace py = pybind11;
 #include <algorithm>
 #include <locale.h>
 
-
+#include "py_components.hpp"
+#include "py_planning.hpp"
+#include "py_mirror_eyes.hpp"
+#include "py_exploration.hpp"
 
 RCS_INSTALL_ERRORHANDLERS
 
 
-
-//////////////////////////////////////////////////////////////////////////////
-// Simple helper class that blocks the execution in the wait() function
-// until the ActionResult event has been received.
-//////////////////////////////////////////////////////////////////////////////
-class PollBlockerComponent
-{
-public:
-
-  PollBlockerComponent(aff::ExampleActionsECS* sim_) : sim(sim_)
-  {
-    sim->setProcessingAction(true);
-  }
-
-  void wait()
-  {
-    while (sim->isProcessingAction())
-    {
-      Timer_waitDT(0.1);
-    }
-    RLOG(0, "Done wait");
-  }
-
-  aff::ExampleActionsECS* sim;
-};
 
 
 
@@ -149,7 +126,6 @@ void define_AffordanceTypes(py::module& m)
 
 
 
-
 //////////////////////////////////////////////////////////////////////////////
 // The python affaction module, mainly consisting off the LlmSim class.
 //////////////////////////////////////////////////////////////////////////////
@@ -160,8 +136,8 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   // LlmSim constructor
   //////////////////////////////////////////////////////////////////////////////
-  py::class_<aff::ExampleActionsECS>(m, "LlmSim")
-  .def(py::init<>([]()
+  auto cls = py::class_<aff::ExampleActionsECS>(m, "LlmSim")
+             .def(py::init<>([]()
   {
 #if !defined(_MSC_VER) && !defined(__APPLE__)// Avoid crashes when running remotely.
     static bool xInitialized = false;
@@ -520,7 +496,15 @@ PYBIND11_MODULE(pyAffaction, m)
   //////////////////////////////////////////////////////////////////////////////
   .def("speak", [](aff::ExampleActionsECS& ex, std::string text)
   {
-    ex.getEntity().publish("Speak", text);
+    nlohmann::json payload =
+    {
+      {"type", "tts"},
+      {"cmd",  "SAY"},
+      {"text", text}
+    };
+
+    ex.getEntity().publish("TriggerPerception", std::string("tts"), 0, payload.dump());
+    //ex.getEntity().publish("Speak", text);
   })
 
   //////////////////////////////////////////////////////////////////////////////
@@ -634,6 +618,7 @@ color_np = np.array(color)
 color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
 cv2.imwrite("color_image.jpg", color_bgr)
 )pbdoc")
+
   //////////////////////////////////////////////////////////////////////////////
   // Returns the entity of which child is a child of, or an empty string
   //////////////////////////////////////////////////////////////////////////////
@@ -771,305 +756,6 @@ cv2.imwrite("color_image.jpg", color_bgr)
     return data;
   })
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Execute the action command, and return immediately.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("execute", [](aff::ExampleActionsECS& ex, std::string actionCommand)
-  {
-    ex.getEntity().publish("ActionSequence", actionCommand);
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Execute the action command, and return only after finished.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("executeBlocking", [](aff::ExampleActionsECS& ex, std::string actionCommand) -> bool
-  {
-    PollBlockerComponent blocker(&ex);
-    ex.getEntity().publish("ActionSequence", actionCommand);
-    blocker.wait();
-    RLOG_CPP(0, "Finished: " << actionCommand);
-    bool success = ex.lastActionResult[0].success();
-
-    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
-    return success;
-  })
-  .def("getRobotCapabilities", [](aff::ExampleActionsECS& ex)
-  {
-    return aff::ActionFactory::printToString();
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree
-  // Call it like: agent.sim.predictActionSequence("get fanta_bottle;put fanta_bottle lego_box;")
-  //////////////////////////////////////////////////////////////////////////////
-  .def("predictActionSequence", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::vector<std::string>
-  {
-    std::string errMsg;
-    std::vector<std::string> seq = Rcs::String_split(sequenceCommand, ";");
-    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT,
-                                              seq, ex.getEntity().getDt());
-    return tree ? tree->findSolutionPathAsStrings() : std::vector<std::string>();
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree
-  //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::string
-  {
-    ex.getEntity().publish("FreezePerception", true);
-    PollBlockerComponent blocker(&ex);
-    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
-    blocker.wait();
-    ex.getEntity().publish("FreezePerception", false);
-
-    if (ex.lastActionResult[0].success())
-    {
-      RLOG_CPP(0, "SUCCESS");
-      return "SUCCESS";
-    }
-
-    std::string fbmsgAsString = "No solution found:\n";
-    std::string fbLine, fbLinePrev;
-    for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
-    {
-      const aff::ActionResult& fb = ex.lastActionResult[i];
-      fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
-
-      if (fbLine!=fbLinePrev)
-      {
-        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
-      }
-      fbLinePrev = fbLine;
-    }
-    // size_t i = 0;
-    // for (const auto& fb : ex.lastActionResult)
-    // {
-    //   fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fb.reason + " Suggestion: " + fb.suggestion + "\n";
-    //   ++i;
-    // }
-
-    RLOG_CPP(0, fbmsgAsString);
-
-    return fbmsgAsString;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
-  {
-    const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
-    RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
-    std::vector<std::string> seq = Rcs::String_split(actionSequence, ";");
-
-    auto tree = ex.getQuery()->planActionTree(aff::PredictionTree::SearchType::DFSMT, seq, ex.getEntity().getDt(),
-                                              0, true, ex.earlyExitAction);
-
-    nlohmann::json j_inner = {
-      {"actions",    nlohmann::json::array()},
-      {"success",    false},
-      {"error",      ""},
-      {"reason",     ""},
-      {"suggestion", ""},
-      {"developer",  ""},
-      {"cost",       0.0}
-    };
-
-    if (!tree)
-    {
-      j_inner["error"] = "Failed to compute prediction tree";
-      return nlohmann::json::array({ j_inner });
-    }
-
-    if (!tree->root->feedbackMsg.error.empty())
-    {
-      j_inner["error"] = "Error in Solution 0";
-      return nlohmann::json::array({ j_inner });
-    }
-
-    // Handling a fatal error in the syntax for the first action
-    std::vector<aff::PredictionTreeNode*> slnPath = tree->findSolutionPath(0, false);
-
-    if (slnPath.empty())
-    {
-      j_inner["error"] = "Prediction tree contains no solutions";
-      return nlohmann::json::array({j_inner});
-    }
-
-    std::vector<aff::PredictionTreeNode*> leafs = tree->getLeafNodes(successes_only);
-
-    // Find the deepest level of the leaf nodes
-    int deepest_level = 0;
-    for (auto leaf : leafs)
-    {
-      deepest_level = std::max(deepest_level, leaf->level);
-    }
-
-    // Remove all nodes not at deepest level
-    leafs.erase(
-      std::remove_if(leafs.begin(), leafs.end(),
-                     [deepest_level](aff::PredictionTreeNode* node)
-    {
-      return node->level < deepest_level;
-    }),
-    leafs.end());
-
-
-    // Reporting only the nodes with the longest failure
-    nlohmann::json j_result = nlohmann::json::array();
-
-    for (auto leaf : leafs)
-    {
-      // Accumulate the grounded sequence command
-      auto slnPath = tree->getPathToNode(leaf);
-      std::vector<std::string> predictedSeq;
-      predictedSeq.reserve(slnPath.size());
-      for (auto node : slnPath)
-      {
-        predictedSeq.push_back(node->actionCommand());
-      }
-
-      const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
-      j_result.push_back(
-      {
-        {"lifted_actions", actionSequence},
-        {"actions", predictedSeq},
-        {"success", slnPath.back()->success},
-        {"error", errMsg.error},
-        {"reason", errMsg.reason},
-        {"suggestion", errMsg.suggestion},
-        {"developer", errMsg.developer},
-        {"cost", slnPath.back()->cost}
-      });
-
-    }
-
-    return j_result;
-  },
-  py::arg("sequenceCommand"),
-  py::arg("successes_only") = true,
-  py::arg("max_threads") = 0,
-  R"pbdoc(
-Plans an action sequence and returns detailed feedback for each attempted solution.
-
-This function resolves a semicolon-separated string of action commands into a
-sequence of robot actions. It attempts to plan and evaluate possible execution paths using
-a depth-first search strategy. The result includes detailed feedback for the deepest (most
-complete) failed solution paths, or the successful path(s) if available.
-
-Parameters
-----------
-sequence_command : str
-    A semicolon-separated sequence of high-level action commands to execute.
-    Example: "get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_5"
-
-successes_only: bool
-    If true, only successful paths will be returned. Otherwise, all paths that reach the overall
-    deepest level will be returned.
-
-max_threads: int
-    The maximum number of threads used in the depth-firrst search. If max_threads is 0 (default),
-    the number of threads will be determined by the computer's thread affinity (as many as possible)
-
-Returns
--------
-List[dict]
-    A list of result dictionaries, each containing:
-      - actions (List[str]): The list of action strings that were executed or planned.
-      - success (bool): Whether the plan was successful.
-      - error (str): Description of the failure or error ("SUCCESS" if successful).
-      - reason (str): More specific explanation of the failure, if available.
-      - suggestion (str): Suggested corrective action.
-      - developer (str): Developer-oriented debug message, if applicable.
-      - cost (float): Planning cost of the solution (lower is better).
-
-    The list is sorted according to the quality of the solution. The first entries are the
-    successful solutions, sorted by their accumulated cost (the first entry is the overall
-    best solution path). This is followed by solutions that contain the most number of steps.
-    If planning fails completely, a single-element list is returned with an error summary.
-    If multiple deepest failure paths exist, each found one is reported.
-
-Example
--------
->>> results = sim.plan_fb_rich("get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray")
->>> for r in results:
-...     print("Actions:", r["actions"])
-...     print("Success:", r["success"])
-...     print("Error:", r["error"])
-...     print("Suggestion:", r["suggestion"])
-
-)pbdoc")
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Predict action sequence as tree, non-blocking version
-  //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
-  {
-    if (ex.isProcessingAction())
-    {
-      RLOG_CPP(0, "Skipped " + sequenceCommand + ": AÍ am already doing something else");
-      return;
-    }
-
-    ex.setProcessingAction(true);
-    ex.getEntity().publish("FreezePerception", true);
-    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Query non-blocking planner
-  //////////////////////////////////////////////////////////////////////////////
-  .def("query_fb_nonblock", [](aff::ExampleActionsECS& ex) -> std::string
-  {
-    if (ex.isProcessingAction())
-    {
-      return std::string();
-    }
-
-    // We unfreeze the perception the first time we see that processing has finished
-    ex.getEntity().publish("FreezePerception", false);
-
-    if (ex.lastActionResult[0].success())
-    {
-      RLOG_CPP(0, "SUCCESS");
-      return "SUCCESS";
-    }
-
-    std::string fbmsgAsString = "No solution found:\n";
-    std::string fbLine, fbLinePrev;
-    for (size_t i = 0; i<ex.lastActionResult.size(); ++i)
-    {
-      const aff::ActionResult& fb = ex.lastActionResult[i];
-
-      if (fb.error=="Actions interrupted")
-      {
-        return "INTERRUPT";
-      }
-
-      fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
-
-      if (fbLine!=fbLinePrev)
-      {
-        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
-      }
-      fbLinePrev = fbLine;
-    }
-
-    RLOG_CPP(0, fbmsgAsString);
-
-    return fbmsgAsString;
-  })
-
-  .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
-  {
-    PollBlockerComponent blocker(&ex);
-    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
-    blocker.wait();
-    bool success = ex.lastActionResult[0].success();
-    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
-
-    return success;
-  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Sets or clears the talk flag. This only has an effect if the Respeaker
@@ -1156,102 +842,6 @@ Example
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Returns the json with all relevant coordinates for the pupils etc.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("getMirrorEyesData", [](aff::ExampleActionsECS& ex) -> nlohmann::json
-  {
-    nlohmann::json j;
-    auto eyeComponents = aff::getComponents<aff::EyeModelIKComponent>(ex.getComponentsRef());
-
-    if (eyeComponents.size() != 1)
-    {
-      RLOG(0, "Found %zu EyeModelIKComponent instances - must be 1", eyeComponents.size());
-      return j;
-    }
-
-    std::string eyeStr = eyeComponents[0]->getMirrorEyesJsonString();
-
-    try 
-    {
-      j = nlohmann::json::parse(eyeStr);
-    }
-    catch (const nlohmann::json::parse_error& e) 
-    {
-      RLOG_CPP(0, "Parse error for '" << eyeStr << "' : " << e.what());
-    }
-
-    return j;
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Returns the most recent camera image if newer than the given frame count
-  //////////////////////////////////////////////////////////////////////////////
-  .def("getCameraImage", [](aff::ExampleActionsECS& ex, int frame_count) -> std::pair<int,std::string>
-  {
-    nlohmann::json j;
-    auto lmrs = aff::getComponents<aff::ZmqRouterComponent>(ex.getComponentsRef());
-
-    if (lmrs.size() != 1)
-    {
-      RLOG(0, "Found %zu ZmqRouterComponent instances - must be 1", lmrs.size());
-      return std::pair<int, std::string>(0, "");
-    }
-
-    auto imgTracker = lmrs[0]->getTrackers<aff::ImageTracker>();
-
-    if (imgTracker.size() != 1)
-    {
-      RLOG(0, "Found %zu ImageTracker instances - must be 1", imgTracker.size());
-      return std::pair<int, std::string>(0, "");
-    }
-
-    return imgTracker[0]->getStampedImage(frame_count);
-  },
-  "Return image if more recent than frame_count",
-  py::arg("frame_count") = -1)
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Head gestures: "yes", "no"
-  // "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
-  // "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
-  //////////////////////////////////////////////////////////////////////////////
-  .def("setHeadGesture", [](aff::ExampleActionsECS& ex, std::string gestureName, double gestureAmplitude, int numTurns)
-  {
-    ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
-  },
-  py::arg("gestureName"),
-  py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
-  py::arg("numTurns") = 3)
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Gaze model methods: 0: Neck only, 1: pupils only.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("setPupilSpeedWeight", [](aff::ExampleActionsECS& ex, double value)
-  {
-    ex.getEntity().publish("SetPupilSpeedWeight", value);
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Pupil point in screen coordinates: z points outwards, x points left, y
-  // points down. Origin is screen center. TODO: Make threadsafe
-  //////////////////////////////////////////////////////////////////////////////
-  .def("getPupilCoordinates", [](aff::ExampleActionsECS& ex) -> std::pair<std::vector<double>, std::vector<double>>
-  {
-    double pr[3], pl[3];
-    std::vector<double> xy_right, xy_left;
-
-    bool success = aff::ActionEyeGaze::computePupilCoordinates(ex.getGraph(), pr, pl);
-
-    if (success)
-    {
-      xy_right= std::vector<double>(pr, pr+3);
-      xy_left = std::vector<double>(pl, pl+3);
-    }
-
-    return std::make_pair(xy_right, xy_left);
-  })
-
-  //////////////////////////////////////////////////////////////////////////////
   // Pausing and interrupting trajectories
   //////////////////////////////////////////////////////////////////////////////
   .def("clearTrajectory", [](aff::ExampleActionsECS& ex)
@@ -1266,214 +856,6 @@ Example
   {
     ex.getEntity().publish("ResumeTrajectory");
   })
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Components to be added. The methods must be called before init.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("addWebsocket", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to connect to a websocket client. The component receives
-    // action commands, and sends back the state.
-    ex.addComponentArgument("-websocket");
-  })
-  .def("addJacoLeft", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to connect to the left Jaco7 Gen2 arm
-    ex.addComponentArgument("-jacoShm7l");
-  })
-  .def("addJacoRight", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to connect to the right Jaco7 Gen2 arm
-    ex.addComponentArgument("-jacoShm7r");
-  })
-  .def("addRespeaker", [](aff::ExampleActionsECS& ex, bool listenWitHandRaisedOnly)
-  {
-    // Adds a component to listen to the Respeaker ROS node, and to acquire the
-    // sound directions, ASR etc.
-    ex.addComponentArgument("-respeaker");
-    if (listenWitHandRaisedOnly)
-    {
-      ex.addComponentArgument("-respeaker_listenWithRaisedHandOnly");
-    }
-  })
-  .def("addRespeaker_usb", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to listen to the Respeaker direction signal directly
-    // from the USB port.
-    ex.addComponentArgument("-respeaker_usb");
-  })
-  .def("addLandmarkZmq", [](aff::ExampleActionsECS& ex,
-                            const std::string& connection,
-                            const std::string& camera_name,
-                            bool withFaceTracking,
-                            const std::string& face_name,
-                            bool withArucoTracking,
-                            const std::string& base_marker,
-                            bool withSkeletonTracking,
-                            double skeleton_radius)
-  {
-    ex.addComponentArgument("-landmarks_zmq");
-    ex.addComponentArgument("-landmarks_connection " + connection);
-    ex.addComponentArgument("-landmarks_camera " + camera_name);
-
-    if (withFaceTracking)
-    {
-      ex.addComponentArgument("-face_tracking");
-      ex.addComponentArgument("-face_bodyName " + face_name);
-    }
-
-    if (withArucoTracking)
-    {
-      ex.addComponentArgument("-aruco_tracking");
-      ex.addComponentArgument("-aruco_base " + base_marker);
-    }
-
-    if (withSkeletonTracking)
-    {
-      ex.addComponentArgument("-skeleton_tracking");
-      ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
-    }
-  },
-  py::arg("connection") = "tcp://localhost:5555",
-  py::arg("camera_name") = "camera_0",
-  py::arg("withFaceTracking") = false,
-  py::arg("face_name") = "face",
-  py::arg("withArucoTracking") = false,
-  py::arg("base_marker") = "aruco_base",
-  py::arg("withSkeletonTracking") = false,
-  py::arg("skeleton_radius") = DBL_MAX
-      )
-  .def("addLandmarkRouter", [](aff::ExampleActionsECS& ex,
-                               const std::string& connection,
-                               const std::string& camera_name,
-                               bool withFaceTracking,
-                               const std::string& face_name,
-                               bool withArucoTracking,
-                               const std::string& base_marker,
-                               bool withSkeletonTracking,
-                               double skeleton_radius)
-  {
-    ex.addComponentArgument("-landmarks_router");
-    ex.addComponentArgument("-landmarks_connection " + connection);
-    ex.addComponentArgument("-landmarks_camera " + camera_name);
-
-    if (withFaceTracking)
-    {
-      ex.addComponentArgument("-face_tracking");
-      ex.addComponentArgument("-face_gesture");
-      ex.addComponentArgument("-face_bodyName " + face_name);
-    }
-
-    if (withArucoTracking)
-    {
-      ex.addComponentArgument("-aruco_tracking");
-      ex.addComponentArgument("-aruco_base " + base_marker);
-    }
-
-    if (withSkeletonTracking)
-    {
-      ex.addComponentArgument("-skeleton_tracking");
-      if (skeleton_radius != DBL_MAX)   // inhibit polluting log
-      {
-        ex.addComponentArgument("-skeleton_radius " + std::to_string(skeleton_radius));
-      }
-    }
-  },
-  py::arg("connection") = "tcp://*:40000",
-  py::arg("camera_name") = "camera_0",
-  py::arg("withFaceTracking") = false,
-  py::arg("face_name") = "face",
-  py::arg("withArucoTracking") = false,
-  py::arg("base_marker") = "aruco_base",
-  py::arg("withSkeletonTracking") = false,
-  py::arg("skeleton_radius") = DBL_MAX
-      )
-  .def("addPTU", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to connect to the PTU action server ROS node, and to being
-    // able to send pan / tilt commands to the PTU
-    ex.addComponentArgument("-ptu");
-  })
-  .def("addTrackingControllerPTU", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to connect to the PW70 CAN bus, and to being able to
-    // send pan / tilt commands to the PTU. Please make sure to not have any
-    // other PTU process (e.g. ROS ActionServer) running.
-    ex.addComponentArgument("-pw70_vel -pw70_control_frequency 50");
-    ex.addComponentArgument("-pw70_pan_joint_name ptu_pan_joint");
-    ex.addComponentArgument("-pw70_tilt_joint_name ptu_tilt_joint");
-  })
-  .def("addMirrorEyes", [](aff::ExampleActionsECS& ex, std::string gazeTargetTopic, std::string cameraTopic, std::string pupilCoordsTopic)
-  {
-    // Adds the ROS interface to the MirrorEye system, and enables the IK-based eye model.
-    ex.addComponentArgument("-mirror_eyes");
-    ex.addComponentArgument("-mirror_eyes_gaze_target_topic " + gazeTargetTopic);
-    ex.addComponentArgument("-mirror_eyes_camera_topic " + cameraTopic);
-    ex.addComponentArgument("-mirror_eyes_pupil_coords_topic " + pupilCoordsTopic);
-    ex.eyeIkEnabled = true;
-  },
-  py::arg("gazeTargetTopic") = "/mirror_eyes/gaze_target",
-  py::arg("cameraTopic") = "/mirror_eyes/camera",
-  py::arg("pupilCoordsTopic") = "/mirror_eyes/pupil_coordinates")
-  .def("addLandmarkROS", [](aff::ExampleActionsECS& ex)
-  {
-    // Adds a component to listen to the landmarks publishers through ROS, which
-    // is for instance the Azure Kinect, and later also the Mediapipe components
-    ex.addComponentArgument("-respeaker");
-  })
-  .def("addZmqListener", [](aff::ExampleActionsECS& ex, std::string ip_string)
-  {
-    // Adds a component to listen to the ZeroMQ publishers, which
-    // is for instance the Webcam Tracking or ASR
-    ex.addComponentArgument("-zmq_listener");
-  },
-  py::arg("ip_string") = "tcp://*:5556")
-  .def("addTTS", [](aff::ExampleActionsECS& ex, std::string type, std::string voice)
-  {
-    // Adds a component to connect to enable the text-to-speech functionality.
-    // Currently, 2 modes are supported: the Nuance TTS which requires the
-    // corresponding ROS node to run, and a native Unix espeak TTS.
-    if (type == "nuance")
-    {
-      ex.addComponentArgument("-nuance_tts");
-    }
-    else if (type == "native")
-    {
-      ex.addComponentArgument("-tts");
-    }
-    else if (type == "piper")
-    {
-      if (voice == "alan")
-      {
-        ex.addComponentArgument("-piper_tts_alan");
-      }
-      else if (voice == "joe")
-      {
-        ex.addComponentArgument("-piper_tts_joe");
-      }
-      else if (voice == "kathleen")
-      {
-        ex.addComponentArgument("-piper_tts_kathleen");
-      }
-      else
-      {
-        ex.addComponentArgument("-piper_tts_ryan");
-      }
-
-    }
-  },
-  py::arg("type") = "piper",
-  py::arg("voice") = "kathleen")
-  .def("addVirtualCamera", [](aff::ExampleActionsECS& ex, int width, int height, bool withGui)
-  {
-    ex.virtualCameraWidth = width;
-    ex.virtualCameraHeight = height;
-    ex.virtualCameraEnabled = true;
-    ex.virtualCameraWindowEnabled = withGui;
-  },
-  py::arg("width") = 640,
-  py::arg("height") = 480,
-  py::arg("withGui") = false)
 
   //////////////////////////////////////////////////////////////////////////////
   // Expose several internal variables to the python layer
@@ -1508,52 +890,6 @@ Example
   .def_readwrite("sceneTransformationDataRecorderEnabled", &aff::ExampleActionsECS::sceneTransformationDataRecorderEnabled)
   .def_readwrite("sceneTransformationDataPlayerEnabled", &aff::ExampleActionsECS::sceneTransformationDataPlayerEnabled)
   .def_readwrite("usersGazeComponentEnabled", &aff::ExampleActionsECS::usersGazeComponentEnabled)
-
-  //////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////
-  .def("recognize_faces", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> std::string
-  {
-    py::gil_scoped_release release;  // Unblock waiting period
-    return aff::recognize_faces(ex.getEntity(), std::string(), n_iterations, timeout_in_seconds);
-  },
-  py::arg("n_iterations") = 5,
-  py::arg("timeout_in_seconds") = 2.5)
-
-  //////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////
-  .def("recognize_agent_face", [](aff::ExampleActionsECS& ex, std::string agentName, int n_iterations, double timeout_in_seconds) -> std::pair<std::string, std::string>
-  {
-      py::gil_scoped_release release;  // Unblock waiting period
-      return aff::recognize_agent_face(ex.getEntity(), ex.getScene(), agentName, n_iterations, timeout_in_seconds);
-  },
-  py::arg("agentName") = std::string(),
-  py::arg("n_iterations") = 5,
-  py::arg("timeout_in_seconds") = 2.5)
-
-  //////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////
-  .def("track_facemesh", [](aff::ExampleActionsECS& ex, int n_iterations, double timeout_in_seconds) -> bool
-  {
-    py::gil_scoped_release release;  // Unblock waiting period
-    return aff::track_facemesh(ex.getEntity(), std::string(), n_iterations, timeout_in_seconds);
-  },
-  py::arg("n_iterations") = 5,
-  py::arg("timeout_in_seconds") = 2.5)
-
-  //////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////
-  .def("track_agent_facemesh", [](aff::ExampleActionsECS& ex, std::string agentName, int n_iterations, double timeout_in_seconds) -> bool
-  {
-      py::gil_scoped_release release;  // Unblock waiting period
-      return aff::track_agent_facemesh(ex.getEntity(), ex.getScene(), agentName, n_iterations, timeout_in_seconds);
-  },
-  py::arg("agentName") = std::string(),
-  py::arg("n_iterations") = 5,
-  py::arg("timeout_in_seconds") = 2.5)
 
   //////////////////////////////////////////////////////////////////////////////
   // viaPoint action
@@ -1633,6 +969,10 @@ Example
   py::arg("inputFile") = "test_robot_traj.txt")
   ;
 
+  bind_components(cls);
+  bind_planning(cls);
+  bind_mirror_eyes(cls);
+  bind_exploration(cls);
 
 
 
@@ -1717,7 +1057,6 @@ Example
     return data;
   })
   ;
-
 
 
 
