@@ -261,11 +261,6 @@ bool LandmarkBase::getSyncInputWithWallclock() const
   return syncInputJsonWithWallclockTime;
 }
 
-// const RcsGraph* LandmarkBase::getGraph() const
-// {
-//   return this->graphPtr;
-// }
-
 std::vector<std::unique_ptr<TrackerBase>>& LandmarkBase::getTrackers()
 {
   return this->trackers;

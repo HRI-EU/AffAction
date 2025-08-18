@@ -59,11 +59,11 @@ public:
   virtual void setFrozen(bool frozen);
   virtual double getCurrentTime() const;
   virtual bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
+  std::string getCameraName() const;
 
 protected:
 
   HTr getCameraTransform(const RcsGraph* graph) const;
-  std::string getCameraName() const;
   static RcsBody* getBody(const RcsGraph* graph, std::pair<std::string, int>& bdyIdPair);
 
   double currentTime;

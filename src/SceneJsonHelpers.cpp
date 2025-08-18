@@ -555,18 +555,17 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
 
 
 
-
   std::vector<const SceneEntity*> objectEntities = scene->getSceneEntities(objectName);
 
   if (objectEntities.size() != 1)
   {
-    RLOG_CPP(0, "Expect 1 match for object '" << objectName << "' but got " << objectEntities.size());
+    RLOG_CPP(1, "Expect 1 match for object '" << objectName << "' but got " << objectEntities.size());
     return json;
   }
 
   const RcsBody* objectBdy = objectEntities[0]->body(graph);
 
-  HTr objectInCamera;   // From camera to object frame: A_CO
+  HTr objectInCamera;   // From camera to object frame: A_OC
   HTr_invTransform(&objectInCamera, &cameraBdy->A_BI, &objectBdy->A_BI);
 
   json["x"] = objectInCamera.org[0];
