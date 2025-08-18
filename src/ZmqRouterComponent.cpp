@@ -283,21 +283,13 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
           {
             { "type", std::get<0>(cmdPair)},
             { "repetitions", std::get<1>(cmdPair) },
-            {
-              "no_bounding_box", {
-                { "left", 222 },
-                { "top", 284 },
-                { "right", 379 },
-                { "bottom", 441 }
-              }
-            },
             { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
           };
 
           if (!std::get<2>(cmdPair).empty())
           {
             auto bbJson = nlohmann::json::parse(std::get<2>(cmdPair));
-            cmd["bounding_box"] = bbJson["bounding_box"];
+            cmd.update(bbJson);
           }
           cmdStr = cmd.dump();
           id_str = std::get<0>(cmdPair);
