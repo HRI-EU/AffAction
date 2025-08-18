@@ -271,7 +271,32 @@ void PW70CANInterfaceLinux::receive_messages()
             tilt_updated = false;
           }
         }
+      }   // if (id == 0x70D || id == 0x70E)
+
+      else if (((id >> 8) & 0x7) == 0x3)            // spontaneous ERROR/WARN/INFO: const uint8_t type = (id >> 8) & 0x7;   // 0x7=status, 0x3=error/…
+      {
+        const uint8_t dlen = frame.data[0];
+        if (dlen < 2)
+        {
+          continue;  // malformed
+        }
+        const uint8_t cmd = frame.data[1];
+        const uint8_t code = frame.data[2];   // error or warning code
+
+        switch (cmd)
+        {
+          case 0x88:  // fatal error
+            RLOG(0, "PW70 ERROR 0x%02X - send CMD_ACK (0x8B) to clear", code);
+            break;
+          case 0x89:  // warning
+            RLOG(0, "PW70 WARNING 0x%02X", code);
+            break;
+          case 0x8A:  // info
+            RLOG(0, "PW70 INFO 0x%02X", code);
+            break;
+        }
       }
+
     }
     else if (nbytes == 0)
     {
