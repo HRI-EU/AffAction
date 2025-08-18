@@ -236,6 +236,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   trajTime = 0.0;
   trajTimeScaling = 1.0;
   ikType = IKComponent::IkSolverType::RMR;
+  landmarksCamera = "camera_0";
   dt = 0.01;
   dt_max = 0.0;
   dt_max2 = 0.0;
@@ -358,6 +359,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-unittest", &unittest, "Run unit tests");
   parser->getArgument("-singleThreaded", &singleThreaded, "Run predictions sequentially");
   parser->getArgument("-physics", &physicsEngine, "Physics engine (default: none)");
+  parser->getArgument("-landmarks_camera", &landmarksCamera, "Camera name for landmarks (default: %s)", landmarksCamera.c_str());
   parser->getArgument("-enableVirtualCamera", &virtualCameraEnabled, "Enable camera for virtual rendering");
   parser->getArgument("-enableVirtualCamWindow", &virtualCameraWindowEnabled, "Window of the camera for virtual rendering");
   parser->getArgument("-virtualCameraBodyName", &virtualCameraBodyName, "Name of body in graph to which camera is attached");
@@ -545,7 +547,7 @@ bool ExampleActionsECS::initAlgo()
   {
     if (EyeModelIKComponent::hasEyeModel(getGraph()))
     {
-      auto eyeIK = new EyeModelIKComponent(&entity, getGraph(), "camera_0");
+      auto eyeIK = new EyeModelIKComponent(&entity, getGraph(), landmarksCamera);
       addComponent(eyeIK);
     }
     else
@@ -1283,9 +1285,11 @@ void ExampleActionsECS::step()
   computeKinematics->call(getCurrentGraph());
   postUpdateGraph->call(ikc->getGraph(), getCurrentGraph());
 
-  dragger->addJointTorque(dH, ikc->getGraph());
+  if (dragger)
+  {
+    dragger->addJointTorque(dH, ikc->getGraph());
+  }
   ikc->setExternalNullspaceVelocity(dH);
-  //ikc->setExternalNullspaceVelocity(static_cast<NamedMouseDragger*>(dragger.get())->draggerTorque);
 
   updateScene->call(ikc->getGraph(), getCurrentGraph(), getScene());
   computeTrajectory->call(trajTimeScaling*entity.getDt());
@@ -2553,7 +2557,7 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
-    componentArgs += " -landmarks_zmq -skeleton_tracking -aruco_tracking -landmarks_camera camera_0";
+    componentArgs += " -landmarks_zmq -skeleton_tracking -aruco_tracking -landmarks_camera " + landmarksCamera;
     return true;
   }
 
@@ -2638,7 +2642,7 @@ public:
   bool initParameters()
   {
     ExampleActionsECS::initParameters();
-    componentArgs = "-landmarks_zmq -aruco_tracking -aruco_base aruco_base -landmarks_camera camera_0";
+    componentArgs = "-landmarks_zmq -aruco_tracking -aruco_base aruco_base -landmarks_camera " + landmarksCamera;
     return true;
   }
 

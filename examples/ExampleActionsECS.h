@@ -164,6 +164,7 @@ protected:
   std::string sequenceCommand;
   std::string componentArgs;
   std::string physicsEngine;
+  std::string landmarksCamera;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
@@ -237,10 +238,6 @@ protected:
   std::vector<GazeComponent*> gazeComponents;
   SceneTransformationDataRecorder* sceneTransformationDataRecorder;
   SceneTransformationDataPlayer* sceneTransformationDataPlayer;
-
-
-
-
 };
 
 }   // namespace aff
