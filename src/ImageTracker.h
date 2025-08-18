@@ -35,18 +35,21 @@
 #define AFF_IMAGETRACKER_H
 
 #include "TrackerBase.h"
+#include "ComponentBase.h"
+#include "VirtualCamera.h"
 
 #include <mutex>
+#include <memory>
 
 
 namespace aff
 {
 
-class ImageTracker : public TrackerBase
+class ImageTracker : public ComponentBase, public TrackerBase
 {
 public:
 
-  ImageTracker(const std::string& cameraName);
+  ImageTracker(EntityBase* parent, const std::string& cameraName);
 
   virtual ~ImageTracker() = default;
 
@@ -56,14 +59,51 @@ public:
 
   void update(ActionScene* scene, RcsGraph* graph) override;
 
-  std::pair<int, std::string> getStampedImage(int frame_count=-1);
+  std::pair<int, std::string> getStampedImage(int frame_count=-1) const;
 
-private:
+  std::vector<double> getCameraParameters() const;
+
+  std::vector<int> getGazeObjectBoundingBox() const;
+
+  // return vector: int minX, int minY, int maxX, int maxY
+  static std::vector<int> getObjectBoundingBox(const ActionScene* scene, const RcsGraph* graph,
+                                               const std::string objName,
+                                               const std::string& cameraName,
+                                               double fx, double fy, double cx, double cy);
+
+protected:
+
+  void onSetGazeTarget(std::string bdyName);
+  void updateDebugWindow(const std::vector<int>& bb) const;
 
   std::pair<int,std::string> stamped_image;
   mutable std::mutex imgMtx;
   double t_parse;
+  std::string gazeTarget;
+  double fx, fy, cx, cy;
+  std::vector<int> gaze_bb;
 };
+
+
+
+
+
+class VirtualImageTracker : public ImageTracker
+{
+public:
+
+  VirtualImageTracker(EntityBase* parent, const std::string& cameraName);
+  virtual ~VirtualImageTracker() = default;
+  void parse(const nlohmann::json& header, const nlohmann::json& data, double time) override;
+  std::string getRequestKeyword() const override;
+  void update(ActionScene* scene, RcsGraph* graph) override;
+
+protected:
+
+  int capture_count;
+  std::unique_ptr<VirtualCamera> vCamPtr;
+};
+
 
 }   // namespace
 

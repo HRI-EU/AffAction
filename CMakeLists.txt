@@ -246,6 +246,7 @@ src/ConcurrentSceneQuery.cpp
 src/FaceTracker.cpp
 src/YoloTracker.cpp
 src/ImageTracker.cpp
+src/ImageHelpers.cpp
 src/VirtualCamera.cpp
 src/SceneHelpers.cpp
 src/StringParserTools.cpp

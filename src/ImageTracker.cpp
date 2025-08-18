@@ -32,17 +32,32 @@
 *******************************************************************************/
 
 #include "ImageTracker.h"
+#include "ImageHelpers.h"
 #include "SceneHelpers.h"
+#include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
+#include <GraphNode.h>
+
+#include <algorithm>
+
 
 
 namespace aff
 {
-
-
-ImageTracker::ImageTracker(const std::string& cameraName) : TrackerBase(cameraName), t_parse(0.0)
+/*******************************************************************************
+ *
+ ******************************************************************************/
+ImageTracker::ImageTracker(EntityBase* parent, const std::string& cameraName) :
+  ComponentBase(parent), TrackerBase(cameraName), t_parse(0.0),
+  fx(640.0), fy(640.0), cx(320.0), cy(240.0)
 {
+  subscribe("SetGazeTarget", &ImageTracker::onSetGazeTarget);
+}
+
+void ImageTracker::onSetGazeTarget(std::string bdyName)
+{
+  this->gazeTarget = bdyName;
 }
 
 std::string ImageTracker::getRequestKeyword() const
@@ -64,17 +79,29 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
       return;
     }
 
-    int stamp = header.at("seq").get<int>();
+    std::string err;
+    double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0;
+    if (!extract_intrinsics(header, fx_, fy_, cx_, cy_, err))
+    {
+      RLOG_CPP(1, "Failed to extract camera intrinsics: " << err << " header: " << header.dump(2));
+      return;
+    }
 
     // Serialize image JSON
+    int stamp = header.at("seq").get<int>();
     std::string image_str = data.dump();
 
     {
       std::lock_guard<std::mutex> lock(imgMtx);
       this->stamped_image = std::make_pair(stamp, image_str);
+      this->fx = fx_;
+      this->fy = fy_;
+      this->cx = cx_;
+      this->cy = cy_;
     }
 
-    RLOG_CPP(1, "Received: count=" << stamped_image.first << " after " << 1.0e3 * (t_parse - t_prev) << " msec");// << " image=" << stamped_image.second);
+    RLOG_CPP(1, "Received: count=" << stamped_image.first
+             << " after " << 1.0e3 * (t_parse - t_prev) << " msec");
   }
   catch (const nlohmann::json::exception& e)
   {
@@ -89,9 +116,71 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
 
 void ImageTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+  double fx_, fy_, cx_, cy_;
+
+  {
+    std::lock_guard<std::mutex> lock(imgMtx);
+    fx_ = this->fx;
+    fy_ = this->fy;
+    cx_ = this->cx;
+    cy_ = this->cy;
+  }
+
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(),
+                                             fx_, fy_, cx_, cy_);
+
+  {
+    std::lock_guard<std::mutex> lock(imgMtx);
+    this->gaze_bb = bb;
+  }
+
+  REXEC(1)
+  {
+    static size_t count = 0;
+
+    if (++count % 10 == 0)
+    {
+      updateDebugWindow(bb);
+    }
+  }
+
 }
 
-std::pair<int, std::string> ImageTracker::getStampedImage(int frame_count)
+void ImageTracker::updateDebugWindow(const std::vector<int>& bb) const
+{
+  if (bb.size() != 4)
+  {
+    RLOG_CPP(1, "Invalid bounding box of size " << bb.size());
+    return;
+  }
+
+  std::pair<int, std::string> img_pair = getStampedImage();
+
+  if (img_pair.second.empty())
+  {
+    return;
+  }
+
+  QString b64_qt = QString::fromStdString(img_pair.second);
+  QImage image = decodeBase64JpegToQImage(b64_qt);
+
+  // Bounding box: minX, minY, maxX, maxY
+  QRect boundingBox(QPoint(bb[0], bb[1]), QPoint(bb[2], bb[3]));
+  QRect safeBox = boundingBox & image.rect();  // ensures boundingBox is within image
+  image = image.copy(safeBox);
+
+  constexpr int kMinWidth = 160;
+  if (image.width() < kMinWidth)
+  {
+    int h = static_cast<int>(std::round(static_cast<double>(kMinWidth) *
+                                        image.height() / image.width()));
+    image = image.scaled(kMinWidth, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  }
+
+  showFrame(image);
+}
+
+std::pair<int, std::string> ImageTracker::getStampedImage(int frame_count) const
 {
   std::lock_guard<std::mutex> lock(imgMtx);
   if ((frame_count == -1) || (stamped_image.first < frame_count))
@@ -101,6 +190,197 @@ std::pair<int, std::string> ImageTracker::getStampedImage(int frame_count)
 
   return std::make_pair(stamped_image.first, std::string());
 }
+
+std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene, const RcsGraph* graph,
+                                                    const std::string objName, const std::string& cameraName,
+                                                    double fx, double fy, double cx, double cy)
+{
+  nlohmann::json j = getObjectInCamera(objName, cameraName, scene, graph);
+
+  if (!j.contains("vertex"))
+  {
+    RLOG_CPP(1, "No 'vertex' key in JSON: " << j.dump(2));
+    return std::vector<int>();
+  }
+
+  if (!j["vertex"].is_array())
+  {
+    RLOG_CPP(1, "JSON or it's not an array: " << j.dump(2));
+    return std::vector<int>();
+  }
+
+  std::vector<std::array<double, 3>> vertices;
+
+  for (const auto& item : j["vertex"])
+  {
+    if (item.is_array() && item.size() == 3)
+    {
+      vertices.push_back({ item[0], item[1], item[2] });
+    }
+    else
+    {
+      RLOG_CPP(1, "Warning: malformed vertex entry.");
+      return std::vector<int>();
+    }
+  }
+
+
+  // Project to pixel coordinates
+  std::vector<std::array<int, 2>> imgPoints;
+  for (const auto& v : vertices)
+  {
+    // We assume that the camera is oriented with x pointing forward, and z pointing up
+    double x_std = -v[1];  // –Y
+    double y_std = -v[2];  // –Z
+    double z_std =  v[0];  //  X
+
+    // Convert to image coordinates using pinhole model
+    double x = fx * (x_std / z_std) + cx;
+    double y = fy * (y_std / z_std) + cy;
+
+    imgPoints.push_back({ static_cast<int>(std::lround(x)), static_cast<int>(std::lround(y)) });
+  }
+
+  if (imgPoints.empty())
+  {
+    RLOG_CPP(1, "No points to compute bounding box.");
+    return std::vector<int>();
+  }
+
+
+  // Assign bounding box
+  int minX = imgPoints[0][0];
+  int maxX = imgPoints[0][0];
+  int minY = imgPoints[0][1];
+  int maxY = imgPoints[0][1];
+
+  for (const auto& p : imgPoints)
+  {
+    minX = std::min(minX, p[0]);
+    maxX = std::max(maxX, p[0]);
+    minY = std::min(minY, p[1]);
+    maxY = std::max(maxY, p[1]);
+  }
+
+  return std::vector<int> {minX, minY, maxX, maxY};
+}
+
+std::vector<double> ImageTracker::getCameraParameters() const
+{
+  std::lock_guard<std::mutex> lock(imgMtx);
+  return std::vector<double> {fx, fy, cx, cy};
+}
+
+std::vector<int> ImageTracker::getGazeObjectBoundingBox() const
+{
+  std::lock_guard<std::mutex> lock(imgMtx);
+  return gaze_bb;
+}
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+VirtualImageTracker::VirtualImageTracker(EntityBase* parent, const std::string& cameraName) :
+  ImageTracker(parent, cameraName), capture_count(0), vCamPtr(nullptr)
+{
+}
+
+void VirtualImageTracker::parse(const nlohmann::json& header, const nlohmann::json& data, double time)
+{
+
+}
+
+std::string VirtualImageTracker::getRequestKeyword() const
+{
+  return "virtual_image";
+}
+
+void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
+{
+  static int count = 0;
+
+  if (++count % 5 != 0)
+  {
+    return;
+  }
+
+  if (!vCamPtr)
+  {
+    vCamPtr = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graph), 640, 480);
+  }
+
+  HTr A_camI = getCameraTransform(graph);
+  vCamPtr->capture(&A_camI);
+  capture_count++;
+
+  int width = (int)vCamPtr->getWidth();
+  int height = (int)vCamPtr->getHeight();
+  std::vector<uint8_t> colorImageUint8(height * width * 3);
+
+  vCamPtr->getColorImage(colorImageUint8.data(), colorImageUint8.size());
+
+  int quality = 90;
+  std::string image_str = rgbToJpegBase64(colorImageUint8.data(), width, height, 90);
+
+  // Project to pixel coordinates
+  double fx_, fy_, cx_, cy_;
+  vCamPtr->getRenderer()->getFocalParams(fx_, fy_, cx_, cy_);
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), fx_, fy_, cx_, cy_);
+
+  {
+    std::lock_guard<std::mutex> lock(imgMtx);
+    this->stamped_image = std::make_pair(capture_count, image_str);
+    this->fx = fx_;
+    this->fy = fy_;
+    this->cx = cx_;
+    this->cy = cy_;
+    this->gaze_bb = bb;
+  }
+
+  REXEC(1)
+  {
+    // Get image directly from capture
+    // const int bytesPerLine = width * 3;
+    // QImage img(colorImageUint8.data(), width, height, bytesPerLine, QImage::Format_RGB888);
+    // VideoViewer::showFrame(img.copy());
+
+    // Get image the long way through decoding etc.
+    QString b64_qt = QString::fromStdString(image_str);
+    QImage image = decodeBase64JpegToQImage(b64_qt);
+
+    if (gaze_bb.size() == 4)
+    {
+      // Here we have a valid bounding box: minX, minY, maxX, maxY
+      QRect boundingBox(QPoint(gaze_bb[0], gaze_bb[1]), QPoint(gaze_bb[2], gaze_bb[3]));
+      QRect safeBox = boundingBox & image.rect();  // ensures boundingBox is within image
+      image = image.copy(safeBox);
+
+      constexpr int kMinWidth = 160;
+      if (image.width() < kMinWidth)
+      {
+        int h = static_cast<int>(std::round(static_cast<double>(kMinWidth) *
+                                            image.height() / image.width()));
+        image = image.scaled(kMinWidth, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+      }
+
+    }
+
+    showFrame(image);
+  }
+
+}
+
+
+
 
 }   // namespace
 

@@ -187,7 +187,13 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-image_tracking" + suffix))
     {
-      auto imgTracker = std::make_unique<ImageTracker>(landmarksCamera);
+      auto imgTracker = std::make_unique<ImageTracker>(&entity, landmarksCamera);
+      lmc->addTracker(std::move(imgTracker));
+    }
+
+    if (getKey(argsVec, "-virtual_image_tracking" + suffix))
+    {
+      auto imgTracker = std::make_unique<VirtualImageTracker>(&entity, landmarksCamera);
       lmc->addTracker(std::move(imgTracker));
     }
 
