@@ -29,243 +29,232 @@
 
 
 
-<!--
-
-Cocktail:
-
-1. Vodka
-2. Gin
-3. Rum (light and dark)
-4. Tequila (silver or blanco)
-5. Whiskey (bourbon or rye)
-6. Vermouth (dry and sweet)
-7. Triple sec or orange liqueur
-8. Brandy
-9. Bitters (Angostura or other flavors)
-10. Simple syrup
-11. Fresh citrus fruits (lemons, limes, oranges)
-12. Grenadine
-13. Cranberry juice
-14. Pineapple juice
-15. Tomato juice
-16. Soda water
-17. Tonic water
-18. Ginger beer
-19. Cola
-20. Cream or milk
-21. Fresh herbs (mint, basil, rosemary)
-22. Sugar cubes
-23. Salt
-24. Ice cubes
-
--->
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
-  <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" >
-    <xi:include href="../scene/g_table_with_grid_140x80.xml"/>
-  </Group>
-  
-  <!-- shelf -->
-  <Body name="shelf" prev="table" rigid_body_joints="0.15 0 0.31 0 0 0" physics="kinematic" color="BLACK_RUBBER" >
-    <Shape type="FRAME" scale="0.2"/>
+
+
+
+  <!-- The model for the dining table. -->
+  <Body name="table" prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" physics="kinematic" mass="10" >
+    <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
+	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.png"/>
+    <Shape scale="0.2" type="FRAME"/>
   </Body>
-  
-  <!-- bottom shelf frames-->
-  <Body name="shelf_bottom" prev="shelf" transform="-0.08 0 0.001 0 0 0" >
-    <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
-           distance="true" physics="true" textureFile="textures/table.jpg"/>
-  </Body>		
-  <Body name="shelf_pos1" prev="shelf_bottom" transform="0 +0.6 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body name="table_grid" prev="table" transform="-0.15 0 0.001 0 0 0" />
+  <Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos2" prev="shelf_bottom" transform="0 +0.4 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos3" prev="shelf_bottom" transform="0 +0.2 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos4" prev="shelf_bottom" transform="0 0 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos5" prev="shelf_bottom" transform="0 -0.2 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos6" prev="shelf_bottom" transform="0 -0.4 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos7" prev="shelf_bottom" transform="0 -0.6 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  
-  <!-- top shelf frames-->
-  <Body name="shelf_top" prev="shelf" transform="0.05 0  0.301 0 0 0" >
-    <Shape type="BOX" extents="0.1 1.4 0.02" transform="0 0 -0.011 0 0 0" graphics="true"
-           distance="true" physics="true" textureFile="textures/table.jpg"/>
+  <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
-  <Body name="shelf_pos8" prev="shelf_top" transform="0 +0.6 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos9" prev="shelf_top" transform="0 +0.4 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos10" prev="shelf_top" transform="0 +0.2 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos11" prev="shelf_top" transform="0 0 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos12" prev="shelf_top" transform="0 -0.2 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos13" prev="shelf_top" transform="0 -0.4 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  <Body name="shelf_pos14" prev="shelf_top" transform="0 -0.6 0 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
   </Body>
 
-  <AffordanceModel body="shelf_bottom" >
-    <Supportable frame="shelf_pos1" />
-    <Supportable frame="shelf_pos2" />
-    <Supportable frame="shelf_pos3" />
-    <Supportable frame="shelf_pos4" />
-    <Supportable frame="shelf_pos5" />
-    <Supportable frame="shelf_pos6" />
-    <Supportable frame="shelf_pos7" />
-  </AffordanceModel>
-
-  <AffordanceModel body="shelf_top" >
-    <Supportable frame="shelf_pos8" />
-    <Supportable frame="shelf_pos9" />
-    <Supportable frame="shelf_pos10" />
-    <Supportable frame="shelf_pos11" />
-    <Supportable frame="shelf_pos12" />
-    <Supportable frame="shelf_pos13" />
-    <Supportable frame="shelf_pos14" />
-  </AffordanceModel>
-
-  <!-- 
-
-===========================================================================
-
-Shelf items 
-
-===========================================================================
+  <Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <!--
   -->
-  
-  
-  <!-- bitters_bottle -->
-  <Group prev="shelf_pos14" name="_bitters" color="LIGHTGRAY" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
 
-  <!-- brandy_bottle -->
-  <Group prev="shelf_pos2" name="_brandy" color="COPPER" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <Body color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
 
-  <!-- coca_cola_bottle -->
-  <Group prev="shelf_pos3" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <Body color="LIGHTGRAY" name="table_grid_3_0" prev="table_grid" transform="0.3 -0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_1" prev="table_grid" transform="0.3 -0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_2" prev="table_grid" transform="0.3 -0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_3" prev="table_grid" transform="0.3 -0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_4" prev="table_grid" transform="0.3 0.0 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_5" prev="table_grid" transform="0.3 0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_6" prev="table_grid" transform="0.3 0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_7" prev="table_grid" transform="0.3 0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_3_8" prev="table_grid" transform="0.3 0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
 
-  <!-- gin_bottle -->
-  <Group prev="shelf_pos4" name="_gin" color="TURQUOISE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <Body color="LIGHTGRAY" name="table_grid_4_0" prev="table_grid" transform="0.45 -0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_1" prev="table_grid" transform="0.45 -0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_2" prev="table_grid" transform="0.45 -0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_3" prev="table_grid" transform="0.45 -0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_4" prev="table_grid" transform="0.45 0.0 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_5" prev="table_grid" transform="0.45 0.15 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_6" prev="table_grid" transform="0.45 0.3 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_7" prev="table_grid" transform="0.45 0.45 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
+  <Body color="LIGHTGRAY" name="table_grid_4_8" prev="table_grid" transform="0.45 0.6 0 0 0 0">
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+  </Body>
 
-  <!-- ginger_beer_bottle -->
-  <Group prev="shelf_pos5" name="_ginger_beer" color="BRONZE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
 
-  <!-- grenadine_bottle -->
-  <Group prev="shelf_pos6" name="_grenadine" color="RUBY" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <AffordanceModel body="table" name="table" types="furniture">
+    <Supportable frame="table_grid_0_0"/>
+    <Supportable frame="table_grid_0_1"/>
+    <Supportable frame="table_grid_0_2"/>
+    <Supportable frame="table_grid_0_3"/>
+    <Supportable frame="table_grid_0_4"/>
+    <Supportable frame="table_grid_0_5"/>
+    <Supportable frame="table_grid_0_6"/>
+    <Supportable frame="table_grid_0_7"/>
+    <Supportable frame="table_grid_0_8"/>
 
-  <!-- salt_bottle -->
-  <Group prev="shelf_pos12" name="_salt" color="PEARL_S" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+    <Supportable frame="table_grid_1_0"/> 
+    <Supportable frame="table_grid_1_1"/> 
+    <Supportable frame="table_grid_1_2"/> 
+    <Supportable frame="table_grid_1_3"/> 
+    <Supportable frame="table_grid_1_4"/> 
+    <Supportable frame="table_grid_1_5"/> 
+    <Supportable frame="table_grid_1_6"/> 
+    <Supportable frame="table_grid_1_7"/> 
+    <Supportable frame="table_grid_1_8"/> 
 
-  <!-- tomato_juice_bottle -->
-  <Group prev="shelf_pos8" name="_tomato_juice" color="RED" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+    <Supportable frame="table_grid_2_0"/> 
+    <Supportable frame="table_grid_2_1"/> 
+    <Supportable frame="table_grid_2_2"/> 
+    <Supportable frame="table_grid_2_3"/> 
+    <Supportable frame="table_grid_2_4"/> 
+    <Supportable frame="table_grid_2_5"/> 
+    <Supportable frame="table_grid_2_6"/> 
+    <Supportable frame="table_grid_2_7"/> 
+    <Supportable frame="table_grid_2_8"/> 
 
-  <!-- soda_water_bottle -->
-  <Group prev="shelf_pos9" name="_soda_water" color="LIGHTGRAY_TRANS" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+    <Supportable frame="table_grid_3_0"/> 
+    <Supportable frame="table_grid_3_1"/> 
+    <Supportable frame="table_grid_3_2"/> 
+    <Supportable frame="table_grid_3_3"/> 
+    <Supportable frame="table_grid_3_4"/> 
+    <Supportable frame="table_grid_3_5"/> 
+    <Supportable frame="table_grid_3_6"/> 
+    <Supportable frame="table_grid_3_7"/> 
+    <Supportable frame="table_grid_3_8"/> 
 
-  <!-- tequila_bottle -->
-  <Group prev="shelf_pos10" name="_tequila" color="YELLOW_TRANS" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+    <Supportable frame="table_grid_4_0"/> 
+    <Supportable frame="table_grid_4_1"/> 
+    <Supportable frame="table_grid_4_2"/> 
+    <Supportable frame="table_grid_4_3"/> 
+    <Supportable frame="table_grid_4_4"/> 
+    <Supportable frame="table_grid_4_5"/> 
+    <Supportable frame="table_grid_4_6"/> 
+    <Supportable frame="table_grid_4_7"/> 
+    <Supportable frame="table_grid_4_8"/> 
+  </AffordanceModel>
 
-  <!-- tonic_water_bottle -->
-  <Group prev="shelf_pos11" name="_tonic_water" color="JADE_S" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
 
-  <!-- TODO (CP) find suitable position-->
-  <!-- triple_sec_bottle --> 
-  <!-- <Body name="triple_sec_bottle" prev="table_right" rigid_body_joints="0.35 -0.2 0 0 0 0" color="YELLOW" physics="dynamic" mass="1" >
-       <Shape type="SSL" length="0.14" radius="0.0325" distance="true" graphics="false" transform="0 0 0.04 0 0 0"/>
-       <Shape type="MESH" meshFile="object_models/Tea.stl" scale="1.0" distance="false" physics="true" />
-       <Shape type="FRAME" marker="true" markerName="aruco_5" extents="0.042 0.042 0" scale="0.1"
-       transform="0.035 0 0.12 0 90 0"/>
-       <Shape type="BOX" extents="0.042 0.042 0.0001" graphics="true" distance="false" physics="false" 
-       textureFile="aruco/4x4marker_5.jpg" transform="0.035 0 0.12 0 90 0"/>
-       </Body>
-
-<Body name="triple_sec_bottle_tip" prev="triple_sec_bottle" transform="0 0 0.23 0 0 0">
-<Shape type="FRAME" scale="0.1"/>
-</Body>
-
-<Body name="triple_sec_bottle_grip" prev="triple_sec_bottle" transform="0 0 0.12 0 0 0">
-<Shape type="FRAME" scale="0.1"/>
-</Body>
-
-<AffordanceModel body="triple_sec_bottle" type="bottle">
-<Stackable frame="triple_sec_bottle"/>
-<Pourable frame="triple_sec_bottle_tip"/>
-<PowerGraspable frame="triple_sec_bottle_grip" />
-<PointPokable frame="triple_sec_bottle_tip"/>
-<Containable frame="triple_sec_bottle" max_volume="1.0" open="true">
-<Ingredient name="triple_sec" volume="1.0" />
-</Containable>
-</AffordanceModel> -->
 
   <!-- vermouth_bottle -->
-  <Group prev="shelf_pos7" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
+  <Group prev="table_grid_0_5" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
   <!-- vodka_bottle -->
-  <Group prev="shelf_pos13" name="_vodka" color="BLUE" rigid_body_joints="true" >
+  <Group prev="table_grid_0_4" name="_vodka" color="BLUE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
   <!-- whiskey_bottle -->
-  <Group prev="shelf_pos1" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" >
+  <Group prev="table_grid_0_3" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
-
   
-  <!-- 
-
-===========================================================================
-
-Table objects 
-
-===========================================================================
-
-  -->
-
   <!-- electric_shaker -->
   <Body name="electric_shaker" prev="table" rigid_body_joints="0.25 -0.6 0.06 0 0 70" physics="kinematic" color="OBSIDIAN" >
     <Shape type="FRAME" scale="0.1"/>
@@ -357,29 +346,6 @@ Table objects
     <Supportable frame="tray_pos3" />
     <Supportable frame="tray_pos4" />
   </AffordanceModel>
-
-  <!-- first_glass
-       <Body name="first_glass" prev="table_left" rigid_body_joints="0.15 -0.15 0 0 0 0" color="TURQUOISE">
-       <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
-       transform="0 0 0.10 0 0 0"/>
-       </Body>
-
-<Body name="first_glass_grip" prev="first_glass" transform="0 0 0.1 0 0 0">
-<Shape type="FRAME" scale="0.05"/>
-</Body>
-
-<Body name="first_glass_tip" prev="first_glass" transform="0 0 0.2 0 0 0">
-<Shape type="FRAME" scale="0.05"/>
-</Body>
-
-<AffordanceModel name="glass" body="first_glass" type="glass" >
-<Stackable frame="first_glass"  />
-<Supportable frame="first_glass_tip" />
-<PowerGraspable frame="first_glass_grip" />
-<Pourable frame="first_glass_tip"/>
-<Containable frame="first_glass_tip" max_volume="1.0" open="true">
-</Containable>
-</AffordanceModel> -->
 
   <!-- 
 
@@ -790,4 +756,66 @@ Table ingredients
     <xi:include href="../scene/g_glass_quadratic.xml"/>
   </Group>
 
+
+
+
+
+  <!-- bitters_bottle -->
+  <Group prev="tray_pos1" name="_bitters" color="LIGHTGRAY" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- brandy_bottle -->
+  <Group prev="tray_pos2" name="_brandy" color="COPPER" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- coca_cola_bottle -->
+  <Group prev="table_grid_1_7" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- gin_bottle -->
+  <Group prev="table_grid_1_0" name="_gin" color="TURQUOISE" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- ginger_beer_bottle -->
+  <Group prev="table_grid_1_1" name="_ginger_beer" color="BRONZE" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- grenadine_bottle -->
+  <Group prev="table_grid_2_1" name="_grenadine" color="RUBY" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- salt_bottle -->
+  <Group prev="table_grid_1_6" name="_salt" color="PEARL_S" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- tomato_juice_bottle -->
+  <Group prev="table_grid_1_5" name="_tomato_juice" color="RED" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- soda_water_bottle -->
+  <Group prev="table_grid_0_1" name="_soda_water" color="LIGHTGRAY_TRANS" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- tequila_bottle -->
+  <Group prev="table_grid_1_4" name="_tequila" color="YELLOW_TRANS" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+  <!-- tonic_water_bottle -->
+  <Group prev="table_grid_1_3" name="_tonic_water" color="JADE_S" rigid_body_joints="true" >
+    <xi:include href="../scene/g_bottle_cocktail.xml"/>
+  </Group>
+
+
+
+  
 </Graph>
