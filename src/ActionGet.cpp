@@ -54,7 +54,7 @@
 
 
 #define t_fingerMove  (2.0)
-#define DEFAULT_LIFTHEIGHT (0.12)
+#define DEFAULT_LIFTHEIGHT (0.3)//was (0.12)
 #define DEFAULT_PREGRASPDIST (0.2)
 #define LIFT_SAFETY_DISTANCE (0.05)   // Safety distance before colliding with object above
 
@@ -68,7 +68,7 @@ namespace aff
 REGISTER_ACTION(ActionGet, "get");
 
 ActionGet::ActionGet() :
-  graspType(GraspType::Other), liftHeight(DEFAULT_LIFTHEIGHT), preGraspDist(DEFAULT_PREGRASPDIST),
+  graspType(GraspType::Other), liftHeight(DEFAULT_LIFTHEIGHT), objHeight(0.0), preGraspDist(DEFAULT_PREGRASPDIST),
   shoulderBase(0.0), handOver(false), isObjCollidable(false)
 {
 }
@@ -263,7 +263,8 @@ void ActionGet::init(const ActionScene& domain,
 
   // The lift height is in absolute coordinates, so we add the object's current
   // z-coordinate.
-  this->liftHeight += objBdy->A_BI.org[2];
+  this->objHeight = objBdy->A_BI.org[2];
+  //this->liftHeight += objBdy->A_BI.org[2];
 
   std::vector<const Manipulator*> freeManipulators;
 
@@ -404,7 +405,8 @@ void ActionGet::init(const ActionScene& domain,
 
     // We also reset the lift height so that we don't get increased height
     // per each hand-over.
-    this->liftHeight = objBdy->A_BI.org[2];
+    this->objHeight = objBdy->A_BI.org[2];
+    this->liftHeight = 0.0;//objBdy->A_BI.org[2];
     RLOG(1, "\"%s\" to grasp is held in hand", entityToGet->name.c_str());
 
 #if 0
@@ -582,6 +584,16 @@ std::string ActionGet::getActionCommand() const
   std::string actionCommand = "get " + objectName + " " + get_manipulators[0] + " ";
   actionCommand += graspTypeToString(graspType);
 
+  if (!whereFrom.empty())
+  {
+    actionCommand += " from " + whereFrom;
+  }
+
+  if (liftHeight != DEFAULT_LIFTHEIGHT)
+  {
+    actionCommand += " liftHeight " + std::to_string(liftHeight);
+  }
+
   if (getDuration() != getDefaultDuration())
   {
     actionCommand += " duration " + std::to_string(getDuration());
@@ -701,7 +713,7 @@ ActionGet::createTrajectory(double t_start,
   // Lift object
   a1->addActivation(handOver ? t_start : t_grasp, true, 0.5, taskObjPosZ);
   a1->addActivation(t_end+afterTime, false, 0.5, taskObjPosZ);
-  a1->add(t_end, liftHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
+  a1->add(t_end, liftHeight+objHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
   a1->add(std::make_shared<tropic::ConnectBodyConstraint>(t_grasp, objectName, capabilityFrame));
 
   // Lift it up in the y-z plane (keep forward position constant)
@@ -762,7 +774,7 @@ ActionGet::createTrajectoryBallGrasp(double t_start,
   // Lift object
   a1->addActivation(t_grasp, true, 0.5, taskObjPosZ);
   a1->addActivation(t_end+ afterTime, false, 0.5, taskObjPosZ);
-  a1->add(t_end, liftHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
+  a1->add(t_end, liftHeight+objHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
   a1->add(std::make_shared<tropic::ConnectBodyConstraint>(t_grasp, objectName, capabilityFrame));
 
   // Lift it up in the y-z plane (keep forward position constant)
@@ -816,7 +828,7 @@ ActionGet::createTrajectoryTopGrasp(double t_start,
 
   if (!handOver)
   {
-    a1->add(t_end, liftHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
+    a1->add(t_end, liftHeight+objHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
   }
   a1->add(std::make_shared<tropic::ConnectBodyConstraint>(t_grasp, objectName, capabilityFrame));
 
@@ -881,7 +893,7 @@ ActionGet::createTrajectoryRimGrasp(double t_start,
 
   if (!handOver)
   {
-    a1->add(t_end, liftHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
+    a1->add(t_end, liftHeight+objHeight, 0.0, 0.0, 7, taskObjPosZ + " 0");
   }
   a1->add(std::make_shared<tropic::ConnectBodyConstraint>(t_grasp, objectName, capabilityFrame));
 

@@ -29,12 +29,20 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
-  <ActionSequence name="0" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green" />
+  <ActionSequence name="a" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green" />
+  <ActionSequence name="b" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water + put glass_green" />
+  <ActionSequence name="c" text="get bottle_of_tequila; pour_put bottle_of_tequila glass table" />
+  <ActionSequence name="d" text="get bottle_of_tequila + get bottle_of_salt; pour bottle_of_tequila glass; pour bottle_of_salt glass_green" />
+  
+
+
+
+  
   <ActionSequence name="0b" text="get glass_green + get bottle_of_gin; put glass_green table; pour bottle_of_gin glass_green; put bottle_of_gin table; pose default" />
   <ActionSequence name="0c" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table + put glass_green table" />
-	<ActionSequence name="0d" text="get glass_green;get bottle_of_gin; get bottle_of_tonic_water; pour bottle_of_gin glass_green ; put glass_green table; put bottle_of_tonic_water table; put bottle_of_gin table ; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
-	<ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
-	<ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="0d" text="get glass_green;get bottle_of_gin; get bottle_of_tonic_water; pour bottle_of_gin glass_green ; put glass_green table; put bottle_of_tonic_water table; put bottle_of_gin table ; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
   <ActionSequence name="3" text="get glass_green; put glass_green table; get bottle_of_gin; pour bottle_of_gin glass_green; put bottle_of_gin table; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
 
   
@@ -48,17 +56,17 @@
     <Shape scale="0.5" type="FRAME"/>
   </Body>
 
-  <!-- The model for a simple camera. -->
+  <!-- The model for a simple camera.
   <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 -180 40 90" was_rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
     <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
     <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
     <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
     <Shape graphics="true" scale="0.2" type="FRAME"/>
-  </Body>
+  </Body> -->
 
-  <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" >
-    <Shape scale="0.2" type="FRAME"/>
-  </Body>
+  <!-- <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" > -->
+  <!--   <Shape scale="0.2" type="FRAME"/> -->
+  <!-- </Body> -->
 
   
   <Body name="Stand" prev="aruco_base" transform="-0.87 0 0 0 0 0" >
@@ -92,7 +100,7 @@
 
 
   <!-- Jaco Gen2 arms -->
-  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="1.6 0 0.4 0 0 180" >
+  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="1.6 0 0.5 0 0 180" >
     <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
@@ -125,7 +133,7 @@
     <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
   </Group>
 
-  <!-- The gaze model of the robot (testing).-->
+  <!-- The gaze model of the robot (testing).
   <Group prev="head_shell" transform="0 0 0 0 0 0">
     <xi:include href="../TwoArmJaco7/g_gazemodel.xml" />
   </Group>
@@ -135,7 +143,7 @@
     <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
     <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
     <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
-  </Body>
+  </Body>-->
   
   <Manipulator body="head_kinect_link" types="head">
     <GazeCapability frame="head_kinect_lens" />
@@ -155,9 +163,9 @@
   </Group>
 
   <model_state model="default" time_stamp="0">
-	<joint_state joint="DofPoleZ" position="-0.1"/>
-	  
-	<joint_state joint="joint_1_right3" position="210"/>
+    <joint_state joint="DofPoleZ" position="-0.25"/>
+    
+    <joint_state joint="joint_1_right3" position="210"/>
     <joint_state joint="joint_2_right3" position="60"/>
     <joint_state joint="joint_3_right3" position="80"/>
     <joint_state joint="joint_4_right3" position="-90"/>
@@ -224,15 +232,15 @@
     <Body name="center_post_link_1"/>
     <Body name="adapter3_shoulder_left"/>
     <Body name="adapter3_shoulder_right"/>
-	<Body name="head_kinect_link"/>
-	<Body name="shelf_bottom"/>
-	<Body name="shelf_bottom"/>
+    <Body name="head_kinect_link"/>
+    <Body name="shelf_bottom"/>
+    <Body name="shelf_bottom"/>
   </BroadPhase>
 
   <!-- Self-collision model -->
   <CollisionModel  DistanceThreshold="0.05" >
 
-    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />			
+    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />	
     <CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />	
     <CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
     <CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />

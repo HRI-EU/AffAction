@@ -145,15 +145,26 @@ void ActionPour::init(const ActionScene& domain,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
-  const AffordanceEntity* pourToAff = domain.getAffordanceEntity(objToPourInto);
+  auto pourToAffs = domain.getAffordanceEntities(objToPourInto);
 
-  if (!pourToAff)
+  if (pourToAffs.empty())
   {
     throw ActionException(ActionException::ParamNotFound,
                           "The " + objToPourInto + " to pour into is unknown.",
                           "Use an object name that is defined in the environment",
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
+
+  if (pourToAffs.size()>1)
+  {
+    throw ActionException(ActionException::ParamInvalid,
+                          "The " + objToPourInto + " is ambiguous.",
+                          "Use an object name that is defined in the environment",
+                          std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+  }
+
+
+  const AffordanceEntity* pourToAff = pourToAffs[0];
 
   auto containers = getAffordances<Containable>(pourToAff);
 

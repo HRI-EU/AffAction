@@ -859,7 +859,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* se
   // Extra nullspace to handle elbow and wrists getting too close to the body.
   // We do this after the joint masking since this should take effect also with
   // constraints on and objects in hand.
-  // REXEC(0)
+  REXEC(10)
   {
     MatNd* dH_extra = MatNd_createLike(dH);
     MatNd* dH_tmp = MatNd_createLike(dH);
@@ -946,6 +946,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* se
   // Add self collision avoidance here. We do it after the joint weight
   // strategy, since we prioritize self collision avoidance against keeping
   // a pose.
+#if 0
   if (selfCA)
   {
     MatNd* dH_ca = MatNd_createLike(graph->q);
@@ -975,6 +976,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* se
     MatNd_addSelf(dH, dH_ca);
     MatNd_destroy(dH_ca);
   }
+#endif
 
   // The right inverse is the method of choice here, since we have less task
   // dimensions than joint space dimensions. We also don't use conflicting

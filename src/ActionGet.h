@@ -129,6 +129,7 @@ public:
   std::vector<std::string> usedManipulators;
   std::vector<std::tuple<Affordance*, Capability*>> affordanceMap;
   double liftHeight;
+  double objHeight;
   double preGraspDist;
   double shoulderBase;
   bool handOver;

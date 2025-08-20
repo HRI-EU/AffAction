@@ -55,13 +55,13 @@
  </Body>
 
   <Body name="forearm" prev="elbow" physics="dynamic" mass="0.9302" cogVector="-0.000018 -0.075478 -0.015006" inertia="0.008147 -1e-06 0   -1e-06 0.000631 -0.0005   0 -0.0005 0.008316" >
-    <Joint name="joint_4" range="-150 0 150" type="RotZ" transform="0 0.006375 -0.21038 90 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.25" weightCA="0" />
+    <Joint name="joint_4" range="-150 0 150" type="RotZ" transform="0 0.006375 -0.21038 90 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.5" weightCA="0" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/forearm_link.STL" color="#bfbfbfff" />
     <Shape type="SSL" length="0.3" radius="0.045" distance="true" physics="false" graphics="false" transform="0 0 -0.04 80 0 90" color="RANDOM" />
   </Body>
 
   <Body name="spherical_wrist_1_link" prev="forearm" physics="dynamic" mass="0.6781" cogVector="0.000001 -0.009432 -0.063883" inertia="0.001596 0 0   0 0.001607 0.000256   0 0.000256 0.000399" >
-    <Joint name="joint_5" range="-720 0 720" type="RotZ" transform="0 -0.20843 -0.006375 -90 0 0" ctrlType="Torque" torqueLimit="9" speedLimit="65" weightMetric="0.25" weightJL="1" weightCA="0" />
+    <Joint name="joint_5" range="-720 0 720" type="RotZ" transform="0 -0.20843 -0.006375 -90 0 0" ctrlType="Torque" torqueLimit="9" speedLimit="65" weightMetric="1" weightJL="1" weightCA="0" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.STL" color="#bfbfbfff" />
     <xShape type="SSL" length="0.072239" radius="0.051571" distance="true" physics="false" graphics="false" transform="-0.000165 -0.025866 -0.106649 -17.187742 0.162154 -90.524217" color="RANDOM" />
   </Body>
@@ -73,7 +73,7 @@
   </Body>
 
   <Body name="bracelet_link" prev="spherical_wrist_2_link" physics="dynamic" mass="0.5" cogVector="0.000281 0.011402 -0.029798" inertia="0.000587 3e-06 3e-06   3e-06 0.000369 -0.000118   3e-06 -0.000118 0.000609" >
-    <Joint name="joint_7" range="-720 0 720" type="RotZ" transform="0 -0.10593 -0.000175 -90 0 0" ctrlType="Torque" torqueLimit="9" speedLimit="65" weightMetric="0.25" weightJL="1" weightCA="0" />
+    <Joint name="joint_7" range="-720 0 720" type="RotZ" transform="0 -0.10593 -0.000175 -90 0 0" ctrlType="Torque" torqueLimit="9" speedLimit="65" weightMetric="1" weightJL="1" weightCA="0" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="kortex_description/arms/gen3/7dof/meshes/bracelet_with_vision_link.STL" color="#bfbfbfff" />
   </Body>
 
