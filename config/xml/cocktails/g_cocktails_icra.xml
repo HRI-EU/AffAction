@@ -333,7 +333,7 @@
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_4_2" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
+  <Group prev="table_grid_4_6" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -345,11 +345,11 @@
   <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
   <!-- </Group> -->
 
-  <Group prev="table_grid_2_1" name="_grenadine" color="RUBY" rigid_body_joints="true" >
+  <Group prev="table_grid_3_8" name="_grenadine" color="RUBY" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_3_8" name="_salt" color="PEARL_S" rigid_body_joints="true" >
+  <Group prev="table_grid_2_1" name="_salt" color="PEARL_S" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 

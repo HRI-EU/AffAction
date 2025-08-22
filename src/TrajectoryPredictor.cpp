@@ -946,7 +946,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* se
   // Add self collision avoidance here. We do it after the joint weight
   // strategy, since we prioritize self collision avoidance against keeping
   // a pose.
-#if 0
+#if 1
   if (selfCA)
   {
     MatNd* dH_ca = MatNd_createLike(graph->q);

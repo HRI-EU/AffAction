@@ -29,6 +29,11 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
+  <ActionSequence name="v1" text="get glass_red; get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table; put glass_red table" />
+  <ActionSequence name="v2" text="get glass_red + get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table + put glass_red table" />
+  <ActionSequence name="v3" text="get glass_red + get bottle_of_tequila; get bottle_of_salt + pour_put bottle_of_tequila glass_red; pour bottle_of_salt glass_red; put glass_red table + put bottle_of_salt table" />
+  <ActionSequence name="v4" text="get glass_red + get bottle_of_tequila; get bottle_of_salt + pour_put bottle_of_tequila glass_red; pour_put bottle_of_salt glass_red; put glass_red table" />
+
   <ActionSequence name="a" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green" />
   <ActionSequence name="b" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water + put glass_green" />
   <ActionSequence name="c" text="get bottle_of_tequila; pour_put bottle_of_tequila glass table" />
@@ -55,19 +60,6 @@
            graphics="true" physics="true" distance="false"/>
     <Shape scale="0.5" type="FRAME"/>
   </Body>
-
-  <!-- The model for a simple camera.
-  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 -180 40 90" was_rigid_body_joints="-0.796 -0.037 1.678 -177.274 52.690 88.299">
-    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
-    <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
-    <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
-    <Shape graphics="true" scale="0.2" type="FRAME"/>
-  </Body> -->
-
-  <!-- <Body color="LIGHTGRAY" name="camera_01" prev="camera_0" transform="0 0 0.05 90 0 90" > -->
-  <!--   <Shape scale="0.2" type="FRAME"/> -->
-  <!-- </Body> -->
-
   
   <Body name="Stand" prev="aruco_base" transform="-0.87 0 0 0 0 0" >
     <xxShape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 0 0 0 -90" scale="0.001" />
@@ -99,7 +91,7 @@
   </Group>
 
 
-  <!-- Jaco Gen2 arms -->
+  <!-- Jaco Gen2 arms
   <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="1.6 0 0.5 0 0 180" >
     <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
@@ -124,7 +116,7 @@
       <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
     </Group>
     <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
-  </Group>
+  </Group> -->
 
 
 
@@ -133,18 +125,6 @@
     <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
   </Group>
 
-  <!-- The gaze model of the robot (testing).
-  <Group prev="head_shell" transform="0 0 0 0 0 0">
-    <xi:include href="../TwoArmJaco7/g_gazemodel.xml" />
-  </Group>
-
-  <Body name="GazePoint" >
-    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
-  </Body>-->
-  
   <Manipulator body="head_kinect_link" types="head">
     <GazeCapability frame="head_kinect_lens" />
   </Manipulator>
@@ -152,8 +132,8 @@
   <Agent body="Johnnie" types="robot" name="Johnnie" >
     <Component manipulator="hand_robot_left3" />
     <Component manipulator="hand_robot_right3" />
-    <Component manipulator="hand_robot_left" />
-    <Component manipulator="hand_robot_right" />
+    <!-- <Component manipulator="hand_robot_left" /> -->
+    <!-- <Component manipulator="hand_robot_right" /> -->
     <xComponent manipulator="head_kinect_link" />
   </Agent>
 
@@ -237,16 +217,21 @@
     <Body name="shelf_bottom"/>
   </BroadPhase>
 
-  <!-- Self-collision model -->
+  <!-- Self-collision model
   <CollisionModel  DistanceThreshold="0.05" >
 
-    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />	
-    <CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />	
+    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />
     <CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
     <CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />
 
     <CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
     <CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
+
+    <CollisionPair body1="hand_robot_left" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_left3" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_right" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_righ3" body2="table" DistanceThreshold="0.02" />
     
     <CollisionPair body1="hand_robot_left" body2="hand_robot_left3" />
     <CollisionPair body1="hand_robot_left" body2="forearm_left3" />
@@ -285,7 +270,7 @@
     <CollisionPair body1="center_post_link" body2="hand_robot_right"  DistanceThreshold="0.2" />
     <CollisionPair body1="center_post_link" body2="hand_robot_left"  DistanceThreshold="0.2" />
 
-  </CollisionModel>
+  </CollisionModel> -->
 
 
 </Graph>
