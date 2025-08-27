@@ -213,9 +213,12 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       auto slnPath = tree->getPathToNode(leaf);
       std::vector<std::string> predictedSeq;
       predictedSeq.reserve(slnPath.size());
+
+      double sln_duration = 0.0;
       for (auto node : slnPath)
       {
         predictedSeq.push_back(node->actionCommand());
+        sln_duration += node->duration;
       }
 
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
@@ -228,7 +231,8 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
         {"reason", errMsg.reason},
         {"suggestion", errMsg.suggestion},
         {"developer", errMsg.developer},
-        {"cost", slnPath.back()->cost}
+        {"cost", slnPath.back()->cost},
+        {"duration", sln_duration}
       });
 
     }

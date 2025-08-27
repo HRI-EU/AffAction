@@ -62,14 +62,14 @@ namespace aff
 size_t PredictionTreeNode::uniqueIdCount = 0;
 
 PredictionTreeNode::PredictionTreeNode() :
-  success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(uniqueIdCount++),
+  duration(0.0), success(false), cost(0.0), accumulatedCost(0.0), idx(-1), uniqueId(uniqueIdCount++),
   level(0), parent(nullptr), graph(nullptr), threadNumber(0), fatalError(false)
 {
 }
 
 PredictionTreeNode::PredictionTreeNode(PredictionTreeNode* parent_,
                                        const TrajectoryPredictor::PredictionResult& pr) :
-  success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
+  duration(pr.duration), success(pr.success), cost(pr.cost()), accumulatedCost(0.0), idx(pr.idx), uniqueId(uniqueIdCount++),
   bodyTransforms(pr.bodyTransforms), parent(parent_), graph(pr.graph), feedbackMsg(pr.feedbackMsg),
   threadNumber(0), fatalError(false)
 {
@@ -1083,6 +1083,7 @@ static void expand(ActionScene& scene,
   PredictionTreeNode* child = new PredictionTreeNode(node, res);
   child->resolvedActionCommand = action->getActionCommand();
   child->threadNumber = globalThreadNumber;
+  child->duration = action->getDuration();
   node->children.push_back(child);
 
   REXEC(1)

@@ -50,6 +50,7 @@ namespace aff
 class PredictionTreeNode
 {
 public:
+  double duration;  /**< Duration of the action in seconds. */
   bool success; /**< Flag indicating whether the action was successfully executed. */
   double cost; /**< Cost of the action execution. */
   double accumulatedCost; /**< Sum of cost up to this node. */

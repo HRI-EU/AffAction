@@ -60,6 +60,7 @@ public:
 
     void print(int verbosityLevel = 1) const;
 
+    double duration;
     int idx;   // Store the index if inside a vector. Not so good.
     bool success;
     double minDist;
