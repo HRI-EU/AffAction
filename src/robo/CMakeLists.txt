@@ -31,6 +31,7 @@
 ################################################################################
 
 OPTION(AFFACTION_WITH_KINOVA_GEN3 "Enable Kinova Gen3 Kortex driver" OFF)
+OPTION(AFFACTION_WITH_LIBFRANKA "Enable libfranka driver" OFF)
 
 
 
@@ -96,3 +97,40 @@ IF (APPLE)
 ENDIF()
 
 TARGET_LINK_LIBRARIES(PTUDriver RcsCore ${ZMQ_LIBRARIES})
+
+
+
+##############################################################################
+# libfranka driver. Here's the cmake vars for pinocchio and Franka:
+# PINOCCHIO_INCLUDE_DIRS PINOCCHIO_LIBRARIES
+# Franka_INCLUDE_DIRS Franka_LIBRARIES
+##############################################################################
+IF (AFFACTION_WITH_LIBFRANKA AND UNIX AND NOT APPLE)
+  #SET(CMAKE_CXX_STANDARD 17)
+
+  ADD_EXECUTABLE(FrankaDriver FrankaDriver.cpp)
+  SET(PINOCCHIO_DIR "/hri/storage/user/mgienger/Repos/pinocchio/install")
+  SET(LIBFRANKA_DIR "/hri/storage/user/mgienger/Repos/libfranka/install")
+  FIND_PACKAGE(pinocchio REQUIRED HINTS "${PINOCCHIO_DIR}/lib/cmake/pinocchio")
+  FIND_PACKAGE(Franka REQUIRED HINTS "${LIBFRANKA_DIR}/lib/cmake/Franka")
+  FIND_PACKAGE(Eigen3 REQUIRED)
+
+  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
+  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${EIGEN3_INCLUDE_DIR}")
+  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${PINOCCHIO_INCLUDE_DIRS}")
+  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${Franka_INCLUDE_DIRS}")
+  TARGET_LINK_LIBRARIES(FrankaDriver RcsCore ${ZMQ_LIBRARIES} ${PINOCCHIO_LIBRARIES} ${Franka_LIBRARIES})
+
+  IF(APPLE)
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(ZMQ REQUIRED libzmq)
+    TARGET_LINK_DIRECTORIES(FrankaDriver PRIVATE ${ZMQ_LIBRARY_DIRS})
+    TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE ${ZMQ_INCLUDE_DIRS})
+  ELSEIF(UNIX)
+    TARGET_COMPILE_DEFINITIONS(FrankaDriver PRIVATE -D_OS_UNIX)
+    TARGET_COMPILE_OPTIONS(FrankaDriver PRIVATE "-Wall")
+    TARGET_COMPILE_OPTIONS(FrankaDriver PRIVATE "-Wno-reorder")
+  ELSEIF(WIN32)
+    TARGET_COMPILE_DEFINITIONS(FrankaDriver PRIVATE -D_OS_WINDOWS -D_USE_MATH_DEFINES)
+  ENDIF()
+ENDIF(AFFACTION_WITH_LIBFRANKA AND UNIX AND NOT APPLE)
