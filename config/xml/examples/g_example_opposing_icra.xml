@@ -139,7 +139,7 @@
 
   <!--  Scene -->
   <Group prev="aruco_base" >
-    <xi:include href="../cocktails/g_cocktails_icra.xml"/>
+    <xi:include href="../cocktails/g_cocktails_icra_recipes_1.xml"/>
   </Group>
 
   <model_state model="default" time_stamp="0">

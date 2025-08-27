@@ -260,7 +260,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
   </Body>
   
-  <Body name="tray_pos2" prev="tray" transform="0.1 -0.15 0.06 0 0 0" >
+  <Body name="tray_pos2" prev="tray" transform="0.1 -0 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
   </Body>
   
@@ -268,7 +268,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
   </Body>
   
-  <Body name="tray_pos4" prev="tray" transform="-0.1 -0.15 0.06 0 0 0" >
+  <Body name="tray_pos4" prev="tray" transform="-0.1 -0 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
   </Body>
 
@@ -286,39 +286,44 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   <!-- bowls -->
-  <Group name="basil" prev="table_grid_2_7" color="RUBY" rigid_body_joints="true" >
+  <!-- <Group name="basil" prev="table_grid_2_7" color="RUBY" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bowl_with_items.xml"/> -->
+  <!-- </Group> -->
+
+  <!-- <Group name="fresh_herbs" prev="table_grid_3_6" color="DARKGREEN" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bowl_with_items.xml"/> -->
+  <!-- </Group> -->
+
+  <Group name="ice_cubes" prev="table_grid_0_7" color="BLUE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bowl_with_items.xml"/>
   </Group>
 
-  <Group name="fresh_herbs" prev="table_grid_3_6" color="DARKGREEN" rigid_body_joints="true" >
+  <Group name="sliced_orange" prev="table_grid_0_1" color="ORANGE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bowl_with_items.xml"/>
   </Group>
 
-  <Group name="ice_cubes" prev="table_grid_4_8" color="BLUE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bowl_with_items.xml"/>
-  </Group>
+  <!-- <Group name="rosemary" prev="table_grid_0_8" color="TURQUOISE" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bowl_with_items.xml"/> -->
+  <!-- </Group> -->
 
-  <Group name="lemon_slice" prev="table_grid_4_7" color="GREEN" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bowl_with_items.xml"/>
-  </Group>
+  <!-- <Group name="sugar_cubes" prev="table_grid_4_0" color="PUREWHITE" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bowl_with_items.xml"/> -->
+  <!-- </Group> -->
 
-  <Group name="rosemary" prev="table_grid_0_8" color="TURQUOISE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bowl_with_items.xml"/>
-  </Group>
 
-  <Group name="sugar_cubes" prev="table_grid_4_0" color="PUREWHITE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bowl_with_items.xml"/>
-  </Group>
 
-  <Group prev="table_grid_1_4" name="_blue" color="BLUE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_glass_quadratic.xml"/>
-  </Group>
 
-  <Group prev="table_grid_1_5" name="_red" color="RED" rigid_body_joints="true" >
-    <xi:include href="../scene/g_glass_quadratic.xml"/>
-  </Group>
+  
+  <!-- Glasses -->
+  <!-- <Group prev="table_grid_1_4" name="_blue" color="BLUE" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_glass_quadratic.xml"/> -->
+  <!-- </Group> -->
 
-  <Group prev="table_grid_3_4" name="_green" color="GREEN" rigid_body_joints="true" >
+  <!-- <Group prev="table_grid_1_5" name="_red" color="RED" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_glass_quadratic.xml"/> -->
+  <!-- </Group> -->
+
+  <Group prev="table_grid_1_4" name="_green" color="GREEN" rigid_body_joints="true" >
     <xi:include href="../scene/g_glass_quadratic.xml"/>
   </Group>
 
@@ -327,15 +332,15 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   <!-- bottles -->
-  <Group prev="table_grid_2_6" name="_bitters" color="LIGHTGRAY" rigid_body_joints="true" >
+  <Group prev="table_grid_2_6" name="_cranberry_juice" color="DARKRED" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_2_4" name="_brandy" color="COPPER" rigid_body_joints="true" >
+  <Group prev="table_grid_2_3" name="_gin" color="COPPER" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_4_6" name="_coca_cola" color="BLACK_RUBBER" rigid_body_joints="true" >
+  <Group prev="tray_pos1" name="_milk" color="WHITE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -347,11 +352,11 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
   <!-- </Group> -->
 
-  <Group prev="table_grid_3_8" name="_grenadine" color="RUBY" rigid_body_joints="true" >
+  <Group prev="table_grid_1_8" name="_pineapple_juice" color="RUBY" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_2_1" name="_salt" color="PEARL_S" rigid_body_joints="true" >
+  <Group prev="table_grid_2_2" name="_rum" color="BLACK_RUBBER" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -363,29 +368,29 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_1_0" name="_tequila" color="YELLOW_TRANS" rigid_body_joints="true" >
+  <Group prev="table_grid_1_0" name="_vermouth" color="YELLOW_TRANS" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_1_7" name="_tonic_water" color="JADE_S" rigid_body_joints="true" >
+  <!-- <Group prev="table_grid_1_7" name="_tonic_water" color="JADE_S" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
+  <!-- </Group> -->
+
+  <!-- <Group prev="table_grid_1_8" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
+  <!-- </Group> -->
+
+  <Group prev="tray_pos4" name="_vodka" color="BLUE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_1_8" name="_vermouth" color="EMERALD_S" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
-
-  <Group prev="table_grid_3_0" name="_vodka" color="BLUE" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
-
-  <Group prev="table_grid_2_2" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" >
-    <xi:include href="../scene/g_bottle_cocktail.xml"/>
-  </Group>
+  <!-- <Group prev="table_grid_2_2" name="_whiskey" color="POLISHED_COPPER" rigid_body_joints="true" > -->
+  <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
+  <!-- </Group> -->
 
 
   
-  <!-- electric_shaker -->
+  <!-- electric_shaker
   <Body name="electric_shaker" prev="tray" rigid_body_joints="0 0 0.06 0 0 70" physics="kinematic" color="OBSIDIAN" >
     <Shape type="FRAME" scale="0.1"/>
     <Shape type="BOX" extents="0.2 0.2 0.12" transform="0 0 -0.01 0 0 0" graphics="true"
@@ -406,9 +411,9 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Stackable frame="electric_shaker"/>
     <Supportable frame="electric_shaker_top" />
     <PointPushable frame="electric_shaker_button"/>
-  </AffordanceModel>
+  </AffordanceModel> -->
 
-  <!-- mixing_container -->
+  <!-- mixing_container
   <Body name="mixing_container" prev="electric_shaker_top" rigid_body_joints="0 0 0 0 0 0" color="RUBY">
     <Shape type="CYLINDER" radius="0.05" length="0.19" graphics="true" distance="true"
            transform="0 0 0.095 0 0 0"/>
@@ -430,7 +435,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Containable frame="mixing_container_tip" max_volume="1.0" open="true">
     </Containable>
   </AffordanceModel>
-
+ -->
 
   
 </Graph>
