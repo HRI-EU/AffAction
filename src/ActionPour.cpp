@@ -52,7 +52,7 @@
 
 
 
-#define DEFAULT_TILT_ANGLE (150.0*M_PI/180.0)
+#define DEFAULT_TILT_ANGLE (120.0*M_PI/180.0)
 #define T_FINGERMOVE  (2.0)
 
 
@@ -250,6 +250,8 @@ void ActionPour::init(const ActionScene& domain,
   this->taskBottleOri = bottle + "-POLAR";
   this->taskGlasOri = glas + "-POLAR";
   this->taskGlasPosX = glas + "-X";
+  this->taskGlasPosY = glas + "-Y";
+  this->taskGlasPosZ = glas + "-Z";
 
   // Determine if glas is held in the hand or standing around. We use this
   // intormation for trajectory generation to constrain the glas orientation
@@ -324,6 +326,21 @@ std::vector<std::string> ActionPour::createTasksXML() const
               "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
     tasks.push_back(xmlTask);
 
+
+
+
+    xmlTask = "<Task name=\"" + taskGlasPosY + "\" " + "controlVariable=\"Y\" " +
+              "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" >";
+    xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+    xmlTask += "min=\"" + std::to_string(-0.1) + "\" ";
+    xmlTask += "max=\"" + std::to_string(0.1) + "\" ";
+    xmlTask += "dxScaling=\"0.01\" slowDownRatio=\"0.5\" />\n";
+    xmlTask += "</Task>";
+
+
+
+    tasks.push_back(xmlTask);
+
     xmlTask = "<Task name=\"" + taskGlasPosZ + "\" " + "controlVariable=\"Z\" " +
               "effector=\"" + glas + "\" refFrame = \"" + roboBaseFrame + "\" />";
     tasks.push_back(xmlTask);
@@ -381,7 +398,7 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   a1->add(t_prep + 0.5*(t_up-t_prep), 0.0, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep, heightAboveGlas, 0.0, 0.0, 7, taskRelPos + " 2");
 
-  //if (initRelPosZ > 0.4)
+  if (initRelPosZ > 0.4)
   {
     //a1->add(t_start + 0.5 * (t_prep - t_start), this->initRelPosZ, 0.0, 0.0, 7, taskRelPos + " 2");
     a1->add(std::make_shared<tropic::PositionConstraint>(t_start + 0.5 * (t_prep - t_start), 0.0, 0.0, initRelPosZ, taskRelPos, 7));
@@ -407,6 +424,11 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
     a1->addActivation(t_end + afterTime, false, 0.5, taskGlasOri);
     a1->addActivation(t_start, true, 0.5, taskGlasPosX);
     a1->addActivation(t_end + afterTime, false, 0.5, taskGlasPosX);
+    a1->addActivation(t_start, true, 0.5, taskGlasPosY);
+    a1->addActivation(t_end + afterTime, false, 0.5, taskGlasPosY);
+    a1->add(t_prep, 0.0, 0.0, 0.0, 7, taskGlasPosY + " 0");
+
+
     a1->addActivation(t_start, true, 0.5, taskGlasPosZ);
     a1->addActivation(t_end + afterTime, false, 0.5, taskGlasPosZ);
   }

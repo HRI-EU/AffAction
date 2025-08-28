@@ -184,55 +184,55 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   <AffordanceModel body="table" name="table" types="furniture">
-    <Supportable frame="table_grid_0_0"/>
+    <!-- <Supportable frame="table_grid_0_0"/> -->
     <Supportable frame="table_grid_0_1"/>
-    <Supportable frame="table_grid_0_2"/>
-    <Supportable frame="table_grid_0_3"/>
-    <Supportable frame="table_grid_0_4"/>
-    <Supportable frame="table_grid_0_5"/>
-    <Supportable frame="table_grid_0_6"/>
+    <!-- <Supportable frame="table_grid_0_2"/> -->
+    <!-- <Supportable frame="table_grid_0_3"/> -->
+    <!-- <Supportable frame="table_grid_0_4"/> -->
+    <!-- <Supportable frame="table_grid_0_5"/> -->
+    <!-- <Supportable frame="table_grid_0_6"/> -->
     <Supportable frame="table_grid_0_7"/>
-    <Supportable frame="table_grid_0_8"/>
+    <!-- <Supportable frame="table_grid_0_8"/> -->
 
-    <Supportable frame="table_grid_1_0"/> 
-    <Supportable frame="table_grid_1_1"/> 
-    <Supportable frame="table_grid_1_2"/> 
-    <Supportable frame="table_grid_1_3"/> 
-    <Supportable frame="table_grid_1_4"/> 
-    <Supportable frame="table_grid_1_5"/> 
-    <Supportable frame="table_grid_1_6"/> 
-    <Supportable frame="table_grid_1_7"/> 
+    <Supportable frame="table_grid_1_0"/>
+    <!-- <Supportable frame="table_grid_1_1"/>  -->
+    <!-- <Supportable frame="table_grid_1_2"/>  -->
+    <!-- <Supportable frame="table_grid_1_3"/>  -->
+    <Supportable frame="table_grid_1_4"/>
+    <!-- <Supportable frame="table_grid_1_5"/>  -->
+    <!-- <Supportable frame="table_grid_1_6"/>  -->
+    <!-- <Supportable frame="table_grid_1_7"/>  -->
     <Supportable frame="table_grid_1_8"/> 
 
-    <Supportable frame="table_grid_2_0"/> 
-    <Supportable frame="table_grid_2_1"/> 
-    <Supportable frame="table_grid_2_2"/> 
-    <Supportable frame="table_grid_2_3"/> 
-    <Supportable frame="table_grid_2_4"/> 
-    <Supportable frame="table_grid_2_5"/> 
-    <Supportable frame="table_grid_2_6"/> 
-    <Supportable frame="table_grid_2_7"/> 
-    <Supportable frame="table_grid_2_8"/> 
+    <!-- <Supportable frame="table_grid_2_0"/> -->
+    <!-- <Supportable frame="table_grid_2_1"/> -->
+    <Supportable frame="table_grid_2_2"/>
+    <Supportable frame="table_grid_2_3"/>
+    <!-- <Supportable frame="table_grid_2_4"/>  -->
+    <Supportable frame="table_grid_2_5"/>
+    <Supportable frame="table_grid_2_6"/>
+    <!-- <Supportable frame="table_grid_2_7"/>  -->
+    <!-- <Supportable frame="table_grid_2_8"/>  -->
 
-    <Supportable frame="table_grid_3_0"/> 
-    <Supportable frame="table_grid_3_1"/> 
-    <Supportable frame="table_grid_3_2"/> 
-    <Supportable frame="table_grid_3_3"/> 
-    <Supportable frame="table_grid_3_4"/> 
-    <Supportable frame="table_grid_3_5"/> 
-    <Supportable frame="table_grid_3_6"/> 
-    <Supportable frame="table_grid_3_7"/> 
-    <Supportable frame="table_grid_3_8"/> 
+    <!-- <Supportable frame="table_grid_3_0"/>  -->
+    <!-- <Supportable frame="table_grid_3_1"/>  -->
+    <!-- <Supportable frame="table_grid_3_2"/>  -->
+    <!-- <Supportable frame="table_grid_3_3"/>  -->
+    <!-- <Supportable frame="table_grid_3_4"/>  -->
+    <!-- <Supportable frame="table_grid_3_5"/>  -->
+    <!-- <Supportable frame="table_grid_3_6"/>  -->
+    <!-- <Supportable frame="table_grid_3_7"/>  -->
+    <!-- <Supportable frame="table_grid_3_8"/>  -->
 
-    <Supportable frame="table_grid_4_0"/> 
-    <Supportable frame="table_grid_4_1"/> 
-    <Supportable frame="table_grid_4_2"/> 
-    <Supportable frame="table_grid_4_3"/> 
-    <Supportable frame="table_grid_4_4"/> 
-    <Supportable frame="table_grid_4_5"/> 
-    <Supportable frame="table_grid_4_6"/> 
-    <Supportable frame="table_grid_4_7"/> 
-    <Supportable frame="table_grid_4_8"/> 
+    <!-- <Supportable frame="table_grid_4_0"/>  -->
+    <!-- <Supportable frame="table_grid_4_1"/>  -->
+    <!-- <Supportable frame="table_grid_4_2"/>  -->
+    <!-- <Supportable frame="table_grid_4_3"/>  -->
+    <!-- <Supportable frame="table_grid_4_4"/>  -->
+    <!-- <Supportable frame="table_grid_4_5"/>  -->
+    <!-- <Supportable frame="table_grid_4_6"/>  -->
+    <!-- <Supportable frame="table_grid_4_7"/>  -->
+    <!-- <Supportable frame="table_grid_4_8"/>  -->
   </AffordanceModel>
 
 
@@ -278,8 +278,8 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <PowerGraspable frame="tray_grip_1"/>
     <PowerGraspable frame="tray_grip_2"/>
     <Supportable frame="tray_pos1" />
-    <Supportable frame="tray_pos2" />
-    <Supportable frame="tray_pos3" />
+    <!-- <Supportable frame="tray_pos2" /> -->
+    <!-- <Supportable frame="tray_pos3" /> -->
     <Supportable frame="tray_pos4" />
   </AffordanceModel>
 

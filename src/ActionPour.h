@@ -79,6 +79,7 @@ protected:
   std::string taskBottleOri;
   std::string taskGlasOri;
   std::string taskGlasPosX;
+  std::string taskGlasPosY;
   std::string taskGlasPosZ;
 
   std::vector<std::string> usedManipulators;

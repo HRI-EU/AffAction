@@ -737,9 +737,12 @@ void TrajectoryPredictor::addElbowNullspace(const RcsGraph* graph, MatNd* dH)
     dist = Math_clip((A_EB.org[1] - A_SB.org[1]) - boundary, penetrationClip, 0.0);
     //RLOG(1, "Left elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
 
-    RcsGraph_1dPosJacobian(graph, left_elbow, base, NULL, 1, J);
-    MatNd_constMulSelf(J, dist*gain);
-    MatNd_addSelf(dH, J);
+    if (dist < 0.0)
+    {
+      RcsGraph_1dPosJacobian(graph, left_elbow, base, NULL, 1, J);
+      MatNd_constMulSelf(J, dist*gain);
+      MatNd_addSelf(dH, J);
+    }
   }
 
   // Right elbow
@@ -748,11 +751,15 @@ void TrajectoryPredictor::addElbowNullspace(const RcsGraph* graph, MatNd* dH)
     HTr_invTransform(&A_SB, &base->A_BI, &sh_right->A_BI);
     HTr_invTransform(&A_EB, &base->A_BI, &right_elbow->A_BI);
     dist = Math_clip((- A_EB.org[1] + A_SB.org[1]) - boundary, penetrationClip, 0.0);
-    // RLOG(1, "Right elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
+    //RLOG(1, "Right elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
 
-    RcsGraph_1dPosJacobian(graph, right_elbow, base, NULL, 1, J);
-    MatNd_constMulSelf(J,  -dist * gain);
-    MatNd_addSelf(dH, J);
+    if (dist < 0.0)
+    {
+      RcsGraph_1dPosJacobian(graph, right_elbow, base, NULL, 1, J);
+      MatNd_constMulSelf(J,  -dist * gain);
+      MatNd_addSelf(dH, J);
+      //RLOG(0, "Right elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
+    }
   }
 
 #if 1
@@ -768,9 +775,12 @@ void TrajectoryPredictor::addElbowNullspace(const RcsGraph* graph, MatNd* dH)
     dist = Math_clip((A_EB.org[1] - A_SB.org[1]) - boundary, penetrationClip, 0.0);
     //RLOG(1, "Left elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
 
-    RcsGraph_1dPosJacobian(graph, left_elbow, base, NULL, 1, J);
-    MatNd_constMulSelf(J, dist*gain);
-    MatNd_addSelf(dH, J);
+    if (dist < 0.0)
+    {
+      RcsGraph_1dPosJacobian(graph, left_elbow, base, NULL, 1, J);
+      MatNd_constMulSelf(J, dist*gain);
+      MatNd_addSelf(dH, J);
+    }
   }
 
   // Right wrist
@@ -781,9 +791,12 @@ void TrajectoryPredictor::addElbowNullspace(const RcsGraph* graph, MatNd* dH)
     dist = Math_clip((- A_EB.org[1] + A_SB.org[1]) - boundary, penetrationClip, 0.0);
     // RLOG(1, "Right elbow: dist=%f   el=%f   sh=%f", dist, A_EB.org[1], A_SB.org[1]);
 
-    RcsGraph_1dPosJacobian(graph, right_elbow, base, NULL, 1, J);
-    MatNd_constMulSelf(J,  -dist * gain);
-    MatNd_addSelf(dH, J);
+    if (dist < 0.0)
+    {
+      RcsGraph_1dPosJacobian(graph, right_elbow, base, NULL, 1, J);
+      MatNd_constMulSelf(J,  -dist * gain);
+      MatNd_addSelf(dH, J);
+    }
   }
 #endif
 
@@ -859,7 +872,7 @@ int TrajectoryPredictor::computeIK(Rcs::IkSolverRMR* solver, RcsCollisionMdl* se
   // Extra nullspace to handle elbow and wrists getting too close to the body.
   // We do this after the joint masking since this should take effect also with
   // constraints on and objects in hand.
-  REXEC(10)
+  REXEC(0)
   {
     MatNd* dH_extra = MatNd_createLike(dH);
     MatNd* dH_tmp = MatNd_createLike(dH);

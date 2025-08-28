@@ -89,7 +89,7 @@
     <xi:include href="../JacoGen3/g_item_base_gen3.xml"/>
   </Group>
 
-  <!-- Jaco Gen3 arms -->
+  <!-- Jaco Gen3 arms
   <Body name="adapter_shoulder_gen3" prev="center_post_link" transform="-0.04 0 0.5704 0 0 0" >
     <Shape type="MESH" meshFile="hri_scitos_description/Gen3Mount-V3.stl" scale="0.001" transform="0 0 0.0638 0 0 180" />
   </Body>
@@ -106,11 +106,11 @@
   <Group name="_left3" prev="adapter_shoulder_gen3_left_2" transform="0 0 0 -90 0 -90" >
     <xi:include href="../JacoGen3/gJacoGen3_7dof.xml"/>
     <xi:include href="../JacoGen3/g_hand_left-gen3.xml"/>
-  </Group>
+  </Group> -->
 
 
-  <!-- Jaco Gen2 arms
-  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="1.6 0 0.5 0 0 180" >
+  <!-- Jaco Gen2 arms -->
+  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="-0.04 0 0.571 0 0 0" was_transform="1.6 0 0.5 0 0 180" >
     <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
@@ -134,7 +134,7 @@
       <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
     </Group>
     <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
-  </Group> -->
+  </Group>
 
 
 
@@ -148,10 +148,10 @@
   </Manipulator>
 
   <Agent body="Johnnie" types="robot" name="Johnnie" >
-    <Component manipulator="hand_robot_left3" />
-    <Component manipulator="hand_robot_right3" />
-    <!-- <Component manipulator="hand_robot_left" /> -->
-    <!-- <Component manipulator="hand_robot_right" /> -->
+    <!-- <Component manipulator="hand_robot_left3" /> -->
+    <!-- <Component manipulator="hand_robot_right3" /> -->
+    <Component manipulator="hand_robot_left" />
+    <Component manipulator="hand_robot_right" />
     <xComponent manipulator="head_kinect_link" />
   </Agent>
 
@@ -161,7 +161,7 @@
   </Group>
 
   <model_state model="default" time_stamp="0">
-    <joint_state joint="DofPoleZ" position="-0.25"/>
+    <joint_state joint="DofPoleZ" position="-0.34"/>
     
     <joint_state joint="joint_1_right3" position="210"/>
     <joint_state joint="joint_2_right3" position="60"/>
@@ -225,23 +225,23 @@
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>
     <Tree root="upperarm_right"/>
-    <Tree root="upperarm_left3"/>
-    <Tree root="upperarm_right3"/>
+    <!-- <Tree root="upperarm_left3"/> -->
+    <!-- <Tree root="upperarm_right3"/> -->
     <Body name="center_post_link_1"/>
     <Body name="adapter3_shoulder_left"/>
     <Body name="adapter3_shoulder_right"/>
     <Body name="head_kinect_link"/>
-    <Body name="shelf_bottom"/>
-    <Body name="shelf_bottom"/>
+    <!-- <Body name="shelf_bottom"/> -->
+    <!-- <Body name="shelf_bottom"/> -->
   </BroadPhase>
 
   <!-- Self-collision model
   <CollisionModel  DistanceThreshold="0.05" >
 
-    <CollisionPair body1="center_post_link" body2="upperarm_left3"  DistanceThreshold="0.15" />
-    <CollisionPair body1="center_post_link" body2="upperarm_right3"  DistanceThreshold="0.15" />
-    <CollisionPair body1="center_post_link" body2="elbow_left3"  DistanceThreshold="0.15" />
-    <CollisionPair body1="center_post_link" body2="elbow_right3"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="elbow_left"  DistanceThreshold="0.25" />
+    <CollisionPair body1="center_post_link" body2="elbow_right"  DistanceThreshold="0.25" />
 
     <CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
     <CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
