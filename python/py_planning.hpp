@@ -220,29 +220,72 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       {
         predictedSeq.push_back(node->actionCommand());
 
-#if 1
+#if 0
+
+
+
+
+
+        // sim.plan_fb_rich("get glass_green; put glass_green table")
         bool put_where_gotten_from = true;
-        if (put_where_gotten_from)
+        if (put_where_gotten_from && predictedSeq.back().compare(0, 3, "put", 0, 3)==0)
         {
+          auto a_words = Rcs::String_split(predictedSeq.back(), " ");
+          auto object = a_words[1];
+
+          RLOG_CPP(0, "Trying to find where " << object << " was gotten from - a_words[0] is " << a_words[0]);
+
           // From each "put" action, we go back through the sequence and search
           // where it has been gotten from. This we append to the put action.
           for (auto it = predictedSeq.rbegin(); it != predictedSeq.rend(); ++it)
           {
             std::string action_i = *it;
-            RLOG_CPP(0, "Checking " << action_i);
+            RLOG_CPP(1, "Checking " << action_i);
 
-            if (action_i.compare(0, 3, "get", 0, 3) == 0)
+            if (action_i.compare(0, 3, "get", 0, 3) != 0)
             {
-              std::cout << "First three characters are equal\n";
-            }
-            else
-            {
-              std::cout << "First three characters differ\n";
+              RLOG_CPP(1, "Skipping non-get action for object " << object);
+              continue;
             }
 
+            RLOG_CPP(1, "Found get action: " << action_i);
+            auto get_words = Rcs::String_split(action_i, " ");
+
+            if (get_words[1] != object)
+            {
+              RLOG_CPP(1, "Skipping irrelevant get action for object " << get_words[1]);
+              continue;
+            }
+
+            // We need to check the parent's graph of the action, because it was predicted until the end
+            if (!node->parent)
+            {
+              RLOG_CPP(1, "Cannot determine parent of action for object " << object);
+              break;
+            }
+
+            const RcsBody* objBdy = RcsGraph_getBodyByName(node->parent->graph, object.c_str());
+            const RcsBody* parentBdy = NULL;
+            RLOG(1, "object is: %s", objBdy ? objBdy->name : "NULL");
+            if (objBdy)
+            {
+              parentBdy = RCSBODY_BY_ID(node->parent->graph, objBdy->parentId);
+              RLOG(0, "place is: %s", parentBdy ? parentBdy->name : "NULL");
+              if (parentBdy)
+              {
+                a_words.insert(a_words.begin() + 2, std::string(parentBdy->name));
+                predictedSeq.back() = Rcs::String_concatenate(a_words, " ");
+                RLOG_CPP(0, "Modified action is: " << predictedSeq.back() << predictedSeq.back());
+              }
+            }
 
           }
         }
+
+
+
+
+
 #endif
 
         sln_duration += node->duration;

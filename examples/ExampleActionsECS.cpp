@@ -652,9 +652,9 @@ bool ExampleActionsECS::initAlgo()
 
   if (virtualCameraEnabled)
   {
-    virtualCamera = std::make_unique<VirtualCamera>(new Rcs::GraphNode(getGraph()),
-                                                    virtualCameraWidth, virtualCameraHeight);
+    addVirtualCamera(virtualCameraBodyName, virtualCameraWidth, virtualCameraHeight);
   }
+
   // Add the SceneTransformationDataRecorder
   if (sceneTransformationDataRecorderEnabled)
   {
@@ -718,7 +718,7 @@ bool ExampleActionsECS::initGraphics()
     return false;
   }
 
-  if (virtualCameraWindowEnabled && virtualCamera)
+  if (virtualCameraWindowEnabled && virtualCameras.size()==1)
   {
     double trf6[6] = {-1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258};
     HTr A_CI;
@@ -731,7 +731,7 @@ bool ExampleActionsECS::initGraphics()
       HTr_copy(&A_CI, &camBdy->A_BI);
     }
 
-    VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCamera.get(), true, false, &A_CI);
+    VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCameras[0].second.get(), true, false, &A_CI);
     vcam->setBlockingMainThread(this->blockingMainThread);
     vcam->setEnabled(true);
     addComponent(vcam);
@@ -1993,19 +1993,49 @@ EntityBase& ExampleActionsECS::getEntity()
   return entity;
 }
 
-const VirtualCamera* ExampleActionsECS::getVirtualCamera() const
+const VirtualCamera* ExampleActionsECS::getVirtualCamera(int idx) const
 {
-  return virtualCamera.get();
+  if (idx<=-1)
+  {
+    idx = 0;
+  }
+  return idx>=virtualCameras.size() ? nullptr : virtualCameras[idx].second.get();
 }
 
-VirtualCamera* ExampleActionsECS::getVirtualCamera()
+VirtualCamera* ExampleActionsECS::getVirtualCamera(int idx)
 {
-  return virtualCamera.get();
+  if (idx<=-1)
+  {
+    idx = 0;
+  }
+  return idx>=virtualCameras.size() ? nullptr : virtualCameras[idx].second.get();
 }
 
-void ExampleActionsECS::setVirtualCamera(VirtualCamera* camera)
+std::vector<std::pair<std::string,VirtualCamera*>> ExampleActionsECS::getVirtualCameras()
 {
-  virtualCamera = std::unique_ptr<VirtualCamera>(camera);
+  std::vector<std::pair<std::string,VirtualCamera*>> cams;
+  for (size_t i=0; i<virtualCameras.size(); ++i)
+  {
+    std::string cam_i_name = virtualCameras[i].first;
+    VirtualCamera* cam_i = virtualCameras[i].second.get();
+    cams.push_back(std::make_pair(cam_i_name, cam_i));
+  }
+
+  return cams;
+}
+
+bool ExampleActionsECS::addVirtualCamera(std::string camera_name, int width, int height)
+{
+  if (!RcsGraph_getBodyByName(getGraph(), camera_name.c_str()))
+  {
+    RLOG(1, "Camera %s not found in graph", camera_name.c_str());
+    return false;
+  }
+
+  VirtualCamera* camera = new VirtualCamera(new Rcs::GraphNode(getGraph()), width, height);
+  virtualCameras.push_back(std::make_pair(camera_name, std::unique_ptr<VirtualCamera>(camera)));
+
+  return true;
 }
 
 void ExampleActionsECS::startThreaded()

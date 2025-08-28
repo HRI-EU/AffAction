@@ -63,7 +63,7 @@ class SimulatorManager:
         self.sim.noTextGui = True
         self.sim.speedUp = 1
         self.sim.verbose = False
-        self.sim.addVirtualCamera(width=320, height=240, withGui=False)
+        self.sim.addVirtualCamera("", width=320, height=240)
         self.sim.xmlFileName = self.scene
         self.sim.dt = 0.05
         self.sim.enableWireframeToggle = False
@@ -106,7 +106,7 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
         f"{get_command}"
         f"move {source_container_name} above {target_container_name} height 0.15;"
         f"pour_put {source_container_name} {target_container_name} putPlace {support};"
-        f"pose default,default_up,default_high"
+        f"pose default"
     )
     results = SIMULATION.plan_fb_rich(action_command)
     logger.info(f"Planning result: {json.dumps(results, indent=2)}")
@@ -118,7 +118,7 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
             f"move {source_container_name} above {target_container_name} height 0.15;"
             f"pour {source_container_name} {target_container_name};"
             f"put {source_container_name};"
-            f"pose default,default_up,default_high"
+            f"pose default"
         )
         results = SIMULATION.plan_fb_rich(action_command)
 
@@ -131,16 +131,19 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
 
 
 def main():
-    sim_manager = SimulatorManager(scene="g_example_worldmodel.xml")
+    sim_manager = SimulatorManager(scene="g_example_opposing_icra.xml")
     sim_manager.setup("build")
     global sim   # For interactive console needed
     sim = sim_manager.sim
     sim.init(True)
+    sim.addVirtualCamera("camera_0", 320, 240)
+    sim.addVirtualCamera("camera_1", 320, 240)
+    sim.addVirtualCamera("camera_2", 320, 240)
     sim.callEvent("Start")
     sim.callEvent("Process")
 
     # grounded_actions = pour_into(sim, "bottle_of_pesto_sauce", "glass_blue", "hand_robot_left")
-    grounded_actions = pour_into(sim, "bottle_of_salt", "glass_green", "hand_robot_right")
+    grounded_actions = pour_into(sim, "bottle_of_gin", "glass_green", "hand_robot_right3")
     # grounded_actions = pour_into(sim, "bottle_of_tomato_sauce", "glass_green", "hand_robot_right")
     
     if not grounded_actions:
@@ -152,15 +155,33 @@ def main():
     try:
         while True:
             sim.step()
-            color_img = sim.captureColorImageFromFrame("camera_01")
-            color_np = np.array(color_img)
-            color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
-            #cv2.imwrite("color_image.jpg", color_bgr)
-            cv2.imshow("Screen capture", color_bgr)
+
+            # Grab first camera
+            color_img0 = sim.captureColorImageFromFrame("camera_0")
+            color_np0 = np.array(color_img0)
+            color_bgr0 = cv2.cvtColor(color_np0, cv2.COLOR_RGB2BGR)
+            #cv2.imwrite("color_image.jpg", color_bgr0)
+            cv2.imshow("Screen capture 0", color_bgr0)
+
+            # Grab second camera
+            color_img1 = sim.captureColorImageFromFrame("camera_1")
+            color_np1 = np.array(color_img1)
+            color_bgr1 = cv2.cvtColor(color_np1, cv2.COLOR_RGB2BGR)
+            #cv2.imwrite("color_image.jpg", color_bgr1)
+            cv2.imshow("Screen capture 1", color_bgr1)
+
+            # Grab third camera
+            color_img2 = sim.captureColorImageFromFrame("camera_2")
+            color_np2 = np.array(color_img2)
+            color_bgr2 = cv2.cvtColor(color_np2, cv2.COLOR_RGB2BGR)
+            #cv2.imwrite("color_image.jpg", color_bgr2)
+            cv2.imshow("Screen capture 2", color_bgr2)
+
+            
             key = cv2.waitKey(1)
 
-            controls = sim.getControls(["hand_robot_left", "hand_robot_right"])
-            logger.debug("Controls:\n%s", json.dumps(controls, indent=2))
+            controls = sim.getControls(["hand_robot_left3", "hand_robot_right3"])
+            logger.info("Controls:\n%s", json.dumps(controls, indent=2))
     except KeyboardInterrupt:
         print("Exiting simulation loop via Ctrl-C...")        
         sim.callEvent("Stop")

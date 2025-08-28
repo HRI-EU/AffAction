@@ -101,9 +101,10 @@ public:
   bool eraseViewer();
   const EntityBase& getEntity() const;
   EntityBase& getEntity();
-  const VirtualCamera* getVirtualCamera() const;
-  VirtualCamera* getVirtualCamera();
-  void setVirtualCamera(VirtualCamera* camera);
+  const VirtualCamera* getVirtualCamera(int idx=-1) const;
+  VirtualCamera* getVirtualCamera(int idx=-1);
+  std::vector<std::pair<std::string,VirtualCamera*>> getVirtualCameras();
+  bool addVirtualCamera(std::string camera_name, int width, int height);
   void addComponentArgument(const std::string& arg);
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;
@@ -180,7 +181,7 @@ protected:
   IKComponent* ikc;
   TextEditComponent* textGui;
 
-  std::unique_ptr<VirtualCamera> virtualCamera;
+  std::vector<std::pair<std::string,std::unique_ptr<VirtualCamera>>> virtualCameras;
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<SceneQueryPool> sceneQuery;
 

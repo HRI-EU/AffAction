@@ -87,6 +87,7 @@ namespace py = pybind11;
 #include "py_components.hpp"
 #include "py_planning.hpp"
 #include "py_mirror_eyes.hpp"
+#include "py_virtual_camera.hpp"
 #include "py_exploration.hpp"
 
 RCS_INSTALL_ERRORHANDLERS
@@ -516,110 +517,6 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
-  // Returns a rendered image from the given coordinates
-  // a = sim.captureImage(0, 0, 1, 0, 0, 0)
-  //////////////////////////////////////////////////////////////////////////////
-  .def("captureImage", [](aff::ExampleActionsECS& ex, double x, double y, double z,
-                          double thx, double thy, double thz) -> std::tuple<py::array_t<uint8_t>, py::array_t<float>>
-  {
-    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-
-    if (!virtualCamera)
-    {
-      RLOG(1, "Creating new virtual camera - not part of simulator");
-      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), 640, 480);
-      ex.setVirtualCamera(virtualCamera);
-    }
-
-    HTr A_camI;
-    double x6[6];
-    VecNd_set6(x6, x, y, z, thx, thy, thz);
-    HTr_from6DVector(&A_camI, x6);
-    virtualCamera->capture(&A_camI);
-
-    py::array_t<uint8_t> colorImageUint8({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 3 });
-    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
-
-    py::array_t<float> depthImageFloat({ (int)virtualCamera->getHeight(), (int)virtualCamera->getWidth(), 1 });
-    virtualCamera->getDepthImage(depthImageFloat.mutable_data(), depthImageFloat.size());
-
-    return std::make_tuple(colorImageUint8, depthImageFloat);
-
-  },
-  R"pbdoc(
-Renders the desired state of the scene. The input is the camera origin and yrp rotation
-around that origin. Outputs the color and depth image. If there is no virtual camera
-instantiated in the simulator, this will be done in this function. This leads to the
-first call being a bit more slow than the consecutive ones, since the camera construction
-takes 1-2 secs.
-Camera frame convention: x points forward, z point upward, and y points left
-
-Example
--------
-import cv2
-import numpy as np
-
-color, depth = sim.captureImage(-0.77, 0.0, 1.66, 0.0, 1.0, 0.0)
-color_np = np.array(color)
-color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
-cv2.imwrite("color_image.jpg", color_bgr)
-
-depth_np = np.array(depth)
-depth_normalized = cv2.normalize(depth_np, None, 0, 255, cv2.NORM_MINMAX)
-depth_display = depth_normalized.astype(np.uint8)
-cv2.imwrite("depth_image.jpg", depth_display)
-)pbdoc")
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Returns a rendered image from the given coordinates
-  //////////////////////////////////////////////////////////////////////////////
-  .def("captureColorImageFromFrame", [](aff::ExampleActionsECS& ex, std::string cameraName) -> py::array_t<uint8_t>
-  {
-    const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
-    if (!cam)
-    {
-      RLOG_CPP(1, "Camera body " << cameraName << " not found - returning empty array");
-      return py::array_t<double>({ 0, 0, 3 });
-    }
-
-    aff::VirtualCamera* virtualCamera = ex.getVirtualCamera();
-    int width = 640, height = 480;
-    if (!virtualCamera)
-    {
-      RLOG(1, "Creating new virtual camera - not part of simulator");
-      virtualCamera = new aff::VirtualCamera(new Rcs::GraphNode(ex.getGraph()), width, height);
-      ex.setVirtualCamera(virtualCamera);
-    }
-
-    width = (int)virtualCamera->getWidth();
-    height = (int)virtualCamera->getHeight();
-
-    virtualCamera->capture(&cam->A_BI);
-
-    // Here width and height need to be reversed
-    py::array_t<uint8_t> colorImageUint8({height, width, 3});
-    virtualCamera->getColorImage(colorImageUint8.mutable_data(), colorImageUint8.size());
-
-    return colorImageUint8;
-  }, R"pbdoc(
-Renders the desired state of the scene from the given camera. Outputs the color image.
-If there is no virtual camera instantiated in the simulator, this will be done in this
-function. This leads to the first call being a bit more slow than the consecutive ones,
-since the camera construction takes 1-2 secs.
-Camera frame convention: x points forward, z point upward, and y points left
-
-Example
--------
-import cv2
-import numpy as np
-
-color = sim.captureColorImageFromFrame("camera_01")
-color_np = np.array(color)
-color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
-cv2.imwrite("color_image.jpg", color_bgr)
-)pbdoc")
-
-  //////////////////////////////////////////////////////////////////////////////
   // Returns the entity of which child is a child of, or an empty string
   //////////////////////////////////////////////////////////////////////////////
   .def("get_parent_entity", [](aff::ExampleActionsECS& ex, std::string child) -> std::string
@@ -972,6 +869,7 @@ cv2.imwrite("color_image.jpg", color_bgr)
   bind_components(cls);
   bind_planning(cls);
   bind_mirror_eyes(cls);
+  bind_virtual_camera(cls);
   bind_exploration(cls);
 
 
@@ -1043,11 +941,6 @@ cv2.imwrite("color_image.jpg", color_bgr)
     aff::ExampleActionsECS* sim = obj.cast<aff::ExampleActionsECS*>();
     lm.enableDebugGraphics(sim->getViewer());
   })
-  //.def("setCameraTransform", [](aff::LandmarkBase& lm, std::string cameraName)
-  //{
-  //  const RcsBody* cam = RcsGraph_getBodyByName(lm.getGraph(), cameraName.c_str());
-  //  lm.setCameraTransform(&cam->A_BI);
-  //})
   .def("getAffordanceFrame", [](aff::LandmarkBase& lm, std::string bodyName, aff::Affordance::Type affordanceType) -> nlohmann::json
   {
     nlohmann::json data;

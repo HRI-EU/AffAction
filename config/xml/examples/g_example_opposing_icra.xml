@@ -60,6 +60,24 @@
            graphics="true" physics="true" distance="false"/>
     <Shape scale="0.5" type="FRAME"/>
   </Body>
+
+
+
+  <!-- The model for a simple camera. -->
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 0 40 0" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+  <Body color="LIGHTGRAY" name="camera_1" prev="aruco_base" rigid_body_joints="0 1 1.7 40 0 -90" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+  <Body color="LIGHTGRAY" name="camera_2" prev="aruco_base" rigid_body_joints="0 -1 1.7 -40 0 90" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+
+
   
   <Body name="Stand" prev="aruco_base" transform="-0.87 0 0 0 0 0" >
     <xxShape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 0 0 0 -90" scale="0.001" />
