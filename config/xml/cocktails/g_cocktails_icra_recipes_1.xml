@@ -332,11 +332,11 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   <!-- bottles -->
-  <Group prev="table_grid_2_6" name="_cranberry_juice" color="DARKRED" rigid_body_joints="true" >
+  <Group prev="table_grid_2_3" name="_cranberry_juice" color="DARKRED" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_2_3" name="_gin" color="COPPER" rigid_body_joints="true" >
+  <Group prev="table_grid_1_0" name="_gin" color="COPPER" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -368,7 +368,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_1_0" name="_vermouth" color="YELLOW_TRANS" rigid_body_joints="true" >
+  <Group prev="table_grid_2_6" name="_vermouth" color="YELLOW_TRANS" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 

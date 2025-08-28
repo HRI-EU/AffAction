@@ -161,7 +161,8 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       {"reason",     ""},
       {"suggestion", ""},
       {"developer",  ""},
-      {"cost",       0.0}
+      {"cost",       0.0},
+      {"duration",   0.0}
     };
 
     if (!tree)
@@ -218,6 +219,32 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       for (auto node : slnPath)
       {
         predictedSeq.push_back(node->actionCommand());
+
+#if 1
+        bool put_where_gotten_from = true;
+        if (put_where_gotten_from)
+        {
+          // From each "put" action, we go back through the sequence and search
+          // where it has been gotten from. This we append to the put action.
+          for (auto it = predictedSeq.rbegin(); it != predictedSeq.rend(); ++it)
+          {
+            std::string action_i = *it;
+            RLOG_CPP(0, "Checking " << action_i);
+
+            if (action_i.compare(0, 3, "get", 0, 3) == 0)
+            {
+              std::cout << "First three characters are equal\n";
+            }
+            else
+            {
+              std::cout << "First three characters differ\n";
+            }
+
+
+          }
+        }
+#endif
+
         sln_duration += node->duration;
       }
 
