@@ -52,7 +52,7 @@
 
 
 
-#define DEFAULT_TILT_ANGLE (120.0*M_PI/180.0)
+#define DEFAULT_TILT_ANGLE (150.0*M_PI/180.0)
 #define T_FINGERMOVE  (2.0)
 
 

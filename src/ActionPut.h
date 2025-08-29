@@ -87,6 +87,7 @@ protected:
 
   std::vector<std::string> createTasksXML() const;
 
+
   std::shared_ptr<tropic::ConstraintSet>
   createTrajectory(double t_start,
                    double t_grasp,
@@ -98,6 +99,7 @@ protected:
   std::string objGraspFrame;    // For retracting only
   std::string surfaceFrameName; // Rcs body name of surface
   std::string fingerJoints;     // Space-separated finger joint names
+  std::string roboBaseFrame;    // For pouring into object held in hand
 
   std::string taskObjHandPos;       // XYZ-task with effector=object and refBdy=hand
   std::string taskHandSurfacePos;   // XYZ-task with effector=hand, refBdy=object and refFrame=surface
@@ -107,6 +109,9 @@ protected:
   std::string taskObjSurfaceOri;
   std::string taskHandObjPolar;
   std::string taskHandInclination;  // Hand inclination in world coordinates (for freezing orienttion when retracting upwards)
+  std::string taskSurfacePosX;       // In case the object to put on is in the robot's hand
+  std::string taskSurfacePosY;       // In case the object to put on is in the robot's hand
+  std::string taskSurfacePosZ;       // In case the object to put on is in the robot's hand
   std::string taskSurfaceOri;       // In case the object to put on is in the robot's hand
   std::string taskFingers;
 
@@ -127,6 +132,8 @@ protected:
   unsigned int polarAxisIdx;
   double distance;
   double heightAboveGoal;   // If "above" is specified, the distance of the object bottom above the target surface.
+  bool receivingContainerHeldInHand;
+
 
   // Point in the frame of the surface object on which the object will be put.
   double startPoint[3];

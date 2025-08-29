@@ -209,7 +209,8 @@ REGISTER_ACTION(ActionPut, "put");
 
 ActionPut::ActionPut() :
   above(false), putDown(false), isObjCollidable(false), isPincerGrasped(false), putPolar(true),
-  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2), distance(0.0), heightAboveGoal(0.0)
+  supportRegionX(0.0), supportRegionY(0.0), polarAxisIdx(2), distance(0.0), heightAboveGoal(0.0),
+  receivingContainerHeldInHand(false)
 {
   Vec3d_setZero(startPoint);
   Vec3d_setZero(midPoint);
@@ -648,6 +649,50 @@ bool ActionPut::initialize(const ActionScene& domain,
   RCHECK_MSG(surfaceAff, "Affordance at solution index %zu is NULL", solutionRank);
   Supportable* supportable = dynamic_cast<Supportable*>(surfaceAff);
   RCHECK_MSG(supportable, "%s is not a Supportable", surfaceAff->frame.c_str());   // never happens
+
+
+
+
+
+
+
+
+
+
+
+
+  this->roboBaseFrame.clear();
+  const AffordanceEntity* targetContainer = domain.getEntityByAffordance(supportable);
+  RLOG_CPP(0, "Pouring into " << targetContainer->name);
+
+  const Manipulator* receivingHand = domain.getGraspingHand(graph, targetContainer);
+  if (receivingHand)
+  {
+    RLOG_CPP(0, "Receiving container " << targetContainer->name << " is held in hand");
+    this->receivingContainerHeldInHand = true;
+    Agent* agent = Agent::getAgentOwningManipulator(&domain, receivingHand->name);
+    this->roboBaseFrame = agent ? agent->bdyName : "";
+  }
+  else
+  {
+    RLOG_CPP(0, "Receiving container not held in hand");
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   surfaceFrameName = surfaceAff->frame;
   supportRegionX = supportable->extentsX;
   supportRegionY = supportable->extentsY;
@@ -707,6 +752,9 @@ bool ActionPut::initialize(const ActionScene& domain,
   this->taskObjSurfaceOri = objBottomName + "-" + surfaceFrameName + "-ORI";
   this->taskHandInclination = graspFrame + "-Inclination";
   this->taskHandObjPolar = graspFrame + "-" + objBottomName + "-POLAR";
+  this->taskSurfacePosX = surfaceFrameName + "-X";
+  this->taskSurfacePosY = surfaceFrameName + "-Y";
+  this->taskSurfacePosZ = surfaceFrameName + "-Z";
   this->taskSurfaceOri = surfaceFrameName + "-POLAR";
   this->taskFingers = graspFrame + "_fingers";
 
@@ -851,11 +899,43 @@ std::vector<std::string> ActionPut::createTasksXML() const
   }
   tasks.push_back(xmlTask);
 
-  // Orientation of surface frame (if held in hand)
-  xmlTask = "<Task name=\"" + taskSurfaceOri + "\" " +
-            "controlVariable=\"POLAR\" " + "effector=\"" + surfaceFrameName + "\" />";
-  tasks.push_back(xmlTask);
 
+
+  if (receivingContainerHeldInHand)
+  {
+    // Position of surface frame
+    xmlTask = "<Task name=\"" + taskSurfacePosX + "\" controlVariable=\"X\" effector=\"" +
+              surfaceFrameName + "\" refFrame = \"" + roboBaseFrame + "\" >";
+    xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+    xmlTask += "min=\"" + std::to_string(-0.1) + "\" ";
+    xmlTask += "max=\"" + std::to_string(0.1) + "\" ";
+    xmlTask += "dxScaling=\"0.01\" slowDownRatio=\"0.5\" />\n";
+    xmlTask += "</Task>";
+    tasks.push_back(xmlTask);
+
+    xmlTask = "<Task name=\"" + taskSurfacePosY + "\" controlVariable=\"Y\" effector=\"" +
+              surfaceFrameName + "\" refFrame = \"" + roboBaseFrame + "\" >";
+    xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+    xmlTask += "min=\"" + std::to_string(-0.1) + "\" ";
+    xmlTask += "max=\"" + std::to_string(0.1) + "\" ";
+    xmlTask += "dxScaling=\"0.01\" slowDownRatio=\"0.5\" />\n";
+    xmlTask += "</Task>";
+    tasks.push_back(xmlTask);
+
+    xmlTask = "<Task name=\"" + taskSurfacePosZ + "\" controlVariable=\"Z\" effector=\"" +
+              surfaceFrameName + "\" refFrame = \"" + roboBaseFrame + "\" >";
+    xmlTask += "\n<TaskRegion type=\"BoxInterval\" ";
+    xmlTask += "min=\"" + std::to_string(-0.1) + "\" ";
+    xmlTask += "max=\"" + std::to_string(0.1) + "\" ";
+    xmlTask += "dxScaling=\"0.01\" slowDownRatio=\"0.5\" />\n";
+    xmlTask += "</Task>";
+    tasks.push_back(xmlTask);
+
+    // Orientation of surface frame
+    xmlTask = "<Task name=\"" + taskSurfaceOri + "\" controlVariable=\"POLAR\" effector=\"" +
+              surfaceFrameName + "\" />";
+    tasks.push_back(xmlTask);
+  }
 
   // Fingers
   xmlTask = "<Task name=\"" + taskFingers + "\" controlVariable=\"Joints\" " +
@@ -885,9 +965,21 @@ ActionPut::createTrajectory(double t_start,
   // Grasp the bottle and lift it up
   auto a1 = std::make_shared<tropic::ActivationSet>();
 
+  if (receivingContainerHeldInHand)
+  {
+    a1->addActivation(t_start, true, 0.5, taskSurfacePosX);
+    a1->addActivation(t_release, false, 0.5, taskSurfacePosX);
+    a1->addActivation(t_start, true, 0.5, taskSurfacePosY);
+    a1->addActivation(t_release, false, 0.5, taskSurfacePosY);
+    a1->add(t_put, 0.0, 0.0, 0.0, 7, taskSurfacePosY + " 0");
 
-  a1->addActivation(t_start, true, 0.5, taskSurfaceOri);
-  a1->addActivation(t_release, false, 0.5, taskSurfaceOri);
+
+
+    a1->addActivation(t_start, true, 0.5, taskSurfacePosZ);
+    a1->addActivation(t_release, false, 0.5, taskSurfacePosZ);
+    a1->addActivation(t_start, true, 0.5, taskSurfaceOri);
+    a1->addActivation(t_release, false, 0.5, taskSurfaceOri);
+  }
 
   // Put object on surface
   a1->addActivation(t_start, true, 0.5, taskObjSurfacePosX);
@@ -1137,7 +1229,6 @@ double ActionPut::getDefaultDuration() const
 {
   return 15.0;
 }
-
 
 
 

@@ -39,7 +39,7 @@
     <Shape scale="0.1" type="FRAME"/>
   </Body>
   
-  <Body name="glass_top" prev="glass" transform="0 0 0.135 0 0 0">
+  <Body name="glass_top" prev="glass" transform="0 0 0.175 0 0 0">
     <Shape scale="0.1" type="FRAME"/>
   </Body>
   

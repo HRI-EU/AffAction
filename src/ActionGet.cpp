@@ -54,7 +54,7 @@
 
 
 #define t_fingerMove  (2.0)
-#define DEFAULT_LIFTHEIGHT (0.3)//was (0.12)
+#define DEFAULT_LIFTHEIGHT (0.24)//was (0.12)
 #define DEFAULT_PREGRASPDIST (0.2)
 #define LIFT_SAFETY_DISTANCE (0.05)   // Safety distance before colliding with object above
 
