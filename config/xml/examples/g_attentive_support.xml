@@ -48,12 +48,28 @@
   </Body>
 
   <!-- The model for a simple camera. -->
-  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.924 0.530 1.473  166.341 48.556 107.392" >
-    <Shape distance="true" extents="0.1 0.05 0.02" graphics="true" physics="true" transform="0 0 0 0 0 0" type="BOX"/>
-    <Shape distance="false" extents="0.03 0.01 0.015" graphics="true" physics="false" transform="0 -0.03 0 0 0 0" type="BOX"/>
-    <Shape distance="false" graphics="true" length="0.01" physics="false" radius="0.02" transform="0 0 0.015 0 0 0" type="CYLINDER"/>
-    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic" rigid_body_joints="-0.8 0 1.7 0 40 0" >		
+    <!-- Upper long part -->
+    <Shape type="FRAME" scale="0.05" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.127" transform="-0.0635 0.04 0.026 90 90 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.127" transform="-0.0635 -0.04 0.026 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.08 0.026 0.127" transform="-0.0635 0 0.026 90 90 0" graphics="true" />
+    
+    <!-- Lower short part -->
+    <Shape type="CYLINDER" radius="0.013" length="0.026" transform="-0.013 0.04 0.013 90 90 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.026" transform="-0.013 -0.04 0.013 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.08 0.026 0.026" transform="-0.013 0 0.013 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.106 0.013 0.026" transform="-0.013 0 0.0195 90 90 0" graphics="true" />
   </Body>
+
+  <Body name="azure_kinect_rgb_frame" prev="camera_0" transform="0 -0.032 0.0195 -90 90 0" >
+    <Shape type="FRAME" scale="0.03" />
+  </Body>
+  
+  <Body name="azure_kinect_depth_frame" prev="camera_0" transform="0 0 0.0195 -90 90 0" >
+    <Shape type="FRAME" scale="0.03" />
+  </Body>
+
   <AffordanceModel body="camera_0" name="camera" types="camera.n.01">
     <Supportable frame="camera_0"/>
   </AffordanceModel>

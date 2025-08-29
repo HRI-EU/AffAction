@@ -183,7 +183,7 @@ void bind_mirror_eyes(py::class_<aff::ExampleActionsECS>& cls)
   //////////////////////////////////////////////////////////////////////////////
   .def("setPupilSpeedWeight", [](aff::ExampleActionsECS& ex, double value)
   {
-    ex.getEntity().publish("SetPupilSpeedWeight", value);
+    ex.getEntity().publish("SetPupilWeight", value);
   })
 
   //////////////////////////////////////////////////////////////////////////////

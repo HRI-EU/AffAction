@@ -45,12 +45,13 @@
 
 namespace aff
 {
+
 /*******************************************************************************
  *
  ******************************************************************************/
 ImageTracker::ImageTracker(EntityBase* parent, const std::string& cameraName) :
   ComponentBase(parent), TrackerBase(cameraName), t_parse(0.0),
-  fx(640.0), fy(640.0), cx(320.0), cy(240.0)
+  fx(640.0), fy(640.0), cx(320.0), cy(240.0), showDebugWindow(false)
 {
   subscribe("SetGazeTarget", &ImageTracker::onSetGazeTarget);
 }
@@ -58,6 +59,11 @@ ImageTracker::ImageTracker(EntityBase* parent, const std::string& cameraName) :
 void ImageTracker::onSetGazeTarget(std::string bdyName)
 {
   this->gazeTarget = bdyName;
+}
+
+void ImageTracker::enableDebugWindow(bool enable)
+{
+  this->showDebugWindow = enable;
 }
 
 std::string ImageTracker::getRequestKeyword() const
@@ -134,7 +140,7 @@ void ImageTracker::update(ActionScene* scene, RcsGraph* graph)
     this->gaze_bb = bb;
   }
 
-  REXEC(1)
+  if (this->showDebugWindow)
   {
     static size_t count = 0;
 
@@ -346,7 +352,7 @@ void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
     this->gaze_bb = bb;
   }
 
-  REXEC(1)
+  if (this->showDebugWindow)
   {
     // Get image directly from capture
     // const int bytesPerLine = width * 3;
@@ -383,4 +389,3 @@ void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
 
 
 }   // namespace
-

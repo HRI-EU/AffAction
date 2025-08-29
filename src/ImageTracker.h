@@ -71,6 +71,8 @@ public:
                                                const std::string& cameraName,
                                                double fx, double fy, double cx, double cy);
 
+  void enableDebugWindow(bool enable);
+
 protected:
 
   void onSetGazeTarget(std::string bdyName);
@@ -81,6 +83,7 @@ protected:
   double t_parse;
   std::string gazeTarget;
   double fx, fy, cx, cy;
+  bool showDebugWindow;
   std::vector<int> gaze_bb;
 };
 

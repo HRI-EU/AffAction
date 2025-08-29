@@ -63,7 +63,6 @@ class SimulatorManager:
         self.sim.noTextGui = True
         self.sim.speedUp = 1
         self.sim.verbose = False
-        self.sim.addVirtualCamera("", width=320, height=240)
         self.sim.xmlFileName = self.scene
         self.sim.dt = 0.05
         self.sim.enableWireframeToggle = False
