@@ -1092,7 +1092,7 @@ size_t ActionGet::getNumSolutions() const
 
 double ActionGet::getDefaultDuration() const
 {
-  const double scaling = (graspType == GraspType::TopGrasp) ? 3.0 : 1.0;
+  const double scaling = (graspType == GraspType::TopGrasp) ? 3.0 : 2.0;
   return scaling*ActionBase::getDefaultDuration();
 }
 

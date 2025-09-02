@@ -76,6 +76,9 @@ public:
   bool canReachTo(const ActionScene* scene,
                   const RcsGraph* graph,
                   const double position[3]) const;
+  bool canReachTo(const ActionScene* scene,
+                  const RcsGraph* graph,
+                  const RcsBody* body) const;
 
   /*! \brief Returns true if the manipulator is holding an object. This is
    *         determined rather low-level: We traverse all children of the
@@ -160,6 +163,10 @@ public:
   // Called by ActionScene::initializeKinematics()
   void computeBaseJointName(const ActionScene* scene,
                             const RcsGraph* graph);
+  std::string computeBaseJointName_(const ActionScene* scene,
+                                    const RcsGraph* graph) const;
+  double computeReach(const ActionScene* scene,
+                      const RcsGraph* graph) const;
 
   std::vector<double> getFingerAnglesFromModelState(const RcsGraph* graph, const std::string& modelState) const;
 };

@@ -51,7 +51,7 @@
     <Stackable frame="bowl_"/>
     <Supportable frame="inside_bowl_"/>
     <Containable frame="tip_bowl_" max_volume="0.5" open="true" />
-    <PowerGraspable frame="grip_bowl_"/>
+    <!-- <PowerGraspable frame="grip_bowl_"/> -->
   </AffordanceModel>
 
 
@@ -72,70 +72,70 @@
 
 
 
-  <Body name="second_" prev="inside_bowl_" physics="dynamic" mass="0.01"
-	rigid_body_joints="0.02 0 0 0 0 0" >
-    <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
-	   transform="0 0 0.01 0 0 0"/>
-  </Body>
+  <!-- <Body name="second_" prev="inside_bowl_" physics="dynamic" mass="0.01" -->
+  <!-- 	rigid_body_joints="0.02 0 0 0 0 0" > -->
+  <!--   <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" -->
+  <!-- 	   transform="0 0 0.01 0 0 0"/> -->
+  <!-- </Body> -->
 
-  <Body name="center_second_" prev="second_" transform="0 0 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
-  </Body>
+  <!-- <Body name="center_second_" prev="second_" transform="0 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
 
-  <AffordanceModel body="second_" types="ingredient">
-    <Stackable frame="second_"  />
-    <BallGraspable frame="center_second_" radius="0.001"/>
-  </AffordanceModel>
-
-
-
-  <Body name="third_" prev="inside_bowl_" physics="dynamic" mass="0.01"
-	rigid_body_joints="-0.02 0 0 0 0 0" >
-    <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
-	   transform="0 0 0.01 0 0 0"/>
-  </Body>
-
-  <Body name="center_third_" prev="third_" transform="0 0 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
-  </Body>
-
-  <AffordanceModel body="third_" types="ingredient">
-    <Stackable frame="third_"  />
-    <BallGraspable frame="center_third_" radius="0.001"/>
-  </AffordanceModel>
+  <!-- <AffordanceModel body="second_" types="ingredient"> -->
+  <!--   <Stackable frame="second_"  /> -->
+  <!--   <BallGraspable frame="center_second_" radius="0.001"/> -->
+  <!-- </AffordanceModel> -->
 
 
 
-  <Body name="fourth_" prev="inside_bowl_" physics="dynamic" mass="0.01"
-	rigid_body_joints="0 0.02 0 0 0 0" >
-    <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
-	   transform="0 0 0.01 0 0 0"/>
-  </Body>
+  <!-- <Body name="third_" prev="inside_bowl_" physics="dynamic" mass="0.01" -->
+  <!-- 	rigid_body_joints="-0.02 0 0 0 0 0" > -->
+  <!--   <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" -->
+  <!-- 	   transform="0 0 0.01 0 0 0"/> -->
+  <!-- </Body> -->
 
-  <Body name="center_fourth_" prev="fourth_" transform="0 0 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
-  </Body>
+  <!-- <Body name="center_third_" prev="third_" transform="0 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
 
-  <AffordanceModel body="fourth_" types="ingredient">
-    <Stackable frame="fourth_"  />
-    <BallGraspable frame="center_fourth_" radius="0.001"/>
-  </AffordanceModel>
+  <!-- <AffordanceModel body="third_" types="ingredient"> -->
+  <!--   <Stackable frame="third_"  /> -->
+  <!--   <BallGraspable frame="center_third_" radius="0.001"/> -->
+  <!-- </AffordanceModel> -->
 
 
 
-  <Body name="fifth_" prev="inside_bowl_" physics="dynamic" mass="0.01"
-	rigid_body_joints="0 -0.02 0 0 0 0" >
-    <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true"
-	   transform="0 0 0.01 0 0 0"/>
-  </Body>
+  <!-- <Body name="fourth_" prev="inside_bowl_" physics="dynamic" mass="0.01" -->
+  <!-- 	rigid_body_joints="0 0.02 0 0 0 0" > -->
+  <!--   <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" -->
+  <!-- 	   transform="0 0 0.01 0 0 0"/> -->
+  <!-- </Body> -->
 
-  <Body name="center_fifth_" prev="fifth_" transform="0 0 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
-  </Body>
+  <!-- <Body name="center_fourth_" prev="fourth_" transform="0 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
 
-  <AffordanceModel body="fifth_" types="ingredient">
-    <Stackable frame="fifth_"  />
-    <BallGraspable frame="center_fifth_" radius="0.001"/>
-  </AffordanceModel>
+  <!-- <AffordanceModel body="fourth_" types="ingredient"> -->
+  <!--   <Stackable frame="fourth_"  /> -->
+  <!--   <BallGraspable frame="center_fourth_" radius="0.001"/> -->
+  <!-- </AffordanceModel> -->
+
+
+
+  <!-- <Body name="fifth_" prev="inside_bowl_" physics="dynamic" mass="0.01" -->
+  <!-- 	rigid_body_joints="0 -0.02 0 0 0 0" > -->
+  <!--   <Shape type="SPHERE" radius="0.01" graphics="true" distance="false" physics="true" -->
+  <!-- 	   transform="0 0 0.01 0 0 0"/> -->
+  <!-- </Body> -->
+
+  <!-- <Body name="center_fifth_" prev="fifth_" transform="0 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
+
+  <!-- <AffordanceModel body="fifth_" types="ingredient"> -->
+  <!--   <Stackable frame="fifth_"  /> -->
+  <!--   <BallGraspable frame="center_fifth_" radius="0.001"/> -->
+  <!-- </AffordanceModel> -->
 
 </Graph>

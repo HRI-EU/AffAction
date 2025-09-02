@@ -45,7 +45,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
 #include <Rcs_body.h>
-#include <Rcs_resourcePath.h>
+#include <Rcs_geometry.h>
 
 #include <algorithm>
 #include <exception>
@@ -70,6 +70,15 @@ Manipulator::Manipulator() : reach(0.0)
 
 Manipulator::Manipulator(const xmlNodePtr node, const std::string& groupSuffix) : SceneEntity(node, groupSuffix), reach(0.0)
 {
+  Rcs::getXMLNodePropertySTLString(node, "baseJoint", this->baseJointName);
+  if (!baseJointName.empty())
+  {
+    baseJointName += groupSuffix;
+  }
+
+
+  getXMLNodePropertyDouble(node, "reach", &this->reach);
+
   xmlNodePtr child = node->children;
 
   while (child)
@@ -80,7 +89,9 @@ Manipulator::Manipulator(const xmlNodePtr node, const std::string& groupSuffix) 
     {
       fingerJoints = Rcs::getXMLNodePropertyVecSTLString(child, "names");
       for (auto& j : fingerJoints)
+      {
         j += groupSuffix;
+      }
     }
     else if (isXMLNodeNameNoCase(child, "PowergraspCapability"))
     {
@@ -514,13 +525,13 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
   RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, ee);
   RCHECK_MSG(jnt, "Body '%s' has no joint", bdyName.c_str());
 
-  this->reach = Vec3d_distance(ee->A_BI.org, jnt->A_JI.org);
+  double arm_reach = Vec3d_distance(ee->A_BI.org, jnt->A_JI.org);
   for (const auto& capability : graspCapabilities)
   {
     ee = RcsGraph_getBodyByName(graph, capability->frame.c_str());
     RCHECK(ee);
-    this->reach = std::max(this->reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
-    RLOG_CPP(5, "Reach by " << ee->name << " is " << reach);
+    arm_reach = std::max(arm_reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
+    RLOG_CPP(5, "Reach by " << ee->name << " is " << arm_reach);
   }
 
   // Traverse backwards from end effector and collect all unconstrained joints
@@ -542,13 +553,103 @@ void Manipulator::computeBaseJointName(const ActionScene* scene,
     this->baseJointName = baseJnt->name;
     for (size_t i = 1; i < jnts.size(); ++i)
     {
-      this->reach += Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org);
+      arm_reach += Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org);
     }
   }
 
+  if (this->reach == 0.0)
+  {
+    this->reach = arm_reach;
+  }
+
   // Here we have a reach for the end effector
-  RLOG(5, "[%s]: basejointname is %s, Reach is %f",
-       name.c_str(), baseJointName.c_str(), reach);
+  RLOG(5, "[%s]: basejointname is %s, computed reach is %f",
+       name.c_str(), baseJointName.c_str(), arm_reach);
+}
+
+std::string Manipulator::computeBaseJointName_(const ActionScene* scene,
+                                               const RcsGraph* graph) const
+{
+  auto graspCapabilities = getCapabilities<GraspCapability>(this);
+  auto gazeCapabilities = getCapabilities<GazeCapability>(this);
+
+  if (graspCapabilities.empty() && gazeCapabilities.empty())
+  {
+    return std::string();
+  }
+
+  // Find "driving" joint of the body
+  const RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, body(graph));
+
+  if (!jnt)
+  {
+    RCHECK_MSG(jnt, "Manipulator '%s' has no joint", bdyName.c_str());
+    return std::string();
+  }
+
+  // Traverse backwards from end effector and collect all unconstrained joints
+  std::vector<const RcsJoint*> jnts;
+  while (jnt)
+  {
+    if (!jnt->constrained)
+    {
+      jnts.push_back(jnt);
+    }
+    jnt = RCSJOINT_BY_ID(graph, jnt->prevId);
+  }
+
+  return jnts.back() ? jnts.back()->name : std::string();
+}
+
+double Manipulator::computeReach(const ActionScene* scene,
+                                 const RcsGraph* graph) const
+{
+  auto graspCapabilities = getCapabilities<GraspCapability>(this);
+  auto gazeCapabilities = getCapabilities<GazeCapability>(this);
+
+  if (graspCapabilities.empty() && gazeCapabilities.empty())
+  {
+    return 0.0;
+  }
+
+  // Now we have a grasping hand
+  const RcsBody* ee = body(graph);
+
+  // Find "driving" joint of the body
+  const RcsJoint* jnt = RcsBody_lastJointBeforeBody(graph, ee);
+  RCHECK_MSG(jnt, "Body '%s' has no joint", bdyName.c_str());
+
+  double arm_reach = Vec3d_distance(ee->A_BI.org, jnt->A_JI.org);
+  for (const auto& capability : graspCapabilities)
+  {
+    ee = RcsGraph_getBodyByName(graph, capability->frame.c_str());
+    RCHECK(ee);
+    arm_reach = std::max(arm_reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
+    RLOG_CPP(0, "Reach by " << ee->name << " is " << arm_reach);
+  }
+
+  // Traverse backwards from end effector and collect all unconstrained joints
+  std::vector<const RcsJoint*> jnts;
+  while (jnt && (std::string(jnt->name)!=this->baseJointName))
+  {
+    if (!jnt->constrained)
+    {
+      jnts.push_back(jnt);
+    }
+    jnt = RCSJOINT_BY_ID(graph, jnt->prevId);
+  }
+
+  // Calculate reach as sum of segments
+  if (!jnts.empty())
+  {
+    for (size_t i = 1; i < jnts.size(); ++i)
+    {
+      arm_reach += Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org);
+      RLOG(0, "Adding %f", Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org));
+    }
+  }
+
+  return arm_reach;
 }
 
 bool Manipulator::canReachTo(const ActionScene* scene,
@@ -572,7 +673,65 @@ bool Manipulator::canReachTo(const ActionScene* scene,
     reachable = true;
   }
 
-  RLOG(1, "objDistance=%f   reach=%f", objDistance, reach);
+  RLOG(1, "objDistance=%f   reach=%f   baseJnt: %s", objDistance, reach, baseJnt->name);
+
+  return reachable;
+}
+
+bool Manipulator::canReachTo(const ActionScene* scene,
+                             const RcsGraph* graph,
+                             const RcsBody* body) const
+{
+  // No grasp capabilities - no reaching
+  if (getCapabilities<GraspCapability>(this).empty())
+  {
+    RLOG(1, "Manipulator '%s' ('%s') has no GraspCapability", name.c_str(), bdyName.c_str());
+    return false;
+  }
+
+  bool reachable = false;
+
+  const RcsJoint* baseJnt = getBaseJoint(graph);
+
+  // Compute AABB and take closest corner
+  double xyzMin[3], xyzMax[3], closest[3];
+  double objDistance = DBL_MAX;
+  double vertices[8][3];
+  MatNd verticesArr = MatNd_fromPtr(8, 3, &vertices[0][0]);
+
+
+  bool hasAABB = RcsGraph_computeBodyAABB(graph, body->id, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax, &verticesArr);
+
+
+  if (hasAABB)//RcsBody_computeAABB(body, RCSSHAPE_COMPUTE_DISTANCE, xyzMin, xyzMax))
+  {
+    // double vertices[8][3];
+    // Math_computeVerticesAABB(vertices, xyzMin, xyzMax);
+
+    for (size_t i=0; i<8; ++i)
+    {
+      objDistance = std::min(objDistance, Vec3d_distance(vertices[i], baseJnt->A_JI.org));
+    }
+  }
+  else
+  {
+    objDistance = Vec3d_distance(body->A_BI.org, baseJnt->A_JI.org);
+  }
+
+
+
+
+
+  // double I_cpBdy[3],I_nBdyPt[3];
+  // const double objDistance = RcsBody_distanceToPoint(body, baseJnt->A_JI.org, I_cpBdy, I_nBdyPt);
+  //const double objDistance = Vec3d_distance(closest, baseJnt->A_JI.org);
+
+  if (objDistance < reach)
+  {
+    reachable = true;
+  }
+
+  RLOG(1, "objDistance=%f   reach=%f   baseJnt: %s", objDistance, reach, baseJnt->name);
 
   return reachable;
 }

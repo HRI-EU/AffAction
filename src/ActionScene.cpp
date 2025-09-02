@@ -814,8 +814,23 @@ void ActionScene::initializeKinematics(const RcsGraph* graph)
   for (auto& m : manipulators)
   {
     RLOG_CPP(5, "Computing base joint name of " << m.bdyName);
-    m.computeBaseJointName(this, graph);
-    RLOG_CPP(5, "Done computing base joint name of " << m.bdyName);
+    if (m.baseJointName.empty())
+    {
+      m.baseJointName = m.computeBaseJointName_(this, graph);
+      RLOG_CPP(0, "Done computing base joint name " << m.baseJointName
+               << " for manipulator " << m.bdyName);
+    }
+
+    if (m.reach==0.0)
+    {
+      m.reach = m.computeReach(this, graph);
+      RLOG_CPP(0, "Done computing reach: " << m.reach << " for manipulator " << m.bdyName);
+    }
+
+    RLOG_CPP(0, "Done computing base joint name " << m.baseJointName << " of "
+             << m.bdyName << " with reach " << m.reach);
+    // auto m_test = m.computeBaseJointName_(this, graph);
+    // RCHECK_MSG(m.baseJointName==m_test, "%s != %s", m.baseJointName.c_str(), m_test.c_str());
   }
 
   // We assume that the defaultPos is given in relative coordinates to the

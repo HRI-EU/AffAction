@@ -1416,6 +1416,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
   // From here on, we have a valid tree. But it might not contain a valid solution.
   std::vector<std::string> predictedActions;
   std::vector<TrajectoryPredictor::PredictionResult> animations;
+  double predictedDuration = 0.0;
 
   // We first check if there is any fatal error in the tree. In this case, we
   // only report one failed issue raather than FIRST_N_SOLUTIONS.
@@ -1441,6 +1442,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
         if (i==0 && res.success)
         {
           predictedActions.push_back(nd->actionCommand());
+          predictedDuration += nd->duration;
           RLOG_CPP(1, "Action: " << nd->actionCommand() << " cost: " << nd->cost);
         }
 
@@ -1547,7 +1549,7 @@ static void _planActionSequenceThreaded(aff::ExampleActionsECS* ex,
 
   // From here on, we succeeded
   std::string detailedActionCommand = Rcs::String_concatenate(predictedActions, ";");
-  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps: " << detailedActionCommand);
+  RLOG_CPP(0, "Sequence has " << predictedActions.size() << " steps (" << predictedDuration << " seconds): " << detailedActionCommand);
   ex->getEntity().publish("ActionSequence", detailedActionCommand);
 
   if (ex->verbose)

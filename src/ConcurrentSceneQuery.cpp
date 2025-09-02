@@ -425,6 +425,86 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
     json["objects"].push_back(n);
   }
 
+#if 1
+
+  // Get robot agents
+  auto robotAgents = scene.getAgents<RobotAgent>();
+  const Manipulator* handLeft = nullptr;
+  const Manipulator* handRight = nullptr;
+  if (robotAgents.size()==1)
+  {
+    const RobotAgent* robotAgent = robotAgents[0];
+    HTr agentFrame = robotAgent->getBodyTransform(graph);
+
+    for (const auto& manipulatorName : robotAgent->manipulators)
+    {
+      const Manipulator* m = scene.getManipulator(manipulatorName);
+      if (m->isOfType("hand"))
+      {
+        HTr handFrame = m->getBodyTransform(graph);
+        Vec3d_invTransformSelf(handFrame.org, &agentFrame);
+
+        if (handFrame.org[1]>0.0)
+        {
+          handLeft = m;
+        }
+        else if (handFrame.org[1]<0.0)
+        {
+          handRight = m;
+        }
+      }
+    }
+  }
+  else
+  {
+    RLOG_CPP(0, "Found " << robotAgents.size() << " robot agents, one is expected");
+  }
+
+  if (handLeft && handRight)
+  {
+    RLOG_CPP(0, "Found 2 hands: left one: " << handLeft->name << " and right one: " << handRight->name);
+
+    json["objects"].clear();
+
+    // Assemble the json
+    for (const auto& n : ntts)
+    {
+      const AffordanceEntity* a = scene.getAffordanceEntity(n);
+      const double* pos = a->getBodyTransform(graph).org;
+      const RcsBody* aBdy = a->body(graph);
+
+      RLOG_CPP(0, "Checking " << a->bdyName);
+
+      bool reachLeft = handLeft->canReachTo(&scene, graph, aBdy);
+      bool reachRight = handRight->canReachTo(&scene, graph, aBdy);
+
+      if (reachLeft && reachRight)
+      {
+        json["objects"].push_back(n + " in the center");
+      }
+      else if (reachLeft)
+      {
+        json["objects"].push_back(n + " at the left side");
+      }
+      else if (reachRight)
+      {
+        json["objects"].push_back(n + " at the right side");
+      }
+      else
+      {
+        json["objects"].push_back(n + " not reachable");
+      }
+    }
+
+
+  }
+  else
+  {
+    RLOG_CPP(0, "Could not find 2 hands");
+  }
+
+#endif
+
   return json;
 }
 

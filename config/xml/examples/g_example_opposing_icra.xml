@@ -79,9 +79,13 @@
 
 
   
-  <Body name="Stand" prev="aruco_base" transform="-0.87 0 0 0 0 0" >
+  <Body name="Stand" prev="aruco_base" transform="-0.97 0 0 0 0 0" >
     <xxShape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 0 0 0 -90" scale="0.001" />
-    <Shape type="BOX" extents="1 0.8 0.28" graphics="true" distance="true" transform="0 0 0.26 0 0 0" />
+    <Shape type="BOX" extents="1 0.8 0.28" graphics="true" distance="true" transform="0 0 0.26 0 0 0" color="DARKGRAY" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="0.4 0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="-0.4 0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="0.4 -0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="-0.4 -0.3 0.06 0 0 0" color="BLACK_RUBBER" />
   </Body>
 
   <!-- Aluminum structure including PTU. -->
