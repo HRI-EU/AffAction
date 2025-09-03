@@ -181,7 +181,58 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <Body color="LIGHTGRAY" name="table_grid_4_8" prev="table_grid" transform="0.45 0.6 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
--->
+  -->
+
+
+
+  <!-- tray -->
+  <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0.04 0 0 0" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
+    <Shape type="BOX" extents="0.4 0.3 0.02" graphics="true" distance="false"
+           transform="0 0 0.01 0 0 0"/>
+    <Shape type="FRAME" scale="0.1" graphics="true"/>
+  </Body>
+
+  <Body name="tray_top" prev="tray" transform="0 0 0.02 0 0 0">
+    <Shape type="FRAME" scale="0.1" graphics="false"/>
+  </Body>
+
+  <!-- <Body name="tray_grip_1" prev="tray" transform="-0.15 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.2" graphics="false"/> -->
+  <!-- </Body> -->
+
+  <!-- <Body name="tray_grip_2" prev="tray" transform="0 0.2 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
+  
+  <Body name="tray_pos1" prev="table" transform="-0.3 0.9 0.06 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  </Body>
+  
+  <Body name="tray_pos2" prev="table" transform="-0.1 0.9 0.06 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  </Body>
+  
+  <Body name="tray_pos3" prev="table" transform="-0.3 0.8 0.06 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  </Body>
+  
+  <Body name="tray_pos4" prev="table" transform="-0.1 0.8 0.06 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  </Body>
+
+  <noAffordanceModel body="tray" type="tray">
+    <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
+    <xxxSupportable frame="tray_top" extentsX="0.01" extentsY="0.01"/>
+    <!-- <PowerGraspable frame="tray_grip_1"/> -->
+    <!-- <PowerGraspable frame="tray_grip_2"/> -->
+    <Supportable frame="tray_pos1" />
+    <!-- <Supportable frame="tray_pos2" /> -->
+    <!-- <Supportable frame="tray_pos3" /> -->
+    <Supportable frame="tray_pos4" />
+  </noAffordanceModel>
+
+
+  
 
   <AffordanceModel body="table" name="table" types="furniture">
     <!-- <Supportable frame="table_grid_0_0"/> -->
@@ -233,55 +284,15 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <!-- <Supportable frame="table_grid_4_6"/>  -->
     <!-- <Supportable frame="table_grid_4_7"/>  -->
     <!-- <Supportable frame="table_grid_4_8"/>  -->
-  </AffordanceModel>
 
-
-
-  <!-- tray -->
-  <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0.04 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
-    <Shape type="BOX" extents="0.3 0.4 0.02" graphics="true" distance="false"
-           transform="0 0 0.01 0 0 0"/>
-    <Shape type="FRAME" scale="0.1" graphics="true"/>
-  </Body>
-
-  <Body name="tray_top" prev="tray" transform="0 0 0.02 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
-  </Body>
-
-  <!-- <Body name="tray_grip_1" prev="tray" transform="-0.15 0 0.01 0 0 0"> -->
-  <!--   <Shape type="FRAME" scale="0.2" graphics="false"/> -->
-  <!-- </Body> -->
-
-  <!-- <Body name="tray_grip_2" prev="tray" transform="0 0.2 0.01 0 0 0"> -->
-  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
-  <!-- </Body> -->
-  
-  <Body name="tray_pos1" prev="tray" transform="0.05 0.15 0.02 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos2" prev="tray" transform="0.05 -0 0.02 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos3" prev="tray" transform="-0.1 0.15 0.02 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos4" prev="tray" transform="-0.1 -0 0.02 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-
-  <AffordanceModel body="tray" type="tray">
-    <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
-    <xxxSupportable frame="tray_top" extentsX="0.01" extentsY="0.01"/>
-    <!-- <PowerGraspable frame="tray_grip_1"/> -->
-    <!-- <PowerGraspable frame="tray_grip_2"/> -->
     <Supportable frame="tray_pos1" />
     <!-- <Supportable frame="tray_pos2" /> -->
     <!-- <Supportable frame="tray_pos3" /> -->
     <Supportable frame="tray_pos4" />
+    
   </AffordanceModel>
+
+
 
 
 
