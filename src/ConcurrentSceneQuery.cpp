@@ -425,7 +425,7 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
     json["objects"].push_back(n);
   }
 
-#if 1
+#if 0
 
   // Get robot agents
   auto robotAgents = scene.getAgents<RobotAgent>();
