@@ -155,6 +155,7 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
                                               0, true, ex.earlyExitAction);
 
     nlohmann::json j_inner = {
+      {"lifted_actions",    nlohmann::json::array()},
       {"actions",    nlohmann::json::array()},
       {"success",    false},
       {"error",      ""},

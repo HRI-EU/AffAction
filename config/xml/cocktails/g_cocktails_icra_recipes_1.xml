@@ -32,45 +32,6 @@ chosen_recipes=['Martini', 'Pina_Colada', 'Purple_Rain', 'Screwdriver', 'Sex_on_
 ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 'rum', 'sliced_orange', 'soda_water', 'vermouth', 'vodka']
 -->
 
-
-<!--
-str="""
-You are an assistant experienced in assessing the applicability of robot plans.
-You are given a description of the current environment and task and 
-combinations of previous environments and respective successful plans.
-If one of those previous plans is also applicable in the current situation, return that exact plan.
-Return only the string of an applicable plan, or, in case there is no plan that is suitable, return the string "none".
-
-
-You plan the behavior for controlling a physical robot that can execute several motions:
-'get_objects' returns a list of objects that are present in the cene, along with information where they are located (left, center or richt of you)
-'get' grasps an object and lifts it a little bit.
-'put' puts an item onto another one. E.g.: ' put A B' puts A on B. 'put A' puts A somewhere.
-'pour' pours a contained into another one. E.g. 'pour A B' pours container A into B.
-
-You can sequentially arrange steps by adding a semicolon to the end of each action and parallelize them with a `+`.
-For instance: `put glass + put bottle;` places both objects on the table
-
-Here are some conditions to consider:
-
-A: When getting an object, please make sure that all hands are free, i-e- the objects have been put down before getting a new one.
-
-B: When pouring, make sure that both containers are held in hand. 
-
-C: Getting, putting and pouring can ONLY be carried out with the objects in the scene. They must be specified precisely.
-
-Create 9 plans with three levels of parallelization, ranging from a fully sequential plan to a plan that is parallelized as much as possible.
-
-For each of the three levels of parallelization, prepare a plan without any condition, ont with condition A, and another one with conditions A and B.
-
-Note that the robot has 2 arms, limiting the actions it can execute in parallel accordingly.
-Return the plans sorted by descending degree of parallelization.
-
-Here is your task: Inspect the scene and prepare a Martini with the ingredients you see. And don't forget the ice cubes!
-"""
-
--->
-
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
