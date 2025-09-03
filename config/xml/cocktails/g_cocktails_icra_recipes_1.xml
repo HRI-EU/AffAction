@@ -32,6 +32,45 @@ chosen_recipes=['Martini', 'Pina_Colada', 'Purple_Rain', 'Screwdriver', 'Sex_on_
 ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 'rum', 'sliced_orange', 'soda_water', 'vermouth', 'vodka']
 -->
 
+
+<!--
+str="""
+You are an assistant experienced in assessing the applicability of robot plans.
+You are given a description of the current environment and task and 
+combinations of previous environments and respective successful plans.
+If one of those previous plans is also applicable in the current situation, return that exact plan.
+Return only the string of an applicable plan, or, in case there is no plan that is suitable, return the string "none".
+
+
+You plan the behavior for controlling a physical robot that can execute several motions:
+'get_objects' returns a list of objects that are present in the cene, along with information where they are located (left, center or richt of you)
+'get' grasps an object and lifts it a little bit.
+'put' puts an item onto another one. E.g.: ' put A B' puts A on B. 'put A' puts A somewhere.
+'pour' pours a contained into another one. E.g. 'pour A B' pours container A into B.
+
+You can sequentially arrange steps by adding a semicolon to the end of each action and parallelize them with a `+`.
+For instance: `put glass + put bottle;` places both objects on the table
+
+Here are some conditions to consider:
+
+A: When getting an object, please make sure that all hands are free, i-e- the objects have been put down before getting a new one.
+
+B: When pouring, make sure that both containers are held in hand. 
+
+C: Getting, putting and pouring can ONLY be carried out with the objects in the scene. They must be specified precisely.
+
+Create 9 plans with three levels of parallelization, ranging from a fully sequential plan to a plan that is parallelized as much as possible.
+
+For each of the three levels of parallelization, prepare a plan without any condition, ont with condition A, and another one with conditions A and B.
+
+Note that the robot has 2 arms, limiting the actions it can execute in parallel accordingly.
+Return the plans sorted by descending degree of parallelization.
+
+Here is your task: Inspect the scene and prepare a Martini with the ingredients you see. And don't forget the ice cubes!
+"""
+
+-->
+
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
@@ -42,146 +81,146 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   </Body>
   <Body name="table_grid" prev="table" transform="-0.15 0 0.001 0 0 0" />
   <Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
   <Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-
   <Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
   <Body color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
+  <!--
   <Body color="LIGHTGRAY" name="table_grid_3_0" prev="table_grid" transform="0.3 -0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_1" prev="table_grid" transform="0.3 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_2" prev="table_grid" transform="0.3 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_3" prev="table_grid" transform="0.3 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_4" prev="table_grid" transform="0.3 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_5" prev="table_grid" transform="0.3 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_6" prev="table_grid" transform="0.3 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_7" prev="table_grid" transform="0.3 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_3_8" prev="table_grid" transform="0.3 0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
   <Body color="LIGHTGRAY" name="table_grid_4_0" prev="table_grid" transform="0.45 -0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_1" prev="table_grid" transform="0.45 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_2" prev="table_grid" transform="0.45 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_3" prev="table_grid" transform="0.45 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_4" prev="table_grid" transform="0.45 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_5" prev="table_grid" transform="0.45 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_6" prev="table_grid" transform="0.45 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_7" prev="table_grid" transform="0.45 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_4_8" prev="table_grid" transform="0.45 0.6 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="true" type="BOX" wireframe="true"/>
+    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-
+-->
 
   <AffordanceModel body="table" name="table" types="furniture">
     <!-- <Supportable frame="table_grid_0_0"/> -->
@@ -238,7 +277,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   <!-- tray -->
-  <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
+  <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0.04 0 0 90" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
     <Shape type="BOX" extents="0.3 0.4 0.02" graphics="true" distance="false"
            transform="0 0 0.01 0 0 0"/>
     <Shape type="FRAME" scale="0.1" graphics="true"/>
@@ -248,35 +287,35 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape type="FRAME" scale="0.1" graphics="false"/>
   </Body>
 
-  <Body name="tray_grip_1" prev="tray" transform="-0.15 0 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.2" graphics="false"/>
-  </Body>
+  <!-- <Body name="tray_grip_1" prev="tray" transform="-0.15 0 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.2" graphics="false"/> -->
+  <!-- </Body> -->
 
-  <Body name="tray_grip_2" prev="tray" transform="0 0.2 0.01 0 0 0">
-    <Shape type="FRAME" scale="0.1" graphics="false"/>
+  <!-- <Body name="tray_grip_2" prev="tray" transform="0 0.2 0.01 0 0 0"> -->
+  <!--   <Shape type="FRAME" scale="0.1" graphics="false"/> -->
+  <!-- </Body> -->
+  
+  <Body name="tray_pos1" prev="tray" transform="0.05 0.15 0.02 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
-  <Body name="tray_pos1" prev="tray" transform="0.1 0.15 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body name="tray_pos2" prev="tray" transform="0.05 -0 0.02 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
-  <Body name="tray_pos2" prev="tray" transform="0.1 -0 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body name="tray_pos3" prev="tray" transform="-0.1 0.15 0.02 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
-  <Body name="tray_pos3" prev="tray" transform="-0.1 0.15 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos4" prev="tray" transform="-0.1 -0 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+  <Body name="tray_pos4" prev="tray" transform="-0.1 -0 0.02 0 0 0" >
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
 
   <AffordanceModel body="tray" type="tray">
     <Stackable frame="tray" extentsX="0.01" extentsY="0.01"/>
     <xxxSupportable frame="tray_top" extentsX="0.01" extentsY="0.01"/>
-    <PowerGraspable frame="tray_grip_1"/>
-    <PowerGraspable frame="tray_grip_2"/>
+    <!-- <PowerGraspable frame="tray_grip_1"/> -->
+    <!-- <PowerGraspable frame="tray_grip_2"/> -->
     <Supportable frame="tray_pos1" />
     <!-- <Supportable frame="tray_pos2" /> -->
     <!-- <Supportable frame="tray_pos3" /> -->
@@ -294,7 +333,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!--   <xi:include href="../scene/g_bowl_with_items.xml"/> -->
   <!-- </Group> -->
 
-  <Group name="ice_cubes" prev="table_grid_0_7" color="BLUE" rigid_body_joints="true" >
+  <Group name="ice_cubes" prev="table_grid_0_7" color="WHITE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bowl_with_items.xml"/>
   </Group>
 
@@ -340,7 +379,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="tray_pos1" name="_milk" color="WHITE" rigid_body_joints="true" >
+  <Group prev="tray_pos1" name="_milk" color="PUREWHITE" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -352,7 +391,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
   <!-- </Group> -->
 
-  <Group prev="table_grid_1_8" name="_pineapple_juice" color="RUBY" rigid_body_joints="true" >
+  <Group prev="table_grid_1_8" name="_pineapple_juice" color="DARKRED" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
@@ -364,11 +403,11 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!--   <xi:include href="../scene/g_bottle_cocktail.xml"/> -->
   <!-- </Group> -->
 
-  <Group prev="table_grid_2_5" name="_soda_water" color="LIGHTGRAY_TRANS" rigid_body_joints="true" >
+  <Group prev="table_grid_2_5" name="_soda_water" color="LIGHTGRAY" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group prev="table_grid_2_6" name="_vermouth" color="YELLOW_TRANS" rigid_body_joints="true" >
+  <Group prev="table_grid_2_6" name="_vermouth" color="YELLOW" rigid_body_joints="true" >
     <xi:include href="../scene/g_bottle_cocktail.xml"/>
   </Group>
 
