@@ -205,19 +205,19 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!-- </Body> -->
   
   <Body name="tray_pos1" prev="table" transform="-0.3 0.9 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
   <Body name="tray_pos2" prev="table" transform="-0.1 0.9 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
   <Body name="tray_pos3" prev="table" transform="-0.3 0.8 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
   
   <Body name="tray_pos4" prev="table" transform="-0.1 0.8 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="true" distance="false" physics="false" wireframe="true" />
+    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
 
   <noAffordanceModel body="tray" type="tray">
