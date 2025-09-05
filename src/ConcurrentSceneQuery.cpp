@@ -480,6 +480,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
     ntts.insert(e.name);
   }
 
+#if 0
   for (const auto& hand : hands)
   {
 
@@ -501,6 +502,31 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
     }
 
   }
+#else
+
+  for (const auto& n : ntts)
+  {
+    const AffordanceEntity* a = scene.getAffordanceEntity(n);
+    const double* pos = a->getBodyTransform(graph).org;
+    const RcsBody* aBdy = a->body(graph);
+
+    RLOG_CPP(0, "Checking " << a->bdyName);
+    json[a->bdyName] = std::vector<std::string>();
+
+    for (const auto& hand : hands)
+    {
+
+      bool reachable = hand->canReachTo(&scene, graph, aBdy);
+
+      if (reachable)
+      {
+        json[a->bdyName].push_back(hand->name);
+      }
+    }
+
+  }
+
+#endif
 
   return json;
 }
