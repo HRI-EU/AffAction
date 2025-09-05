@@ -93,7 +93,7 @@
     <xi:include href="../JacoGen3/g_item_base_gen3.xml"/>
   </Group>
 
-  <!-- Jaco Gen3 arms
+  <!-- Jaco Gen3 arms -->
   <Body name="adapter_shoulder_gen3" prev="center_post_link" transform="-0.04 0 0.5704 0 0 0" >
     <Shape type="MESH" meshFile="hri_scitos_description/Gen3Mount-V3.stl" scale="0.001" transform="0 0 0.0638 0 0 180" />
   </Body>
@@ -110,26 +110,26 @@
   <Group name="_left3" prev="adapter_shoulder_gen3_left_2" transform="0 0 0 -90 0 -90" >
     <xi:include href="../JacoGen3/gJacoGen3_7dof.xml"/>
     <xi:include href="../JacoGen3/g_hand_left-gen3.xml"/>
-  </Group> -->
+  </Group>
 
 
   <!-- Jaco Gen2 arms -->
-  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="-0.04 0 0.571 0 0 0" was_transform="1.6 0 0.5 0 0 180" >
+  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="1.6 0 0.5 0 0 180" >
     <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
-  <Group name="_right" prev="adapter_shoulder_gen2" transform="-0.048206 -0.043874 0.028528 70 0 90" >
-    <Body name="adapter2_shoulder" />
-    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
-      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-    </Body>
-    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
-      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
-    </Group>
-    <xi:include href="../TwoArmJaco7/g_hand_right.xml"/>
-  </Group>
+  <!-- <Group name="_right" prev="adapter_shoulder_gen2" transform="-0.048206 -0.043874 0.028528 70 0 90" > -->
+  <!--   <Body name="adapter2_shoulder" /> -->
+  <!--   <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444"> -->
+  <!--     <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" /> -->
+  <!--   </Body> -->
+  <!--   <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90"> -->
+  <!--     <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/> -->
+  <!--   </Group> -->
+  <!--   <xi:include href="../TwoArmJaco7/g_hand_right.xml"/> -->
+  <!-- </Group> -->
 
-  <Group name="_left" prev="adapter_shoulder_gen2" transform="-0.048206 0.043874 0.028528 -70 0 90">
+  <Group name="_left2" prev="adapter_shoulder_gen2" transform="-0.048206 0.043874 0.028528 -70 0 90">
     <Body name="adapter2_shoulder" />
     <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
       <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
@@ -137,7 +137,9 @@
     <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
       <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
     </Group>
-    <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+    <Group prev="hand_base" >
+      <xi:include href="../TwoArmJaco7/g_hand_left.xml"/>
+    </Group>
   </Group>
 
 
@@ -152,16 +154,16 @@
   </Manipulator>
 
   <Agent body="Johnnie" types="robot" name="Johnnie" >
-    <!-- <Component manipulator="hand_robot_left3" /> -->
-    <!-- <Component manipulator="hand_robot_right3" /> -->
-    <Component manipulator="hand_robot_left" />
-    <Component manipulator="hand_robot_right" />
-    <xComponent manipulator="head_kinect_link" />
+    <Component manipulator="hand_robot_left3" />
+    <Component manipulator="hand_robot_right3" />
+    <Component manipulator="hand_robot_left2" />
+    <!-- <Component manipulator="hand_robot_right" /> -->
+    <!-- <Component manipulator="head_kinect_link" /> -->
   </Agent>
 
   <!--  Scene -->
   <Group prev="aruco_base" >
-    <xi:include href="../cocktails/g_cocktails_icra_recipes_1.xml"/>
+    <xi:include href="g_cocktails_icra_recipes_1.xml"/>
   </Group>
 
   <model_state model="default" time_stamp="0">
@@ -194,22 +196,22 @@
     <joint_state joint="j2s7s300_joint_6_right" position="200"/>
     <joint_state joint="j2s7s300_joint_7_right" position="0"/>
 
-    <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
-    <joint_state joint="j2s7s300_joint_2_left" position="80"/>
-    <joint_state joint="j2s7s300_joint_3_left" position="90"/>
-    <joint_state joint="j2s7s300_joint_4_left" position="290"/>
-    <joint_state joint="j2s7s300_joint_5_left" position="0"/>
-    <joint_state joint="j2s7s300_joint_6_left" position="160"/>
-    <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+    <joint_state joint="j2s7s300_joint_1_left2" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left2" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left2" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left2" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left2" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left2" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left2" position="0"/>
   </model_state>
 
   <model_state model="open_fingers" time_stamp="0">
     <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
     <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
     <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
-    <joint_state joint="j2s7s300_joint_finger_1_left"  position="10" />
-    <joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
-    <joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left2"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left2"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left2"  position="10" />
     <joint_state joint="finger_joint_left3" position="0"/>
     <joint_state joint="finger_joint_right3" position="0"/>
   </model_state>
@@ -218,9 +220,9 @@
     <joint_state joint="j2s7s300_joint_finger_1_right" position="50" />
     <joint_state joint="j2s7s300_joint_finger_2_right" position="50" />
     <joint_state joint="j2s7s300_joint_finger_3_right" position="50" />
-    <joint_state joint="j2s7s300_joint_finger_1_left"  position="50" />
-    <joint_state joint="j2s7s300_joint_finger_2_left"  position="50" />
-    <joint_state joint="j2s7s300_joint_finger_3_left"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left2"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left2"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left2"  position="50" />
     <joint_state joint="finger_joint_left3"  position="40"/>
     <joint_state joint="finger_joint_right3" position="40"/>
   </model_state>

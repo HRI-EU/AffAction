@@ -20,7 +20,7 @@ class SimulatorManager:
     Manages the lifecycle of the LlmSim simulator, including initialization,
     starting the GUI, and shutting down.
     """
-    def __init__(self, scene: str = "g_attentive_support.xml"):
+    def __init__(self, scene: str = "g_optimus_bimanual.xml"):
         """
         Create a SimulatorManager with default configurations.
 
@@ -57,7 +57,7 @@ class SimulatorManager:
         logger.debug(f"Setting up the simulator. PATH: {os.environ.get('PATH')}")
         setLogLevel(-1)
         addResourcePath(str(smile_ws_path / "config"))
-        addResourcePath(str(smile_ws_path / "config" / "xml" / "examples"))
+        addResourcePath(str(smile_ws_path / "config" / "xml" / "optimusplan"))
 
         self.sim = LlmSim()
         self.sim.noTextGui = True
@@ -130,7 +130,7 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
 
 
 def main():
-    sim_manager = SimulatorManager(scene="g_example_opposing_icra.xml")
+    sim_manager = SimulatorManager(scene="g_optimus_bimanual.xml")
     sim_manager.setup("build")
     global sim   # For interactive console needed
     sim = sim_manager.sim
