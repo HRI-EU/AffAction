@@ -394,6 +394,7 @@ tropic::TCS_sptr ActionPour::createTrajectory(double t_start, double t_end) cons
   // At the time point t_prep, we keep a bit distance between bottle and glas
   // so that they don't collide. On the way of tilting the bottle up, we align
   // the opening frames.
+  a1->add(t_prep, 0.0, 0.0, 0.0, 7, taskRelPos + " 0");// forward align
   a1->add(t_prep, 0.6 * d_separate, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep + 0.5*(t_up-t_prep), 0.0, 0.0, 0.0, 7, taskRelPos + " 1");
   a1->add(t_prep, heightAboveGlas, 0.0, 0.0, 7, taskRelPos + " 2");

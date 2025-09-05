@@ -519,7 +519,7 @@ bool ActionGet::initialize(const ActionScene& domain,
     const RcsBody* bdyPtr = RcsGraph_getBodyByName(graph, hand->bdyName.c_str());
     RCHECK_MSG(bdyPtr, "Hand body \"%s\" not found", hand->bdyName.c_str());
     bdyPtr = RCSBODY_BY_ID(graph, bdyPtr->parentId);
-    RCHECK_MSG(bdyPtr, "Hand body first parent not found");
+    RCHECK_MSG(bdyPtr, "Hand body '%s': first parent not found", hand->bdyName.c_str());
     while (bdyPtr->parentId !=1)
     {
       const RcsBody* parentPtr = RCSBODY_BY_ID(graph, bdyPtr->parentId);
