@@ -176,6 +176,7 @@ def convert_base64_image(b64_str) -> np.ndarray:
 
 def main():
     loop_count = 0
+    count = -1
     sim_manager = SimulatorManager(scene="g_attentive_support.xml")
     sim_manager.setup("build")
     sim = sim_manager.sim
@@ -201,7 +202,7 @@ def main():
                 continue
 
             # Capture virtual camera image (stored as jpg-compressed base64 data)
-            count, image_b64 = sim.getCameraImage()
+            count, image_b64 = sim.getCameraImage(count)
 
             if count == 0:
                 logger.warning(f"Image could not be captured")
