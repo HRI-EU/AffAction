@@ -253,7 +253,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <!-- <Supportable frame="table_grid_1_5"/>  -->
     <!-- <Supportable frame="table_grid_1_6"/>  -->
     <!-- <Supportable frame="table_grid_1_7"/>  -->
-    <Supportable frame="table_grid_1_8"/> 
+    <!-- <Supportable frame="table_grid_1_8"/>  -->
 
     <!-- <Supportable frame="table_grid_2_0"/> -->
     <!-- <Supportable frame="table_grid_2_1"/> -->
@@ -263,7 +263,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Supportable frame="table_grid_2_5"/>
     <Supportable frame="table_grid_2_6"/>
     <!-- <Supportable frame="table_grid_2_7"/>  -->
-    <!-- <Supportable frame="table_grid_2_8"/>  -->
+    <Supportable frame="table_grid_2_8"/>
 
     <!-- <Supportable frame="table_grid_3_0"/>  -->
     <!-- <Supportable frame="table_grid_3_1"/>  -->
@@ -363,7 +363,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <!--   <xi:include href="g_bottle_cocktail.xml"/> -->
   <!-- </Group> -->
 
-  <Group prev="table_grid_1_8" name="_pineapple_juice" color="DARKRED" rigid_body_joints="true" >
+  <Group prev="table_grid_2_8" name="_pineapple_juice" color="DARKRED" rigid_body_joints="true" >
     <xi:include href="g_bottle_cocktail.xml"/>
   </Group>
 
