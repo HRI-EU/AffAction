@@ -545,6 +545,18 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns a json in the form:
+  // {"hand_name_1": ['iphone', 'red_glass', 'fanta_bottle'],
+  //  "hand_name_2": ['iphone', 'green_glass', 'milk_bottle']}
+  // where the values are the reachable objects from the manipulator (key).
+  // This function assumes a RobotAgent to be passed
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_object_reachabilities", [](aff::ExampleActionsECS& ex, std::string agentName) -> nlohmann::json
+  {
+    return ex.getQuery()->getObjectReachabilities(agentName);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if there are no objects or a json in the form:
   // {"agents": ['Daniel', 'Felix', 'Robot'] }
   //////////////////////////////////////////////////////////////////////////////

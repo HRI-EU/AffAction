@@ -425,46 +425,63 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
     json["objects"].push_back(n);
   }
 
-#if 0
+  return json;
+}
 
-  // Get robot agents
-  auto robotAgents = scene.getAgents<RobotAgent>();
-  const Manipulator* handLeft = nullptr;
-  const Manipulator* handRight = nullptr;
-  if (robotAgents.size()==1)
+
+
+
+
+
+
+
+nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& agentName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json;
+
+  const Agent* agent = nullptr;
+
+  if (agentName.empty())
   {
-    const RobotAgent* robotAgent = robotAgents[0];
-    HTr agentFrame = robotAgent->getBodyTransform(graph);
-
-    for (const auto& manipulatorName : robotAgent->manipulators)
+    auto robotAgents = scene.getAgents<RobotAgent>();
+    if (robotAgents.size()==1)
     {
-      const Manipulator* m = scene.getManipulator(manipulatorName);
-      if (m->isOfType("hand"))
-      {
-        HTr handFrame = m->getBodyTransform(graph);
-        Vec3d_invTransformSelf(handFrame.org, &agentFrame);
-
-        if (handFrame.org[1]>0.0)
-        {
-          handLeft = m;
-        }
-        else if (handFrame.org[1]<0.0)
-        {
-          handRight = m;
-        }
-      }
+      agent = robotAgents[0];
     }
   }
   else
   {
-    RLOG_CPP(0, "Found " << robotAgents.size() << " robot agents, one is expected");
+    agent = scene.getAgent(agentName);
   }
 
-  if (handLeft && handRight)
+  if (!agent)
   {
-    RLOG_CPP(0, "Found 2 hands: left one: " << handLeft->name << " and right one: " << handRight->name);
+    RLOG_CPP(1, "Agent " << agentName << " not found in scene - returning empty reachabilities");
+    return json;
+  }
 
-    json["objects"].clear();
+  const RobotAgent* robotAgent = dynamic_cast<const RobotAgent*>(agent);
+
+  if (!robotAgent)
+  {
+    RLOG_CPP(1, "Agent " << agentName << " is not a robot agent - returning empty reachabilities");
+    return json;
+  }
+
+
+  std::vector<const Manipulator*> hands = robotAgent->getManipulatorsOfType(&scene, "hand");
+
+  // Only add each item once in case of duplicate names.
+  std::unordered_set<std::string> ntts;
+  for (const auto& e : scene.entities)
+  {
+    ntts.insert(e.name);
+  }
+
+  for (const auto& hand : hands)
+  {
 
     // Assemble the json
     for (const auto& n : ntts)
@@ -475,35 +492,15 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
 
       RLOG_CPP(0, "Checking " << a->bdyName);
 
-      bool reachLeft = handLeft->canReachTo(&scene, graph, aBdy);
-      bool reachRight = handRight->canReachTo(&scene, graph, aBdy);
+      bool reachable = hand->canReachTo(&scene, graph, aBdy);
 
-      if (reachLeft && reachRight)
+      if (reachable)
       {
-        json["objects"].push_back(n + " in the center");
-      }
-      else if (reachLeft)
-      {
-        json["objects"].push_back(n + " at the left side");
-      }
-      else if (reachRight)
-      {
-        json["objects"].push_back(n + " at the right side");
-      }
-      else
-      {
-        json["objects"].push_back(n + " not reachable");
+        json[hand->name].push_back(a->bdyName);
       }
     }
 
-
   }
-  else
-  {
-    RLOG_CPP(0, "Could not find 2 hands");
-  }
-
-#endif
 
   return json;
 }
