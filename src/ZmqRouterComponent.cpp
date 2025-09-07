@@ -74,6 +74,18 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
   subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
   subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
+  
+  getEntity()->subscribe("Speak", [this](std::string text) mutable
+            {
+    nlohmann::json payload =
+    {
+      {"type", "tts"},
+      {"cmd",  "SAY"},
+      {"text", text}
+    };
+
+    getEntity()->publish("TriggerPerception", std::string("tts"), 0, payload.dump());
+  });
 }
 
 ZmqRouterComponent::~ZmqRouterComponent()

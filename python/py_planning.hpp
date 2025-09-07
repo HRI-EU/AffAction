@@ -371,7 +371,7 @@ Example
     {
         if (ex.isProcessingAction())
         {
-            RLOG_CPP(0, "Skipped " + sequenceCommand + ": AÍ am already doing something else");
+            RLOG_CPP(0, "Skipped " + sequenceCommand + ": I am already doing something else");
             return;
         }
 

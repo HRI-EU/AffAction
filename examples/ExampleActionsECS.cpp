@@ -1124,6 +1124,7 @@ bool ExampleActionsECS::initGraphics()
   {
     RLOG(0, "Interrupting action");
     entity.publish("ClearTrajectory");
+    entity.publish("Speak", std::string());
   }, "Interrupt action");
 
   viewer->setKeyCallback('x', [this](char k)

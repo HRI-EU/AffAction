@@ -507,7 +507,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
   for (const auto& n : ntts)
   {
     const AffordanceEntity* a = scene.getAffordanceEntity(n);
-    const double* pos = a->getBodyTransform(graph).org;
+    //const double* pos = a->getBodyTransform(graph).org;
     const RcsBody* aBdy = a->body(graph);
 
     RLOG_CPP(0, "Checking " << a->bdyName);
