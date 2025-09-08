@@ -249,6 +249,8 @@ def main():
                         sim.setHeadGesture("no", 3.14*5.0/180.0, 3)   
                     elif k == ord('c'):
                         logger.info(f"{sim.getMirrorEyesData()}")
+                    elif k == ord('w'):
+                        logger.info(f"{sim.getCameraModel()}")
                     elif k == ord('d'):
                         logger.info("Setting pupil speed weight to 0.0")
                         sim.setPupilSpeedWeight(0.0)
