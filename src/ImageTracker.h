@@ -37,6 +37,7 @@
 #include "TrackerBase.h"
 #include "ComponentBase.h"
 #include "VirtualCamera.h"
+#include "ImageHelpers.h"
 
 #include <mutex>
 #include <memory>
@@ -61,7 +62,7 @@ public:
 
   std::pair<int, std::string> getStampedImage(int frame_count=-1) const;
 
-  std::vector<double> getCameraParameters() const;
+  PinholeCamera getCameraModel() const;
 
   std::vector<int> getGazeObjectBoundingBox() const;
 
@@ -69,7 +70,7 @@ public:
   static std::vector<int> getObjectBoundingBox(const ActionScene* scene, const RcsGraph* graph,
                                                const std::string objName,
                                                const std::string& cameraName,
-                                               double fx, double fy, double cx, double cy);
+                                               const PinholeCamera& phCam);
 
   void enableDebugWindow(bool enable);
 
@@ -82,7 +83,7 @@ protected:
   mutable std::mutex imgMtx;
   double t_parse;
   std::string gazeTarget;
-  double fx, fy, cx, cy;
+  PinholeCamera pinhole;
   bool showDebugWindow;
   std::vector<int> gaze_bb;
 };
@@ -95,7 +96,11 @@ class VirtualImageTracker : public ImageTracker
 {
 public:
 
-  VirtualImageTracker(EntityBase* parent, const std::string& cameraName);
+  VirtualImageTracker(EntityBase* parent,
+                      const std::string& cameraName,
+                      const std::string& cameraType="AzureKinect WFOV",
+                      int width=640,
+                      int height=480);
   virtual ~VirtualImageTracker() = default;
   void parse(const nlohmann::json& header, const nlohmann::json& data, double time) override;
   std::string getRequestKeyword() const override;
@@ -103,6 +108,7 @@ public:
 
 protected:
 
+  std::string cameraType;
   int capture_count;
   std::unique_ptr<VirtualCamera> vCamPtr;
 };

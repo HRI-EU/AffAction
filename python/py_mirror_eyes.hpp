@@ -99,10 +99,9 @@ void bind_mirror_eyes(py::class_<aff::ExampleActionsECS>& cls)
       std::vector<int> bb;
       if (auto* tracker = getImageTracker(ex))
       {
-        auto intr = tracker->getCameraParameters();
         bb = aff::ImageTracker::getObjectBoundingBox(
-          ex.getScene(), ex.getGraph(), objName, tracker->getCameraName(),
-          intr[0], intr[1], intr[2], intr[3]);
+          ex.getScene(), ex.getGraph(), objName,
+          tracker->getCameraName(), tracker->getCameraModel());
       }
 
       // Satisfy the promise (catch in case something races after timeout)
@@ -166,73 +165,151 @@ void bind_mirror_eyes(py::class_<aff::ExampleActionsECS>& cls)
   py::arg("frame_count") = -1)
 
   //////////////////////////////////////////////////////////////////////////////
-  // Head gestures: "yes", "no"
-  // "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
-  // "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
+  // Returns the pinhole camera model for the given camera
   //////////////////////////////////////////////////////////////////////////////
-  .def("setHeadGesture", [](aff::ExampleActionsECS& ex, std::string gestureName, double gestureAmplitude, int numTurns)
+  .def("getCameraModel", [](aff::ExampleActionsECS& ex, const std::string& cameraName) -> nlohmann::json
   {
-    ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
+    if (aff::ImageTracker* tracker = getImageTracker(ex))
+    {
+      (void)cameraName; // currently unused/reserved
+      return tracker->getCameraModel().toJson();
+    }
+    return nlohmann::json();
   },
-  py::arg("gestureName"),
-  py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
-  py::arg("numTurns") = 3)
+  // *INDENT-OFF*
+  R"pbdoc(
+Return the pinhole camera model as JSON.
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Gaze model methods: 0: Neck only, 1: pupils only.
-  //////////////////////////////////////////////////////////////////////////////
-  .def("setPupilSpeedWeight", [](aff::ExampleActionsECS& ex, double value)
-  {
-    ex.getEntity().publish("SetPupilWeight", value);
-  })
+Schema
+------
+{
+  "width":  <int>,          // pixels, >= 0
+  "height": <int>,          // pixels, >= 0
+  "camera_matrix": [
+    [ fx, 0.0, cx ],
+    [ 0.0, fy, cy ],
+    [ 0.0, 0.0, 1.0 ]
+  ],
+  "distortion": [ k1, k2, p1, p2, k3, k4, k5, k6 ]
+}
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Pupil point in screen coordinates: z points outwards, x points left, y
-  // points down. Origin is screen center. TODO: Make threadsafe
-  //////////////////////////////////////////////////////////////////////////////
-  .def("getPupilCoordinates", [](aff::ExampleActionsECS& ex) -> std::pair<std::vector<double>, std::vector<double>>
-  {
-    double pr[3], pl[3];
-    std::vector<double> xy_right, xy_left;
+Fields
+------
+- "width" (int, >= 0)
+    Image width in pixels. When parsing, missing may default to 0.
 
-    bool success = aff::ActionEyeGaze::computePupilCoordinates(ex.getGraph(), pr, pl);
+- "height" (int, >= 0)
+    Image height in pixels. When parsing, missing may default to 0.
 
-    if (success)
-    {
-      xy_right = std::vector<double>(pr, pr + 3);
-      xy_left = std::vector<double>(pl, pl + 3);
-    }
+- "camera_matrix" (3x3 array of numbers, required)
+    Row-major pinhole intrinsics:
+      [
+        [ fx, 0,  cx ],
+        [ 0,  fy, cy ],
+        [ 0,  0,  1  ]
+      ]
+    Units are pixels. fx, fy > 0 expected; (cx, cy) are principal point in pixels.
 
-    return std::make_pair(xy_right, xy_left);
-  })
+- "distortion" (array of 8 numbers)
+    Coefficients in order: [k1, k2, p1, p2, k3, k4, k5, k6].
+    For models using fewer terms (e.g., 5-parameter), remaining values are 0.
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Returns the json with all relevant coordinates for the pupils etc:
-  //////////////////////////////////////////////////////////////////////////////
-  .def("getMirrorEyesData", [](aff::ExampleActionsECS& ex) -> nlohmann::json
-  {
-    nlohmann::json j;
-    auto eyeComponents = aff::getComponents<aff::EyeModelIKComponent>(ex.getComponentsRef());
+Example
+-------
+{
+  "width": 1920,
+  "height": 1080,
+  "camera_matrix": [
+    [1200.0, 0.0, 960.0],
+    [0.0, 1200.0, 540.0],
+    [0.0, 0.0, 1.0]
+  ],
+  "distortion": [-0.12, 0.03, 0.0005, -0.0003, 0.0, 0.0, 0.0, 0.0]
+}
 
-    if (eyeComponents.size() != 1)
-    {
-      RLOG(0, "Found %zu EyeModelIKComponent instances - must be 1", eyeComponents.size());
-      return j;
-    }
+Parameters
+----------
+cameraName : str, optional
+    Name/identifier of the camera. Currently ignored (reserved for multi-camera setups).
 
-    std::string eyeStr = eyeComponents[0]->getMirrorEyesJsonString();
+Returns
+-------
+dict
+    JSON object with intrinsics and distortion as shown above.
 
-    try
-    {
-      j = nlohmann::json::parse(eyeStr);
-    }
-    catch (const nlohmann::json::parse_error& e)
-    {
-      RLOG_CPP(0, "Parse error for '" << eyeStr << "' : " << e.what());
-    }
+)pbdoc"
+  // *INDENT-ON*
+, py::arg("cameraName") = std::string()
+)
 
-    return j;
-  },
+//////////////////////////////////////////////////////////////////////////////
+// Head gestures: "yes", "no"
+// "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
+// "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
+//////////////////////////////////////////////////////////////////////////////
+.def("setHeadGesture", [](aff::ExampleActionsECS& ex, std::string gestureName, double gestureAmplitude, int numTurns)
+{
+ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
+},
+py::arg("gestureName"),
+py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
+py::arg("numTurns") = 3)
+
+//////////////////////////////////////////////////////////////////////////////
+// Gaze model methods: 0: Neck only, 1: pupils only.
+//////////////////////////////////////////////////////////////////////////////
+.def("setPupilSpeedWeight", [](aff::ExampleActionsECS& ex, double value)
+{
+ex.getEntity().publish("SetPupilWeight", value);
+})
+
+//////////////////////////////////////////////////////////////////////////////
+// Pupil point in screen coordinates: z points outwards, x points left, y
+// points down. Origin is screen center. TODO: Make threadsafe
+//////////////////////////////////////////////////////////////////////////////
+.def("getPupilCoordinates", [](aff::ExampleActionsECS& ex) -> std::pair<std::vector<double>, std::vector<double>>
+{
+double pr[3], pl[3];
+std::vector<double> xy_right, xy_left;
+
+bool success = aff::ActionEyeGaze::computePupilCoordinates(ex.getGraph(), pr, pl);
+
+if (success)
+{
+xy_right = std::vector<double>(pr, pr + 3);
+xy_left = std::vector<double>(pl, pl + 3);
+}
+
+return std::make_pair(xy_right, xy_left);
+})
+
+//////////////////////////////////////////////////////////////////////////////
+// Returns the json with all relevant coordinates for the pupils etc:
+//////////////////////////////////////////////////////////////////////////////
+.def("getMirrorEyesData", [](aff::ExampleActionsECS& ex) -> nlohmann::json
+{
+nlohmann::json j;
+auto eyeComponents = aff::getComponents<aff::EyeModelIKComponent>(ex.getComponentsRef());
+
+if (eyeComponents.size() != 1)
+{
+RLOG(0, "Found %zu EyeModelIKComponent instances - must be 1", eyeComponents.size());
+return j;
+}
+
+std::string eyeStr = eyeComponents[0]->getMirrorEyesJsonString();
+
+try
+{
+j = nlohmann::json::parse(eyeStr);
+}
+catch (const nlohmann::json::parse_error& e)
+{
+RLOG_CPP(0, "Parse error for '" << eyeStr << "' : " << e.what());
+}
+
+return j;
+},
     // *INDENT-OFF*
     R"pbdoc(
 Returns the json with all relevant coordinates for the pupils in this form:

@@ -46,7 +46,8 @@ class VirtualCamera
 {
 public:
 
-  VirtualCamera(osg::Node* node, int width=640, int height=480,
+  VirtualCamera(const std::string& cameraType,
+                osg::Node* node, int width=640, int height=480,
                 double near=0.1, double far=10.0);
   virtual ~VirtualCamera() = default;
 

@@ -58,10 +58,31 @@ namespace aff
 /*******************************************************************************
  *
  ******************************************************************************/
-PinholeCamera::PinholeCamera() : fx(0.0), fy(0.0), cx(0.0), cy(0.0)
+PinholeCamera::PinholeCamera() :
+  width(0), height(0),
+  fx(0.0), fy(0.0), cx(0.0), cy(0.0),
+  k1(0.0), k2(0.0), p1(0.0), p2(0.0),
+  k3(0.0), k4(0.0), k5(0.0), k6(0.0)
 {
 }
 
+nlohmann::json PinholeCamera::toJson() const
+{
+  return nlohmann::json
+  {
+    {"width",  width},
+    {"height", height},
+    {
+      "camera_matrix", {
+        {fx, 0.0, cx},
+        {0.0, fy, cy},
+        {0.0, 0.0, 1.0}
+      }
+    },
+    {"distortion", {k1, k2, p1, p2, k3, k4, k5, k6}}
+  };
+
+}
 
 /*******************************************************************************
  * Converts base64 JPEG to QImage
@@ -160,83 +181,13 @@ void showFrame(const QString& key, const QImage& img)
   }
 }
 
-// Optional convenience overload for single-window use:
+/*******************************************************************************
+ * Optional convenience overload for single-window use
+ ******************************************************************************/
 void showFrame(const QImage& img)
 {
   showFrame(QStringLiteral("Video Stream"), img);
 }
-
-
-void showFrame_old(const QImage& img)
-{
-  if (img.isNull())
-  {
-    return;
-  }
-
-  // -- Always run UI work on the GUI thread ---------------------------
-  if (QThread::currentThread() != qApp->thread())
-  {
-    QMetaObject::invokeMethod(
-      qApp,
-      [img] { showFrame(img); },
-      Qt::QueuedConnection);
-    return;
-  }
-
-  // -- Static members for window and cleanup --------------------------
-  static QPointer<QLabel> window;
-  static QLabel* rawWindow = nullptr;
-
-  // RAII "guardian" whose destructor runs at program exit;
-  // The Cleaner object is created the first time showFrame() runs and lives until static
-  // destruction starts.Because its destructor only calls deleteLater(), no GUI code
-  // executes if QApplication is already half - gone; Qt will simply enqueue the deletion
-  // if the event loop is still running, or fall back to direct deletion otherwise.Static
-  // locals are destroyed in reverse order of construction, guaranteeing window is still
-  // valid when Cleaner runs.
-  static struct Cleaner
-  {
-    ~Cleaner()
-    {
-      if (rawWindow)
-      {
-        rawWindow->deleteLater();
-      }
-    }
-  } guard;
-
-  // -- Create window on first use -------------------------------------
-  if (window.isNull())
-  {
-    QLabel* w = new QLabel;
-    w->setWindowTitle(QStringLiteral("Video Stream"));
-    w->setAttribute(Qt::WA_DeleteOnClose, false);
-    w->setAlignment(Qt::AlignCenter);
-    w->setScaledContents(false); // keep aspect ratio
-    w->resize(img.width(), img.height());
-
-    // Track destruction to clear pointers
-    QObject::connect(w, &QObject::destroyed, []
-    {
-      window.clear();
-      rawWindow = nullptr;
-    });
-
-    window = w;
-    rawWindow = w;
-
-    w->show();
-  }
-
-  // -- Update frame ---------------------------------------------------
-  if (window)
-  {
-    window->setPixmap(QPixmap::fromImage(img));
-    window->resize(img.size());
-  }
-}
-
 
 /*******************************************************************************
  * encryption
@@ -282,9 +233,12 @@ std::string rgbToJpegBase64(const uint8_t* rgb,
  * Camera model from header json
  ******************************************************************************/
 bool extract_intrinsics(const nlohmann::json& data,
-                        double& fx, double& fy, double& cx, double& cy,
+                        PinholeCamera& cam,
                         std::string& err)
 {
+  bool success = true;
+  PinholeCamera tmp;
+
   try
   {
     auto it = data.find("camera_matrix");
@@ -308,11 +262,21 @@ bool extract_intrinsics(const nlohmann::json& data,
       }
     }
 
-    fx = cm[0][0].get<double>();
-    fy = cm[1][1].get<double>();
-    cx = cm[0][2].get<double>();
-    cy = cm[1][2].get<double>();
-    return true;
+    tmp.fx = cm[0][0].get<double>();
+    tmp.fy = cm[1][1].get<double>();
+    tmp.cx = cm[0][2].get<double>();
+    tmp.cy = cm[1][2].get<double>();
+
+    tmp.width  = data.value("width",  0);
+    tmp.height = data.value("height", 0);
+    tmp.k1 = data.value("k1", 0);
+    tmp.k2 = data.value("k2", 0);
+    tmp.p1 = data.value("p1", 0);
+    tmp.p2 = data.value("p2", 0);
+    tmp.k3 = data.value("k3", 0);
+    tmp.k4 = data.value("k4", 0);
+    tmp.k5 = data.value("k5", 0);
+    tmp.k6 = data.value("k6", 0);
   }
   catch (const std::exception& e)
   {
@@ -324,8 +288,15 @@ bool extract_intrinsics(const nlohmann::json& data,
     err = "Unknown error while parsing intrinsics.";
     return false;
   }
+
+  if (success)
+  {
+    cam = tmp;
+  }
+
+  return success;
 }
 
 
-}   // namespace
 
+}   // namespace

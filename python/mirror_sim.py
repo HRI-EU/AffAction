@@ -167,7 +167,13 @@ def convert_base64_image(b64_str) -> np.ndarray:
     np_buf = np.frombuffer(img_bytes, dtype=np.uint8)
 
     # Decode to OpenCV image (BGR format)
-    bgr_img = cv2.imdecode(np_buf, cv2.IMREAD_COLOR)
+
+    if np_buf.size == 0:
+        print("Empty buffer, cannot decode.")
+        bgr_img = None
+    else:
+        bgr_img = cv2.imdecode(np_buf, cv2.IMREAD_COLOR)
+        
     if bgr_img is None:
         raise ValueError("cv2.imdecode failed — data may not be a valid image")
 
@@ -180,7 +186,7 @@ def main():
     sim_manager = SimulatorManager(scene="g_attentive_support.xml")
     sim_manager.setup("build")
     sim = sim_manager.sim
-    sim.addComponentArgument("-virtual_image_tracking")
+    sim.addComponentArgument("-virtual_image_tracking -virtual_image_tracking.width 640 -virtual_image_tracking.height 480 -virtual_image_tracking.camera_type AzureKinect WFOV")
     sim.addLandmarkRouter(camera_name="camera_0")
     sim.init(True)
     sim.callEvent("Start")
@@ -198,27 +204,28 @@ def main():
 
             # skip until the 10-th step
             loop_count += 1
-            if loop_count % 10 != 0:  
-                continue
+            #if loop_count % 10 != 0:  
+                #continue
 
             # Capture virtual camera image (stored as jpg-compressed base64 data)
-            count, image_b64 = sim.getCameraImage(count)
+            new_count, image_b64 = sim.getCameraImage(count)
 
-            if count == 0:
-                logger.warning(f"Image could not be captured")
+            if new_count <= count or new_count <= 0:
                 continue
+
+            count = new_count
 
             # Make rgb-image out of it
             image = convert_base64_image(image_b64)
-            #cv2.namedWindow("RGB", cv2.WINDOW_AUTOSIZE)
-            #cv2.imshow("RGB", image)
-
+            cv2.namedWindow("RGB", cv2.WINDOW_AUTOSIZE)
+            cv2.imshow("RGB", image)
+            
             # Get bounding box of object that is currently looked at. Press 'l' in simlator window
             # to let robot gaze at object under mouse tip
             bb = sim.getGazeObjectBoundingBox()
 
             # Show cropped image of object that is looked at
-            if len(bb) == 4:
+            if (len(bb) == 4) and image is not None:
                 roi = crop_bbox(image, bb, margin=10, clip=True, round_coords=True, inclusive_max=False)
                 roi_resized = resize_min_dim(roi, target_min=160)
                 cv2.namedWindow("ROI", cv2.WINDOW_AUTOSIZE) # autosized window to avoid distortion

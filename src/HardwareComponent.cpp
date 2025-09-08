@@ -193,7 +193,16 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-virtual_image_tracking" + suffix))
     {
-      auto imgTracker = std::make_unique<VirtualImageTracker>(&entity, landmarksCamera);
+      std::string virtual_camera_type = "AzureKinect WFOV";
+      int virtual_camera_width = 640;
+      int virtual_camera_height = 480;
+
+      getKeyValuePair<int>(argsVec, "-virtual_image_tracking.width" + suffix, virtual_camera_width);
+      getKeyValuePair<int>(argsVec, "-virtual_image_tracking.height" + suffix, virtual_camera_height);
+      getKeyValuePair<std::string>(argsVec, "-virtual_image_tracking.camera_type"+suffix, virtual_camera_type);
+
+      auto imgTracker = std::make_unique<VirtualImageTracker>(&entity, landmarksCamera, virtual_camera_type,
+                                                              virtual_camera_width, virtual_camera_height);
       lmc->addTracker(std::move(imgTracker));
     }
 
@@ -515,6 +524,11 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
     argP.addDescription("-agent_welcome", "For '-landmarks_router' and '-skeleton_tracking': Callback for agent appearing and disappearing");
+
+    argP.addDescription("-virtual_image_tracking", "For '-landmarks_router': Start with virtual image tracking");
+    argP.addDescription("-virtual_image_tracking.width", "For '-landmarks_router' and '-virtual_image_tracking': Width of captured image in pixels (Default: 640)");
+    argP.addDescription("-virtual_image_tracking.height", "For '-landmarks_router' and '-virtual_image_tracking': Heigth of captured image in pixels (Default: 480)");
+    argP.addDescription("-virtual_image_tracking.camera_type", "For '-landmarks_router' and '-virtual_image_tracking': Type of camera (Default: AzureKinect WFOV. Choices: Kinect_v2, Logitech_C910, AzureKinect. See VirtualCamera.cpp)");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {

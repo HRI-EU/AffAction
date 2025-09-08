@@ -50,7 +50,8 @@
 namespace aff
 {
 
-VirtualCamera::VirtualCamera(osg::Node* node, int width, int height,
+VirtualCamera::VirtualCamera(const std::string& cameraType,
+                             osg::Node* node, int width, int height,
                              double near, double far):
   virtualRenderer(width, height, near, far)
 {
@@ -102,7 +103,7 @@ VirtualCamera::VirtualCamera(osg::Node* node, int width, int height,
   virtualRenderer.setSceneData(shadowScene.get());
 
   double fx, cx, fy, cy;
-  bool success = initCamera("AzureKinect WFOV", width, height, fx, fy, cx, cy, near, far);
+  bool success = initCamera(cameraType, width, height, fx, fy, cx, cy, near, far);
   RCHECK(success);
   virtualRenderer.setProjectionFromFocalParams(fx, fy, cx, cy, near, far);
 }

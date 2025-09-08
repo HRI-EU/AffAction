@@ -51,7 +51,13 @@ class PinholeCamera
 public:
   PinholeCamera();
 
-  double fx, fy, cx, cy;
+  nlohmann::json toJson() const;
+
+  int width, height;      // Pixel resolution
+  double fx, fy, cx, cy;  // Camera matrix
+  double k1, k2;          // Radial distortion
+  double p1, p2;          // Tangential distortion
+  double k3, k4, k5, k6;  // Higher-order radial distortion
 };
 
 QImage decodeBase64JpegToQImage(const QString& base64String);
@@ -60,7 +66,7 @@ std::string rgbToJpegBase64(const uint8_t* rgb, int width, int height, int quali
 void showFrame(const QImage& img);
 
 bool extract_intrinsics(const nlohmann::json& data,
-                        double& fx, double& fy, double& cx, double& cy,
+                        PinholeCamera& cam,
                         std::string& err);
 
 

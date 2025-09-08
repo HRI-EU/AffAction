@@ -365,7 +365,7 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-virtualCameraBodyName", &virtualCameraBodyName, "Name of body in graph to which camera is attached");
   parser->getArgument("-sequence", &sequenceCommand, "Sequence command to start with");
   parser->getArgument("-turbo", &turbo, "Compute action duration to be as fast as possible");
-  parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning");
+  parser->getArgument("-maxNumThreads", &maxNumThreads, "Max. number of threads for planning. 0 means as many as possible (default: %d)", maxNumThreads);
   parser->getArgument("-earlyExitAction", &earlyExitAction, "Early exit with action prediction's first error");
   parser->getArgument("-enableGazeComponent", &gazeComponentEnabled, "Start with gaze component");
   parser->getArgument("-enableEyeIK", &eyeIkEnabled, "Start with eye gaze model");
@@ -2035,7 +2035,7 @@ bool ExampleActionsECS::addVirtualCamera(std::string camera_name, int width, int
     return false;
   }
 
-  VirtualCamera* camera = new VirtualCamera(new Rcs::GraphNode(getGraph()), width, height);
+  VirtualCamera* camera = new VirtualCamera("AzureKinect WFOV", new Rcs::GraphNode(getGraph()), width, height);
   virtualCameras.push_back(std::make_pair(camera_name, std::unique_ptr<VirtualCamera>(camera)));
 
   return true;

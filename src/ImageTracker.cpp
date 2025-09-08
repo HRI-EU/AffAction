@@ -50,8 +50,7 @@ namespace aff
  *
  ******************************************************************************/
 ImageTracker::ImageTracker(EntityBase* parent, const std::string& cameraName) :
-  ComponentBase(parent), TrackerBase(cameraName), t_parse(0.0),
-  fx(640.0), fy(640.0), cx(320.0), cy(240.0), showDebugWindow(false)
+  ComponentBase(parent), TrackerBase(cameraName), t_parse(0.0), showDebugWindow(false)
 {
   subscribe("SetGazeTarget", &ImageTracker::onSetGazeTarget);
 }
@@ -86,12 +85,14 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
     }
 
     std::string err;
-    double fx_ = 0.0, fy_ = 0.0, cx_ = 0.0, cy_ = 0.0;
-    if (!extract_intrinsics(header, fx_, fy_, cx_, cy_, err))
+    PinholeCamera phCam;
+    if (!extract_intrinsics(header, phCam, err))
     {
       RLOG_CPP(1, "Failed to extract camera intrinsics: " << err << " header: " << header.dump(2));
       return;
     }
+
+
 
     // Serialize image JSON
     int stamp = header.at("seq").get<int>();
@@ -100,10 +101,7 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
     {
       std::lock_guard<std::mutex> lock(imgMtx);
       this->stamped_image = std::make_pair(stamp, image_str);
-      this->fx = fx_;
-      this->fy = fy_;
-      this->cx = cx_;
-      this->cy = cy_;
+      this->pinhole = phCam;
     }
 
     RLOG_CPP(1, "Received: count=" << stamped_image.first
@@ -122,18 +120,14 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
 
 void ImageTracker::update(ActionScene* scene, RcsGraph* graph)
 {
-  double fx_, fy_, cx_, cy_;
+  PinholeCamera tmpCam;
 
   {
     std::lock_guard<std::mutex> lock(imgMtx);
-    fx_ = this->fx;
-    fy_ = this->fy;
-    cx_ = this->cx;
-    cy_ = this->cy;
+    tmpCam = this->pinhole;
   }
 
-  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(),
-                                             fx_, fy_, cx_, cy_);
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), tmpCam);
 
   {
     std::lock_guard<std::mutex> lock(imgMtx);
@@ -189,7 +183,7 @@ void ImageTracker::updateDebugWindow(const std::vector<int>& bb) const
 std::pair<int, std::string> ImageTracker::getStampedImage(int frame_count) const
 {
   std::lock_guard<std::mutex> lock(imgMtx);
-  if ((frame_count == -1) || (stamped_image.first < frame_count))
+  if ((frame_count == -1) || (stamped_image.first > frame_count))
   {
     return this->stamped_image;
   }
@@ -197,9 +191,11 @@ std::pair<int, std::string> ImageTracker::getStampedImage(int frame_count) const
   return std::make_pair(stamped_image.first, std::string());
 }
 
-std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene, const RcsGraph* graph,
-                                                    const std::string objName, const std::string& cameraName,
-                                                    double fx, double fy, double cx, double cy)
+std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene,
+                                                    const RcsGraph* graph,
+                                                    const std::string objName,
+                                                    const std::string& cameraName,
+                                                    const PinholeCamera& phCam)
 {
   nlohmann::json j = getObjectInCamera(objName, cameraName, scene, graph);
 
@@ -235,14 +231,15 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene, co
   std::vector<std::array<int, 2>> imgPoints;
   for (const auto& v : vertices)
   {
-    // We assume that the camera is oriented with x pointing forward, and z pointing up
-    double x_std = -v[1];  // –Y
-    double y_std = -v[2];  // –Z
-    double z_std =  v[0];  //  X
+    // We assume that the camera is oriented with x pointing forward, and z
+    // pointing up
+    double x_std = -v[1];  // Y
+    double y_std = -v[2];  // Z
+    double z_std =  v[0];  // X
 
     // Convert to image coordinates using pinhole model
-    double x = fx * (x_std / z_std) + cx;
-    double y = fy * (y_std / z_std) + cy;
+    double x = phCam.fx * (x_std / z_std) + phCam.cx;
+    double y = phCam.fy * (y_std / z_std) + phCam.cy;
 
     imgPoints.push_back({ static_cast<int>(std::lround(x)), static_cast<int>(std::lround(y)) });
   }
@@ -271,10 +268,10 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene, co
   return std::vector<int> {minX, minY, maxX, maxY};
 }
 
-std::vector<double> ImageTracker::getCameraParameters() const
+PinholeCamera ImageTracker::getCameraModel() const
 {
   std::lock_guard<std::mutex> lock(imgMtx);
-  return std::vector<double> {fx, fy, cx, cy};
+  return this->pinhole;
 }
 
 std::vector<int> ImageTracker::getGazeObjectBoundingBox() const
@@ -295,14 +292,19 @@ std::vector<int> ImageTracker::getGazeObjectBoundingBox() const
 /*******************************************************************************
  *
  ******************************************************************************/
-VirtualImageTracker::VirtualImageTracker(EntityBase* parent, const std::string& cameraName) :
-  ImageTracker(parent, cameraName), capture_count(0), vCamPtr(nullptr)
+VirtualImageTracker::VirtualImageTracker(EntityBase* parent,
+                                         const std::string& cameraName,
+                                         const std::string& cameraType_,
+                                         int width,
+                                         int height) :
+  ImageTracker(parent, cameraName), cameraType(cameraType_), capture_count(0), vCamPtr(nullptr)
 {
+  this->pinhole.width = width;
+  this->pinhole.height = height;
 }
 
 void VirtualImageTracker::parse(const nlohmann::json& header, const nlohmann::json& data, double time)
 {
-
 }
 
 std::string VirtualImageTracker::getRequestKeyword() const
@@ -319,45 +321,42 @@ void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
     return;
   }
 
+  // After this, we have a valid capture camera and pinhole camera model
   if (!vCamPtr)
   {
-    vCamPtr = std::make_unique<VirtualCamera>(new Rcs::GraphNode(graph), 640, 480);
+    vCamPtr = std::make_unique<VirtualCamera>(cameraType, new Rcs::GraphNode(graph), pinhole.width, pinhole.height);
+    vCamPtr->getRenderer()->getFocalParams(pinhole.fx, pinhole.fy, pinhole.cx, pinhole.cy);
+    RLOG_CPP(0, "Pinhole model: " << pinhole.toJson().dump(2));
   }
 
   HTr A_camI = getCameraTransform(graph);
   vCamPtr->capture(&A_camI);
   capture_count++;
 
-  int width = (int)vCamPtr->getWidth();
-  int height = (int)vCamPtr->getHeight();
-  std::vector<uint8_t> colorImageUint8(height * width * 3);
-
+  std::vector<uint8_t> colorImageUint8(pinhole.height*pinhole.width*3);
   vCamPtr->getColorImage(colorImageUint8.data(), colorImageUint8.size());
 
   int quality = 90;
-  std::string image_str = rgbToJpegBase64(colorImageUint8.data(), width, height, 90);
+  std::string image_str = rgbToJpegBase64(colorImageUint8.data(), pinhole.width, pinhole.height, quality);
+
+  // RLOG_CPP(0, "width: " << pinhole.width << " height: " << pinhole.height);
+  // RLOG_CPP(0, "image_str is of size " << image_str.size() << " image size: " << colorImageUint8.size());
 
   // Project to pixel coordinates
-  double fx_, fy_, cx_, cy_;
-  vCamPtr->getRenderer()->getFocalParams(fx_, fy_, cx_, cy_);
-  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), fx_, fy_, cx_, cy_);
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), pinhole);
 
   {
     std::lock_guard<std::mutex> lock(imgMtx);
     this->stamped_image = std::make_pair(capture_count, image_str);
-    this->fx = fx_;
-    this->fy = fy_;
-    this->cx = cx_;
-    this->cy = cy_;
     this->gaze_bb = bb;
   }
 
   if (this->showDebugWindow)
   {
-    // Get image directly from capture
-    // const int bytesPerLine = width * 3;
-    // QImage img(colorImageUint8.data(), width, height, bytesPerLine, QImage::Format_RGB888);
-    // VideoViewer::showFrame(img.copy());
+    // // Get image directly from capture
+    // const int bytesPerLine = pinhole.width * 3;
+    // QImage img(colorImageUint8.data(), pinhole.width, pinhole.height, bytesPerLine, QImage::Format_RGB888);
+    // showFrame(img.copy());
 
     // Get image the long way through decoding etc.
     QString b64_qt = QString::fromStdString(image_str);
