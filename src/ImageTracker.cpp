@@ -326,7 +326,6 @@ void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
   {
     vCamPtr = std::make_unique<VirtualCamera>(cameraType, new Rcs::GraphNode(graph), pinhole.width, pinhole.height);
     vCamPtr->getRenderer()->getFocalParams(pinhole.fx, pinhole.fy, pinhole.cx, pinhole.cy);
-    RLOG_CPP(0, "Pinhole model: " << pinhole.toJson().dump(2));
   }
 
   HTr A_camI = getCameraTransform(graph);

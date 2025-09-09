@@ -50,7 +50,6 @@ IKComponent::IKComponent(EntityBase* parent, Rcs::ControllerBase* controller_,
   qFilt(0.0), renderSolid(false), speedLimitCheck(true), jointLimitCheck(true),
   collisionCheck(true), applySpeedAndAccLimits(true)
 {
-  RcsCollisionModel_fprint(stderr, collisionAvoidanceModel);
   this->draggerTorque = MatNd_create(1, controller->getGraph()->dof);   // largest possible alloc
   switch (ik)
   {

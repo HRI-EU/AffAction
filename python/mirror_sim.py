@@ -181,6 +181,42 @@ def convert_base64_image(b64_str) -> np.ndarray:
 
 
 def main():
+    help_text = """
+    ==================================================
+    Simulation Control Help
+    ==================================================
+    This script starts a simulator with a virtual camera,
+    processes images, and lets the robot gaze at objects.
+    You can interact with the simulation through the
+    following keyboard controls, pressed over the OpenCV window:
+
+      General:
+        q or ESC  - Quit the simulation
+        Arrow keys - Report pressed arrow key (LEFT, UP, RIGHT, DOWN)
+
+      Head gestures:
+        a - Perform a "yes" gesture (nodding)
+        b - Perform a "no" gesture (shaking head)
+
+      Camera and gaze:
+        c - Print current mirror eyes data
+        g - Print the current camera model
+
+      Pupil control:
+        d - Set pupil speed weight to 0.0
+        e - Set pupil speed weight to 1.0
+        f - Set pupil speed weight to 0.9
+
+    Notes:
+    - The simulator shows an RGB window of the virtual camera.
+    - Press 'l' in the simulator window to make the robot gaze
+      at the object under the mouse pointer.
+    - The ROI (Region of Interest) window shows the cropped
+      bounding box of the currently gazed object.
+    ==================================================
+    """
+    print(help_text)
+
     loop_count = 0
     count = -1
     sim_manager = SimulatorManager(scene="g_attentive_support.xml")
@@ -249,8 +285,6 @@ def main():
                         sim.setHeadGesture("no", 3.14*5.0/180.0, 3)   
                     elif k == ord('c'):
                         logger.info(f"{sim.getMirrorEyesData()}")
-                    elif k == ord('w'):
-                        logger.info(f"{sim.getCameraModel()}")
                     elif k == ord('d'):
                         logger.info("Setting pupil speed weight to 0.0")
                         sim.setPupilSpeedWeight(0.0)
@@ -260,6 +294,8 @@ def main():
                     elif k == ord('f'):
                         logger.info("Setting pupil speed weight to 0.1")
                         sim.setPupilSpeedWeight(0.9)
+                    elif k == ord('g'):
+                        logger.info(f"{sim.getCameraModel()}")
                     
                 else:
                     logger.info(f"Pressed key code {k}")
