@@ -30,6 +30,85 @@
 <!--
 chosen_recipes=['Martini', 'Pina_Colada', 'Purple_Rain', 'Screwdriver', 'Sex_on_the_Beach', 'White_Russian']
 ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 'rum', 'sliced_orange', 'soda_water', 'vermouth', 'vodka']
+
+Run 1
+ice_cubes: table_grid_0_7
+sliced_orange: table_grid_0_1
+bottle_of_cranberry_juice: table_grid_2_3 
+bottle_of_gin: table_grid_1_0 
+bottle_of_milk: tray_pos1 
+bottle_of_pineapple_juice: table_grid_2_8 
+bottle_of_rum: table_grid_2_2 
+bottle_of_soda_water: table_grid_2_5 
+bottle_of_vermouth: table_grid_2_6 
+bottle_of_vodka:tray_pos4 
+
+
+Run 2
+bottle_of_cranberry_juice -> table_grid_2_5
+bottle_of_gin -> tray_pos1
+bottle_of_milk -> table_grid_2_2
+bottle_of_pineapple_juice -> tray_pos4
+bottle_of_rum -> table_grid_2_3
+bottle_of_soda_water -> table_grid_2_8
+bottle_of_vermouth -> table_grid_1_0
+bottle_of_vodka -> table_grid_2_6
+ice_cubes -> table_grid_0_1
+sliced_orange -> table_grid_0_7
+
+
+Run 3
+bottle_of_cranberry_juice -> table_grid_2_2
+bottle_of_gin -> tray_pos4
+bottle_of_milk -> tray_pos1
+bottle_of_pineapple_juice -> table_grid_1_0
+bottle_of_rum -> table_grid_2_6
+bottle_of_soda_water -> table_grid_2_5
+bottle_of_vermouth -> table_grid_2_8
+bottle_of_vodka -> table_grid_2_3
+ice_cubes -> table_grid_0_7
+sliced_orange -> table_grid_0_1
+
+
+Run 4
+bottle_of_cranberry_juice -> table_grid_2_2
+bottle_of_gin -> table_grid_2_5
+bottle_of_milk -> table_grid_1_0
+bottle_of_pineapple_juice -> tray_pos4
+bottle_of_rum -> table_grid_2_8
+bottle_of_soda_water -> table_grid_2_3
+bottle_of_vermouth -> table_grid_2_6
+bottle_of_vodka -> tray_pos1
+ice_cubes -> table_grid_0_1
+sliced_orange -> table_grid_0_7
+
+
+Run 5
+bottle_of_cranberry_juice -> table_grid_1_0
+bottle_of_gin -> table_grid_2_6
+bottle_of_milk -> table_grid_2_5
+bottle_of_pineapple_juice -> table_grid_2_3
+bottle_of_rum -> tray_pos1
+bottle_of_soda_water -> table_grid_2_2
+bottle_of_vermouth -> tray_pos4
+bottle_of_vodka -> table_grid_2_8
+ice_cubes -> table_grid_0_7
+sliced_orange -> table_grid_0_1
+
+
+Run 6
+bottle_of_cranberry_juice -> tray_pos4
+bottle_of_gin -> table_grid_1_0
+bottle_of_milk -> table_grid_2_5
+bottle_of_pineapple_juice -> table_grid_2_8
+bottle_of_rum -> table_grid_2_2
+bottle_of_soda_water -> table_grid_2_3
+bottle_of_vermouth -> tray_pos1
+bottle_of_vodka -> table_grid_2_6
+ice_cubes -> table_grid_0_1
+sliced_orange -> table_grid_0_7
+
+
 -->
 
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">

@@ -146,7 +146,12 @@
 
   <!--  Scene -->
   <Group prev="aruco_base" >
-    <xi:include href="g_cocktails_icra_recipes_1.xml"/>
+    <!-- <xi:include href="g_cocktails_icra_recipes_1.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_2.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_3.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_4.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_5.xml"/> -->
+    <xi:include href="g_cocktails_icra_recipes_6.xml"/>
   </Group>
 
   <model_state model="default" time_stamp="0">
