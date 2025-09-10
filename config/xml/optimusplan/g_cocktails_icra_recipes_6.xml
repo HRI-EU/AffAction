@@ -48,7 +48,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
 
 
   
-  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15160882729210037 -0.432282487866778 0 0 0 0" was_transform="-0.15 -0.45 0 0 0 0" >
+  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15160882729210037 -0.432282487866778 0 0 0 0" >
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15698204504483118 0.4580808012717337 0 0 0 0">
@@ -129,7 +129,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <xi:include href="g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group name="_milk" prev="table_grid_2_5" color="PUREWHITE" rigid_body_joints="true" >
+  <Group name="_milk" prev="table_grid_2_2" color="PUREWHITE" rigid_body_joints="true" >
     <xi:include href="g_bottle_cocktail.xml"/>
   </Group>
 
@@ -137,7 +137,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <xi:include href="g_bottle_cocktail.xml"/>
   </Group>
 
-  <Group name="_rum" prev="table_grid_2_2" color="BLACK_RUBBER" rigid_body_joints="true" >
+  <Group name="_rum" prev="table_grid_2_5" color="BLACK_RUBBER" rigid_body_joints="true" >
     <xi:include href="g_bottle_cocktail.xml"/>
   </Group>
 

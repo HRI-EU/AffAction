@@ -38,115 +38,46 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
   <Body name="table" prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" physics="kinematic" mass="10" >
     <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
 	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.png"/>
+    <Shape type="BOX" extents="0.4 0.3 0.02" graphics="true" distance="false"
+           transform="-0.15 0.9 0.05 0 0 0" textureFile="textures/table.png" />
     <Shape scale="0.2" type="FRAME"/>
   </Body>
   <Body name="table_grid" prev="table" transform="-0.15 0 0.001 0 0 0" />
-  <Body color="LIGHTGRAY" name="table_grid_0_0" prev="table_grid" transform="-0.15 -0.6 0 0 0 0">
+  
+  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15590575192063763 -0.4658024078141058 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.15 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_2" prev="table_grid" transform="-0.15 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_3" prev="table_grid" transform="-0.15 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_4" prev="table_grid" transform="-0.15 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_5" prev="table_grid" transform="-0.15 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_6" prev="table_grid" transform="-0.15 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_8" prev="table_grid" transform="-0.15 0.6 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15850609015713402 0.466922538638415 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-  <Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0 -0.6 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="-0.0169256493808536 -0.5972273697741913 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.0 -0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_2" prev="table_grid" transform="0.0 -0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_3" prev="table_grid" transform="0.0 -0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.0 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_5" prev="table_grid" transform="0.0 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_6" prev="table_grid" transform="0.0 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_7" prev="table_grid" transform="0.0 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_1_8" prev="table_grid" transform="0.0 0.6 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="0.019350581106463507 0.01591731116456432 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-  <Body color="LIGHTGRAY" name="table_grid_2_0" prev="table_grid" transform="0.15 -0.6 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.14676908364490435 -0.2822986803120319 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_1" prev="table_grid" transform="0.15 -0.45 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15436568250045474 -0.14411654418483727 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.15 -0.3 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.13915113935199538 0.16421324479888572 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15 -0.15 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15024863891291007 0.29005952503947957 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_4" prev="table_grid" transform="0.15 0.0 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.15 0.15 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.15 0.3 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_7" prev="table_grid" transform="0.15 0.45 0 0 0 0">
-    <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
-  </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.15 0.6 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_8" prev="table_grid" transform="0.14859600029284892 0.5886844252631057 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-
-
-  <!-- tray -->
-  <Body name="tray" prev="table" rigid_body_joints="-0.15 0.9 0.04 0 0 0" color="LIGHTBLUE" physics="dynamic" mass="0.5" >
-    <Shape type="BOX" extents="0.4 0.3 0.02" graphics="true" distance="false"
-           transform="0 0 0.01 0 0 0" textureFile="textures/table.png" />
-    <Shape type="FRAME" scale="0.1" graphics="true"/>
-  </Body>
-
-  <Body name="tray_pos1" prev="table" transform="-0.3 0.9 0.06 0 0 0" >
+  <Body name="tray_pos1" prev="table" transform="-0.2928899508327704 0.9061134134589727 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
-  
-  <Body name="tray_pos2" prev="table" transform="-0.15 0.9 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos3" prev="table" transform="-0.3 0.8 0.06 0 0 0" >
-    <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
-  </Body>
-  
-  <Body name="tray_pos4" prev="table" transform="-0.15 0.8 0.06 0 0 0" >
+  <Body name="tray_pos4" prev="table" transform="-0.1694016358807682 0.7847647592931922 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
 
