@@ -222,7 +222,7 @@ def main():
     sim_manager = SimulatorManager(scene="g_attentive_support.xml")
     sim_manager.setup("build")
     sim = sim_manager.sim
-    sim.addComponentArgument("-virtual_image_tracking -virtual_image_tracking.width 640 -virtual_image_tracking.height 480 -virtual_image_tracking.camera_type AzureKinect WFOV")
+    sim.addComponentArgument("-virtual_image_tracking -virtual_image_tracking.width 640 -virtual_image_tracking.height 480 -virtual_image_tracking.camera_type AzureKinect_WFOV")
     sim.addLandmarkRouter(camera_name="camera_0")
     sim.init(True)
     sim.callEvent("Start")

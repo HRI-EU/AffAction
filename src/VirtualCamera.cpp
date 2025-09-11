@@ -133,7 +133,7 @@ bool VirtualCamera::initCamera(const std::string& cameraName, int width, int hei
     cx = 0.5*width - 0.5;
     cy = 0.5*height - 0.5;
   }
-  else if (cameraName=="AzureKinect WFOV")
+  else if (cameraName=="AzureKinect_WFOV")
   {
     fx = 0.8201975534 * height;
     fy = fx;

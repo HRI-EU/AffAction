@@ -98,7 +98,7 @@ public:
 
   VirtualImageTracker(EntityBase* parent,
                       const std::string& cameraName,
-                      const std::string& cameraType="AzureKinect WFOV",
+                      const std::string& cameraType="AzureKinect_WFOV",
                       int width=640,
                       int height=480);
   virtual ~VirtualImageTracker() = default;

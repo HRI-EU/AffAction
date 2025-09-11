@@ -193,7 +193,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-virtual_image_tracking" + suffix))
     {
-      std::string virtual_camera_type = "AzureKinect WFOV";
+      std::string virtual_camera_type = "AzureKinect_WFOV";
       int virtual_camera_width = 640;
       int virtual_camera_height = 480;
 
@@ -528,7 +528,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-virtual_image_tracking", "For '-landmarks_router': Start with virtual image tracking");
     argP.addDescription("-virtual_image_tracking.width", "For '-landmarks_router' and '-virtual_image_tracking': Width of captured image in pixels (Default: 640)");
     argP.addDescription("-virtual_image_tracking.height", "For '-landmarks_router' and '-virtual_image_tracking': Heigth of captured image in pixels (Default: 480)");
-    argP.addDescription("-virtual_image_tracking.camera_type", "For '-landmarks_router' and '-virtual_image_tracking': Type of camera (Default: AzureKinect WFOV. Choices: Kinect_v2, Logitech_C910, AzureKinect. See VirtualCamera.cpp)");
+    argP.addDescription("-virtual_image_tracking.camera_type", "For '-landmarks_router' and '-virtual_image_tracking': Type of camera (Default: AzureKinect_WFOV. Choices: Kinect_v2, Logitech_C910, AzureKinect. See VirtualCamera.cpp)");
   }
   else if (getKey(argvStrVec, "-landmarks_zmq"))
   {
