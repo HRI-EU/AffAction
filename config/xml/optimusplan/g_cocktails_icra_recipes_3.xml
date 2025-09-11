@@ -51,7 +51,7 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-  <Body color="LIGHTGRAY" name="table_grid_1_1" prev="table_grid" transform="0.01759919545704947 -0.4696245218158319 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_1_0" prev="table_grid" transform="0.0019479509090586516 -0.6050052852033777 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_1_4" prev="table_grid" transform="4.7063249656340705e-05 -0.012514977216789198 0 0 0 0">

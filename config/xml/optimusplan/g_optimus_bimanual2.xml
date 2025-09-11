@@ -1,0 +1,288 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+
+  <ActionSequence name="v1" text="get glass_red; get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table; put glass_red table" />
+  <ActionSequence name="v2" text="get glass_red + get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table + put glass_red table" />
+  <ActionSequence name="v3" text="get glass_red + get bottle_of_tequila; get bottle_of_salt + pour_put bottle_of_tequila glass_red; pour bottle_of_salt glass_red; put glass_red table + put bottle_of_salt table" />
+  <ActionSequence name="v4" text="get glass_red + get bottle_of_tequila; get bottle_of_salt + pour_put bottle_of_tequila glass_red; pour_put bottle_of_salt glass_red; put glass_red table" />
+
+  <ActionSequence name="a" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green" />
+  <ActionSequence name="b" text="get glass_green liftHeight 0.3 + get bottle_of_tonic_water liftHeight 0.3 + get bottle_of_coca_cola liftHeight 0.3; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water + put glass_green" />
+  <ActionSequence name="c" text="get bottle_of_tequila; pour_put bottle_of_tequila glass table" />
+  <ActionSequence name="d" text="get bottle_of_tequila + get bottle_of_salt; pour bottle_of_tequila glass; pour bottle_of_salt glass_green" />
+  
+
+
+
+  
+  <ActionSequence name="0b" text="get glass_green + get bottle_of_gin; put glass_green table; pour bottle_of_gin glass_green; put bottle_of_gin table; pose default" />
+  <ActionSequence name="0c" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table + put glass_green table" />
+  <ActionSequence name="0d" text="get glass_green;get bottle_of_gin; get bottle_of_tonic_water; pour bottle_of_gin glass_green ; put glass_green table; put bottle_of_tonic_water table; put bottle_of_gin table ; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="1" text="get glass_green + get bottle_of_gin + get bottle_of_tonic_water; put glass_green table; pour bottle_of_gin glass_green + put bottle_of_tonic_water table; put bottle_of_gin table + get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="2" text="get glass_green; put glass_green table; get bottle_of_gin + get bottle_of_tonic_water; pour bottle_of_gin glass_green; put bottle_of_gin table; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+  <ActionSequence name="3" text="get glass_green; put glass_green table; get bottle_of_gin; pour bottle_of_gin glass_green; put bottle_of_gin table; get bottle_of_tonic_water; pour bottle_of_tonic_water glass_green; put bottle_of_tonic_water table; pose_default;" />
+
+  
+  <Body name="default_camera_view" transform="2.889515 2.524415 2.047909 5.740 -11.548 -144.248" />
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
+           graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+
+
+  <!-- The model for a simple camera. -->
+  <Body color="LIGHTGRAY" name="camera_0" prev="aruco_base" rigid_body_joints="-0.8 0 1.7 0 40 0" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+  <Body color="LIGHTGRAY" name="camera_1" prev="aruco_base" rigid_body_joints="0 1 1.7 40 0 -90" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+  <Body color="LIGHTGRAY" name="camera_2" prev="aruco_base" rigid_body_joints="0 -1 1.7 -40 0 90" >
+    <Shape graphics="true" scale="0.2" type="FRAME"/>
+  </Body>
+
+
+  
+  <Body name="Stand" prev="aruco_base" transform="-0.97 0 0 0 0 0" >
+    <xxShape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 0 0 0 -90" scale="0.001" />
+    <Shape type="BOX" extents="1 0.8 0.28" graphics="true" distance="true" transform="0 0 0.26 0 0 0" color="DARKGRAY" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="0.4 0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="-0.4 0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="0.4 -0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+    <Shape type="CYLINDER" radius="0.05" length="0.12" graphics="true" distance="true" transform="-0.4 -0.3 0.06 0 0 0" color="BLACK_RUBBER" />
+  </Body>
+
+  <!-- Aluminum structure including PTU. -->
+  <Group prev="Stand" >
+    <xi:include href="../JacoGen3/g_item_base_gen3.xml"/>
+  </Group>
+
+  
+
+  <!-- Jaco Gen2 arms -->
+  <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="-0.04 0 0.571 0 0 0" was_transform="1.6 0 0.5 0 0 180" >
+    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+  </Body>
+
+  <Group name="_right" prev="adapter_shoulder_gen2" transform="-0.048206 -0.043874 0.028528 70 0 90" >
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <Group prev="hand_base" >
+      <xi:include href="g_hand_right.xml"/>
+    </Group>
+  </Group>
+
+  <Group name="_left" prev="adapter_shoulder_gen2" transform="-0.048206 0.043874 0.028528 -70 0 90">
+    <Body name="adapter2_shoulder" />
+    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
+      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
+    </Body>
+    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
+      <xi:include href="../TwoArmJaco7/g_kinova_ulw2_sph_7dof.xml"/>
+    </Group>
+    <Group prev="hand_base" >
+      <xi:include href="g_hand_left.xml"/>
+    </Group>
+  </Group>
+
+
+
+  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+    <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
+  </Group>
+
+  <Manipulator body="head_kinect_link" types="head">
+    <GazeCapability frame="head_kinect_lens" />
+  </Manipulator>
+
+  <Agent body="Johnnie" types="robot" name="Johnnie" >
+    <!-- <Component manipulator="hand_robot_left3" /> -->
+    <!-- <Component manipulator="hand_robot_right3" /> -->
+    <Component manipulator="hand_robot_left" />
+    <Component manipulator="hand_robot_right" />
+    <xComponent manipulator="head_kinect_link" />
+  </Agent>
+
+  <!--  Scene -->
+  <Group prev="aruco_base" >
+    <!-- <xi:include href="g_cocktails_icra_recipes_1.xml"/> -->
+    <xi:include href="g_cocktails_icra_recipes_2.xml"/>
+    <!-- <xi:include href="g_cocktails_icra_recipes_3.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_4.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_5.xml"/> -->
+    <!-- <xi:include href="g_cocktails_icra_recipes_6.xml"/> -->
+  </Group>
+
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="DofPoleZ" position="-0.34"/>
+    
+    <joint_state joint="joint_1_right3" position="210"/>
+    <joint_state joint="joint_2_right3" position="60"/>
+    <joint_state joint="joint_3_right3" position="80"/>
+    <joint_state joint="joint_4_right3" position="-90"/>
+    <joint_state joint="joint_5_right3" position="0"/>
+    <joint_state joint="joint_6_right3" position="-30"/>
+    <joint_state joint="joint_7_right3" position="-120"/>
+    <joint_state joint="finger_joint_right3" position="0"/>
+
+    <joint_state joint="joint_1_left3" position="-40"/>
+    <joint_state joint="joint_2_left3" position="-60"/>
+    <joint_state joint="joint_3_left3" position="-80"/>
+    <joint_state joint="joint_4_left3" position="90"/>
+    <joint_state joint="joint_5_left3" position="0"/>
+    <joint_state joint="joint_6_left3" position="30"/>
+    <joint_state joint="joint_7_left3" position="120"/>
+    <joint_state joint="finger_joint_left3" position="0"/>
+
+
+    <joint_state joint="j2s7s300_joint_1_right" position="20"/>
+    <joint_state joint="j2s7s300_joint_2_right" position="280"/>
+    <joint_state joint="j2s7s300_joint_3_right" position="-90"/>
+    <joint_state joint="j2s7s300_joint_4_right" position="70"/>
+    <joint_state joint="j2s7s300_joint_5_right" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_right" position="200"/>
+    <joint_state joint="j2s7s300_joint_7_right" position="0"/>
+
+    <joint_state joint="j2s7s300_joint_1_left" position="-20"/>
+    <joint_state joint="j2s7s300_joint_2_left" position="80"/>
+    <joint_state joint="j2s7s300_joint_3_left" position="90"/>
+    <joint_state joint="j2s7s300_joint_4_left" position="290"/>
+    <joint_state joint="j2s7s300_joint_5_left" position="0"/>
+    <joint_state joint="j2s7s300_joint_6_left" position="160"/>
+    <joint_state joint="j2s7s300_joint_7_left" position="0"/>
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="10" />
+    <joint_state joint="j2s7s300_joint_finger_1_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_2_left"  position="10" />
+    <joint_state joint="j2s7s300_joint_finger_3_left"  position="10" />
+    <joint_state joint="finger_joint_left3" position="0"/>
+    <joint_state joint="finger_joint_right3" position="0"/>
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="0">
+    <joint_state joint="j2s7s300_joint_finger_1_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_right" position="50" />
+    <joint_state joint="j2s7s300_joint_finger_1_left"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_2_left"  position="50" />
+    <joint_state joint="j2s7s300_joint_finger_3_left"  position="50" />
+    <joint_state joint="finger_joint_left3"  position="40"/>
+    <joint_state joint="finger_joint_right3" position="40"/>
+  </model_state>
+
+  <!-- For collision checking -->
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="upperarm_left"/>
+    <Tree root="upperarm_right"/>
+    <!-- <Tree root="upperarm_left3"/> -->
+    <!-- <Tree root="upperarm_right3"/> -->
+    <Body name="center_post_link_1"/>
+    <Body name="adapter3_shoulder_left"/>
+    <Body name="adapter3_shoulder_right"/>
+    <Body name="head_kinect_link"/>
+    <!-- <Body name="shelf_bottom"/> -->
+    <!-- <Body name="shelf_bottom"/> -->
+  </BroadPhase>
+
+  <!-- Self-collision model
+  <CollisionModel  DistanceThreshold="0.05" >
+
+    <CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="elbow_left"  DistanceThreshold="0.25" />
+    <CollisionPair body1="center_post_link" body2="elbow_right"  DistanceThreshold="0.25" />
+
+    <CollisionPair body1="hand_robot_left" body2="hand_robot_right" />
+    <CollisionPair body1="hand_robot_left3" body2="hand_robot_right3" />
+
+    <CollisionPair body1="hand_robot_left" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_left3" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_right" body2="table" DistanceThreshold="0.02" />
+    <CollisionPair body1="hand_robot_righ3" body2="table" DistanceThreshold="0.02" />
+    
+    <CollisionPair body1="hand_robot_left" body2="hand_robot_left3" />
+    <CollisionPair body1="hand_robot_left" body2="forearm_left3" />
+    <CollisionPair body1="hand_robot_left" body2="elbow_left3" />
+    <CollisionPair body1="hand_robot_left" body2="upperarm_left3" />
+
+    <CollisionPair body1="forearm_left" body2="hand_robot_left3" />
+    <CollisionPair body1="forearm_left" body2="forearm_left3" />
+    <CollisionPair body1="forearm_left" body2="elbow_left3" />
+    <CollisionPair body1="forearm_left" body2="upperarm_left3" />
+
+    <CollisionPair body1="upperarm_left" body2="hand_robot_left3" />
+    <CollisionPair body1="upperarm_left" body2="forearm_left3" />
+    <CollisionPair body1="upperarm_left" body2="elbow_left3" />
+    <CollisionPair body1="upperarm_left" body2="upperarm_left3" />
+
+    <CollisionPair body1="hand_robot_right" body2="hand_robot_right3" />
+    <CollisionPair body1="hand_robot_right" body2="forearm_right3" />
+    <CollisionPair body1="hand_robot_right" body2="elbow_right3" />
+    <CollisionPair body1="hand_robot_right" body2="upperarm_right3" />
+
+    <CollisionPair body1="forearm_right" body2="hand_robot_right3" />
+    <CollisionPair body1="forearm_right" body2="forearm_right3" />
+    <CollisionPair body1="forearm_right" body2="elbow_right3" />
+    <CollisionPair body1="forearm_right" body2="upperarm_right3" />
+
+    <CollisionPair body1="upperarm_right" body2="hand_robot_right3" />
+    <CollisionPair body1="upperarm_right" body2="forearm_right3" />
+    <CollisionPair body1="upperarm_right" body2="elbow_right3" />
+    <CollisionPair body1="upperarm_right" body2="upperarm_right3" />
+
+    <CollisionPair body1="center_post_link" body2="upperarm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="upperarm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="forearm_right"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="forearm_left"  DistanceThreshold="0.15" />
+    <CollisionPair body1="center_post_link" body2="hand_robot_right"  DistanceThreshold="0.2" />
+    <CollisionPair body1="center_post_link" body2="hand_robot_left"  DistanceThreshold="0.2" />
+
+  </CollisionModel> -->
+
+
+</Graph>

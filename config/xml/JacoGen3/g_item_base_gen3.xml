@@ -51,7 +51,7 @@
     <Shape type="FRAME" scale="0.2" transform="-0.05 0 1.3 0 40 0" />
   </Body>
 
-  <Group prev="center_post_link" transform="-0.05 0 1.3 0 40 0" >
+  <Group prev="center_post_link" transform="-0.05 0 1.3 0 40 6" >
     <xi:include href="../scene/g_azure_kinect.xml"/>
   </Group>
 
