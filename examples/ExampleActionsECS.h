@@ -104,7 +104,7 @@ public:
   const VirtualCamera* getVirtualCamera(int idx=-1) const;
   VirtualCamera* getVirtualCamera(int idx=-1);
   std::vector<std::pair<std::string,VirtualCamera*>> getVirtualCameras();
-  bool addVirtualCamera(std::string camera_name, int width, int height);
+  bool addVirtualCamera(std::string camera_name, std::string camera_type, int width, int height);
   void addComponentArgument(const std::string& arg);
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;

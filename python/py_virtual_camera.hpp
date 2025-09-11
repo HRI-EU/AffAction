@@ -31,6 +31,9 @@
 
 *******************************************************************************/
 
+#include <GraphNode.h>
+
+
 void bind_virtual_camera(py::class_<aff::ExampleActionsECS>& cls)
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -88,6 +91,58 @@ depth_normalized = cv2.normalize(depth_np, None, 0, 255, cv2.NORM_MINMAX)
 depth_display = depth_normalized.astype(np.uint8)
 cv2.imwrite("depth_image.jpg", depth_display)
 )pbdoc")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Adds a text label to an object
+  //////////////////////////////////////////////////////////////////////////////
+  .def("addTextLabelToBody", [](aff::ExampleActionsECS& ex, std::string cameraName, std::string bodyName, std::string text) -> bool
+  {
+    auto virtualCameras = ex.getVirtualCameras();
+    if (virtualCameras.empty())
+    {
+      RLOG_CPP(1, "No virtual cameras found - returning empty array");
+      return false;
+    }
+
+    bool success = true;
+    int num_calls = 0;
+
+    for (size_t i=0; i<virtualCameras.size(); ++i)
+      {
+        if (cameraName != virtualCameras[i].first)
+        {
+          continue;
+        }
+
+        aff::VirtualCamera* vcam = virtualCameras[i].second;
+
+        if (!vcam)
+        {
+          RLOG_CPP(1, "Found NULL virtual camera on index " << i << " - skipping");
+          continue;
+        }
+
+        osg::Group* root = dynamic_cast<osg::Group*>(vcam->getRenderer()->getSceneData());
+
+
+        auto gnVec = Rcs::findChildrenOfType<Rcs::GraphNode>(root);
+
+        for (const auto& gn : gnVec)
+        {
+          success = gn->addTextLabel(bodyName, text) && success;
+          num_calls++;
+        }
+
+      }
+
+    if (num_calls==0)
+    {
+      RLOG_CPP(1, "No text labes could be assigned");
+      success = false;
+    }
+
+    return success;
+  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
@@ -160,8 +215,8 @@ cv2.imwrite("color_image.jpg", color_bgr)
   //
   //////////////////////////////////////////////////////////////////////////////
   .def("addVirtualCamera",
-       py::overload_cast<std::string, int, int>(&aff::ExampleActionsECS::addVirtualCamera),
-       py::arg("camera_name"), py::arg("width"), py::arg("height"))
+       py::overload_cast<std::string, std::string, int, int>(&aff::ExampleActionsECS::addVirtualCamera),
+       py::arg("camera_name"), py::arg("camera_type"), py::arg("width"), py::arg("height"))
 
 
     ;

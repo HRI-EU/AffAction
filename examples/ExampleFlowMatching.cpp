@@ -492,7 +492,7 @@ bool ExampleFlowMatching::initGraphics()
   pn->getPhysicsGraphNode()->displayCollisionModel(true);   // shows the goal in wireframe
 
   // Add camera and renderer
-  virtualCamera = std::make_unique<VirtualCamera>("AzureKinect WFOV", new Rcs::GraphNode(graphC->getGraph()));
+  virtualCamera = std::make_unique<VirtualCamera>("AzureKinect_WFOV", new Rcs::GraphNode(graphC->getGraph()));
   vcamC = std::make_unique<SampleRecorder>(&entity, virtualCamera.get());
   vcamC->setCameraTransform(q_cam[0], q_cam[1], q_cam[2], q_cam[3], q_cam[4], q_cam[5]);
 

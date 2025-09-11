@@ -652,7 +652,7 @@ bool ExampleActionsECS::initAlgo()
 
   if (virtualCameraEnabled)
   {
-    addVirtualCamera(virtualCameraBodyName, virtualCameraWidth, virtualCameraHeight);
+    addVirtualCamera(virtualCameraBodyName, "AzureKinect_WFOV", virtualCameraWidth, virtualCameraHeight);
   }
 
   // Add the SceneTransformationDataRecorder
@@ -718,23 +718,30 @@ bool ExampleActionsECS::initGraphics()
     return false;
   }
 
-  if (virtualCameraWindowEnabled && virtualCameras.size()==1)
+  if (virtualCameraWindowEnabled)
   {
-    double trf6[6] = {-1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258};
-    HTr A_CI;
-    HTr_from6DVector(&A_CI, trf6);
-
-    if (!virtualCameraBodyName.empty())
+    if (virtualCameras.size()==1)
     {
-      const RcsBody* camBdy = RcsGraph_getBodyByName(getCurrentGraph(), virtualCameraBodyName.c_str());
-      RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
-      HTr_copy(&A_CI, &camBdy->A_BI);
-    }
+      double trf6[6] = {-1.836150, -2.665913, 2.790988, -0.537332, 0.374638, 1.143258};
+      HTr A_CI;
+      HTr_from6DVector(&A_CI, trf6);
 
-    VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCameras[0].second.get(), true, false, &A_CI);
-    vcam->setBlockingMainThread(this->blockingMainThread);
-    vcam->setEnabled(true);
-    addComponent(vcam);
+      if (!virtualCameraBodyName.empty())
+      {
+        const RcsBody* camBdy = RcsGraph_getBodyByName(getCurrentGraph(), virtualCameraBodyName.c_str());
+        RCHECK_MSG(camBdy, "Unknown body for camera: %s", virtualCameraBodyName.c_str());
+        HTr_copy(&A_CI, &camBdy->A_BI);
+      }
+
+      VirtualCameraWindow* vcam = new VirtualCameraWindow(&entity, virtualCameras[0].second.get(), true, false, &A_CI);
+      vcam->setBlockingMainThread(this->blockingMainThread);
+      vcam->setEnabled(true);
+      addComponent(vcam);
+    }
+    else
+    {
+      RLOG_CPP(0, "Wrong number of virtual cameras: " << virtualCameras.size() << " - should be 1");
+    }
   }
 
   // Optional graphics window. We don't use a static instance since this will
@@ -1222,7 +1229,6 @@ bool ExampleActionsECS::initGraphics()
     getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
     entity.process();
   }
-
 
   return true;
 }
@@ -2027,7 +2033,7 @@ std::vector<std::pair<std::string,VirtualCamera*>> ExampleActionsECS::getVirtual
   return cams;
 }
 
-bool ExampleActionsECS::addVirtualCamera(std::string camera_name, int width, int height)
+bool ExampleActionsECS::addVirtualCamera(std::string camera_name, std::string camera_type, int width, int height)
 {
   if (!RcsGraph_getBodyByName(getGraph(), camera_name.c_str()))
   {
@@ -2035,7 +2041,7 @@ bool ExampleActionsECS::addVirtualCamera(std::string camera_name, int width, int
     return false;
   }
 
-  VirtualCamera* camera = new VirtualCamera("AzureKinect WFOV", new Rcs::GraphNode(getGraph()), width, height);
+  VirtualCamera* camera = new VirtualCamera(camera_type, new Rcs::GraphNode(getGraph()), width, height);
   virtualCameras.push_back(std::make_pair(camera_name, std::unique_ptr<VirtualCamera>(camera)));
 
   return true;
@@ -2502,7 +2508,7 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "RenderFromSiluation");
+RCS_REGISTER_EXAMPLE(ExampleVirtualRendering, "Actions", "RenderFromSimulation");
 
 
 /*******************************************************************************
