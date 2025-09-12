@@ -55,6 +55,7 @@
 
 #define IS_NEAR_THRESHOLD  (0.4)
 #define DEFAULT_ABOVE_DIST (0.2)
+#define DEFAULT_RETRACT_DIST (0.3)   // was 0.15
 
 
 namespace aff
@@ -663,19 +664,19 @@ bool ActionPut::initialize(const ActionScene& domain,
 
   this->roboBaseFrame.clear();
   const AffordanceEntity* targetContainer = domain.getEntityByAffordance(supportable);
-  RLOG_CPP(0, "Pouring into " << targetContainer->name);
+  //RLOG_CPP(0, "Pouring into " << targetContainer->name);
 
   const Manipulator* receivingHand = domain.getGraspingHand(graph, targetContainer);
   if (receivingHand)
   {
-    RLOG_CPP(0, "Receiving container " << targetContainer->name << " is held in hand");
+    //RLOG_CPP(0, "Receiving container " << targetContainer->name << " is held in hand");
     this->receivingContainerHeldInHand = true;
     Agent* agent = Agent::getAgentOwningManipulator(&domain, receivingHand->name);
     this->roboBaseFrame = agent ? agent->bdyName : "";
   }
   else
   {
-    RLOG_CPP(0, "Receiving container not held in hand");
+    //RLOG_CPP(0, "Receiving container not held in hand");
   }
 
 
@@ -1026,7 +1027,7 @@ ActionPut::createTrajectory(double t_start,
   }
   else
   {
-    const double releaseDistance = 0.15;
+    const double releaseDistance = DEFAULT_RETRACT_DIST;
     const double releaseUp = -0.05;
     a1->addActivation(t_put, true, 0.5, taskObjHandPos);
     a1->addActivation(t_release + 0*afterTime, false, 0.5, taskObjHandPos);
