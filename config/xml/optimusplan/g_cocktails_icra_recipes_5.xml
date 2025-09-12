@@ -42,16 +42,16 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
            transform="-0.15 0.9 0.05 0 0 0" textureFile="textures/table.png" />
     <Shape scale="0.2" type="FRAME"/>
   </Body>
-  <Body name="table_grid" prev="table" transform="-0.15 0 0.001 0 0 0" />
+  <Body name="table_grid" prev="table" transform="-0.2 0 0.001 0 0 0" />
 
 
 
 
 
-  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.1304038893314084 -0.46414962991848824 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_0_1" prev="table_grid" transform="-0.0804038893314084 -0.46414962991848824 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.15041595613751046 0.43250027165402904 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_0_7" prev="table_grid" transform="-0.10041595613751046 0.43250027165402904 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
@@ -62,13 +62,13 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-  <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.14722156878911696 -0.2967464683792594 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_2" prev="table_grid" transform="0.14722156878911696 -0.3167464683792594 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.15822986715612514 -0.15358517362890323 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_3" prev="table_grid" transform="0.16822986715612514 -0.14358517362890323 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
-  <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.16093491033142973 0.14000270701222936 0 0 0 0">
+  <Body color="LIGHTGRAY" name="table_grid_2_5" prev="table_grid" transform="0.14093491033142973 0.14000270701222936 0 0 0 0">
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
   <Body color="LIGHTGRAY" name="table_grid_2_6" prev="table_grid" transform="0.13130698330924198 0.29599317835784855 0 0 0 0">
@@ -78,10 +78,10 @@ ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 
     <Shape distance="false" extents="0.1 0.1 0.001" graphics="false" type="BOX" wireframe="true"/>
   </Body>
 
-  <Body name="tray_pos1" prev="table" transform="-0.29811063871902227 0.8925705985141643 0.06 0 0 0" >
+  <Body name="tray_pos1" prev="table" transform="-0.31811063871902227 0.8925705985141643 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
-  <Body name="tray_pos4" prev="table" transform="-0.1541217236292323 0.7990195486087398 0.06 0 0 0" >
+  <Body name="tray_pos4" prev="table" transform="-0.1341217236292323 0.7990195486087398 0.06 0 0 0" >
     <Shape type="BOX" extents="0.08 0.08 0.001" graphics="false" distance="false" physics="false" wireframe="true" />
   </Body>
 
