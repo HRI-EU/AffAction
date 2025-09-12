@@ -85,6 +85,8 @@ ActionGet::ActionGet(const ActionScene& domain,
   res = getAndEraseKeyValuePair(params, "liftHeight", liftHeight);
   RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
 
+  RCHECK_MSG(!params.empty(), "Action parameters are empty");
+
   std::string objectToGet = params[0];
   std::string manipulator = params.size()>1?params[1]:std::string();
   std::string graspToUse = params.size()>2?params[2]:std::string();
@@ -494,7 +496,7 @@ bool ActionGet::initialize(const ActionScene& domain,
     graspType = GraspType::BallGrasp;
     const double* pt = bg->getFrame(graph)->A_BI.org;
     I_graspPoint = std::vector<double>(pt, pt+3);
-    RLOG(0, "I_graspPoint = %f %f %f", I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]);
+    RLOG(5, "I_graspPoint = %f %f %f", I_graspPoint[0], I_graspPoint[1], I_graspPoint[2]);
   }
   else if (dynamic_cast<TwistGraspable*>(winningAff))   // This is true for Twistables as well
   {

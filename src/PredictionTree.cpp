@@ -1123,11 +1123,11 @@ void DFSMT(ActionScene& scene,
   ActionResult err;
   auto action = std::unique_ptr<ActionBase>(ActionFactory::create(scene, node->graph, levelCommands[node->level], err));
 
-  // If we can't create the action for this command, we don't expand any childred.
+  // If we can't create the action for this command, we don't expand any children.
   if (!action)
   {
-    RLOG_CPP(0, "Could not create this action: '" << levelCommands[node->level] << "'");
-    RLOG_CPP(0, "Feedback: '" << err.toString() << "'");
+    RLOG_CPP(1, "Could not create this action: '" << levelCommands[node->level] << "'");
+    RLOG_CPP(1, "Feedback: '" << err.toString() << "'");
     node->feedbackMsg = err;
     std::string tmp = "Failed to create action: " + node->feedbackMsg.error;
     node->feedbackMsg.error = tmp;
@@ -1209,7 +1209,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
   }
 
   maxThreads = nThreads;
-  RLOG_CPP(0, "Planning with " << maxThreads << " threads - early exit is "
+  RLOG_CPP(5, "Planning with " << maxThreads << " threads - early exit is "
            << (earlyExitSearch ? "TRUE" : "FALSE"));
 
   // Create tree
@@ -1222,7 +1222,7 @@ static std::unique_ptr<PredictionTree> planActionTreeDFT_MT(ActionScene& domain,
   DFSMT(domain, broadphase, selfCA, tree->root, actions, dt, earlyExitSearch, earlyExitAction, isFinished);
   tree->t_calc = Timer_getSystemTime() - tree->t_calc;
 
-  RLOG_CPP(0, "Started threads: " << startedThreads << " stopped threads: " << stoppedThreads);
+  RLOG_CPP(5, "Started threads: " << startedThreads << " stopped threads: " << stoppedThreads);
 
   return tree;
 }
