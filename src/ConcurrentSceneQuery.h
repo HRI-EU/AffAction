@@ -80,6 +80,7 @@ public:
    */
   nlohmann::json getObjectReachabilities(const std::string& agentName);
 
+  nlohmann::json getObjectGraspabilities(const std::string& agentName);
 
   /*! \brief Returns empty json if there are no objects or a json in the form:
    *         {"objects": ['iphone', 'red_glass'] }

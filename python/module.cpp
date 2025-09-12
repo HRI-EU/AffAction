@@ -554,7 +554,17 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("get_object_reachabilities", [](aff::ExampleActionsECS& ex, std::string agentName) -> nlohmann::json
   {
     return ex.getQuery()->getObjectReachabilities(agentName);
-  })
+  },
+  py::arg("agentName") = std::string())
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Same as above, but with internal simulation
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_object_graspabilities", [](aff::ExampleActionsECS& ex, std::string agentName) -> nlohmann::json
+  {
+    return ex.getQuery()->getObjectGraspabilities(agentName);
+  },
+  py::arg("agentName") = std::string())
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if there are no objects or a json in the form:

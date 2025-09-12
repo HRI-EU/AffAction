@@ -37,6 +37,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_typedef.h>
 #include <Rcs_timer.h>
+#include <Rcs_utilsCPP.h>
 #include <URDFGenerator.h>
 
 #include <unordered_set>
@@ -631,5 +632,75 @@ void ConcurrentSceneQuery::startPlaybackTransformationData()
   sim->startPlaybackTransformationData();
   sim->unlockStepMtx();
 }
+
+
+
+
+
+
+
+
+
+
+nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& agentName)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update(true);
+  nlohmann::json json;
+
+  const RobotAgent* agent = nullptr;
+
+  auto robotAgents = scene.getAgents<RobotAgent>();
+
+  if (robotAgents.size()!=1)
+  {
+    RLOG_CPP(1, "Found " << robotAgents.size() << " Robot Agents in scene - expecting 1");
+    return json;
+  }
+
+  agent = robotAgents[0];
+
+
+  std::vector<const Manipulator*> hands = agent->getManipulatorsOfType(&scene, "hand");
+
+  // Only add each item once in case of duplicate names.
+  std::unordered_set<std::string> ntts;
+  for (const auto& e : scene.entities)
+  {
+    ntts.insert(e.name);
+  }
+
+  for (const auto& n : ntts)
+  {
+    const AffordanceEntity* a = scene.getAffordanceEntity(n);
+    json[a->bdyName] = std::vector<std::string>();
+
+    for (const auto& hand : hands)
+    {
+      std::string errMsg;
+      std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
+      update(true);
+      auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
+                                                 broadphase, nullptr, actions, sim->dt);
+
+      if (!tree || tree->findSolutionPathAsStrings().empty())
+      {
+        continue;
+      }
+
+      json[a->bdyName].push_back(hand->name);
+    }
+
+  }
+
+  return json;
+}
+
+
+
+
+
+
+
 
 }   // namespace aff
