@@ -143,6 +143,87 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Predict and execute action sequence as tree, non-blocking version
+  //////////////////////////////////////////////////////////////////////////////
+  .def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> std::string
+  {
+    static std::mutex mtx;
+    static std::lock_guard<std::mutex> lock(mtx);
+    Timer_waitDT(0.1);
+
+    static std::string prev_seq = sequenceCommand;
+
+    if (ex.isProcessingAction())
+    {
+      RLOG_CPP(0, "Skipped " << sequenceCommand << ": I am already doing something else: " << prev_seq);
+      return prev_seq;
+    }
+
+    ex.setProcessingAction(true);
+    ex.getEntity().publish("FreezePerception", true);
+    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
+
+    prev_seq = sequenceCommand;
+
+    return std::string();
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Query non-blocking planner
+  //////////////////////////////////////////////////////////////////////////////
+  .def("query_fb_nonblock", [](aff::ExampleActionsECS& ex) -> std::string
+  {
+    if (ex.isProcessingAction())
+    {
+      return std::string();
+    }
+
+    // We unfreeze the perception the first time we see that processing has finished
+    ex.getEntity().publish("FreezePerception", false);
+
+    if (ex.lastActionResult[0].success())
+    {
+      RLOG_CPP(0, "SUCCESS");
+      return "SUCCESS";
+    }
+
+    std::string fbmsgAsString = "No solution found:\n";
+    std::string fbLine, fbLinePrev;
+    for (size_t i = 0; i < ex.lastActionResult.size(); ++i)
+    {
+      const aff::ActionResult& fb = ex.lastActionResult[i];
+
+      if (fb.error == "Actions interrupted")
+      {
+        return "INTERRUPT";
+      }
+
+      fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
+
+      if (fbLine != fbLinePrev)
+      {
+        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
+      }
+      fbLinePrev = fbLine;
+    }
+
+    RLOG_CPP(0, fbmsgAsString);
+
+    return fbmsgAsString;
+  })
+
+  .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
+  {
+    PollBlockerComponent blocker(&ex);
+    ex.getEntity().publish("PlanDFSEE", sequenceCommand);
+    blocker.wait();
+    bool success = ex.lastActionResult[0].success();
+    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
+
+    return success;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
   .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
@@ -220,75 +301,6 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       for (auto node : slnPath)
       {
         predictedSeq.push_back(node->actionCommand());
-
-#if 0
-
-
-
-
-
-        // sim.plan_fb_rich("get glass_green; put glass_green table")
-        bool put_where_gotten_from = true;
-        if (put_where_gotten_from && predictedSeq.back().compare(0, 3, "put", 0, 3)==0)
-        {
-          auto a_words = Rcs::String_split(predictedSeq.back(), " ");
-          auto object = a_words[1];
-
-          RLOG_CPP(0, "Trying to find where " << object << " was gotten from - a_words[0] is " << a_words[0]);
-
-          // From each "put" action, we go back through the sequence and search
-          // where it has been gotten from. This we append to the put action.
-          for (auto it = predictedSeq.rbegin(); it != predictedSeq.rend(); ++it)
-          {
-            std::string action_i = *it;
-            RLOG_CPP(1, "Checking " << action_i);
-
-            if (action_i.compare(0, 3, "get", 0, 3) != 0)
-            {
-              RLOG_CPP(1, "Skipping non-get action for object " << object);
-              continue;
-            }
-
-            RLOG_CPP(1, "Found get action: " << action_i);
-            auto get_words = Rcs::String_split(action_i, " ");
-
-            if (get_words[1] != object)
-            {
-              RLOG_CPP(1, "Skipping irrelevant get action for object " << get_words[1]);
-              continue;
-            }
-
-            // We need to check the parent's graph of the action, because it was predicted until the end
-            if (!node->parent)
-            {
-              RLOG_CPP(1, "Cannot determine parent of action for object " << object);
-              break;
-            }
-
-            const RcsBody* objBdy = RcsGraph_getBodyByName(node->parent->graph, object.c_str());
-            const RcsBody* parentBdy = NULL;
-            RLOG(1, "object is: %s", objBdy ? objBdy->name : "NULL");
-            if (objBdy)
-            {
-              parentBdy = RCSBODY_BY_ID(node->parent->graph, objBdy->parentId);
-              RLOG(0, "place is: %s", parentBdy ? parentBdy->name : "NULL");
-              if (parentBdy)
-              {
-                a_words.insert(a_words.begin() + 2, std::string(parentBdy->name));
-                predictedSeq.back() = Rcs::String_concatenate(a_words, " ");
-                RLOG_CPP(0, "Modified action is: " << predictedSeq.back() << predictedSeq.back());
-              }
-            }
-
-          }
-        }
-
-
-
-
-
-#endif
-
         sln_duration += node->duration;
       }
 
@@ -362,81 +374,10 @@ Example
 ...     print("Error:", r["error"])
 ...     print("Suggestion:", r["suggestion"])
 
-)pbdoc")
-
-//////////////////////////////////////////////////////////////////////////////
-// Predict action sequence as tree, non-blocking version
-//////////////////////////////////////////////////////////////////////////////
-.def("plan_fb_nonblock", [](aff::ExampleActionsECS& ex, std::string sequenceCommand)
-    {
-        if (ex.isProcessingAction())
-        {
-            RLOG_CPP(0, "Skipped " + sequenceCommand + ": I am already doing something else");
-            return;
-        }
-
-        ex.setProcessingAction(true);
-        ex.getEntity().publish("FreezePerception", true);
-        ex.getEntity().publish("PlanDFSEE", sequenceCommand);
-    })
-
-                                    //////////////////////////////////////////////////////////////////////////////
-                                    // Query non-blocking planner
-                                    //////////////////////////////////////////////////////////////////////////////
-        .def("query_fb_nonblock", [](aff::ExampleActionsECS& ex) -> std::string
-            {
-                if (ex.isProcessingAction())
-                {
-                    return std::string();
-                }
-
-                // We unfreeze the perception the first time we see that processing has finished
-                ex.getEntity().publish("FreezePerception", false);
-
-                if (ex.lastActionResult[0].success())
-                {
-                    RLOG_CPP(0, "SUCCESS");
-                    return "SUCCESS";
-                }
-
-                std::string fbmsgAsString = "No solution found:\n";
-                std::string fbLine, fbLinePrev;
-                for (size_t i = 0; i < ex.lastActionResult.size(); ++i)
-                {
-                    const aff::ActionResult& fb = ex.lastActionResult[i];
-
-                    if (fb.error == "Actions interrupted")
-                    {
-                        return "INTERRUPT";
-                    }
-
-                    fbLine = fb.reason + " Suggestion: " + fb.suggestion + "\n";
-
-                    if (fbLine != fbLinePrev)
-                    {
-                        fbmsgAsString += "  Issue " + std::to_string(i) + ": " + fbLine;
-                    }
-                    fbLinePrev = fbLine;
-                }
-
-                RLOG_CPP(0, fbmsgAsString);
-
-                return fbmsgAsString;
-            })
-
-        .def("plan", [](aff::ExampleActionsECS& ex, std::string sequenceCommand) -> bool
-            {
-                PollBlockerComponent blocker(&ex);
-                ex.getEntity().publish("PlanDFSEE", sequenceCommand);
-                blocker.wait();
-                bool success = ex.lastActionResult[0].success();
-                RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
-
-                return success;
-            })
+)pbdoc") 
 
 
 
-  ;
+;
 
 }
