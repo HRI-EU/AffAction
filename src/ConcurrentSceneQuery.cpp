@@ -436,7 +436,8 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
 
 
 
-nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& agentName)
+nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& agentName,
+                                                             bool key_is_hands)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
@@ -481,53 +482,43 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
     ntts.insert(e.name);
   }
 
-#if 0
-  for (const auto& hand : hands)
-  {
 
-    // Assemble the json
+  if (key_is_hands)
+  {
+    for (const auto& hand : hands)
+    {
+      json[hand->name] = std::vector<std::string>();
+
+      for (const auto& n : ntts)
+      {
+        const AffordanceEntity* a = scene.getAffordanceEntity(n);
+        const RcsBody* aBdy = a->body(graph);
+
+        if (hand->canReachTo(&scene, graph, aBdy))
+        {
+          json[hand->name].push_back(a->bdyName);
+        }
+      }
+    }
+  }   // if (key_is_hands)
+  else
+  {
     for (const auto& n : ntts)
     {
       const AffordanceEntity* a = scene.getAffordanceEntity(n);
-      const double* pos = a->getBodyTransform(graph).org;
       const RcsBody* aBdy = a->body(graph);
+      json[a->bdyName] = std::vector<std::string>();
 
-      RLOG_CPP(0, "Checking " << a->bdyName);
-
-      bool reachable = hand->canReachTo(&scene, graph, aBdy);
-
-      if (reachable)
+      for (const auto& hand : hands)
       {
-        json[hand->name].push_back(a->bdyName);
+        if (hand->canReachTo(&scene, graph, aBdy))
+        {
+          json[a->bdyName].push_back(hand->name);
+        }
       }
     }
+  }   // not key_is_hands
 
-  }
-#else
-
-  for (const auto& n : ntts)
-  {
-    const AffordanceEntity* a = scene.getAffordanceEntity(n);
-    //const double* pos = a->getBodyTransform(graph).org;
-    const RcsBody* aBdy = a->body(graph);
-
-    RLOG_CPP(0, "Checking " << a->bdyName);
-    json[a->bdyName] = std::vector<std::string>();
-
-    for (const auto& hand : hands)
-    {
-
-      bool reachable = hand->canReachTo(&scene, graph, aBdy);
-
-      if (reachable)
-      {
-        json[a->bdyName].push_back(hand->name);
-      }
-    }
-
-  }
-
-#endif
 
   return json;
 }
@@ -642,7 +633,8 @@ void ConcurrentSceneQuery::startPlaybackTransformationData()
 
 
 
-nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& agentName)
+nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& agentName,
+                                                             bool key_is_hands)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
@@ -670,28 +662,60 @@ nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& 
     ntts.insert(e.name);
   }
 
-  for (const auto& n : ntts)
+  if (key_is_hands)
   {
-    const AffordanceEntity* a = scene.getAffordanceEntity(n);
-    json[a->bdyName] = std::vector<std::string>();
-
     for (const auto& hand : hands)
     {
-      std::string errMsg;
-      std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
-      update(true);
-      auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
-                                                 broadphase, nullptr, actions, sim->dt);
+      json[hand->name] = std::vector<std::string>();
 
-      if (!tree || tree->findSolutionPathAsStrings().empty())
+      for (const auto& n : ntts)
       {
-        continue;
+        const AffordanceEntity* a = scene.getAffordanceEntity(n);
+        const RcsBody* aBdy = a->body(graph);
+
+        std::string errMsg;
+        std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
+        update(true);
+        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
+                                                   broadphase, nullptr, actions, sim->dt);
+
+        if (!tree || tree->findSolutionPathAsStrings().empty())
+        {
+          continue;
+        }
+
+        json[hand->name].push_back(a->bdyName);
+      }
+    }
+  }   // if (key_is_hands)
+  else
+  {
+    for (const auto& n : ntts)
+    {
+      const AffordanceEntity* a = scene.getAffordanceEntity(n);
+      json[a->bdyName] = std::vector<std::string>();
+
+      for (const auto& hand : hands)
+      {
+        std::string errMsg;
+        std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
+        update(true);
+        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
+                                                   broadphase, nullptr, actions, sim->dt);
+
+        if (!tree || tree->findSolutionPathAsStrings().empty())
+        {
+          continue;
+        }
+
+        json[a->bdyName].push_back(hand->name);
       }
 
-      json[a->bdyName].push_back(hand->name);
     }
-
   }
+
+
+
 
   return json;
 }
