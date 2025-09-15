@@ -271,7 +271,6 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   withEventGui = false;
   noViewer = false;
   noTextGui = false;
-  plot = false;
   valgrind = false;
   unittest = false;
   withRobot = false;
@@ -353,7 +352,6 @@ bool ExampleActionsECS::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-eventGui", &withEventGui, "Launch event gui");
   parser->getArgument("-noViewer", &noViewer, "Do not launch viewer");
   parser->getArgument("-noTextGui", &noTextGui, "Do not launch TextGui");
-  parser->getArgument("-plot", &plot, "Enable debug plotting");
   parser->getArgument("-valgrind", &valgrind, "Valgrind mode without graphics and Gui");
   parser->getArgument("-verbose", &verbose, "Print debug information to console");
   parser->getArgument("-unittest", &unittest, "Run unit tests");

@@ -169,7 +169,7 @@ protected:
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
-  bool plot, valgrind, withRobot, pause, withEventGui;
+  bool valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
   unsigned int loopCount;
   std::atomic<bool> processingAction;
