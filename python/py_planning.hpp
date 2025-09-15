@@ -178,7 +178,8 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       return std::string();
     }
 
-    // We unfreeze the perception the first time we see that processing has finished
+    // We unfreeze the perception the first time we see that processing
+    // has finished
     ex.getEntity().publish("FreezePerception", false);
 
     if (ex.lastActionResult[0].success())
@@ -218,7 +219,8 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
     ex.getEntity().publish("PlanDFSEE", sequenceCommand);
     blocker.wait();
     bool success = ex.lastActionResult[0].success();
-    RLOG(0, "   success=%s   result=%s", success ? "true" : "false", ex.lastActionResult[0].error.c_str());
+    RLOG(0, "   success=%s   result=%s", success ? "true" : "false",
+         ex.lastActionResult[0].error.c_str());
 
     return success;
   })
@@ -226,7 +228,10 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
   //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
-  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex, std::string sequenceCommand, bool successes_only, size_t max_threads) -> nlohmann::json
+  .def("plan_fb_rich", [](aff::ExampleActionsECS& ex,
+                          std::string sequenceCommand,
+                          bool successes_only,
+                          size_t max_threads) -> nlohmann::json
   {
     const std::string actionSequence = aff::ActionSequence::resolve(ex.getGraph()->cfgFile, sequenceCommand);
     RLOG_CPP(0, "Processing sequence: '" << actionSequence << "'");
@@ -326,12 +331,14 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
   py::arg("successes_only") = true,
   py::arg("max_threads") = 0,
   R"pbdoc(
-Plans an action sequence and returns detailed feedback for each attempted solution.
+Plans an action sequence and returns detailed feedback for each attempted
+solution.
 
 This function resolves a semicolon-separated string of action commands into a
-sequence of robot actions. It attempts to plan and evaluate possible execution paths using
-a depth-first search strategy. The result includes detailed feedback for the deepest (most
-complete) failed solution paths, or the successful path(s) if available.
+sequence of robot actions. It attempts to plan and evaluate possible execution
+paths using a depth-first search strategy. The result includes detailed
+feedback for the deepest (most complete) failed solution paths, or the
+successful path(s) if available.
 
 Parameters
 ----------
@@ -340,30 +347,34 @@ sequence_command : str
     Example: "get bottle_of_tomato_sauce; put bottle_of_tomato_sauce tray frame tray_position_5"
 
 successes_only: bool
-    If true, only successful paths will be returned. Otherwise, all paths that reach the overall
-    deepest level will be returned.
+    If true, only successful paths will be returned. Otherwise, all paths that
+    reach the overall deepest level will be returned.
 
 max_threads: int
-    The maximum number of threads used in the depth-firrst search. If max_threads is 0 (default),
-    the number of threads will be determined by the computer's thread affinity (as many as possible)
+    The maximum number of threads used in the depth-first search. If
+    max_threads is 0 (default), the number of threads will be determined by
+    the computer's thread affinity (as many as possible)
 
 Returns
 -------
 List[dict]
     A list of result dictionaries, each containing:
-      - actions (List[str]): The list of action strings that were executed or planned.
+      - actions (List[str]): The list of action strings that were executed or
+        planned.
       - success (bool): Whether the plan was successful.
-      - error (str): Description of the failure or error ("SUCCESS" if successful).
+      - error (str): Description of the failure or error ("SUCCESS" if
+        successful).
       - reason (str): More specific explanation of the failure, if available.
       - suggestion (str): Suggested corrective action.
       - developer (str): Developer-oriented debug message, if applicable.
       - cost (float): Planning cost of the solution (lower is better).
 
-    The list is sorted according to the quality of the solution. The first entries are the
-    successful solutions, sorted by their accumulated cost (the first entry is the overall
-    best solution path). This is followed by solutions that contain the most number of steps.
-    If planning fails completely, a single-element list is returned with an error summary.
-    If multiple deepest failure paths exist, each found one is reported.
+    The list is sorted according to the quality of the solution. The first
+    entries are the successful solutions, sorted by their accumulated cost (the
+    first entry is the overall best solution path). This is followed by
+    solutions that contain the most number of steps. If planning fails
+    completely, a single-element list is returned with an error summary. If
+    multiple deepest failure paths exist, each found one is reported.
 
 Example
 -------
@@ -374,7 +385,7 @@ Example
 ...     print("Error:", r["error"])
 ...     print("Suggestion:", r["suggestion"])
 
-)pbdoc") 
+)pbdoc")
 
 
 
