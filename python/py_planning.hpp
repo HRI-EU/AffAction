@@ -241,7 +241,7 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
                                               0, true, ex.earlyExitAction);
 
     nlohmann::json j_inner = {
-      {"lifted_actions",    nlohmann::json::array()},
+      {"lifted_actions",    seq},
       {"actions",    nlohmann::json::array()},
       {"success",    false},
       {"error",      ""},
@@ -312,7 +312,7 @@ void bind_planning(py::class_<aff::ExampleActionsECS>& cls)
       const aff::ActionResult& errMsg = slnPath.back()->feedbackMsg;
       j_result.push_back(
       {
-        {"lifted_actions", actionSequence},
+        {"lifted_actions", seq},
         {"actions", predictedSeq},
         {"success", slnPath.back()->success},
         {"error", errMsg.error},

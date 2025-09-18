@@ -118,6 +118,7 @@ protected:
   std::string whereOn;   // Optional keyword specifying the name of the Supportable to put the object on.
   std::string nearTo;    // Keyword specifying the name of an entity or agent near to which the object is to be put.
   std::string farFrom;   // Keyword specifying the name of an entity or agent far of which the object is to be put.
+  std::vector<std::string> awayFromArea;
   std::string detailedActionCommand;
 
   std::vector<std::string> usedManipulators;

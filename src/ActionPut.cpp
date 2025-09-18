@@ -305,6 +305,28 @@ void ActionPut::parseArgs(const ActionScene& domain,
                           std::string(__FILENAME__) + " " + std::to_string(__LINE__));
   }
 
+  // Parse entities that constitute to convex hull to be avoided
+  std::string awayFromString;   // Comma-separated list of entities
+  res = getAndEraseKeyValuePair(params, "awayFrom", awayFromString);
+  RCHECK_MSG(res >= -1, "%s", Rcs::String_concatenate(params, " ").c_str());
+  if ((res==0) && (!awayFromString.empty()))
+  {
+    this->awayFromArea = Rcs::String_split(awayFromString, ",");
+
+    for (const auto& awayFromEntry : awayFromArea)
+    {
+      if (domain.getSceneEntities(awayFromEntry).empty())
+      {
+        throw ActionException(ActionException::UnrecoverableError,
+                              "Cannot put an object far from " + awayFromEntry +
+                              " because " + awayFromEntry + " is unknown",
+                              "Put it far away of another object in the environment",
+                              std::string(__FILENAME__) + " " + std::to_string(__LINE__));
+      }
+    }
+  }
+
+
 }
 
 // This function assigns the following member variables:
