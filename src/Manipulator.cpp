@@ -694,7 +694,7 @@ bool Manipulator::canReachTo(const ActionScene* scene,
   const RcsJoint* baseJnt = getBaseJoint(graph);
 
   // Compute AABB and take closest corner
-  double xyzMin[3], xyzMax[3], closest[3];
+  double xyzMin[3], xyzMax[3];// , closest[3];
   double objDistance = DBL_MAX;
   double vertices[8][3];
   MatNd verticesArr = MatNd_fromPtr(8, 3, &vertices[0][0]);

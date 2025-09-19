@@ -45,9 +45,11 @@
 #include <Rcs_utilsCPP.h>
 #include <Rcs_typedef.h>
 #include <Rcs_body.h>
+#include <Rcs_geometry.h>
 #include <Rcs_macros.h>
 
 #include <algorithm>
+#include <array>
 
 
 
@@ -60,6 +62,64 @@
 
 namespace aff
 {
+
+static void computePolyAroundNtts(const ActionScene& domain,
+                                  const RcsGraph* graph,
+                                  const std::vector<std::string>& nttNames,
+                                  MatNd* hull)
+{
+  std::vector<const SceneEntity*> ntts;
+  for (const auto& nttName : nttNames)
+  {
+    auto tmp = domain.getSceneEntities(nttName);   // Several ones possible when type name is used
+    ntts.insert(ntts.end(), tmp.begin(), tmp.end());
+  }
+
+  std::vector<std::array<double, 2>> pts;
+  for (const auto& ntt : ntts)
+  {
+    const double* pos = ntt->body(graph)->A_BI.org;
+    pts.emplace_back(std::array<double, 2>({pos[0], pos[1]}));
+  }
+
+  MatNd centers = MatNd_fromPtr(pts.size(), 2, pts[0].data());
+  MatNd_convexHull2D(&centers, hull);
+}
+
+static void eraseAffordancesInsidePolygon(const ActionScene& domain,
+                                          const RcsGraph* graph,
+                                          const std::vector<std::string>& nttNames,
+                                          std::vector<std::tuple<Affordance*, Affordance*>>& affordanceMap)
+{
+  const double eps = -1.0e-4;   // eps or more inside is invalid
+  MatNd* hull = MatNd_create(0, 2);
+  computePolyAroundNtts(domain, graph, nttNames, hull);
+  //MatNd_printCommentDigits("hull", hull, 5);
+
+  // Return if degenerate
+  if (hull->m < 3)
+  {
+    return;
+  }
+
+  auto it = affordanceMap.begin();
+
+  while (it != affordanceMap.end())
+  {
+    const Affordance* stackable = std::get<0>(*it);
+    const RcsBody* putFrame = stackable->getFrame(graph);
+    double d = Math_distPointPolygon2D(putFrame->A_BI.org, (double(*)[2]) hull->ele, hull->m, nullptr, nullptr);
+    it = (d < eps) ? affordanceMap.erase(it) : it + 1;
+
+    if (d < eps)
+    {
+      RLOG_CPP(1, "Erased " << putFrame->name << " from POLY");
+    }
+  }
+
+  MatNd_destroy(hull);
+}
+
 template<typename T>
 static void eraseAffordancesNearerOrFartherAgent(const ActionScene& domain,
                                                  const RcsGraph* graph,
@@ -535,6 +595,32 @@ std::vector<std::tuple<Affordance*, Affordance*>> ActionPut::initOptions(const A
     eraseSupportablesNearer(domain, graph, farFrom, d_limit, aMap);
   }
   RLOG_CPP(1, "Done erase Supportables nearer than. Remaining: " << aMap.size());
+
+
+
+
+
+  // Erase the Supportables that are inside a polygon spanned by a set of entities
+  // We add the agent's manipulators so that the zone in front of the robot and
+  // between the hands will be spared.
+  if (!awayFromArea.empty())
+  {
+    const RobotAgent* robo = dynamic_cast<RobotAgent*>(Agent::getAgentOwningManipulator(&domain, usedManipulators[0]));
+    std::vector<std::string> polyVertNtts = awayFromArea;
+    polyVertNtts.insert(polyVertNtts.end(), robo->manipulators.begin(), robo->manipulators.end());
+    polyVertNtts.push_back(robo->bdyName);
+    eraseAffordancesInsidePolygon(domain, graph, polyVertNtts, aMap);
+  }
+  RLOG_CPP(0, "Done erase Supportables inside polygon. Remaining: " << aMap.size());
+
+
+
+
+
+
+
+
+
 
   // Erase the Supportables that are already occupied wit something. We only do it if the
   // object to put is collideable.
@@ -1167,6 +1253,7 @@ void ActionPut::print() const
   std::cout << "whereOn: " << whereOn << std::endl;
   std::cout << "nearTo: " << nearTo << std::endl;
   std::cout << "farFrom: " << farFrom << std::endl;
+  std::cout << "awayFromArea: " << Rcs::String_concatenate(awayFromArea, ";");
   std::cout << "putOri3d: " << putOri3d[0] << putOri3d[1] << putOri3d[2] << std::endl;
   std::cout << "putPolar: " << putPolar << std::endl;
 
