@@ -29,6 +29,11 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
 
+  <ActionSequence name="away1" text="get bottle_of_pineapple_juice; put bottle_of_pineapple_juice awayFrom bowl_ice_cubes,bottle_of_vodka,bottle_of_milk,bottle_of_vermouth,bottle_of_soda_water" />
+  <ActionSequence name="away2" text="get bottle_of_pineapple_juice; put bottle_of_pineapple_juice awayFrom bowl_ice_cubes,bottle_of_vodka,bottle_of_milk,bottle_of_vermouth,bottle_of_soda_water,bowl_sliced_orange,bottle_of_gin" />
+  <ActionSequence name="away3" text="get glass_green; put glass_green awayFrom bowl_ice_cubes,bottle_of_vodka,bottle_of_milk,bottle_of_vermouth,bottle_of_soda_water,bowl_sliced_orange,bottle_of_gin" />
+  <ActionSequence name="away4" text="get bottle_of_cranberry_juice; put bottle_of_cranberry_juice awayFrom bowl_ice_cubes,bottle_of_vodka,bottle_of_milk,bottle_of_vermouth,bottle_of_soda_water,bowl_sliced_orange,bottle_of_gin" />
+
   <ActionSequence name="v1" text="get glass_red; get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table; put glass_red table" />
   <ActionSequence name="v2" text="get glass_red + get bottle_of_tequila; pour bottle_of_tequila glass_red; put bottle_of_tequila far bottle_of_tequila table; get bottle_of_salt; pour bottle_of_salt glass_red; put bottle_of_salt table + put glass_red table" />
   <ActionSequence name="v3" text="get glass_red + get bottle_of_tequila; get bottle_of_salt + pour_put bottle_of_tequila glass_red; pour bottle_of_salt glass_red; put glass_red table + put bottle_of_salt table" />
@@ -146,12 +151,13 @@
 
   <!--  Scene -->
   <Group prev="aruco_base" >
+    <xi:include href="g_cocktails_icra_recipes.xml"/>
     <!-- <xi:include href="g_cocktails_icra_recipes_1.xml"/> -->
     <!-- <xi:include href="g_cocktails_icra_recipes_2.xml"/> -->
     <!-- <xi:include href="g_cocktails_icra_recipes_3.xml"/> -->
     <!-- <xi:include href="g_cocktails_icra_recipes_4.xml"/> -->
     <!-- <xi:include href="g_cocktails_icra_recipes_5.xml"/> -->
-    <xi:include href="g_cocktails_icra_recipes_6.xml"/>
+    <!-- <xi:include href="g_cocktails_icra_recipes_6.xml"/> -->
   </Group>
 
   <model_state model="default" time_stamp="0">
