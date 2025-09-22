@@ -61,7 +61,7 @@ class FaceTracker : public TrackerBase
 {
 public:
 
-  FaceTracker(const std::string& nameOfFaceBody, const std::string& cameraName);
+  FaceTracker(const std::string& nameOfFaceBody, const std::string& cameraName, const std::string& nameOfAgent);
   virtual ~FaceTracker();
 
   // Inherited methods
@@ -69,11 +69,13 @@ public:
   void parse(const nlohmann::json& header, const nlohmann::json& data, double time);
   void update(ActionScene* scene, RcsGraph* graph);
 
-  bool isVisible() const;
+  //bool isVisible() const;
   void enableDebugGraphics(bool enable);
   bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
+  void registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback);
 
   static const std::string& getFaceMeshDebugString(const std::string& fileName = "FaceMesh.txt");
+  static std::string findFaceOfAgent(const ActionScene* scene, const RcsGraph* graph, const std::string& agentName);
 
 private:
 
@@ -89,17 +91,22 @@ private:
   bool addGraphics(Rcs::Viewer* viewer, const HTr* cameraFrame);
 
   bool newFaceUpdate;
+  bool wasVisible;
+  bool isVisible;
+  double lastUpdateTime;
   RcsMeshData* mesh;
   MatNd* landmarks;
   Rcs::Viewer* viewer;
   HTr faceTrf;
   std::mutex landmarksMtx;
   std::string faceName;
+  std::string agentName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;
   osg::ref_ptr<Rcs::MeshNode> faceMeshNode;
   osg::ref_ptr<Rcs::ArrowNode> leftIrisNode, rightIrisNode;
   osg::ref_ptr<Rcs::VertexArrayNode> landmarksNode;
   osg::ref_ptr<Rcs::NodeBase> sw;
+  std::vector<std::function<void(const std::string&, bool)>> agentAppearDisappearCb;
 };
 
 }   // namespace aff

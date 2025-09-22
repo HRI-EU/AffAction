@@ -58,48 +58,64 @@ private:
   // if recognized.
   //////////////////////////////////////////////////////////////////////////////
   ES::ScopedSubscription createAgentChangedSubscriber(EntityBase* entity,
-                                                      const ActionScene* scene)
+                                                      const ActionScene* scene,
+                                                      bool recognize)
   {
-    return entity->subscribe("AgentChanged", [entity, scene]
+    return entity->subscribe("AgentChanged", [entity, scene, recognize]
                              (std::string agentName, bool appeared) mutable
     {
-      std::thread([](EntityBase* entity, const ActionScene* scene, std::string agentName, bool appeared)
+      std::thread([](EntityBase* entity, const ActionScene* scene, std::string agentName, bool appeared, bool recognize)
       {
         std::string text;
+        RLOG_CPP(1, "AgentChanged");
 
-        if (appeared)
+        if (!recognize)
         {
-          std::pair<std::string,std::string> res;
-          res = recognize_agent_face(*entity, scene, agentName, 3, 2.0);
-          std::string recognized = res.first;
-          RLOG_CPP(0, "recognized: " << recognized << " old: " << res.second);
-          if (recognized.empty())
+          if (appeared)
           {
-            recognized = "unknown_person";
-            text = "Hello, I don't think we met before.";
-          }
-          else if (recognized != res.second)
-          {
-            text = "Hello " + recognized + " nice to see you!";
+            text = "Hello";
           }
           else
           {
-            text = "Hello again, " + recognized;
+            text = "Bye bye";
           }
-
-          // It is better to publish it, because otherwise we might face
-          // concurrency issues with reading and writing agent names.
-          entity->publish("RenameAgent", res.second, recognized);
         }
-        else
+        else   // with recognition
         {
-          text = "Bye " + agentName;
-        }
+          if (appeared)
+          {
+            RLOG_CPP(1, "Agent appeared");
+            std::pair<std::string, std::string> res;
+            res = recognize_agent_face(*entity, scene, agentName, 3, 2.0);
+            std::string recognized = res.first;
+            if (recognized.empty())
+            {
+              recognized = "unknown_person";
+              text = "Hello, I don't think we met before.";
+            }
+            else if (recognized != res.second)
+            {
+              text = "Hello " + recognized + " nice to see you!";
+            }
+            else
+            {
+              text = "Hello again, " + recognized;
+            }
+
+            // It is better to publish it, because otherwise we might face
+            // concurrency issues with reading and writing agent names.
+            entity->publish("RenameAgent", res.second, recognized);
+          }
+          else   // disappered
+          {
+            text = "Bye " + agentName;
+          }
+        }   // recognize
 
         RLOG_CPP(0, "Speaking: " << text);
         entity->publish("Speak", text);
       },
-      entity, scene, std::move(agentName), appeared).detach();
+      entity, scene, std::move(agentName), appeared, recognize).detach();
     });
 
   }
@@ -114,6 +130,7 @@ private:
                              (std::string from_name, std::string to_name) mutable
     {
       Agent* agent = nullptr;
+      RLOG_CPP(1, "RenameAgent");
 
       for (auto& a : scene->agents)
       {
@@ -126,7 +143,7 @@ private:
           }
           else
           {
-            RLOG_CPP(0, "Can't rename robot agent '" << from_name << "'");
+            RLOG_CPP(1, "Can't rename robot agent '" << from_name << "'");
           }
         }
       }
@@ -134,12 +151,12 @@ private:
 
       if (!agent)
       {
-        RLOG_CPP(0, "Can't find agent '" << from_name
+        RLOG_CPP(1, "Can't find agent '" << from_name
                  << "' - skipping renaming to '" << to_name << "'");
         return;
       }
 
-      RLOG_CPP(0, "Renaming agent from '" << from_name << "' to '"
+      RLOG_CPP(1, "Renaming agent from '" << from_name << "' to '"
                << to_name << "'");
 
       agent->name = to_name;
@@ -157,14 +174,18 @@ private:
   }
 
 public:
-  AgentWelcomeComponent(EntityBase* parent, const ActionScene* scene) : ComponentBase(parent)
+  AgentWelcomeComponent(EntityBase* parent, const ActionScene* scene, bool recognize=true) : ComponentBase(parent)
   {
-    parent->withProcessLock([this, parent, scene]()
+    parent->withProcessLock([this, parent, scene, recognize]()
     {
       agentChangedSub = std::make_unique<ES::ScopedSubscription>(
-                          createAgentChangedSubscriber(parent, scene));
-      renameAgentSub = std::make_unique<ES::ScopedSubscription>(
-                         createAgentRenameSubscriber(parent, scene));
+                          createAgentChangedSubscriber(parent, scene, recognize));
+
+      if (recognize)
+      {
+        renameAgentSub = std::make_unique<ES::ScopedSubscription>(
+                           createAgentRenameSubscriber(parent, scene));
+      }
     });
 
   }

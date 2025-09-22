@@ -32,6 +32,7 @@
 *******************************************************************************/
 
 #include "FaceTracker.h"
+#include "SceneHelpers.h"
 
 #include <Rcs_graphicsUtils.h>
 #include <BodyNode.h>
@@ -44,7 +45,6 @@
 #include <Rcs_utilsCPP.h>
 #include <Rcs_body.h>
 #include <Rcs_shape.h>
-#include <Rcs_timer.h>
 
 #include <string>
 #include <iostream>
@@ -55,6 +55,8 @@
 #define DISTANCE_FACE_TO_CAM         (0.0)
 //#define FACEMESH_SIMPLE_NUM_VERTICES (468)
 #define FACEMESH_IRIS_NUM_VERTICES   (478)
+#define DEFAULT_MAX_AGE (2.0)
+
 
 namespace aff
 {
@@ -69,8 +71,10 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 }
 
 // In case the iris is estimated, there are 10 more landmarks
-FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& camera) :
-  TrackerBase(nameOfFaceBody), newFaceUpdate(false), mesh(NULL), landmarks(NULL), viewer(nullptr), faceName(nameOfFaceBody)
+FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& camera, const std::string& nameOfAgent) :
+  TrackerBase(nameOfFaceBody), newFaceUpdate(false), wasVisible(false), isVisible(false),
+  lastUpdateTime(0.0), mesh(nullptr), landmarks(nullptr), viewer(nullptr),
+  faceName(nameOfFaceBody), agentName(nameOfAgent)
 {
   std::string meshFile = Rcs::getAbsoluteFileName("hri_scitos_description/FaceMesh-holes-478.obj");
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
@@ -104,6 +108,7 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 {
   std::lock_guard<std::mutex> lock(landmarksMtx);
   newFaceUpdate = true;
+  lastUpdateTime = getWallclockTime();
 
   NLOG_CPP(1, "FaceTracker::parse" << jsonData.dump());
   size_t nFaceLandmarks = 0;
@@ -164,6 +169,27 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
 void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+  const double age = getWallclockTime() - lastUpdateTime;
+
+  this->wasVisible = isVisible;
+  this->isVisible = (age <= DEFAULT_MAX_AGE) ? true : false;
+
+  if ((!wasVisible) && isVisible)
+  {
+    for (const auto& cb : agentAppearDisappearCb)
+    {
+      cb(agentName, true);
+    }
+
+  }
+  else if (wasVisible && (!isVisible))
+  {
+    for (const auto& cb : agentAppearDisappearCb)
+    {
+      cb(agentName, false);
+    }
+  }
+
   std::lock_guard<std::mutex> lock(landmarksMtx);
   if (!newFaceUpdate)
   {
@@ -403,10 +429,10 @@ bool FaceTracker::estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A
   return true;
 }
 
-bool FaceTracker::isVisible() const
-{
-  return (landmarks->m>0) ? true : false;
-}
+//bool FaceTracker::isVisible() const
+//{
+//  return (landmarks->m>0) ? true : false;
+//}
 
 /*static*/ const std::string& FaceTracker::getFaceMeshDebugString(const std::string& fileName)
 {
@@ -460,6 +486,41 @@ bool FaceTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
   }
 
   return success;
+}
+
+void FaceTracker::registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback)
+{
+  agentAppearDisappearCb.push_back(callback);
+}
+
+std::string FaceTracker::findFaceOfAgent(const ActionScene* scene,
+                                         const RcsGraph* graph,
+                                         const std::string& agentName)
+{
+  const Agent* a = scene->getAgent(agentName);
+  if (!dynamic_cast<const HumanAgent*>(a))
+  {
+    RLOG_CPP(0, "Couldn't find HumanAgent with name '" << agentName
+             << "' - skipping face tracker");
+    return std::string();
+  }
+
+  RCSBODY_TRAVERSE_BODIES(graph, (RcsBody*)a->body(graph))
+  {
+    RLOG(0, "Checking body %s (children: %d %d)", BODY->name, BODY->firstChildId, BODY->lastChildId);
+    for (unsigned int i = 0; i < BODY->nShapes; ++i)
+    {
+      RcsShape* sh = &BODY->shapes[i];
+      if ((sh->type == RCSSHAPE_MESH) && (sh->mesh) &&
+          (sh->mesh->nVertices == FACEMESH_IRIS_NUM_VERTICES))
+      {
+        return std::string(BODY->name);
+      }
+    }
+  }
+  RLOG(0, "Done - returning nothing");
+
+  return std::string();
 }
 
 }   // namespace aff

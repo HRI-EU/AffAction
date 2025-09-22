@@ -65,6 +65,7 @@
 #include <Rcs_timer.h>
 #include <Rcs_utilsCPP.h>
 #include <Rcs_macros.h>
+#include <Rcs_shape.h>
 
 #include <thread>
 
@@ -208,9 +209,23 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (getKey(argsVec, "-face_tracking" + suffix))
     {
-      std::string faceBdyName = "face";
-      getKeyValuePair<std::string>(argsVec, "-face_bodyName" + suffix, faceBdyName);
-      lmc->addFaceTracker(faceBdyName, landmarksCamera);
+      std::string faceAgentName, faceBdyName;
+      getKeyValuePair<std::string>(argsVec, "-face_tracking.agent" + suffix, faceAgentName);
+      getKeyValuePair<std::string>(argsVec, "-face_tracking.face_body_name" + suffix, faceBdyName);
+
+      if (faceBdyName.empty())
+      {
+        faceBdyName = FaceTracker::findFaceOfAgent(scene, graph, faceAgentName);
+        RCHECK_MSG(!faceBdyName.empty(), "Couldn't find face body for agent '%s'", faceAgentName.c_str());
+      }
+
+      TrackerBase* tr = lmc->addFaceTracker(faceBdyName, landmarksCamera, faceAgentName);
+      dynamic_cast<FaceTracker*>(tr)->registerAgentAppearDisappearCallback([ret](const std::string& agentName, bool appear)
+      {
+        std::string appearStr = appear ? "' appeared" : "' disappered";
+        RLOG_CPP(0, "Agent '" << agentName << appearStr);
+        ret->getEntity()->publish("AgentChanged", agentName, appear);
+      });
     }
 
     if (getKey(argsVec, "-aruco_tracking" + suffix))
@@ -524,6 +539,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     argP.addDescription("-skeleton_tracking", "For '-landmarks_zmq': Start with skeleton tracking");
     argP.addDescription("-skeleton_radius", "For '-landmarks_zmq' and '-skeleton_tracking': Radius of skeleton detections (default: infinity)");
     argP.addDescription("-agent_welcome", "For '-landmarks_router' and '-skeleton_tracking': Callback for agent appearing and disappearing");
+    argP.addDescription("-agent_welcome.recognize", "For '-landmarks_router' and '-agent_welcome': Recognize face");
 
     argP.addDescription("-virtual_image_tracking", "For '-landmarks_router': Start with virtual image tracking");
     argP.addDescription("-virtual_image_tracking.width", "For '-landmarks_router' and '-virtual_image_tracking': Width of captured image in pixels (Default: 640)");
@@ -542,7 +558,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
 
     if (getKey(argvStrVec, "-agent_welcome"))
     {
-      components.push_back(new AgentWelcomeComponent(&entity, scene));
+      bool with_fr = getKey(argvStrVec, "-agent_welcome.recognize");
+      components.push_back(new AgentWelcomeComponent(&entity, scene, with_fr));
     }
 
   }

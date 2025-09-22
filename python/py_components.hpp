@@ -114,7 +114,7 @@ void bind_components(py::class_<aff::ExampleActionsECS>& cls)
                                const std::string& connection,
                                const std::string& camera_name,
                                bool withFaceTracking,
-                               const std::string& face_name,
+                               const std::string& face_agent_name,
                                bool withArucoTracking,
                                const std::string& base_marker,
                                bool withSkeletonTracking,
@@ -128,7 +128,8 @@ void bind_components(py::class_<aff::ExampleActionsECS>& cls)
     {
       ex.addComponentArgument("-face_tracking");
       ex.addComponentArgument("-face_gesture");
-      ex.addComponentArgument("-face_bodyName " + face_name);
+      //ex.addComponentArgument("-face_bodyName " + face_name);
+      ex.addComponentArgument("-face_tracking.agent " + face_agent_name);
     }
 
     if (withArucoTracking)
@@ -149,7 +150,7 @@ void bind_components(py::class_<aff::ExampleActionsECS>& cls)
   py::arg("connection") = "tcp://*:40000",
   py::arg("camera_name") = "camera_0",
   py::arg("withFaceTracking") = false,
-  py::arg("face_name") = "face",
+  py::arg("face_agent_name") = "",
   py::arg("withArucoTracking") = false,
   py::arg("base_marker") = "aruco_base",
   py::arg("withSkeletonTracking") = false,
