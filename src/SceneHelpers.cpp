@@ -357,14 +357,16 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
   for (size_t i = 0; i < n_iterations; ++i)
   {
     nlohmann::json bb_json;
-
-    bb_json["bounding_box"] =
+    if (humanAgent->bb_head.size() >= 4)
     {
-      { "left",   humanAgent->bb_head[0]},
-      { "top",    humanAgent->bb_head[1]},
-      { "right",  humanAgent->bb_head[2]},
-      { "bottom", humanAgent->bb_head[3]}
-    };
+      bb_json["bounding_box"] =
+      {
+        { "left",   humanAgent->bb_head[0]},
+        { "top",    humanAgent->bb_head[1]},
+        { "right",  humanAgent->bb_head[2]},
+        { "bottom", humanAgent->bb_head[3]}
+      };
+    }
 
     RLOG_CPP(1, "recognize_faces iteration " << i
              << " with bounding box " << bb_json.dump());

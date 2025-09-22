@@ -74,9 +74,9 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
   subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
   subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
-  
+
   getEntity()->subscribe("Speak", [this](std::string text) mutable
-            {
+  {
     nlohmann::json payload =
     {
       {"type", "tts"},
@@ -105,7 +105,7 @@ void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetit
 
 void ZmqRouterComponent::onTriggerPerception(std::string target_id, int repetitions, std::string jsonString)
 {
-  RLOG_CPP(1, "target_id: " << target_id << " repetitions: " << repetitions << " json: " << jsonString);
+  RLOG_CPP(1, "target_id: " << target_id << " repetitions: " << repetitions << " json: '" << jsonString << "'");
   std::lock_guard<std::mutex> lock(commandMtx);
   commandQueue.push({ target_id, repetitions, jsonString });
 }
@@ -298,15 +298,26 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
             { "ts",   std::chrono::duration_cast<ms>(now.time_since_epoch()).count() }
           };
 
+          // Process json part
           if (!std::get<2>(cmdPair).empty())
           {
-            auto bbJson = nlohmann::json::parse(std::get<2>(cmdPair));
-            cmd.update(bbJson);
+            try
+            {
+              auto bbJson = nlohmann::json::parse(std::get<2>(cmdPair));
+              if (bbJson.is_object())
+              {
+                cmd.update(bbJson);
+              }
+            }
+            catch (const nlohmann::json::parse_error& e)
+            {
+              RLOG_CPP(1, "JSON parse error: " << e.what());
+            }
           }
+
           cmdStr = cmd.dump();
           id_str = std::get<0>(cmdPair);
           commandQueue.pop();
-          RLOG_CPP(1, "cmsjson:\n" << cmdStr);
         }
 
       }
