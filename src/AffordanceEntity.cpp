@@ -80,7 +80,11 @@ SceneEntity::SceneEntity(const xmlNodePtr node, const std::string& groupSuffix)
 
   name = bdyName;
   instanceId = bdyName;
-  Rcs::getXMLNodePropertySTLString(node, "name", name);
+  int len = Rcs::getXMLNodePropertySTLString(node, "name", name);
+  if (len>0)
+  {
+    name += groupSuffix;
+  }
   Rcs::getXMLNodePropertySTLString(node, "instance_id", instanceId);
   types = Rcs::getXMLNodePropertyVecSTLString(node, "types");
 
