@@ -733,7 +733,7 @@ void EyeModelIKComponent::onUpdateScene(RcsGraph* desired, RcsGraph* current, Ac
   }
   else
   {
-    RLOG_CPP(1, "Failed to determine object bounding box: camera is '" << cameraBody
+    RLOG_CPP(4, "Failed to determine object bounding box: camera is '" << cameraBody
              << "' and gaze target is '" << gazeTargetBody << "'");
   }
 
