@@ -169,6 +169,9 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
 void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+
+
+
   const double age = getWallclockTime() - lastUpdateTime;
 
   this->wasVisible = isVisible;
@@ -488,7 +491,7 @@ bool FaceTracker::initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph)
   return success;
 }
 
-void FaceTracker::registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback)
+void FaceTracker::registerAgentAppearDisappearCallback(std::function<void(std::string agentName, bool appear)> callback)
 {
   agentAppearDisappearCb.push_back(callback);
 }
@@ -507,7 +510,6 @@ std::string FaceTracker::findFaceOfAgent(const ActionScene* scene,
 
   RCSBODY_TRAVERSE_BODIES(graph, (RcsBody*)a->body(graph))
   {
-    RLOG(0, "Checking body %s (children: %d %d)", BODY->name, BODY->firstChildId, BODY->lastChildId);
     for (unsigned int i = 0; i < BODY->nShapes; ++i)
     {
       RcsShape* sh = &BODY->shapes[i];
@@ -518,9 +520,20 @@ std::string FaceTracker::findFaceOfAgent(const ActionScene* scene,
       }
     }
   }
-  RLOG(0, "Done - returning nothing");
 
   return std::string();
 }
+
+void FaceTracker::onRenameAgent(std::string from, std::string to)
+{
+  if (from == this->agentName)
+  {
+    this->agentName = to;
+  }
+
+}
+
+
+
 
 }   // namespace aff

@@ -119,7 +119,7 @@ Agent* Agent::createAgent(const xmlNodePtr node, const std::string& groupSuffix,
 
 void Agent::print() const
 {
-  std::cout << name << " has " << types.size() << " types: ";
+  std::cout << "Agent " << name << " has " << types.size() << " types: ";
 
   for (const auto& t : types)
   {

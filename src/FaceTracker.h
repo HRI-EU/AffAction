@@ -72,10 +72,11 @@ public:
   //bool isVisible() const;
   void enableDebugGraphics(bool enable);
   bool initDebugGraphics(Rcs::Viewer* viewer, const RcsGraph* graph);
-  void registerAgentAppearDisappearCallback(std::function<void(const std::string& agentName, bool appear)> callback);
+  void registerAgentAppearDisappearCallback(std::function<void(std::string agentName, bool appear)> callback);
 
   static const std::string& getFaceMeshDebugString(const std::string& fileName = "FaceMesh.txt");
   static std::string findFaceOfAgent(const ActionScene* scene, const RcsGraph* graph, const std::string& agentName);
+  void onRenameAgent(std::string from, std::string to);
 
 private:
 

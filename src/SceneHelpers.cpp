@@ -150,7 +150,7 @@ std::string recognize_faces(EntityBase& entity,
   });
 
   t_calc = getWallclockTime() - t_calc;
-  RLOG(0, "%s recognize_faces after %.3f sec%s",
+  RLOG(1, "%s recognize_faces after %.3f sec%s",
        (success ? "SUCCESS" : "FAIL"), t_calc,
        (success ? "" : ": Timeout reached while waiting for face recognition."));
 
@@ -391,7 +391,7 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
     std::cout << std::endl;
   }
 
-  RLOG(0, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
+  RLOG(1, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
 
   int winnerCount = 0;
   std::string winnerName;

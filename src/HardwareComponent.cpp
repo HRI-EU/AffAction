@@ -220,12 +220,17 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       }
 
       TrackerBase* tr = lmc->addFaceTracker(faceBdyName, landmarksCamera, faceAgentName);
-      dynamic_cast<FaceTracker*>(tr)->registerAgentAppearDisappearCallback([ret](const std::string& agentName, bool appear)
+      FaceTracker* ftr = dynamic_cast<FaceTracker*>(tr);
+      RCHECK(ftr);
+      ftr->registerAgentAppearDisappearCallback([ret](std::string agentName, bool appear)
       {
         std::string appearStr = appear ? "' appeared" : "' disappered";
-        RLOG_CPP(0, "Agent '" << agentName << appearStr);
+        RLOG_CPP(1, "Agent '" << agentName << appearStr);
         ret->getEntity()->publish("AgentChanged", agentName, appear);
       });
+
+
+      entity.subscribe("RenameAgent", &FaceTracker::onRenameAgent, ftr);
     }
 
     if (getKey(argsVec, "-aruco_tracking" + suffix))

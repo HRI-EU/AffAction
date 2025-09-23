@@ -112,7 +112,6 @@ private:
           }
         }   // recognize
 
-        RLOG_CPP(0, "Speaking: " << text);
         entity->publish("Speak", text);
       },
       entity, scene, std::move(agentName), appeared, recognize).detach();
@@ -130,7 +129,7 @@ private:
                              (std::string from_name, std::string to_name) mutable
     {
       Agent* agent = nullptr;
-      RLOG_CPP(1, "RenameAgent");
+      RLOG_CPP(1, "RenameAgent from '" << from_name << "' to '" << to_name << "'");
 
       for (auto& a : scene->agents)
       {
@@ -162,12 +161,12 @@ private:
       agent->name = to_name;
 
       // Remove old name from types, and add new one
-      RLOG_CPP(1, "Erasing from_name: " << from_name);
+      RLOG_CPP(1, "Erasing from_name from types: " << from_name);
       agent->types.erase(std::remove(agent->types.begin(),
                                      agent->types.end(),
                                      from_name), agent->types.end());
 
-      RLOG_CPP(1, "Adding to_name: " << to_name);
+      RLOG_CPP(1, "Adding to_name to types: " << to_name);
       agent->types.push_back(to_name);
     });
 
