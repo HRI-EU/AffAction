@@ -109,10 +109,12 @@ IF (AFFACTION_WITH_LIBFRANKA AND UNIX AND NOT APPLE)
   #SET(CMAKE_CXX_STANDARD 17)
 
   ADD_EXECUTABLE(FrankaDriver FrankaDriver.cpp)
-  SET(PINOCCHIO_DIR "/hri/storage/user/mgienger/Repos/pinocchio/install")
-  SET(LIBFRANKA_DIR "/hri/storage/user/mgienger/Repos/libfranka/install")
-  FIND_PACKAGE(pinocchio REQUIRED HINTS "${PINOCCHIO_DIR}/lib/cmake/pinocchio")
-  FIND_PACKAGE(Franka REQUIRED HINTS "${LIBFRANKA_DIR}/lib/cmake/Franka")
+  SET(PINOCCHIO_DIR1 "/home/charm/michael/pinocchio/install")
+  SET(LIBFRANKA_DIR1 "/home/charm/michael/libfranka/install")
+  SET(PINOCCHIO_DIR2 "/hri/storage/user/mgienger/Repos/pinocchio/install")
+  SET(LIBFRANKA_DIR2 "/hri/storage/user/mgienger/Repos/libfranka/install")
+  FIND_PACKAGE(pinocchio REQUIRED HINTS "${PINOCCHIO_DIR1}/lib/cmake/pinocchio" "${PINOCCHIO_DIR2}/lib/cmake/pinocchio")
+  FIND_PACKAGE(Franka REQUIRED HINTS "${LIBFRANKA_DIR1}/lib/cmake/Franka" "${LIBFRANKA_DIR2}/lib/cmake/Franka")
   FIND_PACKAGE(Eigen3 REQUIRED)
 
   TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json

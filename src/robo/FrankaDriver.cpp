@@ -39,6 +39,7 @@
 #include <Rcs_math.h>
 #include <Rcs_filters.h>
 #include <Rcs_timer.h>
+#include <Rcs_macros.h>
 
 #include <zmq.hpp>
 
@@ -61,12 +62,26 @@
 
 #include <csignal>
 
+
+#define DOF_ARM (7)
+
 static std::atomic<bool> runLoop(true);
 
 
 class FrankaDriver : public RoboDriver
 {
 public:
+
+  static void setDefaultBehavior(franka::Robot& robot)
+  {
+    robot.setCollisionBehavior({{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},  // joint lower
+    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},  // joint upper
+    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},         // cartesian lower
+    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}});        // cartesian upper
+
+    // (Optional) Set correct tool mass/COM if you have a tool; zeros if not:
+    //robot.setLoad(0.0, {0,0,0}, {0,0,0, 0,0,0, 0,0,0});
+  }
 
   void registerFeedbackCallback(std::function<void(const std::string&)> cb)
   {
@@ -77,41 +92,109 @@ public:
   {
   }
 
-  int start()
+  int joint_hold_compliant_simple(std::string robo_ip)
   {
     try
     {
-      double time = 0.0;
-      franka::Robot robot("172.16.0.2");
-      franka::Model model = robot.loadModel();
+      franka::Robot robot(robo_ip);
+      FrankaDriver::setDefaultBehavior(robot);
 
-      robot.setCollisionBehavior(
-      {{20, 20, 20, 20, 20, 20, 20}},  // joint lower
-      {{20, 20, 20, 20, 20, 20, 20}},  // joint upper
-      {{10, 10, 10, 10, 10, 10}},      // cartesian lower
-      {{10, 10, 10, 10, 10, 10}}       // cartesian upper
+      // Joint compliance (Nm/rad). Lower = softer; raise for firmer hold.
+      // robot.setJointImpedance({120, 120, 120, 80, 60, 40, 30});
+      // robot.setJointImpedance({60, 60, 50, 30, 20, 12, 8});   // Ultra-soft
+      // robot.setJointImpedance({90, 90, 80, 45, 35, 20, 15});  // Soft
+      // robot.setJointImpedance({140, 140, 120, 70, 55, 35, 25});  // Medium
+
+      robot.setJointImpedance({140, 140, 120, 30, 20, 12, 8});   // Ultra-soft
+
+      std::array<double,7> q_hold{};
+      bool initialized = false;
+
+      robot.control(
+        [&](const franka::RobotState& rs, franka::Duration) -> franka::JointPositions
+      {
+        if (!initialized)
+        {
+          q_hold = rs.q;              // latch initial joints once
+          initialized = true;
+        }
+        return franka::JointPositions(q_hold);  // keep commanding the latched pose
+      },
+      franka::ControllerMode::kJointImpedance,  // use joint impedance controller
+      /*limit_rate=*/true                        // smooth & safe
       );
 
-      robot.setCartesianImpedance({600, 600, 600, 50, 50, 50});
-      std::cout << "[INFO] Cartesian impedance set.\n";
+    }
+    catch (const franka::Exception& e)
+    {
+      std::cerr << "Franka Exception: " << e.what() << std::endl;
+      return -1;
+    }
+    return 0;
+  }
+
+
+
+  int follow_the_hand(std::string robo_ip)
+  {
+    try
+    {
+      franka::Robot robot("192.168.42.11");
+      FrankaDriver::setDefaultBehavior(robot);
+
+      // Soft, comfy stiffness (tune to taste). Increase values to make it firmer.
+      robot.setCartesianImpedance({200, 200, 200, 15, 15, 15});
+
+      std::cout << "[INFO] Follow-the-hand mode: move the arm gently; Ctrl-C to stop.\n";
+
+      // Control loop: equilibrium pose = measured pose (follows the hand)
+      robot.control(
+        [](const franka::RobotState& rs, franka::Duration) -> franka::CartesianPose
+      {
+        return franka::CartesianPose(rs.O_T_EE);
+      },
+      franka::ControllerMode::kCartesianImpedance,  // select Cartesian impedance controller
+      /*limit_rate=*/true                           // avoid extra rate limiting for a "light" feel
+      );
+    }
+    catch (const franka::Exception& e)
+    {
+      std::cerr << "Franka Exception: " << e.what() << std::endl;
+      return -1;
+    }
+    return 0;
+  }
+
+  // Seems like setting cartesian compliance is not working currently:
+  // https://github.com/frankarobotics/libfranka/issues/180
+  int cartesian_compliance(std::string robo_ip)
+  {
+    RLOG(0, "START called");
+
+    try
+    {
+      double time = 0.0;
+      size_t loopCount = 0;
+      franka::Robot robot(robo_ip);
+      franka::Model model = robot.loadModel();
+      FrankaDriver::setDefaultBehavior(robot);
+
+      robot.setCartesianImpedance({50, 50, 50, 10, 10, 10});
+      //robot.setCartesianImpedance({600, 600, 600, 15, 15, 15});
+      RLOG_CPP(0, "[INFO] Cartesian impedance set.");
 
       std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
 
-
-      robot.control([&](const franka::RobotState& rs, franka::Duration period) -> franka::CartesianPose
+      auto cartesian_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::CartesianPose
       {
-
         // Send feedback back to remote process
         if (this->feedbackFcn)
         {
-
-          this->feedbackFcn("Hello");
+          this->feedbackFcn(feedback2JsonString(rs, 0, nullptr));
         }
 
-
-
-
-        if (time == 0.0)
+        // Dration is 0 at the first incocation of the callback
+        if (time == 0.0 && !filteredJointCommands)
         {
           // Create and initialize filters
           const double tmc = 0.1;
@@ -122,10 +205,17 @@ public:
           {
             filteredJointCommands->setMaxVel(getMaxVel()[i], i);
           }
-
+          RLOG(0, "Robot initialized");
         }
 
         time += period.toSec();
+
+        loopCount++;
+
+        if (loopCount%500==0)
+        {
+          RLOG(0, "tic");
+        }
 
         // Tool & stiffness frames to use for the FK:
         //    - If you haven't changed them: use rs.F_T_EE and rs.EE_T_K
@@ -156,8 +246,88 @@ public:
         }
 
         return motion;
-      });
+      };
 
+
+
+
+      robot.control(cartesian_pose_cb, franka::ControllerMode::kCartesianImpedance, /*limit_rate=*/false);
+    }
+    catch (const franka::Exception& e)
+    {
+      std::cerr << "Franka Exception: " << e.what() << std::endl;
+      return -1;
+    }
+
+    return 0;
+  }
+
+  // Joint-space compliance
+  int joint_compliance(std::string robo_ip)
+  {
+
+    try
+    {
+      double time = 0.0;
+      size_t loopCount = 0;
+      franka::Robot robot(robo_ip);
+      franka::Model model = robot.loadModel();
+      FrankaDriver::setDefaultBehavior(robot);
+
+      // Joint compliance (Nm/rad). Lower = softer; raise for firmer hold.
+      // robot.setJointImpedance({120, 120, 120, 80, 60, 40, 30});
+      // robot.setJointImpedance({60, 60, 50, 30, 20, 12, 8});   // Ultra-soft
+      // robot.setJointImpedance({90, 90, 80, 45, 35, 20, 15});  // Soft
+      // robot.setJointImpedance({140, 140, 120, 70, 55, 35, 25});  // Medium
+      RLOG_CPP(0, "[INFO] Joint impedance set.");
+
+      std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
+
+      auto joint_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::JointPositions
+      {
+        // Send feedback back to remote process
+        if (this->feedbackFcn)
+        {
+          this->feedbackFcn(feedback2JsonString(rs, 0, nullptr));
+        }
+
+        // Initialize on first cycle
+        if (!filteredJointCommands)
+        {
+          // Create and initialize filters
+          const double tmc = 0.1;
+          const double dt = 0.001;
+          filteredJointCommands = std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, getDOF());
+          filteredJointCommands->init(rs.q.data());
+          for (size_t i = 0; i < filteredJointCommands->getDim(); ++i)
+          {
+            filteredJointCommands->setMaxVel(getMaxVel()[i], i);
+          }
+          RLOG(0, "Filters initialized");
+        }
+
+        time += period.toSec();
+        loopCount++;
+
+        if (loopCount%500==0)
+        {
+          RLOG(0, "tic");
+        }
+
+        // Compute desired EE pose from q_des
+        std::array<double,7> q_des;
+        for (size_t i=0; i<q_des.size(); ++i)
+        {
+          q_des[i] = filteredJointCommands->getPosition(i);
+        }
+
+        return franka::JointPositions(q_des);
+      };
+
+
+
+
+      robot.control(joint_pose_cb, franka::ControllerMode::kCartesianImpedance, /*limit_rate=*/false);
     }
     catch (const franka::Exception& e)
     {
@@ -170,7 +340,7 @@ public:
 
   size_t getDOF() const
   {
-    return 7;
+    return DOF_ARM;
   }
 
   double getMinTMC() const
@@ -310,6 +480,32 @@ public:
     return quitMe;
   }
 
+  std::string feedback2JsonString(const franka::RobotState& rs,
+                                  int64_t time_usec, const RoboCommand* cmd)
+  {
+    nlohmann::json fbJson;
+    fbJson["time"] = Timer_getSystemTime();
+    fbJson["cycle_time_usec"] = time_usec;
+    fbJson["position"] = rs.q;
+    fbJson["velocity"] = rs.dq;
+    fbJson["torque"] = rs.tau_J;
+
+    // if (cmd)
+    // {
+    //   std::vector<double> joint_err(DOF_ARM, 0.0);
+    //   std::vector<double> joint_cmd(DOF_ARM, 0.0);
+
+    //   for (size_t i=0; i<DOF_ARM; ++i)
+    //   {
+    //     joint_err[i] = RCS_RAD2DEG(RCS_DEG2RAD(cmd->q_des[i]) - rs.q[i]);
+    //     joint_cmd[i] = RCS_DEG2RAD(cmd->q_des[i]);
+    //   }
+    //   fbJson["position_error"] = joint_err;
+    //   fbJson["position_command"] = joint_cmd;
+    // }
+
+    return fbJson.dump();
+  }
 
 protected:
 
@@ -320,16 +516,8 @@ protected:
 
 
 
-static int runFranka(const std::string& robo_name)
+static int runFranka(const aff::RoboNetworkInfo* nwInfo)
 {
-  const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
-
-  if (!nwInfo)
-  {
-    RLOG_CPP(0, "Robo name not known: " << robo_name);
-    return -1;
-  }
-
   // Thread sending sensory data to remote process
   FeedbackThread feedback;
   feedback.start(nwInfo->roboSender, runLoop);
@@ -340,9 +528,9 @@ static int runFranka(const std::string& robo_name)
   auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
   robo.registerFeedbackCallback(fbFcn);
   //robo.setDummyMode(dummy_mode);
-  robo.start();//runLoop, readOnly);
+  robo.cartesian_compliance(nwInfo->robo_ip);//runLoop, readOnly);
 
-  // Command receiver. On each arriving command, the PTUDriver's setCommand
+  // Command receiver. On each arriving command, the driver's setCommand
   // functionis called.
   bool blocking = true;
   CommandThread commands;
@@ -356,10 +544,12 @@ static int runFranka(const std::string& robo_name)
   return 0;
 }
 
+
+
 /*******************************************************************************
  *
  *******************************************************************************/
-void quit(int /*sig*/)
+static void quit(int /*sig*/)
 {
   static int kHit = 0;
   fprintf(stderr, "Trying to exit gracefully - %dst attempt\n", kHit+1);
@@ -381,11 +571,19 @@ int main(int argc, char** argv)
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
   int mode = 0;
-  std::string robo_name;
+  std::string robo_name = "riemann";
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
   argP.getArgument("-robo_name", &robo_name, "Robot specifier (default is %s)", robo_name.c_str());
+
+  const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
+
+  if (!nwInfo)
+  {
+    RLOG_CPP(0, "Robo name not known: " << robo_name);
+    return -1;
+  }
 
   switch (mode)
   {
@@ -398,8 +596,35 @@ int main(int argc, char** argv)
       break;
 
     case 1:
-      runFranka(robo_name);
+      runFranka(nwInfo);
       break;
+
+    case 2:
+    {
+      FrankaDriver robo;
+      robo.cartesian_compliance(nwInfo->robo_ip);
+      RPAUSE();
+      robo.stop();
+    }
+    break;
+
+    case 3:
+    {
+      FrankaDriver robo;
+      robo.follow_the_hand(nwInfo->robo_ip);
+      RPAUSE();
+      robo.stop();
+    }
+    break;
+
+    case 4:
+    {
+      FrankaDriver robo;
+      robo.joint_hold_compliant_simple(nwInfo->robo_ip);
+      RPAUSE();
+      robo.stop();
+    }
+    break;
 
     default:
       RLOG_CPP(0, "No mode " << mode);

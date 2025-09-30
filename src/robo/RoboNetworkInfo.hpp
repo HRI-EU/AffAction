@@ -87,11 +87,11 @@ public:
     littbarski.roboMode = "LowLevel";
     littbarski.q_default_deg = { -40.0, -80.0, -80.0, 100.0, 0.0, 40.0, 110.0 };
 
-    // Just Jaco Gen3 simulation
+    // Just Jaco Gen3 right simulation
     RoboNetworkInfo test_right = rummenigge;
     test_right.roboMode = "TestWithoutRobot";
 
-    // Just Jaco Gen3 simulation
+    // Just Jaco Gen3 left simulation
     RoboNetworkInfo test_left = littbarski;
     test_left.roboMode = "TestWithoutRobot";
 
@@ -112,6 +112,32 @@ public:
     RoboNetworkInfo ptu_test = ptu;
     ptu_test.roboMode = "TestWithoutRobot";
 
+    // Franka right
+    RoboNetworkInfo riemann;
+    riemann.robo_ip = "192.168.42.11";
+    riemann.roboToRemotePort = 40008;
+    riemann.remoteToRoboPort = 40009;
+    riemann.robo_computer_ip = "localhost";
+    riemann.roboSender = "tcp://*:" + std::to_string(riemann.roboToRemotePort);
+    riemann.roboReceiver = "tcp://*:" + std::to_string(riemann.remoteToRoboPort);
+    riemann.remoteReceiver = "tcp://" + riemann.robo_computer_ip + ":" + std::to_string(riemann.roboToRemotePort);
+    riemann.remoteSender = "tcp://" + riemann.robo_computer_ip + ":" + std::to_string(riemann.remoteToRoboPort);
+    riemann.roboMode = "";
+    riemann.q_default_deg = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+    // Franka left
+    RoboNetworkInfo laplace;
+    laplace.robo_ip = "192.168.43.11";
+    laplace.roboToRemotePort = 40010;
+    laplace.remoteToRoboPort = 40011;
+    laplace.robo_computer_ip = "localhost";
+    laplace.roboSender = "tcp://*:" + std::to_string(laplace.roboToRemotePort);
+    laplace.roboReceiver = "tcp://*:" + std::to_string(laplace.remoteToRoboPort);
+    laplace.remoteReceiver = "tcp://" + laplace.robo_computer_ip + ":" + std::to_string(laplace.roboToRemotePort);
+    laplace.remoteSender = "tcp://" + laplace.robo_computer_ip + ":" + std::to_string(laplace.remoteToRoboPort);
+    laplace.roboMode = "";
+    laplace.q_default_deg = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
 
 
     static std::map<std::string, RoboNetworkInfo> nwInfo =
@@ -121,7 +147,9 @@ public:
       { "test_right", test_right },
       { "test_left",  test_left  },
       { "ptu",        ptu        },
-      { "ptu_test",   ptu_test   }
+      { "ptu_test",   ptu_test   },
+      { "riemann",    riemann    },
+      { "laplace",    laplace    }
     };
 
     auto it = nwInfo.find(roboName);
