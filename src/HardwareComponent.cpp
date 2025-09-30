@@ -49,6 +49,7 @@
 #include "AzureSkeletonTracker.h"
 #include "AgentWelcomeComponent.hpp"
 #include "ImageTracker.h"
+#include "WebsocketClientComponent.hpp"
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -566,6 +567,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
       bool with_fr = getKey(argvStrVec, "-agent_welcome.recognize");
       components.push_back(new AgentWelcomeComponent(&entity, scene, with_fr));
     }
+    
+    components.push_back(new WebsocketClientComponent(&entity));
 
   }
 

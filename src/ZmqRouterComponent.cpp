@@ -262,6 +262,20 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         {
           // Found first occurrence
           RLOG_CPP(0, "Worker found for the first time: " << id);
+
+          bool trackerExists = false;
+          for (const auto& t : getTrackers())
+          {
+            if (t->getRequestKeyword()==id)
+            {
+              trackerExists = true;
+              break;
+            }
+          }
+
+          RLOG(0, "Tracker for '%s' %s", id.c_str(), trackerExists ? "exists" : "not loaded");
+
+
         }
         workers[id] = Clock::now();              // refresh liveness
 

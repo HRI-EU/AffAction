@@ -281,10 +281,6 @@ bool track_agent_facemesh(EntityBase& entity,
 
     RLOG_CPP(1, "track_agent_facemesh iteration " << i
              << " with bounding box " << bb_json.dump());
-    REXEC(0)
-    {
-      std::cout << ".";
-    }
 
     // In the last iteration, we set the repetitions to continusous update
     // (-2), so that the face is tracked without bounding box updates.
@@ -300,11 +296,6 @@ bool track_agent_facemesh(EntityBase& entity,
   }
 
   t_calc = getWallclockTime() - t_calc;
-
-  REXEC(0)
-  {
-    std::cout << std::endl;
-  }
 
   RLOG(0, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
 
@@ -370,10 +361,6 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
 
     RLOG_CPP(1, "recognize_faces iteration " << i
              << " with bounding box " << bb_json.dump());
-    REXEC(0)
-    {
-      std::cout << ".";
-    }
 
     std::string recognized = recognize_faces(entity, bb_json.dump(), 1, timeout_in_seconds);
 
@@ -385,19 +372,13 @@ std::pair<std::string,std::string> recognize_agent_face(EntityBase& entity,
   }
 
   t_calc = getWallclockTime() - t_calc;
-
-  REXEC(0)
-  {
-    std::cout << std::endl;
-  }
-
   RLOG(1, "Took %.2f sec (is %.2f fps)", t_calc, n_iterations/t_calc);
 
   int winnerCount = 0;
   std::string winnerName;
   for (const auto& detection : detections)
   {
-    std::cout << "Key: " << detection.first << ", Value: " << detection.second << "\n";
+    RLOG_CPP(1, "Key: " << detection.first << ", Value: " << detection.second);
 
     if (detection.second>winnerCount)
     {
