@@ -43,6 +43,7 @@
 #include "PW70ZmqComponent.hpp"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
+#include "FrankaComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
 #include "RespeakerSoundDirComponent.h"
@@ -367,7 +368,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     argP.addDescription("-pw70_pan_joint_name", "Name of PW70 pan joint (default: empty string)");
     argP.addDescription("-pw70_tilt_joint_name", "Name of PW70 pan joint (default: empty string)");
     argP.addDescription("-pw70_control_frequency", "PW70 PTU control frequency (Must be 1, 10, 25, 50 or 100. Default: 50)");
-    argP.addDescription("-pw70_vel", "Start with Scitos PTU in velocity mode");
+    argP.addDescription("-pw70_vel", "Start with PW70 PTU in velocity mode");
   }
   else
   {
@@ -389,8 +390,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
 
   if (dryRun)
   {
-    argP.addDescription("-jacoGen3Zmq_left", "Start with Kinova Kortex component");
-    argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component");
+    argP.addDescription("-jacoGen3Zmq_left", "Start with Kinova Kortex component (left arm)");
+    argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component (right arm)");
+    argP.addDescription("-frankaZmq_left", "Start with Franka component (left arm)");
+    argP.addDescription("-frankaZmq_right", "Start with Franka component (right arm)");
   }
   else
   {
@@ -415,11 +418,30 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
     {
       std::string suffix = "";
-      std::string otherRecv="tcp://localhost:5555";
-      std::string otherSend="tcp://localhost:5556";
+      std::string otherRecv="tcp://localhost:40002";
+      std::string otherSend="tcp://localhost:40003";
       components.push_back(new aff::KortexComponent(&entity, suffix,
                                                     otherRecv,otherSend));
     }
+
+    if (getKey(argvStrVec, "-frankaZmq_left"))
+    {
+      std::string suffix = "_left";
+      std::string otherRecv="tcp://localhost:40010";
+      std::string otherSend="tcp://localhost:40011";
+      components.push_back(new aff::FrankaComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
+    }
+
+    if (getKey(argvStrVec, "-frankaZmq_right"))
+    {
+      std::string suffix = "_right";
+      std::string otherRecv="tcp://localhost:40008";
+      std::string otherSend="tcp://localhost:40009";
+      components.push_back(new aff::FrankaComponent(&entity, suffix,
+                                                    otherRecv,otherSend));
+    }
+
   }
 
 #if defined USE_ROS
@@ -567,9 +589,8 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
       bool with_fr = getKey(argvStrVec, "-agent_welcome.recognize");
       components.push_back(new AgentWelcomeComponent(&entity, scene, with_fr));
     }
-    
-    components.push_back(new WebsocketClientComponent(&entity));
 
+    components.push_back(new WebsocketClientComponent(&entity));
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq2"))
