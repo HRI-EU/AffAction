@@ -88,9 +88,9 @@ public:
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       waitCount++;
 
-      if (waitCount > 50)
+      if (waitCount > 100)
       {
-        RLOG_CPP(0, "Didn't hear from robot for 5 seconds - giving up");
+        RLOG_CPP(0, "Didn't hear from robot for 10 seconds - giving up");
         return;
       }
     }

@@ -59,7 +59,7 @@
 #include <thread>
 #include <iostream>
 #include <chrono>
-
+#include <atomic>
 #include <csignal>
 
 
@@ -80,7 +80,7 @@ public:
     {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}});        // cartesian upper
 
     // (Optional) Set correct tool mass/COM if you have a tool; zeros if not:
-    //robot.setLoad(0.0, {0,0,0}, {0,0,0, 0,0,0, 0,0,0});
+    // robot.setLoad(0.0, {0,0,0}, {0,0,0, 0,0,0, 0,0,0});
   }
 
   void registerFeedbackCallback(std::function<void(const std::string&)> cb)
@@ -88,8 +88,38 @@ public:
     feedbackFcn = std::move(cb);
   }
 
+  void start(std::string robo_ip, const std::atomic_bool& run_flag, bool inSimulation)
+  {
+    if (roboThread.joinable())
+    {
+      RLOG(1, "Robo thread start() called while thread is already running.");
+      return;
+    }
+
+    if (inSimulation)
+    {
+      roboThread = std::thread(&FrankaDriver::sim_loop, this, std::cref(run_flag));
+    }
+    else
+    {
+      roboThread = std::thread(&FrankaDriver::joint_compliance, this, robo_ip, std::cref(run_flag));
+    }
+
+  }
+
   void stop()
   {
+    if (roboThread.joinable())
+    {
+      RLOG(0, "Waiting for robo thread to join");
+      roboThread.join();
+      RLOG(0, "Robo thread joined");
+    }
+    else
+    {
+      RLOG(0, "Robo thread already stopped");
+    }
+
   }
 
   int joint_hold_compliant_simple(std::string robo_ip)
@@ -188,7 +218,7 @@ public:
       auto cartesian_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::CartesianPose
       {
         // Send feedback back to remote process
-        if (this->feedbackFcn)
+        if (this->feedbackFcn && (loopCount%25==0))
         {
           this->feedbackFcn(feedback2JsonString(rs, 0, nullptr));
         }
@@ -263,7 +293,91 @@ public:
   }
 
   // Joint-space compliance
-  int joint_compliance(std::string robo_ip)
+  int sim_loop(const std::atomic<bool>& run_flag)
+  {
+    size_t loopCount = 0;
+
+    // Create and initialize filters
+    const double tmc = 0.1;
+    const double dt = 0.001;
+    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
+    filteredJointCommands = std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, getDOF());
+    std::vector<double> q_init{0.0, 0.0, 0.0, -M_PI_2, 0.0, M_PI_2, 0.0};
+    filteredJointCommands->init(q_init.data());
+    for (size_t i = 0; i < filteredJointCommands->getDim(); ++i)
+    {
+      filteredJointCommands->setMaxVel(getMaxVel()[i], i);
+    }
+    RLOG(0, "Filters initialized");
+
+
+    while (run_flag.load(std::memory_order_relaxed))
+    {
+      // Send feedback back to remote process every 25th frame (=40Hz)
+      if (this->feedbackFcn && (loopCount%25==0))
+      {
+        nlohmann::json fbJson;
+        fbJson["time"] = Timer_getSystemTime();
+        fbJson["cycle_time_usec"] = dt;
+        fbJson["position"] = filteredJointCommands->getPosition();
+        fbJson["velocity"] = filteredJointCommands->getVelocity();
+        fbJson["torque"] = std::vector<double>(7, 0.0);
+        this->feedbackFcn(fbJson.dump());
+      }
+
+      // Process new incoming commands
+      RoboCommand copyOfCmd;
+      {
+        std::lock_guard<std::mutex> lock(cmdMtx);
+        copyOfCmd = this->incomingCommand;
+        this->incomingCommand.newCommand = false;
+      }
+
+      if (copyOfCmd.newCommand)
+      {
+        for (const auto& pair : copyOfCmd.jointCommands)
+        {
+          const JointCommand& cmd = pair.second;
+
+          if (cmd.has_position_command)
+          {
+            filteredJointCommands->setTarget(cmd.position_command, cmd.index);
+          }
+          if (cmd.has_vmax)
+          {
+            filteredJointCommands->setMaxVel(cmd.vmax, cmd.index);
+          }
+          if (cmd.has_tmc)
+          {
+            filteredJointCommands->setTimeConstant(cmd.tmc, cmd.index);
+          }
+        }
+      }
+
+      // Interpolation at every time step
+      filteredJointCommands->iterate();
+
+      // Compute desired EE pose from q_des
+      std::array<double,7> q_des{};
+      for (size_t i=0; i<q_des.size(); ++i)
+      {
+        q_des[i] = filteredJointCommands->getPosition(i);
+      }
+
+      loopCount++;
+
+      Timer_waitDT(dt);
+    }
+
+
+
+
+
+    return 0;
+  }
+
+  // Joint-space compliance
+  int joint_compliance(std::string robo_ip, const std::atomic<bool>& run_flag)
   {
 
     try
@@ -271,22 +385,21 @@ public:
       double time = 0.0;
       size_t loopCount = 0;
       franka::Robot robot(robo_ip);
-      franka::Model model = robot.loadModel();
       FrankaDriver::setDefaultBehavior(robot);
 
       // Joint compliance (Nm/rad). Lower = softer; raise for firmer hold.
       // robot.setJointImpedance({120, 120, 120, 80, 60, 40, 30});
       // robot.setJointImpedance({60, 60, 50, 30, 20, 12, 8});   // Ultra-soft
       // robot.setJointImpedance({90, 90, 80, 45, 35, 20, 15});  // Soft
-      // robot.setJointImpedance({140, 140, 120, 70, 55, 35, 25});  // Medium
+      robot.setJointImpedance({140, 140, 120, 70, 55, 35, 25});  // Medium
       RLOG_CPP(0, "[INFO] Joint impedance set.");
 
       std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
 
       auto joint_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::JointPositions
       {
-        // Send feedback back to remote process
-        if (this->feedbackFcn)
+        // Send feedback back to remote process every 25th frame (=40Hz)
+        if (this->feedbackFcn && (loopCount%25==0))
         {
           this->feedbackFcn(feedback2JsonString(rs, 0, nullptr));
         }
@@ -306,6 +419,51 @@ public:
           RLOG(0, "Filters initialized");
         }
 
+
+        // Process new incoming commands
+        RoboCommand copyOfCmd;
+        {
+          std::lock_guard<std::mutex> lock(cmdMtx);
+          copyOfCmd = this->incomingCommand;
+          this->incomingCommand.newCommand = false;
+        }
+
+        if (copyOfCmd.newCommand)
+        {
+          for (const auto& pair : copyOfCmd.jointCommands)
+          {
+            //const std::string& joint_name = pair.first;
+            const JointCommand& cmd = pair.second;
+
+            if (cmd.has_position_command)
+            {
+              filteredJointCommands->setTarget(cmd.position_command, cmd.index);
+            }
+
+            if (cmd.has_vmax)
+            {
+              filteredJointCommands->setMaxVel(cmd.vmax, cmd.index);
+            }
+
+            if (cmd.has_tmc)
+            {
+              filteredJointCommands->setTimeConstant(cmd.tmc, cmd.index);
+            }
+          }
+        }
+
+        // Interpolation at every time step
+        filteredJointCommands->iterate();
+
+        // Compute desired EE pose from q_des
+        std::array<double,7> q_des{};
+        for (size_t i=0; i<q_des.size(); ++i)
+        {
+          q_des[i] = filteredJointCommands->getPosition(i);
+        }
+
+
+
         time += period.toSec();
         loopCount++;
 
@@ -314,12 +472,12 @@ public:
           RLOG(0, "tic");
         }
 
-        // Compute desired EE pose from q_des
-        std::array<double,7> q_des;
-        for (size_t i=0; i<q_des.size(); ++i)
+        // Exit request from outside?
+        if (!run_flag.load(std::memory_order_relaxed))
         {
-          q_des[i] = filteredJointCommands->getPosition(i);
+          return franka::MotionFinished(franka::JointPositions(q_des));
         }
+
 
         return franka::JointPositions(q_des);
       };
@@ -327,7 +485,7 @@ public:
 
 
 
-      robot.control(joint_pose_cb, franka::ControllerMode::kCartesianImpedance, /*limit_rate=*/false);
+      robot.control(joint_pose_cb, franka::ControllerMode::kJointImpedance, /*limit_rate=*/true);
     }
     catch (const franka::Exception& e)
     {
@@ -337,6 +495,23 @@ public:
 
     return 0;
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   size_t getDOF() const
   {
@@ -510,41 +685,8 @@ public:
 protected:
 
   std::function<void(const std::string&)> feedbackFcn;
+  std::thread roboThread;
 };
-
-
-
-
-
-static int runFranka(const aff::RoboNetworkInfo* nwInfo)
-{
-  // Thread sending sensory data to remote process
-  FeedbackThread feedback;
-  feedback.start(nwInfo->roboSender, runLoop);
-
-  // Robo driver thread. The FeedbackThread's updateMessage function is called
-  // in each control cycle once registered.
-  FrankaDriver robo;
-  auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
-  robo.registerFeedbackCallback(fbFcn);
-  //robo.setDummyMode(dummy_mode);
-  robo.cartesian_compliance(nwInfo->robo_ip);//runLoop, readOnly);
-
-  // Command receiver. On each arriving command, the driver's setCommand
-  // functionis called.
-  bool blocking = true;
-  CommandThread commands;
-  auto cmdFcn = std::bind(&FrankaDriver::setCommand, &robo, std::placeholders::_1);
-  commands.start(nwInfo->roboReceiver, cmdFcn, runLoop, blocking);
-
-  commands.stop();
-  robo.stop();
-  feedback.stop();
-
-  return 0;
-}
-
-
 
 /*******************************************************************************
  *
@@ -576,6 +718,7 @@ int main(int argc, char** argv)
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
   argP.getArgument("-robo_name", &robo_name, "Robot specifier (default is %s)", robo_name.c_str());
+  bool sim = argP.hasArgument("-sim", "Test in simulation only");
 
   const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
@@ -590,19 +733,43 @@ int main(int argc, char** argv)
     case 0:
       printf("\nHere's what you can do:\n\n");
       printf("\t-m 0   Prints this message (default)\n");
-      printf("\t-m 1   Run libfranka server\n");
+      printf("\t-m 1   Run joint compliance (networked)\n");
+      printf("\t-m 2   Run joint compliance demo (no networking)\n");
+      printf("\t-m 3   Run follow-the-hand demo (no networking)\n");
       printf("\n");
       argP.print();
       break;
 
     case 1:
-      runFranka(nwInfo);
-      break;
+    {
+      // Thread sending sensory data to remote process. This runs a networking thread that is
+      // woken up by a condition variable that is set from the robo thread.
+      FeedbackThread feedback;
+      feedback.start(nwInfo->roboSender, runLoop);
+
+      // Robo driver thread. The FeedbackThread's updateMessage function is called
+      // in each control cycle once registered.
+      FrankaDriver robo;
+      auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
+      robo.registerFeedbackCallback(fbFcn);
+      robo.start(nwInfo->robo_ip, runLoop, sim);
+
+      // Command receiver. On each arriving command, the driver's setCommand function is called.
+      bool blocking = true;
+      CommandThread commands;
+      auto cmdFcn = std::bind(&FrankaDriver::setCommand, &robo, std::placeholders::_1);
+      commands.start(nwInfo->roboReceiver, cmdFcn, runLoop, blocking);
+
+      commands.stop();
+      robo.stop();
+      feedback.stop();
+    }
+    break;
 
     case 2:
     {
       FrankaDriver robo;
-      robo.cartesian_compliance(nwInfo->robo_ip);
+      robo.joint_hold_compliant_simple(nwInfo->robo_ip);
       RPAUSE();
       robo.stop();
     }

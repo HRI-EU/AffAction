@@ -2775,4 +2775,43 @@ public:
 
 RCS_REGISTER_EXAMPLE(ExampleGazeWebsocket, "Actions", "Gaze with websocket");
 
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleFrankaDriver : public ExampleActionsECS
+{
+public:
+
+  ExampleFrankaDriver(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start Franka Driver program separately: bin/FrankaDriver -m 1");
+  }
+
+  virtual ~ExampleFrankaDriver()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_robo_tablemount.xml";
+    configDirectory = "config/xml/Franka";
+    componentArgs = "-frankaZmq_right ";
+    enableRealGraphVisualization = true;
+    speedUp = 1;
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start Franka Driver program separately: bin/FrankaDriver -m 1\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleFrankaDriver, "Actions", "FrankaDriver");
+
 }   // namespace aff

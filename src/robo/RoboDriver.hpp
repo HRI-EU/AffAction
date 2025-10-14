@@ -67,7 +67,6 @@ protected:
     std::map<std::string, JointCommand> jointCommands;
     bool quitMe;
     bool newCommand;
-
   };
 
   mutable std::mutex cmdMtx;

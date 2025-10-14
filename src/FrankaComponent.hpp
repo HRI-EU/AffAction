@@ -95,7 +95,7 @@ public:
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
     {
-      RLOG(0, "No data yet received");
+      RLOG(1, "No data yet received");
       return;
     }
 
@@ -183,7 +183,6 @@ private:
       RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
       std::vector<double> q, qd, tor;
-      double q_grip = -1.0;
 
       if (recv_json.contains("position"))
       {
@@ -200,7 +199,7 @@ private:
         tor = recv_json["torque"].get<std::vector<double>>();
       }
 
-      if ((q.size()==7) && (qd.size()==7) && (tor.size()==7) && (q_grip!=-1))
+      if ((q.size()==7) && (qd.size()==7) && (tor.size()==7))
       {
         std::lock_guard<std::mutex> lock(this->recvMtx);
         this->jointPosition = q;
@@ -229,15 +228,121 @@ private:
       return std::string();
     }
 
+    // {
+    //   std::lock_guard<std::mutex> lock(cmdMtx);
+    //   if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
+    //   {
+    //     cmdJson["q_des"] = jointCommands;
+    //   }
+
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    nlohmann::json payload =
+    {
+      {
+        "joints", {
+          {
+            "joint_1", {
+              {"index", 0},
+              {"position_command", jointCommands[0]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_2", {
+              {"index", 1},
+              {"position_command", jointCommands[1]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_3", {
+              {"index", 2},
+              {"position_command", jointCommands[2]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_4", {
+              {"index", 3},
+              {"position_command", jointCommands[3]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_5", {
+              {"index", 4},
+              {"position_command", jointCommands[4]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_6", {
+              {"index", 5},
+              {"position_command", jointCommands[5]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "joint_7", {
+              {"index", 6},
+              {"position_command", jointCommands[6]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          }
+
+        }
+      },
+      {"quit", false}
+    };
+
+
+
+
+
+
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
       if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
       {
-        cmdJson["q_des"] = jointCommands;
+        cmdJson = payload;
       }
 
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Memorize previous state
     jointCommandsPrev = jointCommands;
 
     return cmdJson.dump();
