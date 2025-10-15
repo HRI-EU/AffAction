@@ -36,10 +36,23 @@
 
 #include "ComponentBase.h"
 
-#include <Rcs_macros.h>
+#define ASIO_STANDALONE
+
+#if defined (_MSC_VER)
+#define _WEBSOCKETPP_CPP11_TYPE_TRAITS_
+#define WEBSOCKETPP_USE_STD_RANDOM_DEVICE
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
+
+#if defined (_MSC_VER)
+#pragma warning(pop)
+#endif
+
+#include <Rcs_macros.h>
 
 #include <iostream>
 #include <string>

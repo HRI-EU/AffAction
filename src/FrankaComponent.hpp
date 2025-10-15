@@ -228,97 +228,27 @@ private:
       return std::string();
     }
 
-    // {
-    //   std::lock_guard<std::mutex> lock(cmdMtx);
-    //   if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
-    //   {
-    //     cmdJson["q_des"] = jointCommands;
-    //   }
-
-    // }
-
-
-
-
-
-
-
-
-
-
-
-
-
     nlohmann::json payload =
     {
-      {
-        "joints", {
-          {
-            "joint_1", {
-              {"index", 0},
-              {"position_command", jointCommands[0]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_2", {
-              {"index", 1},
-              {"position_command", jointCommands[1]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_3", {
-              {"index", 2},
-              {"position_command", jointCommands[2]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_4", {
-              {"index", 3},
-              {"position_command", jointCommands[3]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_5", {
-              {"index", 4},
-              {"position_command", jointCommands[4]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_6", {
-              {"index", 5},
-              {"position_command", jointCommands[5]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          },
-          {
-            "joint_7", {
-              {"index", 6},
-              {"position_command", jointCommands[6]},
-              {"novmax", 0.2},
-              {"notmc", 0.1}
-            }
-          }
-
-        }
-      },
+      {"robot_name", "my little robot"},
+      {"timestamp",  Timer_getSystemTime()},
+      {"actuators", nlohmann::json::array()},
       {"quit", false}
     };
 
-
-
-
-
+    auto& acts = payload["actuators"];
+    for (int i = 0; i < 7; ++i)
+    {
+      acts.push_back(
+      {
+        {"id",    "joint_" + std::to_string(i + 1)},
+        {"type",  "joint"},
+        {"index", i},
+        {"position", jointCommands[i]},
+        {"no_vmax", 0.2},
+        {"no_tmc",  0.1}
+      });
+    }
 
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
@@ -326,21 +256,7 @@ private:
       {
         cmdJson = payload;
       }
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // Memorize previous state
     jointCommandsPrev = jointCommands;

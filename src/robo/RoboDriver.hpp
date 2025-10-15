@@ -33,6 +33,8 @@
 #ifndef AFF_ROBODRIVER_H
 #define AFF_ROBODRIVER_H
 
+#include "json.hpp"
+
 #include <vector>
 #include <map>
 #include <mutex>
@@ -42,61 +44,71 @@
 class RoboDriver
 {
 public:
-
 protected:
 
 
-  // Command data struct
-  struct JointCommand
+
+  /*
+
   {
-    int index;
-    double position_command;
-    double vmax;
-    double tmc;
-    bool has_position_command;
-    bool has_vmax;
-    bool has_tmc;
+  "robot_name": "my little robot" ,
+  "timestamp": "2025-10-14T12:00:00Z",
+  "actuators": [
+    { "id": "joint_1", "type": "joint", "index": 0,
+      "position": 0.4, "velocity": 0.4, "force_torque": 0.0,
+      "tmc": 0.1, "vmax": 0.1
+    },
+    { "id": "joint_2", "type": "joint", "index": 1, "position": 0.4},
+    { "id": "gripper", "type": "gripper", "index": 0, "position": 0.4, "effort": 100}
+  ],
+  "quit": true
+  }
+
+  */
+
+  struct ActuatorCommand
+  {
+    std::string id;         // "joint_1", "gripper", ...
+    std::string type;       // "joint", "gripper", ... (string as requested)
+    int index = -1;         // array index for vector access
+
+    double position = 0.0;
+    double effort   = 0.0;
+    double tmc      = 0.0;
+    double vmax     = 0.0;
+
+    bool has_position = false;
+    bool has_effort   = false;
+    bool has_tmc      = false;
+    bool has_vmax     = false;
   };
 
-  struct RoboCommand
+  struct RobotCommand
   {
-    RoboCommand() : quitMe(false), newCommand(false)
-    {
-    }
-
-    std::map<std::string, JointCommand> jointCommands;
-    bool quitMe;
-    bool newCommand;
+    std::string robot_name;
+    double timestamp;
+    uint64_t seq = 0;
+    std::vector<ActuatorCommand> actuators;
+    bool quit = false;
   };
+
+
+  // static ActuatorCommand parse_actuator(const nlohmann::json& j, ActuatorCommand& out);
+  static bool parse_actuator(const nlohmann::json& j, ActuatorCommand& out);
+  static bool parse_robot_command(const nlohmann::json& msg, RobotCommand& cmd);
+
 
   mutable std::mutex cmdMtx;
-  RoboCommand incomingCommand;
+  RobotCommand incomingCommand;
+  bool newIncomingCommand = false;
 
-  RoboCommand getCommand() const
-  {
-    std::lock_guard<std::mutex> lock(cmdMtx);
-    return this->incomingCommand;
-  }
-
+  virtual bool setCommand(const std::string& json_msg) = 0;
+  virtual bool check_robot_command(RobotCommand& cmd) const = 0;
   virtual size_t getDOF() const = 0;
-
   virtual double getMinTMC() const = 0;
-
   virtual std::vector<double> getMaxVel() const = 0;
 
-  virtual double getMaxVel(size_t index) const
-  {
-    return getMaxVel()[index];
-  }
-
-  std::vector<double> getDesiredQ() const
-  {
-    std::vector<double> q_des;
-
-
-    return q_des;
-  }
-
+  virtual double getMaxVel(size_t index) const;
 };
 
 #endif

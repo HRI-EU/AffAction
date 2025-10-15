@@ -43,6 +43,7 @@
 
 #include <zmq.hpp>
 
+#if defined (AFFACTION_WITH_LIBFRANKA)
 #include <franka/robot.h>
 #include <franka/model.h>
 #include <franka/exception.h>
@@ -54,6 +55,8 @@
 #include <pinocchio/fwd.hpp>
 
 #include <Eigen/Dense>
+#endif
+
 #include <array>
 #include <mutex>
 #include <thread>
@@ -71,17 +74,6 @@ static std::atomic<bool> runLoop(true);
 class FrankaDriver : public RoboDriver
 {
 public:
-
-  static void setDefaultBehavior(franka::Robot& robot)
-  {
-    robot.setCollisionBehavior({{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},  // joint lower
-    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},  // joint upper
-    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},         // cartesian lower
-    {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}});        // cartesian upper
-
-    // (Optional) Set correct tool mass/COM if you have a tool; zeros if not:
-    // robot.setLoad(0.0, {0,0,0}, {0,0,0, 0,0,0, 0,0,0});
-  }
 
   void registerFeedbackCallback(std::function<void(const std::string&)> cb)
   {
@@ -102,7 +94,13 @@ public:
     }
     else
     {
+#if defined (AFFACTION_WITH_LIBFRANKA)
       roboThread = std::thread(&FrankaDriver::joint_compliance, this, robo_ip, std::cref(run_flag));
+#else
+      RLOG_CPP(0, "libFranka not compiled in - can't start robot thread.");
+#endif
+
+
     }
 
   }
@@ -120,6 +118,259 @@ public:
       RLOG(0, "Robo thread already stopped");
     }
 
+  }
+
+  int sim_loop(const std::atomic<bool>& run_flag)
+  {
+    size_t loopCount = 0;
+
+    // Create and initialize filters
+    const double tmc = 0.1;
+    const double dt = 0.001;
+    Rcs::RampFilterND filteredJointCommands(tmc, 0.0, dt, DOF_ARM);
+
+    //filteredJointCommands = std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, getDOF());
+    std::vector<double> q_init{0.0, 0.0, 0.0, -M_PI_2, 0.0, M_PI_2, 0.0};
+    filteredJointCommands.init(q_init.data());
+    for (size_t i = 0; i < filteredJointCommands.getDim(); ++i)
+    {
+      filteredJointCommands.setMaxVel(RoboDriver::getMaxVel(i), i);
+    }
+    RLOG(0, "Filters initialized");
+
+
+    while (run_flag.load(std::memory_order_relaxed))
+    {
+      // Send feedback back to remote process every 25th frame (=40Hz)
+      if (this->feedbackFcn && (loopCount % 25 == 0))
+      {
+        nlohmann::json fbJson;
+        fbJson["time"] = Timer_getSystemTime();
+        fbJson["cycle_time_usec"] = dt;
+        fbJson["position"] = filteredJointCommands.getPosition();
+        fbJson["velocity"] = filteredJointCommands.getVelocity();
+        fbJson["torque"] = std::vector<double>(7, 0.0);
+        this->feedbackFcn(fbJson.dump());
+      }
+
+      // Process new incoming commands
+      bool receivedNewCommand = false;
+      RobotCommand copyOfCmd;
+      {
+        std::lock_guard<std::mutex> lock(cmdMtx);
+        copyOfCmd = this->incomingCommand;
+        receivedNewCommand = this->newIncomingCommand;
+        this->newIncomingCommand = false;
+      }
+
+      if (receivedNewCommand)
+      {
+        applyCommandToFilters(copyOfCmd, filteredJointCommands);
+      }
+
+      // Interpolation at every time step
+      filteredJointCommands.iterate();
+
+      // Compute desired EE pose from q_des
+      std::array<double, 7> q_des{};
+      for (size_t i = 0; i < q_des.size(); ++i)
+      {
+        q_des[i] = filteredJointCommands.getPosition(i);
+      }
+
+      loopCount++;
+
+      Timer_waitDT(dt);
+    }
+
+    return 0;
+  }
+
+  bool setCommand(const std::string& message)
+  {
+    std::vector<double> maxVel = getMaxVel();
+    nlohmann::json data;
+    bool quitMe = false;
+
+    // Parse with exception safety
+    try
+    {
+      data = nlohmann::json::parse(message);
+    }
+    catch (const nlohmann::json::parse_error& e)
+    {
+      RLOG_CPP(1, "JSON parse error: " << e.what());
+      return false;
+    }
+
+    RoboDriver::RobotCommand rcmd;
+    bool valid_cmd = parse_robot_command(data, rcmd);
+
+    if (!valid_cmd)
+    {
+      RLOG_CPP(1, "Malformed robot command: " << message);
+      return false;
+    }
+
+    valid_cmd = check_robot_command(rcmd);
+
+    if (valid_cmd)
+    {
+      std::lock_guard<std::mutex> lock(cmdMtx);
+      this->incomingCommand = rcmd;
+      this->newIncomingCommand = true;
+      quitMe = this->incomingCommand.quit;
+    }
+    else
+    {
+      RLOG_CPP(1, "Invalid robot command: " << message);
+      return false;
+    }
+
+    return quitMe;
+  }
+
+  size_t getDOF() const
+  {
+    return DOF_ARM;
+  }
+
+  double getMinTMC() const
+  {
+    return 0.05;
+  }
+
+  std::vector<double> getMaxVel() const
+  {
+    const double maxVel_1_4 = RCS_DEG2RAD(150.0);
+    const double maxVel_5_7 = RCS_DEG2RAD(301.0);
+    std::vector<double> maxVel = { maxVel_1_4, maxVel_1_4, maxVel_1_4, maxVel_1_4,
+                                   maxVel_5_7,  maxVel_5_7,  maxVel_5_7
+                                 };
+    return maxVel;
+  }
+
+  // FR3 joint ranges:
+  //    1: -166/166 deg
+  //    2: -105/105 deg
+  //    3: -166/166 deg
+  //    4: -176/-7 deg
+  //    5: -165/165 deg
+  //    6:  25/265 deg
+  //    7: -175/175 deg
+  std::vector<double> getLowerJointLimits() const
+  {
+    std::vector<double> ll(DOF_ARM, 0.0);
+    ll[0] = RCS_DEG2RAD(-166.0);
+    ll[1] = RCS_DEG2RAD(-105.0);
+    ll[2] = RCS_DEG2RAD(-166.0);
+    ll[3] = RCS_DEG2RAD(-176.0);
+    ll[4] = RCS_DEG2RAD(-165.0);
+    ll[5] = RCS_DEG2RAD(25.0);
+    ll[6] = RCS_DEG2RAD(-175.0);
+
+    return ll;
+  }
+
+  std::vector<double> getUpperJointLimits() const
+  {
+    std::vector<double> ul(DOF_ARM, 0.0);
+    ul[0] = RCS_DEG2RAD(166.0);
+    ul[1] = RCS_DEG2RAD(105.0);
+    ul[2] = RCS_DEG2RAD(166.0);
+    ul[3] = RCS_DEG2RAD(-7.0);
+    ul[4] = RCS_DEG2RAD(165.0);
+    ul[5] = RCS_DEG2RAD(265.0);
+    ul[6] = RCS_DEG2RAD(175.0);
+
+    return ul;
+  }
+
+  bool check_robot_command(RobotCommand& robo_cmd) const
+  {
+    bool success = true;
+
+    std::vector<double> ll = getLowerJointLimits();
+    std::vector<double> ul = getUpperJointLimits();
+
+    for (const auto& cmd : robo_cmd.actuators)
+    {
+      if ((cmd.type != "joint") || (cmd.index<0) || (cmd.index>=DOF_ARM))
+      {
+        continue;
+      }
+
+      if (cmd.has_position)
+      {
+        if ((cmd.position<ll[cmd.index]) || (cmd.position>ul[cmd.index]))
+        {
+          success = false;
+        }
+      }
+
+      if (cmd.has_vmax && (cmd.vmax > RoboDriver::getMaxVel(cmd.index)))
+      {
+        success = false;
+      }
+
+      if (cmd.has_tmc && (cmd.tmc < getMinTMC()))
+      {
+        return false;
+      }
+
+    }
+
+    return success;
+  }
+
+  void applyCommandToFilters(const RobotCommand& robo_cmd, Rcs::RampFilterND& filt) const
+  {
+    for (const auto& cmd : robo_cmd.actuators)
+    {
+      if ((cmd.type != "joint") || (cmd.index<0) || (cmd.index>=DOF_ARM))
+      {
+        continue;
+      }
+
+      if (cmd.has_position)
+      {
+        filt.setTarget(cmd.position, cmd.index);
+      }
+
+      if (cmd.has_vmax)
+      {
+        filt.setMaxVel(cmd.vmax, cmd.index);
+      }
+
+      if (cmd.has_tmc)
+      {
+        filt.setTimeConstant(cmd.tmc, cmd.index);
+      }
+    }
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+#if defined (AFFACTION_WITH_LIBFRANKA)
+
+  static void setDefaultBehavior(franka::Robot& robot)
+  {
+    robot.setCollisionBehavior({ {100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0} },  // joint lower
+    { {100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0} },  // joint upper
+    { {100.0, 100.0, 100.0, 100.0, 100.0, 100.0} },         // cartesian lower
+    { {100.0, 100.0, 100.0, 100.0, 100.0, 100.0} });        // cartesian upper
+
+    // (Optional) Set correct tool mass/COM if you have a tool; zeros if not:
+    // robot.setLoad(0.0, {0,0,0}, {0,0,0, 0,0,0, 0,0,0});
   }
 
   int joint_hold_compliant_simple(std::string robo_ip)
@@ -281,7 +532,8 @@ public:
 
 
 
-      robot.control(cartesian_pose_cb, franka::ControllerMode::kCartesianImpedance, /*limit_rate=*/false);
+      robot.control(cartesian_pose_cb, franka::ControllerMode::kCartesianImpedance,
+                    /*limit_rate=*/false);
     }
     catch (const franka::Exception& e)
     {
@@ -292,89 +544,7 @@ public:
     return 0;
   }
 
-  // Joint-space compliance
-  int sim_loop(const std::atomic<bool>& run_flag)
-  {
-    size_t loopCount = 0;
 
-    // Create and initialize filters
-    const double tmc = 0.1;
-    const double dt = 0.001;
-    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
-    filteredJointCommands = std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, getDOF());
-    std::vector<double> q_init{0.0, 0.0, 0.0, -M_PI_2, 0.0, M_PI_2, 0.0};
-    filteredJointCommands->init(q_init.data());
-    for (size_t i = 0; i < filteredJointCommands->getDim(); ++i)
-    {
-      filteredJointCommands->setMaxVel(getMaxVel()[i], i);
-    }
-    RLOG(0, "Filters initialized");
-
-
-    while (run_flag.load(std::memory_order_relaxed))
-    {
-      // Send feedback back to remote process every 25th frame (=40Hz)
-      if (this->feedbackFcn && (loopCount%25==0))
-      {
-        nlohmann::json fbJson;
-        fbJson["time"] = Timer_getSystemTime();
-        fbJson["cycle_time_usec"] = dt;
-        fbJson["position"] = filteredJointCommands->getPosition();
-        fbJson["velocity"] = filteredJointCommands->getVelocity();
-        fbJson["torque"] = std::vector<double>(7, 0.0);
-        this->feedbackFcn(fbJson.dump());
-      }
-
-      // Process new incoming commands
-      RoboCommand copyOfCmd;
-      {
-        std::lock_guard<std::mutex> lock(cmdMtx);
-        copyOfCmd = this->incomingCommand;
-        this->incomingCommand.newCommand = false;
-      }
-
-      if (copyOfCmd.newCommand)
-      {
-        for (const auto& pair : copyOfCmd.jointCommands)
-        {
-          const JointCommand& cmd = pair.second;
-
-          if (cmd.has_position_command)
-          {
-            filteredJointCommands->setTarget(cmd.position_command, cmd.index);
-          }
-          if (cmd.has_vmax)
-          {
-            filteredJointCommands->setMaxVel(cmd.vmax, cmd.index);
-          }
-          if (cmd.has_tmc)
-          {
-            filteredJointCommands->setTimeConstant(cmd.tmc, cmd.index);
-          }
-        }
-      }
-
-      // Interpolation at every time step
-      filteredJointCommands->iterate();
-
-      // Compute desired EE pose from q_des
-      std::array<double,7> q_des{};
-      for (size_t i=0; i<q_des.size(); ++i)
-      {
-        q_des[i] = filteredJointCommands->getPosition(i);
-      }
-
-      loopCount++;
-
-      Timer_waitDT(dt);
-    }
-
-
-
-
-
-    return 0;
-  }
 
   // Joint-space compliance
   int joint_compliance(std::string robo_ip, const std::atomic<bool>& run_flag)
@@ -394,7 +564,13 @@ public:
       robot.setJointImpedance({140, 140, 120, 70, 55, 35, 25});  // Medium
       RLOG_CPP(0, "[INFO] Joint impedance set.");
 
-      std::unique_ptr<Rcs::RampFilterND> filteredJointCommands;
+      const double tmc = 0.1;
+      const double dt = 0.001;
+      Rcs::RampFilterND filteredJointCommands(tmc, 0.0, dt, DOF_ARM);
+      for (size_t i = 0; i < filteredJointCommands.getDim(); ++i)
+      {
+        filteredJointCommands.setMaxVel(RoboDriver::getMaxVel(i), i);
+      }
 
       auto joint_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::JointPositions
       {
@@ -404,65 +580,38 @@ public:
           this->feedbackFcn(feedback2JsonString(rs, 0, nullptr));
         }
 
-        // Initialize on first cycle
-        if (!filteredJointCommands)
+        // Initialize filters with current robot sensor values on first cycle
+        if (loopCount == 0)
         {
-          // Create and initialize filters
-          const double tmc = 0.1;
-          const double dt = 0.001;
-          filteredJointCommands = std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, getDOF());
-          filteredJointCommands->init(rs.q.data());
-          for (size_t i = 0; i < filteredJointCommands->getDim(); ++i)
-          {
-            filteredJointCommands->setMaxVel(getMaxVel()[i], i);
-          }
+          filteredJointCommands.init(rs.q.data());
           RLOG(0, "Filters initialized");
         }
 
 
         // Process new incoming commands
-        RoboCommand copyOfCmd;
+        bool receivedNewCommand = false;
+        RobotCommand copyOfCmd;
         {
           std::lock_guard<std::mutex> lock(cmdMtx);
           copyOfCmd = this->incomingCommand;
-          this->incomingCommand.newCommand = false;
+          receivedNewCommand = this->newIncomingCommand;
+          this->newIncomingCommand = false;
         }
 
-        if (copyOfCmd.newCommand)
+        if (receivedNewCommand)
         {
-          for (const auto& pair : copyOfCmd.jointCommands)
-          {
-            //const std::string& joint_name = pair.first;
-            const JointCommand& cmd = pair.second;
-
-            if (cmd.has_position_command)
-            {
-              filteredJointCommands->setTarget(cmd.position_command, cmd.index);
-            }
-
-            if (cmd.has_vmax)
-            {
-              filteredJointCommands->setMaxVel(cmd.vmax, cmd.index);
-            }
-
-            if (cmd.has_tmc)
-            {
-              filteredJointCommands->setTimeConstant(cmd.tmc, cmd.index);
-            }
-          }
+          applyCommandToFilters(copyOfCmd, filteredJointCommands);
         }
 
         // Interpolation at every time step
-        filteredJointCommands->iterate();
+        filteredJointCommands.iterate();
 
         // Compute desired EE pose from q_des
         std::array<double,7> q_des{};
         for (size_t i=0; i<q_des.size(); ++i)
         {
-          q_des[i] = filteredJointCommands->getPosition(i);
+          q_des[i] = filteredJointCommands.getPosition(i);
         }
-
-
 
         time += period.toSec();
         loopCount++;
@@ -477,7 +626,6 @@ public:
         {
           return franka::MotionFinished(franka::JointPositions(q_des));
         }
-
 
         return franka::JointPositions(q_des);
       };
@@ -498,165 +646,8 @@ public:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  size_t getDOF() const
-  {
-    return DOF_ARM;
-  }
-
-  double getMinTMC() const
-  {
-    return 0.05;
-  }
-
-  std::vector<double> getMaxVel() const
-  {
-    const double maxVel_1_4 = RCS_DEG2RAD(150.0);
-    const double maxVel_5_7 = RCS_DEG2RAD(301.0);
-    std::vector<double> maxVel = { maxVel_1_4, maxVel_1_4, maxVel_1_4, maxVel_1_4,
-                                   maxVel_5_7,  maxVel_5_7,  maxVel_5_7
-                                 };
-    return maxVel;
-  }
-
-  // Parses this:
-  // {
-  //   "joints": {
-  //     "joint_1": { "index": 0, "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 },
-  //     "joint_2": { "index": 0, "position_command": 0.4, "vmax": 0.2, "tmc": 0.1 }
-  //   },
-  //   "quit": true
-  // }
-  // All entries are optional
-  bool setCommand(const std::string& message)
-  {
-    std::vector<double> maxVel = getMaxVel();
-    nlohmann::json data;
-    bool quitMe = false;
-
-    // Parse with exception safety
-    try
-    {
-      data = nlohmann::json::parse(message);
-    }
-    catch (const nlohmann::json::parse_error& e)
-    {
-      RLOG_CPP(1, "JSON parse error: " << e.what());
-      return quitMe;
-    }
-
-    // Parse into temporary variable to keep concurrent access short. We do all
-    // the checking and validation here so that there is no overhead in the
-    // control loop.
-    std::map<std::string, JointCommand> joint_map_tmp;
-    bool success = true;
-
-
-    // Validate "joints"
-    if (data.contains("joints") && data["joints"].is_object())
-    {
-      // Iterate joints
-      for (auto it = data["joints"].begin(); it != data["joints"].end(); ++it)
-      {
-        const std::string& joint_name = it.key();
-        const nlohmann::json& joint_data = it.value();
-
-        if (!joint_data.is_object())
-        {
-          RLOG_CPP(1, "Joint `" << joint_name << "` is not an object");
-          success = false;
-          continue;
-        }
-
-        JointCommand cmd{};
-
-        // Ensure required field "index"
-        if (joint_data.contains("index") &&
-            joint_data["index"].is_number() &&
-            joint_data["index"] < getDOF())
-        {
-          cmd.index = joint_data["index"].get<int>();
-        }
-        else
-        {
-          RLOG_CPP(1, "Joint `" << joint_name << "` has no or wrong index: " << data.dump(2));
-          success = false;
-          continue;
-        }
-
-        // Optional position_command
-        if (joint_data.contains("position_command") &&
-            joint_data["position_command"].is_number())
-        {
-          cmd.position_command = joint_data["position_command"].get<double>();
-          cmd.has_position_command = true;
-        }
-
-        // Optional vmax
-        if (joint_data.contains("vmax") && joint_data["vmax"].is_number())
-        {
-          cmd.vmax = joint_data["vmax"].get<double>();
-          cmd.has_vmax = true;
-
-          if (cmd.vmax > maxVel[cmd.index])
-          {
-            RLOG_CPP(1, "Joint `" << joint_name << "` exceeds vmax: " << data.dump(2));
-            success = false;
-          }
-        }
-
-        // Optional tmc
-        if (joint_data.contains("tmc") && joint_data["tmc"].is_number())
-        {
-          cmd.tmc = joint_data["tmc"].get<double>();
-          cmd.has_tmc = true;
-
-          if (cmd.tmc < getMinTMC())
-          {
-            RLOG_CPP(1, "Joint `" << joint_name << "` has too low tmc: " << data.dump(2));
-            success = false;
-          }
-        }
-
-        joint_map_tmp.emplace(joint_name, cmd);
-      }
-    }
-
-    // Parse quitMe
-    quitMe = data.value("quit", false);
-
-    // Parsing finished - perform concurrent swap here
-    if (success)
-    {
-      std::lock_guard<std::mutex> lock(cmdMtx);
-      this->incomingCommand.jointCommands.swap(joint_map_tmp);
-      this->incomingCommand.newCommand = true;
-      this->incomingCommand.quitMe = quitMe;
-    }
-    else
-    {
-      RLOG_CPP(0, "Error creading commands: " << data.dump(2));
-    }
-
-    return quitMe;
-  }
-
   std::string feedback2JsonString(const franka::RobotState& rs,
-                                  int64_t time_usec, const RoboCommand* cmd)
+                                  int64_t time_usec, const RobotCommand* cmd)
   {
     nlohmann::json fbJson;
     fbJson["time"] = Timer_getSystemTime();
@@ -665,22 +656,31 @@ public:
     fbJson["velocity"] = rs.dq;
     fbJson["torque"] = rs.tau_J;
 
-    // if (cmd)
-    // {
-    //   std::vector<double> joint_err(DOF_ARM, 0.0);
-    //   std::vector<double> joint_cmd(DOF_ARM, 0.0);
+    if (cmd)
+    {
+      std::vector<double> joint_err(DOF_ARM, 0.0);
+      std::vector<double> joint_cmd(DOF_ARM, 0.0);
 
-    //   for (size_t i=0; i<DOF_ARM; ++i)
-    //   {
-    //     joint_err[i] = RCS_RAD2DEG(RCS_DEG2RAD(cmd->q_des[i]) - rs.q[i]);
-    //     joint_cmd[i] = RCS_DEG2RAD(cmd->q_des[i]);
-    //   }
-    //   fbJson["position_error"] = joint_err;
-    //   fbJson["position_command"] = joint_cmd;
-    // }
+      for (size_t i=0; i<cmd->actuators.size(); ++i)
+      {
+        const ActuatorCommand& a = cmd->actuators[i];
+
+        if ((a.type != "joint") || (a.index<0) || (a.index>=DOF_ARM))
+        {
+          continue;
+        }
+
+        joint_cmd[i] = RCS_RAD2DEG(RCS_DEG2RAD(a.position));
+        joint_err[i] = RCS_RAD2DEG(RCS_DEG2RAD(a.position) - rs.q[a.index]);
+        fbJson["position_error"] = joint_err;
+        fbJson["position_command"] = joint_cmd;
+      }
+    }
 
     return fbJson.dump();
   }
+
+#endif   // AFFACTION_WITH_LIBFRANKA
 
 protected:
 
@@ -766,6 +766,7 @@ int main(int argc, char** argv)
     }
     break;
 
+#if defined (AFFACTION_WITH_LIBFRANKA)
     case 2:
     {
       FrankaDriver robo;
@@ -783,15 +784,7 @@ int main(int argc, char** argv)
       robo.stop();
     }
     break;
-
-    case 4:
-    {
-      FrankaDriver robo;
-      robo.joint_hold_compliant_simple(nwInfo->robo_ip);
-      RPAUSE();
-      robo.stop();
-    }
-    break;
+#endif   // AFFACTION_WITH_LIBFRANKA
 
     default:
       RLOG_CPP(0, "No mode " << mode);

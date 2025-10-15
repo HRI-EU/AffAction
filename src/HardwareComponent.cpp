@@ -50,7 +50,12 @@
 #include "AzureSkeletonTracker.h"
 #include "AgentWelcomeComponent.hpp"
 #include "ImageTracker.h"
+
+//#define WITH_WEBSOCKETCLIENTCOMPONENT
+#if defined WITH_WEBSOCKETCLIENTCOMPONENT
 #include "WebsocketClientComponent.hpp"
+#endif
+
 
 #if defined USE_ROS
 #include "ros/PtuActionComponent.h"
@@ -70,6 +75,7 @@
 #include <Rcs_shape.h>
 
 #include <thread>
+#include <random>
 
 
 
@@ -589,8 +595,9 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
       bool with_fr = getKey(argvStrVec, "-agent_welcome.recognize");
       components.push_back(new AgentWelcomeComponent(&entity, scene, with_fr));
     }
-
+#if defined WITH_WEBSOCKETCLIENTCOMPONENT
     components.push_back(new WebsocketClientComponent(&entity));
+#endif
   }
 
   if (getKey(argvStrVec, "-landmarks_zmq2"))
