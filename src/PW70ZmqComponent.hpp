@@ -55,10 +55,11 @@ class PW70ZmqComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
   PW70ZmqComponent(EntityBase* parent,
+                   double dt_commands,
                    std::string suffix="",
                    std::string otherRecv="tcp://localhost:40006",
                    std::string otherSend="tcp://localhost:40007")
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_pan_joint"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_tilt_joint"+suffix));
@@ -208,9 +209,8 @@ private:
     return membersInitialized;
   }
 
-  std::string compile_outgoing_message()
+  std::string generate_command_message()
   {
-    Timer_waitDT(0.01);               // 100 Hz command rate
     nlohmann::json cmdJson;
 
     if (!enableCommands || jointCommands.empty() || (jointCommands==jointCommandsPrev))

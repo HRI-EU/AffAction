@@ -2698,52 +2698,6 @@ RCS_REGISTER_EXAMPLE(ExampleAruco, "Actions", "Aruco (with webcam) test program"
 /*******************************************************************************
  *
  ******************************************************************************/
-class ExampleJacoGen3 : public ExampleActionsECS
-{
-public:
-
-  ExampleJacoGen3(int argc, char** argv) : ExampleActionsECS(argc, argv)
-  {
-    RMSG("Start bin/KortexDriver -m 1");
-
-    RMSG("fmod(361,360) = %f", fmod(361.0,360.0));
-    RMSG("fmod(359,360) = %f", fmod(359.0,360.0));
-    RMSG("fmod(1,360) = %f", fmod(1.0,360.0));
-    RMSG("fmod(-1,360) = %f", fmod(-1.0,360.0));
-    RMSG("fmod(-361,360) = %f", fmod(-361.0,360.0));
-    RMSG("fmod(-359,360) = %f", fmod(-359.0,360.0));
-  }
-
-  virtual ~ExampleJacoGen3()
-  {
-  }
-
-  bool initParameters()
-  {
-    ExampleActionsECS::initParameters();
-    xmlFileName = "gJacoGen3_7dof.xml";
-    configDirectory = "config/xml/JacoGen3";
-    speedUp = 1;
-    addComponentArgument("-jacoGen3Zmq");
-    enableRealGraphVisualization = true;
-    return true;
-  }
-
-  std::string help()
-  {
-    std::string str = "Start bin/KortexDriver -m 1\n\n";
-    str += ExampleActionsECS::help();
-    return str;
-  }
-
-};
-
-RCS_REGISTER_EXAMPLE(ExampleJacoGen3, "Actions", "Jaco Gen3 test");
-
-
-/*******************************************************************************
- *
- ******************************************************************************/
 class ExampleGazeWebsocket : public ExampleActionsECS
 {
 public:
@@ -2812,6 +2766,91 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleFrankaDriver, "Actions", "FrankaDriver");
+RCS_REGISTER_EXAMPLE(ExampleFrankaDriver, "RoboDrivers", "FrankaDriver");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleKortexDriver : public ExampleActionsECS
+{
+public:
+
+  ExampleKortexDriver(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start bin/KortexDriver -m 1");
+
+    RMSG("fmod(361,360) = %f", fmod(361.0, 360.0));
+    RMSG("fmod(359,360) = %f", fmod(359.0, 360.0));
+    RMSG("fmod(1,360) = %f", fmod(1.0, 360.0));
+    RMSG("fmod(-1,360) = %f", fmod(-1.0, 360.0));
+    RMSG("fmod(-361,360) = %f", fmod(-361.0, 360.0));
+    RMSG("fmod(-359,360) = %f", fmod(-359.0, 360.0));
+  }
+
+  virtual ~ExampleKortexDriver()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "gJacoGen3_7dof.xml";
+    configDirectory = "config/xml/JacoGen3";
+    speedUp = 1;
+    addComponentArgument("-jacoGen3Zmq");
+    enableRealGraphVisualization = true;
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/KortexDriver -m 1\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleKortexDriver, "RoboDrivers", "KortexDriver");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExamplePTUDriver : public ExampleActionsECS
+{
+public:
+
+  ExamplePTUDriver(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start bin/PTUDriver -m 1");
+  }
+
+  virtual ~ExamplePTUDriver()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_attentive_support.xml";
+    configDirectory = "config/xml/examples";
+    speedUp = 1;
+    addComponentArgument("-pw70_zmq");
+    enableRealGraphVisualization = true;
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/PTUDriver -m 1\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExamplePTUDriver, "RoboDrivers", "PTUDriver");
 
 }   // namespace aff

@@ -54,10 +54,11 @@ class KortexComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
   KortexComponent(EntityBase* parent,
+                  double dt_commands,
                   std::string suffix="",
                   std::string otherRecv="tcp://localhost:5555",
                   std::string otherSend="tcp://localhost:5556")
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend)
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_1"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_2"+suffix));
@@ -315,9 +316,8 @@ private:
     return membersInitialized;
   }
 
-  std::string compile_outgoing_message()
+  std::string generate_command_message()
   {
-    Timer_waitDT(0.01);               // 100 Hz command rate
     nlohmann::json cmdJson;
 
     if (!enableCommands)

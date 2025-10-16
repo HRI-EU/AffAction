@@ -56,11 +56,14 @@ class RoboNetworkInterface
 {
 public:
 
-  RoboNetworkInterface(std::string otherRecv, std::string otherSend) :
+  RoboNetworkInterface(std::string otherRecv, std::string otherSend, double dt_commands) :
     context(1),   // 1 = one I/O thread
     otherRecvEndpoint(otherRecv),
-    otherSendEndpoint(otherSend)
-  {}
+    otherSendEndpoint(otherSend),
+    senderCommandPeriod(dt_commands)
+  {
+    RCHECK(senderCommandPeriod > 0.0);
+  }
 
   virtual ~RoboNetworkInterface()
   {
@@ -124,6 +127,8 @@ public:
     RLOG(0, "RoboNetworkInterface stopped");
   }
 
+protected:
+
   void recvThreadFunc()
   {
     RLOG_CPP(0, "Listening to robot feedback on " << otherRecvEndpoint);
@@ -182,9 +187,17 @@ public:
     pub_socket.set(zmq::sockopt::linger, 0);    // dont block on close, but loose messages
     pub_socket.connect(otherSendEndpoint);
 
+    // Convert the double (seconds) to the clock's native duration
+    using Clock = std::chrono::steady_clock;
+    const Clock::duration period = std::chrono::duration_cast<Clock::duration>(
+                                     std::chrono::duration<double>(senderCommandPeriod));
+    Clock::time_point next_tick = Clock::now() + period;
+    size_t loopCount = 0;
+
+
     while (runLoop && !watchDogTriggered)
     {
-      std::string cmdJson = compile_outgoing_message();
+      std::string cmdJson = generate_command_message();
 
       if (!cmdJson.empty())
       {
@@ -197,6 +210,30 @@ public:
           RLOG_CPP(0, "ZMQ send error: " << e.what());
         }
       }
+
+      // Wait until next cycle: absolute tick avoids drift
+      next_tick += period;
+
+      // Sleep until then if we're early, otherwise handle overrun
+      auto now = Clock::now();
+      if (now < next_tick)
+      {
+        std::this_thread::sleep_until(next_tick);
+      }
+      else
+      {
+        // Missed the deadline.
+        double dt_over = std::chrono::duration<double>(now - next_tick).count();
+
+        if (dt_over > senderCommandPeriod)
+        {
+          RLOG_CPP(0, "Missed command period to " << otherRecvEndpoint << " - resyncing " << loopCount <<
+                   " overflow[msec]: " << std::fixed << std::setprecision(6) << 1000.0 * dt_over);
+        }
+      }
+
+      next_tick = now + period;
+      loopCount++;
     }   // while ...
 
 
@@ -231,7 +268,7 @@ protected:
   RoboNetworkInterface& operator=(RoboNetworkInterface&&)      = delete;
 
   virtual bool process_incoming_message(const std::string& recv_msg) = 0;
-  virtual std::string compile_outgoing_message() = 0;
+  virtual std::string generate_command_message() = 0;
 
   mutable std::atomic<bool> isInitialized{false};
   std::atomic<bool> watchDogTriggered{false};
@@ -241,6 +278,7 @@ protected:
   zmq::context_t context;
   std::string otherRecvEndpoint;
   std::string otherSendEndpoint;
+  double senderCommandPeriod;
 };
 
 }   // namespace

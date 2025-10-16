@@ -264,7 +264,10 @@ public:
     this->pw70->reset_stop();
 
     // Wait a moment to allow the interface to initialize
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    if (!dummy_mode)
+    {
+      std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
   }
 
   void stop()

@@ -390,7 +390,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     }
     else if (getKey(argvStrVec, "-pw70_zmq"))
     {
-      components.push_back(new PW70ZmqComponent(&entity));
+      const double dt_commands = 0.01;
+      components.push_back(new PW70ZmqComponent(&entity, dt_commands));
     }
   }
 
@@ -408,7 +409,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string otherRecv="tcp://localhost:40004";// was 5557
       std::string otherSend="tcp://localhost:40005";// was 5558
-      components.push_back(new aff::KortexComponent(&entity, suffix,
+      const double dt_commands = 0.01;
+      components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv,otherSend));
     }
 
@@ -417,7 +419,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string otherRecv="tcp://localhost:40002";// was 5555
       std::string otherSend="tcp://localhost:40003";// was 5556
-      components.push_back(new aff::KortexComponent(&entity, suffix,
+      const double dt_commands = 0.01;
+      components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv,otherSend));
     }
 
@@ -426,7 +429,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "";
       std::string otherRecv="tcp://localhost:40002";
       std::string otherSend="tcp://localhost:40003";
-      components.push_back(new aff::KortexComponent(&entity, suffix,
+      const double dt_commands = 0.01;
+      components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv,otherSend));
     }
 
@@ -435,7 +439,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string otherRecv="tcp://localhost:40010";
       std::string otherSend="tcp://localhost:40011";
-      components.push_back(new aff::FrankaComponent(&entity, suffix,
+      const double dt_commands = 0.01;
+      components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
                                                     otherRecv,otherSend));
     }
 
@@ -444,7 +449,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string otherRecv="tcp://localhost:40008";
       std::string otherSend="tcp://localhost:40009";
-      components.push_back(new aff::FrankaComponent(&entity, suffix,
+      const double dt_commands = 0.01;
+      components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
                                                     otherRecv,otherSend));
     }
 
