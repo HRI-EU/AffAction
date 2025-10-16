@@ -40,7 +40,7 @@ OPTION(AFFACTION_WITH_LIBFRANKA "Enable libfranka driver" OFF)
 ##############################################################################
 # Kinova Kortex Gen3 driver
 ##############################################################################
-ADD_EXECUTABLE(KortexDriver KortexDriver.cpp)
+ADD_EXECUTABLE(KortexDriver KortexDriver.cpp RoboDriver.cpp)
 TARGET_LINK_LIBRARIES(KortexDriver RcsCore ${ZMQ_LIBRARIES})
 TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
 
@@ -89,7 +89,7 @@ ENDIF(AFFACTION_WITH_KINOVA_GEN3)
 ##############################################################################
 # Socket CAN Schunk PW70 driver
 ##############################################################################
-ADD_EXECUTABLE(PTUDriver PTUDriver.cpp ../PW70CANInterface.cpp)
+ADD_EXECUTABLE(PTUDriver PTUDriver.cpp  RoboDriver.cpp ../PW70CANInterface.cpp)
 TARGET_INCLUDE_DIRECTORIES(PTUDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/..") # for PW70
 TARGET_INCLUDE_DIRECTORIES(PTUDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
 

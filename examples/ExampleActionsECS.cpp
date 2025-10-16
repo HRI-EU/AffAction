@@ -2704,7 +2704,7 @@ public:
 
   ExampleJacoGen3(int argc, char** argv) : ExampleActionsECS(argc, argv)
   {
-    RMSG("Start bin/KortexDriver");
+    RMSG("Start bin/KortexDriver -m 1");
 
     RMSG("fmod(361,360) = %f", fmod(361.0,360.0));
     RMSG("fmod(359,360) = %f", fmod(359.0,360.0));
@@ -2731,7 +2731,7 @@ public:
 
   std::string help()
   {
-    std::string str = "Start bin/KortexDriver\n\n";
+    std::string str = "Start bin/KortexDriver -m 1\n\n";
     str += ExampleActionsECS::help();
     return str;
   }

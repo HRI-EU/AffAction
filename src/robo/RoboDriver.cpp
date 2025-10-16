@@ -32,15 +32,14 @@
 
 #include "RoboDriver.hpp"
 
+#include <Rcs_macros.h>
+#include <Rcs_basicMath.h>
 
 
 
-double RoboDriver::getMaxVel(size_t index) const
-{
-  return getMaxVel()[index];
-}
-
-// ---- tiny helpers: safe getters (never throw) ----
+/*******************************************************************************
+ * tiny helpers: safe getters (never throw)
+ ******************************************************************************/
 static inline bool j_get_string(const nlohmann::json& j, const char* key, std::string& out)
 {
   auto it = j.find(key);
@@ -100,6 +99,9 @@ inline void j_get_seq_u64(const nlohmann::json& j, const char* key, uint64_t& ou
   }
 }
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
 /* static */ bool RoboDriver::parse_actuator(const nlohmann::json& j, RoboDriver::ActuatorCommand& out)
 {
   out = RoboDriver::ActuatorCommand{};
@@ -147,8 +149,9 @@ inline void j_get_seq_u64(const nlohmann::json& j, const char* key, uint64_t& ou
   return true;
 }
 
-
-
+/*******************************************************************************
+ *
+ ******************************************************************************/
 /* static */ bool RoboDriver::parse_robot_command(const nlohmann::json& msg, RoboDriver::RobotCommand& cmd)
 {
   if (!msg.is_object())
@@ -195,4 +198,124 @@ inline void j_get_seq_u64(const nlohmann::json& j, const char* key, uint64_t& ou
   cmd = std::move(tmp);
 
   return true;
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void RoboDriver::applyCommandToFilters(const RoboDriver::RobotCommand& robo_cmd, Rcs::RampFilterND& filt, double scale_joint_commands) const
+{
+  for (const auto& cmd : robo_cmd.actuators)
+  {
+    if ((cmd.type != "joint") || (cmd.index < 0) || (cmd.index >= (int)filt.getDim()))
+    {
+      continue;
+    }
+
+    if (cmd.has_position)
+    {
+      filt.setTarget(scale_joint_commands*cmd.position, cmd.index);
+    }
+
+    if (cmd.has_vmax)
+    {
+      filt.setMaxVel(scale_joint_commands*cmd.vmax, cmd.index);
+    }
+
+    if (cmd.has_tmc)
+    {
+      filt.setTimeConstant(cmd.tmc, cmd.index);
+    }
+  }
+
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+bool RoboDriver::setCommand(const std::string& message)
+{
+  nlohmann::json data;
+  bool quitMe = false;
+
+  // Parse with exception safety
+  try
+  {
+    data = nlohmann::json::parse(message);
+  }
+  catch (const nlohmann::json::parse_error& e)
+  {
+    RLOG_CPP(1, "JSON parse error: " << e.what());
+    return false;
+  }
+
+  RoboDriver::RobotCommand rcmd;
+  bool valid_cmd = parse_robot_command(data, rcmd);
+
+  if (!valid_cmd)
+  {
+    RLOG_CPP(1, "Malformed robot command: " << message);
+    return false;
+  }
+
+  valid_cmd = check_robot_command(rcmd);
+
+  if (valid_cmd)
+  {
+    std::lock_guard<std::mutex> lock(cmdMtx);
+    this->incomingCommand = rcmd;
+    this->newIncomingCommand = true;
+    quitMe = this->incomingCommand.quit;
+  }
+  else
+  {
+    RLOG_CPP(1, "Invalid robot command: " << message);
+    return false;
+  }
+
+  return quitMe;
+}
+
+/*******************************************************************************
+ * Time in seconds from epoch
+ ******************************************************************************/
+/* static */ double RoboDriver::getWallclockTime()
+{
+  auto currentTime = std::chrono::system_clock::now();
+  double seconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime.time_since_epoch()).count();
+  return seconds;
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+/* static */ bool RoboDriver::setRealTimePrio()
+{
+  bool success = false;
+
+#if defined (_OS_UNIX)
+  pthread_t self = pthread_self();
+  int policy = SCHED_RR;
+
+  // Clamp priority to system limits
+  int desiredPrio = 99;
+  int prioMin = sched_get_priority_min(policy);
+  int prioMax = sched_get_priority_max(policy);
+
+  sched_param param;
+  param.sched_priority = Math_iClip(desiredPrio, prioMin, prioMax);
+
+  int res = pthread_setschedparam(self, policy, &param);
+  if (res != 0)
+  {
+    RLOG_CPP(0, "pthread_setschedparam failed: " << strerror(res));
+  }
+  else
+  {
+    RLOG_CPP(0, "Real-time priority set to " << desiredPrio);
+    success = true;
+  }
+#endif
+
+  return success;
 }

@@ -30,6 +30,7 @@
 
 *******************************************************************************/
 
+#include "RoboDriver.hpp"
 #include "json.hpp"
 
 #include <Rcs_filters.h>
@@ -75,23 +76,13 @@ namespace k_api = Kinova::Api;
 #endif //AFFACTION_WITH_KINOVA_GEN3
 
 
-constexpr std::size_t   DOF_ARM        = 7;   // Gen3 R-07
-constexpr std::uint16_t TCP_PORT   = 10000;   // high-level services
-constexpr std::uint16_t UDP_PORT   = 10001;   // BaseCyclic feedback
+constexpr int DOF_ARM    = 7;       // Gen3 R-07
+constexpr int TCP_PORT   = 10000;   // high-level services
+constexpr int UDP_PORT   = 10001;   // BaseCyclic feedback
 
 #define MINIMAL_GRIPPER_POSITION_ERROR  ((double)1.5)
 #define MINIMAL_GRIPPER_VELOCITY  ((double)0.75)
 
-
-/*******************************************************************************
- * Time in seconds from epoch
- ******************************************************************************/
-static inline double getWallclockTime()
-{
-  auto currentTime = std::chrono::system_clock::now();
-  double seconds = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime.time_since_epoch()).count();
-  return seconds;
-}
 
 /*******************************************************************************
  * Angle wrapping helpers
@@ -176,7 +167,7 @@ public:
       steady_interval_(std::chrono::duration_cast<std::chrono::steady_clock::duration>(
                          std::chrono::duration<double>(dt_seconds))),
       next_steady_(std::chrono::steady_clock::now()),
-      guard_(guard)                                    // how long we allow for the final spin
+      guard_(guard)  // how long we allow for the final spin
   {
   }
 
@@ -281,7 +272,7 @@ private:
  *
  ******************************************************************************/
 
-class KortexDriver
+class KortexDriver : public RoboDriver
 {
 public:
 
@@ -351,95 +342,71 @@ public:
     RLOG(0, "Robo thread stopped");
   }
 
-  struct RoboCommand
-  {
-    RoboCommand() : gripper_pos(0.0), gripper_force(100.0),
-      received_gripper_pos(false),
-      received_gripper_force(false),
-      received_q_des(false)
-    {
-    }
-
-    double gripper_pos;
-    double gripper_force;
-
-    std::array<double,DOF_ARM> q_des{};
-
-    bool received_gripper_pos;
-    bool received_gripper_force;
-    bool received_q_des;
-  };
-
-  bool setCommand(const std::string& message)
-  {
-    auto j = nlohmann::json::parse(message);
-    KortexDriver::RoboCommand cmd;
-
-    if (j.contains("q_des"))
-    {
-      // We receive radians. Degrees are only used internally.
-      cmd.q_des = j["q_des"].get<std::array<double, DOF_ARM>>();
-      cmd.received_q_des = true;
-      VecNd_constMulSelf(cmd.q_des.data(), 180.0/M_PI, DOF_ARM);
-    }
-
-    if (j.contains("gripper_command"))
-    {
-      cmd.gripper_pos = j["gripper_command"].get<double>();
-      cmd.received_gripper_pos = true;
-    }
-
-    if (j.contains("gripper_force"))
-    {
-      cmd.gripper_force = j["gripper_force"].get<double>();
-      cmd.received_gripper_force = true;
-    }
-
-    bool quitMe = j.value("quit", false);
-
-    // thread-safe
-    std::lock_guard<std::mutex> lock(cmdMtx);
-    this->incomingCommand = cmd;
-
-    return quitMe;
-  }
-
-  RoboCommand getCommand() const
-  {
-    std::lock_guard<std::mutex> lock(cmdMtx);
-    return this->incomingCommand;
-  }
-
-
 private:
 
-  bool setRealTimePrio()
+  double getMinTMC() const
   {
-    bool success = false;
+    return 0.05;
+  }
 
-#if defined (_OS_UNIX)
-    pthread_t self = pthread_self();
-    int policy = SCHED_RR;
+  // Actuator Limit (magnitude) (from User-Guide-Gen3-R07.pdf pp.98)
+  // large (joints 1 - 4) 79.64 deg/s (1.39 rad/s)
+  // small (joints 5 - 7) 69.91 deg/s (1.22 rad/s)
+  std::vector<double> getMaxVel_deg() const
+  {
+    static std::vector<double> maxVel = { 75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0};
+    return maxVel;
+  }
 
-    // Clamp priority to system limits
-    int desiredPrio = 99;
-    int prioMin = sched_get_priority_min(policy);
-    int prioMax = sched_get_priority_max(policy);
+  double getMaxVel_deg(size_t index) const
+  {
+    return getMaxVel_deg()[index];
+  }
 
-    sched_param param;
-    param.sched_priority = Math_iClip(desiredPrio, prioMin, prioMax);
 
-    int res = pthread_setschedparam(self, policy, &param);
-    if (res != 0)
+  /*
+  Joint ranges[deg] (from User-Guide-Gen3-R07.pdf pp.98):
+  1 -inf   ... +inf
+  2 -128.9 ... +128.9
+  3 -inf   ... +inf
+  4 -147.8 ... +147.8
+  5 -inf   ... +inf
+  6 -120.3 ... +120.3
+  7 -inf   ... +inf
+  */
+  bool check_robot_command(RobotCommand& robo_cmd) const
+  {
+    bool success = true;
+
+    //std::vector<double> ll = getLowerJointLimits();
+    //std::vector<double> ul = getUpperJointLimits();
+
+    for (const auto& cmd : robo_cmd.actuators)
     {
-      RLOG_CPP(0, "pthread_setschedparam failed: " << strerror(res));
+      if ((cmd.type != "joint") || (cmd.index < 0) || (cmd.index >= DOF_ARM))
+      {
+        continue;
+      }
+
+      //if (cmd.has_position)
+      //{
+      //  if ((cmd.position < ll[cmd.index]) || (cmd.position > ul[cmd.index]))
+      //  {
+      //    success = false;
+      //  }
+      //}
+
+      if (cmd.has_vmax && (cmd.vmax > RCS_DEG2RAD(getMaxVel_deg(cmd.index))))
+      {
+        success = false;
+      }
+
+      if (cmd.has_tmc && (cmd.tmc < getMinTMC()))
+      {
+        return false;
+      }
+
     }
-    else
-    {
-      RLOG_CPP(0, "Real-time priority set to " << desiredPrio);
-      success = true;
-    }
-#endif
 
     return success;
   }
@@ -457,7 +424,6 @@ private:
     constexpr double tmc = 0.05;
     constexpr int filter_substeps = 20;
     constexpr double dt_filter = dt / (double)filter_substeps;
-    std::vector<double> maxVelInDeg = { 75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0 };
 
     // simple mockup state
     std::vector<double> q_curr_deg(DOF_ARM, 0.0);     // position  [deg]
@@ -475,17 +441,16 @@ private:
 
     RCHECK(q_default_deg.size() == DOF_ARM);
 
+    float gripper_des = 0.1;
+
     // Initialize continuous angles close to default pose
     std::vector<double> q_cont_deg = closest_to_default(q_curr_deg, q_default_deg);
 
     // Initialize filter with robot's continuous state
-    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
-      std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt_filter, DOF_ARM);
-    filteredJointCommands->init(q_cont_deg.data());
-    for (size_t i = 0; i < q_cont_deg.size(); ++i)
+    Rcs::RampFilterND filteredJointCommands(q_cont_deg.data(), tmc, 0.0, dt_filter, DOF_ARM);
+    for (size_t i = 0; i < filteredJointCommands.getDim(); ++i)
     {
-      filteredJointCommands->setMaxVel(maxVelInDeg[i], i);
-      this->incomingCommand.q_des[i] = q_cont_deg[i];
+      filteredJointCommands.setMaxVel(getMaxVel_deg(i), i);
       if (q_cont_deg[i] != q_curr_deg[i])
       {
         RLOG(0, "continuous angles adjusted at index %zu: curr: %f   cont: %f   default: %f",
@@ -500,19 +465,36 @@ private:
 
     while (run_flag && runLoop)
     {
-      RoboCommand cmd = getCommand();
-
-      if (cmd.received_q_des)
+      // Process new incoming commands
+      bool receivedNewCommand = false;
+      RobotCommand copyOfCmd;
       {
-        filteredJointCommands->setTarget(cmd.q_des.data());
+        std::lock_guard<std::mutex> lock(cmdMtx);
+        copyOfCmd = this->incomingCommand;
+        receivedNewCommand = this->newIncomingCommand;
+        this->newIncomingCommand = false;
+      }
+
+      if (receivedNewCommand)
+      {
+        applyCommandToFilters(copyOfCmd, filteredJointCommands, 180.0/M_PI);
+
+        auto grippers = copyOfCmd.getActuatorsOfType("gripper");
+        if (grippers.size()==1)
+        {
+          if (grippers[0]->has_position)
+          {
+            gripper_des = grippers[0]->position;
+          }
+        }
       }
 
       for (int i = 0; i < filter_substeps; ++i)
       {
-        filteredJointCommands->iterate();
+        filteredJointCommands.iterate();
       }
 
-      qd_des_deg = computeDesiredJointSpeeds(filteredJointCommands.get(), q_curr_deg);
+      qd_des_deg = computeDesiredJointSpeeds(&filteredJointCommands, q_curr_deg);
 
       for (size_t i = 0; i < DOF_ARM; ++i)
       {
@@ -549,7 +531,7 @@ private:
       fb["velocity"] = qd_curr_rad;
       fb["torque"] = tau;                 // always zero in sim
       fb["imu_acceleration"] = { 0, 0, 9.81 };        // dummy gravity vector
-      fb["gripper_position"] = cmd.gripper_pos;
+      fb["gripper_position"] = gripper_des;
 
       feedbackFcn(fb.dump());
 
@@ -660,21 +642,13 @@ private:
       Kinova::Api::BaseCyclic::Feedback base_feedback = base_cyclic.RefreshFeedback();
 
       // Initialize filter with current robot's state
-      // Actuator Limit (magnitude) (from User-Guide-Gen3-R07.pdf pp.98)
-      // large (joints 1 - 4) 79.64 deg/s (1.39 rad/s)
-      // small (joints 5 - 7) 69.91 deg/s (1.22 rad/s)
-      std::vector<double> maxVelInDeg = {75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0};
       const double tmc = 0.05;
       const double dt = 0.025;   // 40Hz
       std::vector<double> jointPositionsInDeg = getJointPositionsInDeg(base_feedback);
-      std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
-        std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, DOF_ARM);
-      filteredJointCommands->init(jointPositionsInDeg.data());
+      Rcs::RampFilterND filteredJointCommands(jointPositionsInDeg.data(), tmc, 0.0, dt, DOF_ARM);
       for (size_t i = 0; i < jointPositionsInDeg.size(); ++i)
       {
-        filteredJointCommands->setMaxVel(maxVelInDeg[i], i);
-        this->incomingCommand.q_des[i] = jointPositionsInDeg[i];
-        //RLOG(0, "jnt %zu: %.3f deg", i, jointPositionsInDeg[i]);
+        filteredJointCommands.setMaxVel(getMaxVel_deg(i), i);
       }
 
       this->isInitialized = true;
@@ -692,16 +666,28 @@ private:
         // Get feedback and iterate command filters
         base_feedback = base_cyclic.RefreshFeedback();   // UDP 10001
 
-        RoboCommand cmd = getCommand();
-
-        if (cmd.received_q_des)
+        // Process new incoming commands
+        bool receivedNewCommand = false;
+        RobotCommand copyOfCmd;
         {
-          filteredJointCommands->setTarget(cmd.q_des.data());
+          std::lock_guard<std::mutex> lock(cmdMtx);
+          copyOfCmd = this->incomingCommand;
+          receivedNewCommand = this->newIncomingCommand;
+          this->newIncomingCommand = false;
         }
 
-        filteredJointCommands->iterate();
+        if (receivedNewCommand)
+        {
+          applyCommandToFilters(copyOfCmd, filteredJointCommands, 180.0/M_PI);
+        }
+
+        // Interpolation at every time step
+        filteredJointCommands.iterate();
+
+
+
         jointPositionsInDeg = getJointPositionsInDeg(base_feedback);
-        std::vector<double> qd_des = computeDesiredJointSpeeds(filteredJointCommands.get(),
+        std::vector<double> qd_des = computeDesiredJointSpeeds(&filteredJointCommands,
                                                                jointPositionsInDeg);
 
         if (!readOnly)
@@ -847,7 +833,6 @@ private:
     // Actuator Limit (magnitude) (from User-Guide-Gen3-R07.pdf pp.98)
     // large (joints 1 - 4) 79.64 deg/s (1.39 rad/s)
     // small (joints 5 - 7) 69.91 deg/s (1.22 rad/s)
-    std::vector<double> maxVelInDeg = {75.0, 75.0, 75.0, 75.0, 60.0, 60.0, 60.0};
     const double tmc = 0.1;   // keep >= 10 times dt
     const double dt = 0.01;
     std::vector<double> q_curr_deg = getJointPositionsInDeg(base_feedback);
@@ -862,13 +847,10 @@ private:
     std::vector<double> q_cont_deg = closest_to_default(q_curr_deg, q_default_deg);
 
     // Initialize filters with robot's continuous state
-    std::unique_ptr<Rcs::RampFilterND> filteredJointCommands =
-      std::make_unique<Rcs::RampFilterND>(tmc, 0.0, dt, DOF_ARM);
-    filteredJointCommands->init(q_cont_deg.data());
+    Rcs::RampFilterND filteredJointCommands(q_cont_deg.data(), tmc, 0.0, dt, DOF_ARM);
     for (size_t i = 0; i < q_cont_deg.size(); ++i)
     {
-      filteredJointCommands->setMaxVel(maxVelInDeg[i], i);
-      this->incomingCommand.q_des[i] = q_cont_deg[i];
+      filteredJointCommands.setMaxVel(getMaxVel_deg(i), i);
       if (q_cont_deg[i] != q_curr_deg[i])
       {
         RLOG(0, "continuous angles adjusted at index %zu: curr: %f   cont: %f   default: %f",
@@ -901,8 +883,10 @@ private:
     // the gripper. If this force limit is exceeded the gripper motion will stop.
     // 0 is the lowest force limit and 100 the maximum.
     k_api::GripperCyclic::MotorCommand* gripper_motor_command;
+    float gripper_des;
     {
       float gripper_position = base_feedback.interconnect().gripper_feedback().motor()[0].position();
+      gripper_des = gripper_position;
 
       // Initialize interconnect command to current gripper position.
       base_command.mutable_interconnect()->mutable_command_id()->set_identifier(0);
@@ -917,7 +901,7 @@ private:
 
     if (!readOnly)
     {
-      // Set actuators in velocity mode now that the command is equal to measure
+      // Set actuators in velocity mode now that the command is equal to measue
       auto control_mode_message = k_api::ActuatorConfig::ControlModeInformation();
       control_mode_message.set_control_mode(k_api::ActuatorConfig::ControlMode::VELOCITY);
       for (unsigned int i = 0; i < actuator_count; i++)
@@ -951,14 +935,24 @@ private:
       }
       else
       {
-        RoboCommand cmd = getCommand();
-
-        if (cmd.received_q_des)
+        // Process new incoming commands
+        bool receivedNewCommand = false;
+        RobotCommand copyOfCmd;
         {
-          filteredJointCommands->setTarget(cmd.q_des.data());
+          std::lock_guard<std::mutex> lock(cmdMtx);
+          copyOfCmd = this->incomingCommand;
+          receivedNewCommand = this->newIncomingCommand;
+          this->newIncomingCommand = false;
         }
 
-        filteredJointCommands->iterate();
+        if (receivedNewCommand)
+        {
+          applyCommandToFilters(copyOfCmd, filteredJointCommands, 180.0/M_PI);
+        }
+
+        // Interpolation at every time step
+        filteredJointCommands.iterate();
+
         q_curr_deg = getJointPositionsInDeg(base_feedback);
 
         for (std::size_t i = 0; i < q_curr_deg.size(); ++i)
@@ -968,7 +962,7 @@ private:
           RLOG(1, "Raw: %f   Cont: %f   delta: %f", q_curr_deg[i], q_cont_deg[i], delta);
         }
 
-        std::vector<double> qd_des = computeDesiredJointSpeeds(filteredJointCommands.get(), q_curr_deg);
+        std::vector<double> qd_des = computeDesiredJointSpeeds(&filteredJointCommands, q_curr_deg);
 
         // Incrementing identifier ensures actuators can reject out of time frames
         base_command.set_frame_id((base_command.frame_id()+1) % 65536);
@@ -988,8 +982,23 @@ private:
         }
 
         // Gripper command
+        float gripper_force_des = -1.0f;
         const double gripper_curr = base_feedback.interconnect().gripper_feedback().motor()[0].position();
-        const double gripper_error = cmd.gripper_pos - gripper_curr;
+        auto grippers = copyOfCmd.getActuatorsOfType("gripper");
+        if (grippers.size() == 1)
+        {
+          if (grippers[0]->has_position)
+          {
+            gripper_des = (float)grippers[0]->position;
+          }
+
+          if (grippers[0]->has_effort)
+          {
+            gripper_force_des = (float)grippers[0]->effort;
+          }
+        }
+
+        const double gripper_error = gripper_des - gripper_curr;
         const double gripper_p_gain = 2.5;
         double gripper_velocity = Math_clip(gripper_p_gain*dt*fabs(gripper_error), MINIMAL_GRIPPER_VELOCITY, 100.0);
 
@@ -998,9 +1007,13 @@ private:
           gripper_velocity = 0.0;
         }
 
-        gripper_motor_command->set_position((float) cmd.gripper_pos);
+        gripper_motor_command->set_position(gripper_des);
         gripper_motor_command->set_velocity((float) gripper_velocity);
-        gripper_motor_command->set_force((float) cmd.gripper_force);
+
+        if (gripper_force_des>=0.0)
+        {
+          gripper_motor_command->set_force(gripper_force_des);
+        }
 
         // Send command and update feedback from robot
         base_feedback = base_cyclic.Refresh(base_command, 0);
@@ -1009,7 +1022,7 @@ private:
         if (timer.getWaitCycleCount()%2==0)
         {
           int64_t time_usec = timer.getTickUs();
-          feedbackFcn(feedback2JsonString(base_feedback, time_usec, &cmd, q_cont_deg));
+          feedbackFcn(feedback2JsonString(base_feedback, time_usec, &copyOfCmd, q_cont_deg));
         }
       }
 
@@ -1049,7 +1062,7 @@ private:
   }
 
   std::string feedback2JsonString(const k_api::BaseCyclic::Feedback& feedback,
-                                  int64_t time_usec, const RoboCommand* cmd,
+                                  int64_t time_usec, const RobotCommand* cmd,
                                   std::vector<double> q_cont_deg)
   {
     std::vector<double> jointVel(feedback.actuators_size());
@@ -1099,10 +1112,17 @@ private:
       std::vector<double> joint_err(DOF_ARM, 0.0);
       std::vector<double> joint_cmd(DOF_ARM, 0.0);
 
-      for (size_t i=0; i<DOF_ARM; ++i)
+      for (size_t i = 0; i < cmd->actuators.size(); ++i)
       {
-        joint_err[i] = RCS_RAD2DEG(RCS_DEG2RAD(cmd->q_des[i]) - jointPos[i]);
-        joint_cmd[i] = RCS_DEG2RAD(cmd->q_des[i]);
+        const ActuatorCommand& a = cmd->actuators[i];
+
+        if ((a.type != "joint") || (a.index < 0) || (a.index >= DOF_ARM))
+        {
+          continue;
+        }
+
+        joint_err[i] = a.position - RCS_DEG2RAD(jointPos[a.index]);
+        joint_cmd[i] = a.position;
       }
       fbJson["position_error"] = joint_err;
       fbJson["position_command"] = joint_cmd;
@@ -1135,14 +1155,6 @@ private:
 
     for (unsigned int i = 0; i < qd_des.size(); i++)
     {
-      // const double x_des = filteredCommands->getPosition(i);
-      // double fberr = Math_fmodAngle(RCS_DEG2RAD(x_des)) - Math_fmodAngle(RCS_DEG2RAD(x_curr_in_deg[i]));
-      // fberr = RCS_RAD2DEG(Math_fmodAngle(fberr));
-
-      // const double maxVel = filteredCommands->getMaxVel(i);
-      // const double xd_des = ffwGain*filteredCommands->getVelocity(i) + fbGain*fberr;
-
-
       // feedback error in degrees, shortest path
       const double err_deg = signed_diff_deg(filteredCommands->getPosition(i), x_curr_in_deg[i]);
 
@@ -1157,9 +1169,7 @@ private:
   }
 
 
-  mutable std::mutex cmdMtx;
   std::atomic<bool> isInitialized{false};
-  RoboCommand incomingCommand;
   std::atomic<bool> runLoop{false};
   std::thread kortexThread;
 };

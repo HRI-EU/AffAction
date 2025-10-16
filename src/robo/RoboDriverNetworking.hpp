@@ -116,7 +116,7 @@ private:
 
   void networkThreadFcn(std::string endpoint, const std::atomic_bool& run_flag)
   {
-    RLOG_CPP(0, "Feedback thread running on '" << endpoint << "'");
+    RLOG_CPP(0, "Feedback thread sending on '" << endpoint << "'");
     zmq::context_t ctx(1);
     zmq::socket_t pub_socket(ctx, zmq::socket_type::pub);
     pub_socket.bind(endpoint);

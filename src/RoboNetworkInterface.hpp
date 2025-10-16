@@ -126,7 +126,7 @@ public:
 
   void recvThreadFunc()
   {
-
+    RLOG_CPP(0, "Listening to robot feedback on " << otherRecvEndpoint);
     try
     {
       const double max_timeout = 2.0;   // seconds
@@ -150,6 +150,10 @@ public:
           if (dataOk)
           {
             isInitialized.store(true, std::memory_order_release);
+          }
+          else
+          {
+            RLOG_CPP(0, "Incoming data not ok: " << msg_str);
           }
         }
 

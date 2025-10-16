@@ -320,6 +320,72 @@ private:
     Timer_waitDT(0.01);               // 100 Hz command rate
     nlohmann::json cmdJson;
 
+    if (!enableCommands)
+    {
+      return std::string();
+    }
+
+    if ((jointCommands.empty() || (jointCommands==jointCommandsPrev)) &&
+        (gripper_command==gripper_command_prev))
+    {
+      return std::string();
+    }
+
+    nlohmann::json payload =
+    {
+      {"robot_name", "my little robot"},
+      {"timestamp",  Timer_getSystemTime()},
+      {"actuators", nlohmann::json::array()},
+      {"quit", false}
+    };
+
+    auto& acts = payload["actuators"];
+    for (int i = 0; i < 7; ++i)
+    {
+      acts.push_back(
+      {
+        {"id",    "joint_" + std::to_string(i + 1)},
+        {"type",  "joint"},
+        {"index", i},
+        {"position", jointCommands[i]},
+        {"no_vmax", 0.2},
+        {"no_tmc",  0.1}
+      });
+    }
+
+    if (gripper_command!=gripper_command_prev)
+    {
+      acts.push_back(
+      {
+        {"id",    "gripper"},
+        {"type",  "gripper"},
+        {"index", 0},
+        {"position", RCS_RAD2DEG(gripper_command)/0.4},
+        {"effort", gripper_force}
+      });
+    }
+
+
+    {
+      std::lock_guard<std::mutex> lock(cmdMtx);
+      if (!jointCommands.empty() && (jointCommands != jointCommandsPrev))
+      {
+        cmdJson = payload;
+      }
+    }
+
+    // Memorize previous state
+    jointCommandsPrev = jointCommands;
+    gripper_command_prev = gripper_command;
+
+    return cmdJson.dump();
+  }
+
+  std::string compile_outgoing_message_old()
+  {
+    Timer_waitDT(0.01);               // 100 Hz command rate
+    nlohmann::json cmdJson;
+
     if (!enableCommands || jointCommands.empty() || (jointCommands==jointCommandsPrev))
     {
       return std::string();

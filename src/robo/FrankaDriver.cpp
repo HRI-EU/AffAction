@@ -37,7 +37,6 @@
 
 #include <Rcs_cmdLine.h>
 #include <Rcs_math.h>
-#include <Rcs_filters.h>
 #include <Rcs_timer.h>
 #include <Rcs_macros.h>
 
@@ -134,7 +133,7 @@ public:
     filteredJointCommands.init(q_init.data());
     for (size_t i = 0; i < filteredJointCommands.getDim(); ++i)
     {
-      filteredJointCommands.setMaxVel(RoboDriver::getMaxVel(i), i);
+      filteredJointCommands.setMaxVel(getMaxVel(i), i);
     }
     RLOG(0, "Filters initialized");
 
@@ -186,50 +185,6 @@ public:
     return 0;
   }
 
-  bool setCommand(const std::string& message)
-  {
-    std::vector<double> maxVel = getMaxVel();
-    nlohmann::json data;
-    bool quitMe = false;
-
-    // Parse with exception safety
-    try
-    {
-      data = nlohmann::json::parse(message);
-    }
-    catch (const nlohmann::json::parse_error& e)
-    {
-      RLOG_CPP(1, "JSON parse error: " << e.what());
-      return false;
-    }
-
-    RoboDriver::RobotCommand rcmd;
-    bool valid_cmd = parse_robot_command(data, rcmd);
-
-    if (!valid_cmd)
-    {
-      RLOG_CPP(1, "Malformed robot command: " << message);
-      return false;
-    }
-
-    valid_cmd = check_robot_command(rcmd);
-
-    if (valid_cmd)
-    {
-      std::lock_guard<std::mutex> lock(cmdMtx);
-      this->incomingCommand = rcmd;
-      this->newIncomingCommand = true;
-      quitMe = this->incomingCommand.quit;
-    }
-    else
-    {
-      RLOG_CPP(1, "Invalid robot command: " << message);
-      return false;
-    }
-
-    return quitMe;
-  }
-
   size_t getDOF() const
   {
     return DOF_ARM;
@@ -249,6 +204,13 @@ public:
                                  };
     return maxVel;
   }
+
+  double getMaxVel(size_t index) const
+  {
+    return getMaxVel()[index];
+  }
+
+
 
   // FR3 joint ranges:
   //    1: -166/166 deg
@@ -308,7 +270,7 @@ public:
         }
       }
 
-      if (cmd.has_vmax && (cmd.vmax > RoboDriver::getMaxVel(cmd.index)))
+      if (cmd.has_vmax && (cmd.vmax > getMaxVel(cmd.index)))
       {
         success = false;
       }
@@ -323,32 +285,7 @@ public:
     return success;
   }
 
-  void applyCommandToFilters(const RobotCommand& robo_cmd, Rcs::RampFilterND& filt) const
-  {
-    for (const auto& cmd : robo_cmd.actuators)
-    {
-      if ((cmd.type != "joint") || (cmd.index<0) || (cmd.index>=DOF_ARM))
-      {
-        continue;
-      }
 
-      if (cmd.has_position)
-      {
-        filt.setTarget(cmd.position, cmd.index);
-      }
-
-      if (cmd.has_vmax)
-      {
-        filt.setMaxVel(cmd.vmax, cmd.index);
-      }
-
-      if (cmd.has_tmc)
-      {
-        filt.setTimeConstant(cmd.tmc, cmd.index);
-      }
-    }
-
-  }
 
 
 
@@ -569,7 +506,7 @@ public:
       Rcs::RampFilterND filteredJointCommands(tmc, 0.0, dt, DOF_ARM);
       for (size_t i = 0; i < filteredJointCommands.getDim(); ++i)
       {
-        filteredJointCommands.setMaxVel(RoboDriver::getMaxVel(i), i);
+        filteredJointCommands.setMaxVel(getMaxVel(i), i);
       }
 
       auto joint_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::JointPositions
@@ -650,7 +587,7 @@ public:
                                   int64_t time_usec, const RobotCommand* cmd)
   {
     nlohmann::json fbJson;
-    fbJson["time"] = Timer_getSystemTime();
+    fbJson["time"] = getWallclockTime();
     fbJson["cycle_time_usec"] = time_usec;
     fbJson["position"] = rs.q;
     fbJson["velocity"] = rs.dq;
@@ -670,8 +607,8 @@ public:
           continue;
         }
 
-        joint_cmd[i] = RCS_RAD2DEG(RCS_DEG2RAD(a.position));
-        joint_err[i] = RCS_RAD2DEG(RCS_DEG2RAD(a.position) - rs.q[a.index]);
+        joint_cmd[i] = a.position;
+        joint_err[i] = a.position - rs.q[a.index];
         fbJson["position_error"] = joint_err;
         fbJson["position_command"] = joint_cmd;
       }

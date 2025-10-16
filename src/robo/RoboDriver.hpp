@@ -35,6 +35,8 @@
 
 #include "json.hpp"
 
+#include <Rcs_filters.h>
+
 #include <vector>
 #include <map>
 #include <mutex>
@@ -44,6 +46,8 @@
 class RoboDriver
 {
 public:
+  virtual bool setCommand(const std::string& json_msg);
+
 protected:
 
 
@@ -52,7 +56,7 @@ protected:
 
   {
   "robot_name": "my little robot" ,
-  "timestamp": "2025-10-14T12:00:00Z",
+  "timestamp": 0.0,
   "actuators": [
     { "id": "joint_1", "type": "joint", "index": 0,
       "position": 0.4, "velocity": 0.4, "force_torque": 0.0,
@@ -86,29 +90,37 @@ protected:
   struct RobotCommand
   {
     std::string robot_name;
-    double timestamp;
+    double timestamp = 0.0;
     uint64_t seq = 0;
     std::vector<ActuatorCommand> actuators;
     bool quit = false;
+
+    std::vector<const ActuatorCommand*> getActuatorsOfType(std::string actuator_type) const
+    {
+      std::vector<const ActuatorCommand*> out;
+      for (const auto& a : actuators)
+        if (a.type == actuator_type)
+        {
+          out.push_back(&a);
+        }
+      return out;
+    }
   };
 
 
-  // static ActuatorCommand parse_actuator(const nlohmann::json& j, ActuatorCommand& out);
   static bool parse_actuator(const nlohmann::json& j, ActuatorCommand& out);
   static bool parse_robot_command(const nlohmann::json& msg, RobotCommand& cmd);
+  static double getWallclockTime();
+  static bool setRealTimePrio();
 
+  virtual bool check_robot_command(RobotCommand& cmd) const = 0;
+  virtual void applyCommandToFilters(const RobotCommand& robo_cmd,
+                                     Rcs::RampFilterND& filt,
+                                     double scale_joint_commands=1.0) const;
 
   mutable std::mutex cmdMtx;
   RobotCommand incomingCommand;
   bool newIncomingCommand = false;
-
-  virtual bool setCommand(const std::string& json_msg) = 0;
-  virtual bool check_robot_command(RobotCommand& cmd) const = 0;
-  virtual size_t getDOF() const = 0;
-  virtual double getMinTMC() const = 0;
-  virtual std::vector<double> getMaxVel() const = 0;
-
-  virtual double getMaxVel(size_t index) const;
 };
 
 #endif
