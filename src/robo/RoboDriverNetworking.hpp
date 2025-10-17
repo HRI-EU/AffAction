@@ -43,8 +43,6 @@
 #include <exception>
 #include <sstream>
 
-
-
 /*******************************************************************************
  * Class to send feedback message from driver process to the remote computer.
  * The driver proccess calls updateMessage() through the passed function object.
@@ -232,9 +230,6 @@ private:
  * The passed cmdFcn is responsible to implement the parsing of the commands.
  * If the cmdFcn returns true, the thread quits and stops all driver threads.
  * This allows to implement a quit-logic in the parsed commands.
- *
- * Currently, the command function is responsible to implement the wait cycle.
- * \todo: That is not so good.
  *******************************************************************************/
 class CommandThread
 {
@@ -296,9 +291,9 @@ private:
     RLOG(0, "Command receiver thread running");
     zmq::context_t ctx(1);
     zmq::socket_t sub(ctx, zmq::socket_type::sub);
-    sub.bind(endpoint);
     sub.set(zmq::sockopt::subscribe, "");
     sub.set(zmq::sockopt::rcvtimeo, 100); // recv timeout 100ms to enable stopping
+    sub.bind(endpoint);
 
     while (run_flag && runLoop)
     {
