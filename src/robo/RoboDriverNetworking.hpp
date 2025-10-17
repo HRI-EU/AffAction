@@ -56,6 +56,9 @@
  * Features:
  * - Checks if port has already bound and returns success from start() so that
  *   duplicate processes will be recognized.
+ * - Due to the pub-sub communication pattern, there may be several processes
+ *   receiving robot data, and several ones writing commands, at the same time.
+ *   This can be convenient, but is not particularly safe.
  *******************************************************************************/
 class FeedbackThread
 {
