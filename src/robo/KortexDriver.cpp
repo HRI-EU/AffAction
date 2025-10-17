@@ -211,7 +211,11 @@ static void runRobo(int argc, char** argv)
   }
 
   FeedbackThread feedback;
-  feedback.start(nwInfo->roboSender, runLoop);
+  bool success = feedback.start(nwInfo->roboSender, runLoop);
+  if (!success)
+  {
+    return;
+  }
 
   KortexDriver robo;
 

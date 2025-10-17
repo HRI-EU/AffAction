@@ -41,6 +41,7 @@
 #include <functional>
 #include <atomic>
 #include <exception>
+#include <sstream>
 
 
 
@@ -51,22 +52,50 @@
  * the networking thread with a condition variable to avoid hitting timing limits
  * through networking. This is particularly an issue for high-frequency loops
  * (like the 1kHz loop examples in the Kortex library).
+ *
+ * Features:
+ * - Checks if port has already bound and returns success from start() so that
+ *   duplicate processes will be recognized.
  *******************************************************************************/
 class FeedbackThread
 {
 public:
   FeedbackThread() = default;
 
-  void start(std::string endpoint, const std::atomic_bool& run_flag)
+  bool start(std::string endpoint, const std::atomic_bool& run_flag)
   {
     if (thread_.joinable())
     {
       RLOG(1, "FeedbackThread::start() called while thread is already running.");
-      return;
+      return false;
     }
 
-    this-> runLoop = true;
+    this->runLoop.store(true, std::memory_order_release);
+
+    {
+      std::lock_guard<std::mutex> lk(thread_init_mtx_);
+      threadInitialized = false;             // reset before launching
+    }
+
     thread_ = std::thread(&FeedbackThread::networkThreadFcn, this, endpoint, std::cref(run_flag));
+
+    std::unique_lock<std::mutex> lk(thread_init_mtx_);
+    bool ok = thread_init_cv_.wait_for(lk, std::chrono::seconds(1),
+                                       [this] { return threadInitialized; });
+    lk.unlock();
+
+    if (!ok)
+    {
+      runLoop.store(false, std::memory_order_release);
+      if (thread_.joinable())
+      {
+        thread_.join();
+      }
+      RLOG(1, "Didn't hear from FeedbackThread for 1 second - giving up");
+      return false;
+    }
+
+    return true;
   }
 
   ~FeedbackThread()
@@ -116,12 +145,36 @@ private:
 
   void networkThreadFcn(std::string endpoint, const std::atomic_bool& run_flag)
   {
-    RLOG_CPP(0, "Feedback thread sending on '" << endpoint << "'");
     zmq::context_t ctx(1);
     zmq::socket_t pub_socket(ctx, zmq::socket_type::pub);
-    pub_socket.bind(endpoint);
-    pub_socket.set(zmq::sockopt::sndhwm, 1000);   // prevent infinite queueing
-    pub_socket.set(zmq::sockopt::linger, 0);      // fast socket shutdown
+
+    try
+    {
+      pub_socket.bind(endpoint);
+      pub_socket.set(zmq::sockopt::sndhwm, 1000);   // prevent infinite queueing
+      pub_socket.set(zmq::sockopt::linger, 0);      // fast socket shutdown
+    }
+    catch (const zmq::error_t& e)
+    {
+      std::ostringstream detailed_err;
+      detailed_err << e.what() << " (errno=" << e.num() << ", " << zmq_strerror(e.num()) << ")";
+      RLOG_CPP(0, "Exiting from FeedbackThread with error " << detailed_err.str());
+      RLOG_CPP(0, "It seems that another process is already binding this port: " << endpoint <<
+               " .Please make sure that no other RoboDriver is running");
+      return;
+    }
+    catch (const std::exception& e)
+    {
+      RLOG_CPP(0, "Exception when binding port in FeedbackThread: " << e.what());
+      return;
+    }
+
+    RLOG_CPP(0, "Feedback thread sending on '" << endpoint << "'");
+    {
+      std::lock_guard<std::mutex> lk(thread_init_mtx_);
+      threadInitialized = true;              // set condition under the mutex
+    }
+    thread_init_cv_.notify_one();              // wake the starter immediately
 
     std::unique_lock<std::mutex> lock(mtx_);
     while (run_flag && runLoop)
@@ -160,6 +213,10 @@ private:
   std::condition_variable cv_;
   std::thread             thread_;
   std::atomic<bool> runLoop{false};
+
+  std::mutex thread_init_mtx_;
+  std::condition_variable thread_init_cv_;
+  bool threadInitialized{false};
 };
 
 

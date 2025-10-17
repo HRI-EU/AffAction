@@ -480,7 +480,11 @@ static void runPTU(int argc, char** argv)
 
   // Thread sending sensory data to remote process
   FeedbackThread feedback;
-  feedback.start(nwInfo->roboSender, runLoop);
+  bool success = feedback.start(nwInfo->roboSender, runLoop);
+  if (!success)
+  {
+    return;
+  }
 
   // Robo driver thread. The FeedbackThread's updateMessage function is called
   // in each control cycle once registered.

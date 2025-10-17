@@ -79,7 +79,7 @@ public:
     feedbackFcn = std::move(cb);
   }
 
-  void start(std::string robo_ip, const std::atomic_bool& run_flag, bool inSimulation)
+  void start(std::string robo_ip, const std::atomic_bool& run_flag, std::string controlMode)
   {
     if (roboThread.joinable())
     {
@@ -87,7 +87,7 @@ public:
       return;
     }
 
-    if (inSimulation)
+    if (controlMode == "TestWithoutRobot")
     {
       roboThread = std::thread(&FrankaDriver::sim_loop, this, std::cref(run_flag));
     }
@@ -509,7 +509,8 @@ public:
         filteredJointCommands.setMaxVel(getMaxVel(i), i);
       }
 
-      auto joint_pose_cb = [&](const franka::RobotState& rs, franka::Duration period) -> franka::JointPositions
+      auto joint_pose_cb = [&](const franka::RobotState& rs,
+                               franka::Duration period) -> franka::JointPositions
       {
         // Send feedback back to remote process every 25th frame (=40Hz)
         if (this->feedbackFcn && (loopCount%25==0))
@@ -570,7 +571,9 @@ public:
 
 
 
-      robot.control(joint_pose_cb, franka::ControllerMode::kJointImpedance, /*limit_rate=*/true);
+      robot.control(joint_pose_cb,
+                    franka::ControllerMode::kJointImpedance,
+                    /*limit_rate=*/true);
     }
     catch (const franka::Exception& e)
     {
@@ -650,12 +653,11 @@ int main(int argc, char** argv)
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
   int mode = 0;
-  std::string robo_name = "riemann";
+  std::string robo_name = "riemann_sim";
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
   argP.getArgument("-robo_name", &robo_name, "Robot specifier (default is %s)", robo_name.c_str());
-  bool sim = argP.hasArgument("-sim", "Test in simulation only");
 
   const aff::RoboNetworkInfo* nwInfo = aff::RoboNetworkInfo::getNetworkInfo(robo_name);
 
@@ -679,17 +681,21 @@ int main(int argc, char** argv)
 
     case 1:
     {
-      // Thread sending sensory data to remote process. This runs a networking thread that is
-      // woken up by a condition variable that is set from the robo thread.
+      // Thread sending sensory data to remote process. This runs a networking thread
+      // that is woken up by a condition variable that is set from the robo thread.
       FeedbackThread feedback;
-      feedback.start(nwInfo->roboSender, runLoop);
+      bool success = feedback.start(nwInfo->roboSender, runLoop);
+      if (!success)
+      {
+        return -1;
+      }
 
       // Robo driver thread. The FeedbackThread's updateMessage function is called
       // in each control cycle once registered.
       FrankaDriver robo;
       auto fbFcn = std::bind(&FeedbackThread::updateMessage, &feedback, std::placeholders::_1);
       robo.registerFeedbackCallback(fbFcn);
-      robo.start(nwInfo->robo_ip, runLoop, sim);
+      robo.start(nwInfo->robo_ip, runLoop, nwInfo->roboMode);
 
       // Command receiver. On each arriving command, the driver's setCommand function is called.
       bool blocking = true;

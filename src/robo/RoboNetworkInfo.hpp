@@ -138,18 +138,28 @@ public:
     laplace.roboMode = "";
     laplace.q_default_deg = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
+    // Franka right simulation
+    RoboNetworkInfo riemann_sim = riemann;
+    riemann_sim.roboMode = "TestWithoutRobot";
+
+    // Franka left simulation
+    RoboNetworkInfo laplace_sim = laplace;
+    laplace_sim.roboMode = "TestWithoutRobot";
+
 
 
     static std::map<std::string, RoboNetworkInfo> nwInfo =
     {
-      { "rummenigge", rummenigge },
-      { "littbarski", littbarski },
-      { "test_right", test_right },
-      { "test_left",  test_left  },
-      { "ptu",        ptu        },
-      { "ptu_test",   ptu_test   },
-      { "riemann",    riemann    },
-      { "laplace",    laplace    }
+      { "rummenigge",  rummenigge  },
+      { "littbarski",  littbarski  },
+      { "test_right",  test_right  },
+      { "test_left",   test_left   },
+      { "ptu",         ptu         },
+      { "ptu_test",    ptu_test    },
+      { "riemann",     riemann     },
+      { "laplace",     laplace     },
+      { "riemann_sim", riemann_sim },
+      { "laplace_sim", laplace_sim }
     };
 
     auto it = nwInfo.find(roboName);
