@@ -3,7 +3,7 @@ Need to fix axis transform for joint "joint_12_0" has weird axis direction: [-1.
 -->
 <Graph name="DefaultPose" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
 
-  <Body name="palm_link" prev="world" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
+  <Body name="palm_link" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 -179.908748 0.000073 90.045626" meshFile="allegro_hand_description/meshes/palm.stl" color="#333333ff" />
     <Shape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 -179.908748 0.000073 90.045626" meshFile="allegro_hand_description/meshes/palm.stl" />
   </Body>
@@ -124,7 +124,5 @@ Need to fix axis transform for joint "joint_12_0" has weird axis direction: [-1.
     <Shape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 179.908748" meshFile="allegro_hand_description/meshes/finger_tip_silicon.stl" />
   </Body>
 
-<model_state model="DefaultPose" time_stamp="0">
-</model_state>
 
 </Graph>

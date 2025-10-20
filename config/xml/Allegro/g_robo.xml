@@ -1,0 +1,74 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+  
+  <Body name="base" >
+    <Joint name="base_joint" range="-12.032114 45.263666 102.559445" type="TransZ" />
+  </Body>
+
+
+
+  <Group name="_right" prev="base" >
+    <xi:include href="g_hand_right.xml"/>
+  </Group>
+
+
+  <Manipulator body="palm_link_right" types="hand hand_right" >
+    <Joints names="joint_0_0_right joint_1_0_right joint_2_0_right joint_3_0_right joint_4_0_right joint_5_0_right joint_6_0_right joint_7_0_right joint_8_0_right joint_9_0_right joint_10_0_right joint_11_0_right joint_12_0_right joint_13_0_right joint_14_0_right joint_15_0_right"/>
+    <PowergraspCapability frame="link_0_0_right" />
+  </Manipulator>
+
+
+  
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="joint_0_0_right" position="0" />
+    <joint_state joint="joint_1_0_right" position="0" />
+    <joint_state joint="joint_2_0_right" position="0" />
+    <joint_state joint="joint_3_0_right" position="0" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="0" />
+    <joint_state joint="joint_6_0_right" position="0" />
+    <joint_state joint="joint_7_0_right" position="0" />
+    <joint_state joint="joint_8_0_right" position="0" />
+    <joint_state joint="joint_9_0_right" position="0" />
+    <joint_state joint="joint_10_0_right" position="0" />
+    <joint_state joint="joint_11_0_right" position="0" />
+    <joint_state joint="joint_12_0_right" position="0" />
+    <joint_state joint="joint_13_0_right" position="0" />
+    <joint_state joint="joint_14_0_right" position="0" />
+    <joint_state joint="joint_15_0_right" position="0" />
+  </model_state>	     
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="palm_link_right"/>
+  </BroadPhase>
+
+</Graph>

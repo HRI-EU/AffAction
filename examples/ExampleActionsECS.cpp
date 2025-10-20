@@ -2853,4 +2853,43 @@ public:
 
 RCS_REGISTER_EXAMPLE(ExamplePTUDriver, "RoboDrivers", "PTUDriver");
 
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAllegroDriver : public ExampleActionsECS
+{
+public:
+
+  ExampleAllegroDriver(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+    RMSG("Start bin/AllegroDriver -m 1");
+  }
+
+  virtual ~ExampleAllegroDriver()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_robo.xml";
+    configDirectory = "config/xml/Allegro";
+    speedUp = 1;
+    addComponentArgument("-allegroZmq_right");
+    enableRealGraphVisualization = true;
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/AllegroDriver -m 1\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAllegroDriver, "RoboDrivers", "AllegroDriver");
+
 }   // namespace aff

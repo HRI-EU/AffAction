@@ -44,6 +44,7 @@
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
 #include "FrankaComponent.hpp"
+#include "AllegroComponent.hpp"
 #include "ZmqJsonSubscriber.hpp"
 #include "StringParserTools.hpp"
 #include "RespeakerSoundDirComponent.h"
@@ -401,27 +402,29 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component (right arm)");
     argP.addDescription("-frankaZmq_left", "Start with Franka component (left arm)");
     argP.addDescription("-frankaZmq_right", "Start with Franka component (right arm)");
+    argP.addDescription("-allegroZmq_left", "Start with Allegro component (left hand)");
+    argP.addDescription("-allegroZmq_right", "Start with Allegro component (right hand)");
   }
   else
   {
     if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
     {
       std::string suffix = "_left";
-      std::string otherRecv="tcp://localhost:40004";// was 5557
-      std::string otherSend="tcp://localhost:40005";// was 5558
+      std::string otherRecv="tcp://localhost:40004";
+      std::string otherSend="tcp://localhost:40005";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv,otherSend));
+                                                    otherRecv, otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv="tcp://localhost:40002";// was 5555
-      std::string otherSend="tcp://localhost:40003";// was 5556
+      std::string otherRecv="tcp://localhost:40002";
+      std::string otherSend="tcp://localhost:40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv,otherSend));
+                                                    otherRecv, otherSend));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
@@ -431,7 +434,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string otherSend="tcp://localhost:40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv,otherSend));
+                                                    otherRecv, otherSend));
     }
 
     if (getKey(argvStrVec, "-frankaZmq_left"))
@@ -441,17 +444,27 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string otherSend="tcp://localhost:40011";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv,otherSend));
+                                                    otherRecv, otherSend));
     }
 
-    if (getKey(argvStrVec, "-frankaZmq_right"))
+    if (getKey(argvStrVec, "-allegroZmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv="tcp://localhost:40008";
-      std::string otherSend="tcp://localhost:40009";
+      std::string otherRecv="tcp://localhost:40012";
+      std::string otherSend="tcp://localhost:40013";
       const double dt_commands = 0.01;
-      components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv,otherSend));
+      components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
+                                                     otherRecv, otherSend));
+    }
+
+    if (getKey(argvStrVec, "-allegroZmq_left"))
+    {
+      std::string suffix = "_left";
+      std::string otherRecv="tcp://localhost:40014";
+      std::string otherSend="tcp://localhost:40015";
+      const double dt_commands = 0.01;
+      components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
+                                                     otherRecv, otherSend));
     }
 
   }
