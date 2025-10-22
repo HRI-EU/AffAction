@@ -65,6 +65,7 @@
 
 #include <ControllerWidgetBase.h>
 #include <CmdLineWidget.h>
+#include <JointWidget.h>
 
 #include <AABBNode.h>
 #include <SphereNode.h>
@@ -916,6 +917,19 @@ bool ExampleActionsECS::initGraphics()
     else
     {
       new aff::EventGui(&entity);
+    }
+  }, "Launch event gui");
+
+  viewer->setKeyCallback('J', [this](char k)
+  {
+    if (blockingMainThread)
+    {
+      auto jw = new Rcs::JointWidget(nullptr, getGraph(), nullptr, getGraph()->q, getCurrentGraph()->q, false, true);
+      jw->show();
+    }
+    else
+    {
+      new Rcs::JointGui(getGraph(), nullptr, getGraph()->q, getCurrentGraph()->q, false, true);
     }
   }, "Launch event gui");
 
