@@ -278,6 +278,7 @@ src/VirtualCameraWindow.cpp
 src/TTSComponent.cpp
 src/RespeakerSoundDirComponent.cpp
 src/RetargetComponent.cpp
+src/JointGuiComponent.cpp
 )
 
 SET(GUI_SRCS
@@ -291,6 +292,7 @@ examples/ExampleActionsECS.cpp
 examples/ExampleRetarget.cpp
 examples/ExampleFlowMatching.cpp
 examples/ExampleViapoints.cpp
+examples/ExampleGui.cpp
 src/JacoShmComponent.cpp
 src/AzureBodyTrackingComponent.cpp
 )
