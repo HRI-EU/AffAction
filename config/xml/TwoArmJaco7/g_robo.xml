@@ -130,4 +130,6 @@
     <joint_state joint="GazePoint_rigidBodyJnt2" position="1.166729" />
   </model_state>
   
+  <xi:include href="../TwoArmJaco7/g_collisionmodel.xml"/>
+
 </Graph>

@@ -53,6 +53,7 @@ joint_15_0:     -8.0    -1.7    108.0
   </Body>
 
   <Body name="link_3_0_tip" prev="link_3_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
   </Body>
@@ -82,6 +83,7 @@ joint_15_0:     -8.0    -1.7    108.0
   </Body>
 
   <Body name="link_7_0_tip" prev="link_7_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
   </Body>
@@ -111,6 +113,7 @@ joint_15_0:     -8.0    -1.7    108.0
   </Body>
 
   <Body name="link_11_0_tip" prev="link_11_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
   </Body>
@@ -140,6 +143,7 @@ joint_15_0:     -8.0    -1.7    108.0
   </Body>
 
   <Body name="link_15_0_tip" prev="link_15_0" transform="0 0 0.05 0 0 0" physics="fixed" mass="0.0014" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 179.908748" meshFile="allegro_hand_description/meshes/finger_tip_silicon.stl" color="#e5e5e5ff" />
     <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 179.908748" meshFile="allegro_hand_description/meshes/finger_tip_silicon.stl" />
   </Body>

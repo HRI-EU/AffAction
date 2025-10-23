@@ -34,7 +34,7 @@
 
   <Body name="base" >
     <Joint name="base_joint" range="-1 0 1" type="TransZ" />
-	<Shape type="FRAME" />
+	<xShape type="FRAME" />
   </Body>
 
   <Group name="_right" prev="base" >

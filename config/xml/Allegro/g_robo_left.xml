@@ -1,0 +1,116 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+  
+	<!-- The optional grapchics window camera perspective when starting up. -->
+  <Body name="default_camera_view" transform="0.628586 -0.504824 -0.072022   -11.226 12.180 141.17"/>
+
+  <Body name="base" >
+    <Joint name="base_joint" range="-1 0 1" type="TransZ" />
+	<Shape type="FRAME" />
+  </Body>
+
+  <Group name="_left" prev="base" >
+    <xi:include href="g_hand_left.xml"/>
+  </Group>
+
+
+  <Manipulator body="palm_link_left" types="hand hand_left" >
+    <Joints names="joint_0_0_left joint_1_0_left joint_2_0_left joint_3_0_left joint_4_0_left joint_5_0_left joint_6_0_left joint_7_0_left joint_8_0_left joint_9_0_left joint_10_0_left joint_11_0_left joint_12_0_left joint_13_0_left joint_14_0_left joint_15_0_left"/>
+    <PowergraspCapability frame="link_0_0_left" />
+  </Manipulator>
+
+
+  <!-- pointing - middle - ring - thumb from distal to proximal -->
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="joint_0_0_left" position="2" />
+    <joint_state joint="joint_1_0_left" position="2" />
+    <joint_state joint="joint_2_0_left" position="2" />
+    <joint_state joint="joint_3_0_left" position="2" />
+    <joint_state joint="joint_4_0_left" position="2" />
+    <joint_state joint="joint_5_0_left" position="2" />
+    <joint_state joint="joint_6_0_left" position="2" />
+    <joint_state joint="joint_7_0_left" position="2" />
+    <joint_state joint="joint_8_0_left" position="2" />
+    <joint_state joint="joint_9_0_left" position="2" />
+    <joint_state joint="joint_10_0_left" position="2" />
+    <joint_state joint="joint_11_0_left" position="60" />
+    <joint_state joint="joint_12_0_left" position="-50" />
+    <joint_state joint="joint_13_0_left" position="140" />
+    <joint_state joint="joint_14_0_left" position="-60" />
+    <joint_state joint="joint_15_0_left" position="2" />
+  </model_state>	     
+
+  <model_state model="pose1" time_stamp="0">
+    <joint_state joint="joint_0_0_left"  position="5" />
+    <joint_state joint="joint_1_0_left"  position="5" />
+    <joint_state joint="joint_2_0_left"  position="15" />
+    <joint_state joint="joint_3_0_left"  position="40" />
+    <joint_state joint="joint_4_0_left"  position="5" />
+    <joint_state joint="joint_5_0_left"  position="5" />
+    <joint_state joint="joint_6_0_left"  position="25" />
+    <joint_state joint="joint_7_0_left"  position="35" />
+    <joint_state joint="joint_8_0_left"  position="5" />
+    <joint_state joint="joint_9_0_left"  position="5" />
+    <joint_state joint="joint_10_0_left" position="30" />
+    <joint_state joint="joint_11_0_left" position="30" />
+    <joint_state joint="joint_12_0_left" position="20" />
+    <joint_state joint="joint_13_0_left" position="5" />
+    <joint_state joint="joint_14_0_left" position="5" />
+    <joint_state joint="joint_15_0_left" position="5" />
+  </model_state>	     
+
+  <model_state model="point" time_stamp="0">
+    <joint_state joint="joint_0_0_left"  position="5" />
+    <joint_state joint="joint_1_0_left"  position="5" />
+    <joint_state joint="joint_2_0_left"  position="15" />
+    <joint_state joint="joint_3_0_left"  position="25" />
+    
+    <joint_state joint="joint_4_0_left"  position="5" />
+    <joint_state joint="joint_5_0_left"  position="5" />
+    <joint_state joint="joint_6_0_left"  position="100" />
+    <joint_state joint="joint_7_0_left"  position="50" />
+    
+    <joint_state joint="joint_8_0_left"  position="5" />
+    <joint_state joint="joint_9_0_left"  position="5" />
+    <joint_state joint="joint_10_0_left" position="100" />
+    <joint_state joint="joint_11_0_left" position="30" />
+    
+    <joint_state joint="joint_12_0_left" position="20" />
+    <joint_state joint="joint_13_0_left" position="5" />
+    <joint_state joint="joint_14_0_left" position="50" />
+    <joint_state joint="joint_15_0_left" position="50" />
+  </model_state>	     
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="palm_link_left"/>
+  </BroadPhase>
+
+</Graph>
