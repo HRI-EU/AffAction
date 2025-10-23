@@ -55,11 +55,12 @@ class AllegroComponent : public ComponentBase, public RoboNetworkInterface
 public:
   AllegroComponent(EntityBase* parent,
                    double dt_commands,
-                   std::string suffix="",
-                   std::string otherRecv="tcp://localhost:40012",
-                   std::string otherSend="tcp://localhost:40013")
+                   std::string suffix,//="",
+                   std::string otherRecv,//="tcp://localhost:40012",
+                   std::string otherSend)//="tcp://localhost:40013")
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
+    RLOG_CPP(1, "suffix: " << suffix << " otherRecv: " << otherRecv << " otherSend: " << otherSend);
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_0_0"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_1_0"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_2_0"+suffix));
@@ -76,6 +77,12 @@ public:
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_13_0"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_14_0"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_15_0"+suffix));
+
+    fingerTips.push_back(Rcs::BodyNameIndexPair("link_3_0_tip"+suffix));
+    fingerTips.push_back(Rcs::BodyNameIndexPair("link_7_0_tip"+suffix));
+    fingerTips.push_back(Rcs::BodyNameIndexPair("link_11_0_tip"+suffix));
+    fingerTips.push_back(Rcs::BodyNameIndexPair("link_15_0_tip"+suffix));
+    this->fingerTipPressure = std::vector<double>(4, 0.0);
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);
@@ -95,12 +102,13 @@ public:
 
   void onUpdateGraph(RcsGraph* graph)
   {
-    std::vector<double> jntPosTmp, jntVelTmp;
+    std::vector<double> jntPosTmp, jntVelTmp, ftfTmp;
 
     {
       std::lock_guard<std::mutex> lock(this->recvMtx);
       jntPosTmp = this->jointPosition;
       jntVelTmp = this->jointVelocity;
+      ftfTmp = this->fingerTipPressure;
     }
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
@@ -116,6 +124,17 @@ public:
                  jntNameIdPairs[i].jointName.c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
       MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
+    }
+
+    for (size_t i=0; i<ftfTmp.size(); ++i)
+    {
+      std::string col = std::string("#") + valueToColorRGB(ftfTmp[i]) + std::string("ff");
+      RcsBody* b = fingerTips[i].getBody(graph);
+      if (b && b->nShapes>0)
+      {
+        strcpy(b->shapes[0].color, col.c_str());
+        RLOG_CPP(1, "pressure " << i << " is: " << col);
+      }
     }
 
   }
@@ -192,7 +211,7 @@ private:
       // If successful, process the parsed JSON data
       RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
-      std::vector<double> q, qd, tor;
+      std::vector<double> q, qd, tor, ftf;
 
       if (recv_json.contains("position"))
       {
@@ -209,6 +228,12 @@ private:
         tor = recv_json["torque"].get<std::vector<double>>();
       }
 
+      if (recv_json.contains("finger_tip_force"))
+      {
+        ftf = recv_json["finger_tip_force"].get<std::vector<double>>();
+        RLOG_CPP(1, "ftf: " << ftf[0] << " " << ftf[1] << " "  << ftf[2]  << " " << ftf[3]);
+      }
+
       if ((q.size()==jntNameIdPairs.size()) &&
           (qd.size()==jntNameIdPairs.size()) &&
           (tor.size()==jntNameIdPairs.size()))
@@ -217,6 +242,10 @@ private:
         this->jointPosition = q;
         this->jointVelocity = qd;
         this->jointTorque = tor;
+        if (!ftf.empty())
+        {
+          this->fingerTipPressure = ftf;
+        }
         membersInitialized = true;
       }
 
@@ -275,13 +304,72 @@ private:
     return cmdJson.dump();
   }
 
+  std::string valueToColorRGB(double value)
+  {
+    // Clamp value between 0 and 500+
+    if (value < 0)
+    {
+      value = 0;
+    }
 
+    int r = 0, g = 0, b = 0;
+
+    if (value <= 124)   // Blue (0,0,255) to Cyan (0,255,255)
+    {
+      double t = value / 124.0;
+      r = 0;
+      g = static_cast<int>(255 * t);
+      b = 255;
+    }
+    else if (value <= 249)   // Cyan (0,255,255) to Green (0,255,0)
+    {
+      double t = (value - 124.0) / (249.0 - 124.0);
+      r = 0;
+      g = 255;
+      b = static_cast<int>(255 * (1 - t));
+    }
+    else if (value <= 375)   // Green to Yellow (255,255,0)
+    {
+      double t = (value - 249.0) / (375.0 - 249.0);
+      r = static_cast<int>(255 * t);
+      g = 255;
+      b = 0;
+    }
+    else if (value <= 500)   // Yellow to Red (255,0,0)
+    {
+      double t = (value - 375.0) / (500.0 - 375.0);
+      r = 255;
+      g = static_cast<int>(255 * (1 - t));
+      b = 0;
+    }
+    else   // Beyond 500: Red
+    {
+      r = 255;
+      g = 0;
+      b = 0;
+    }
+
+    // Clamp values just in case
+    r = Math_iClip(r, 0, 255);
+    g = Math_iClip(g, 0, 255);
+    b = Math_iClip(b, 0, 255);
+
+    std::ostringstream oss;
+    oss << std::uppercase << std::hex << std::setfill('0')
+        << std::setw(2) << r
+        << std::setw(2) << g
+        << std::setw(2) << b;
+
+    return oss.str();
+  }
 
   bool enableCommands = false;
   bool eStop = false;
   std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
+  std::vector<Rcs::BodyNameIndexPair> fingerTips;
   std::vector<double> jointPosition, jointVelocity, jointTorque;
   std::vector<double> jointCommands, jointCommandsPrev;
+  std::vector<double> fingerTipPressure;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
 };
