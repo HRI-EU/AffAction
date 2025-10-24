@@ -31,35 +31,30 @@
 
 *******************************************************************************/
 
-#ifndef AFF_EXAMPLEGUI_H
-#define AFF_EXAMPLEGUI_H
+#ifndef AFF_EXAMPLEJOINTCONTROL_H
+#define AFF_EXAMPLEJOINTCONTROL_H
 
 #include "EntityBase.h"
-#include "ConcurrentSceneQuery.h"
 
 #include <GraphComponent.h>
 #include <GraphicsWindow.h>
+#include <JointGuiComponent.h>
 
 #include <ExampleBase.h>
-
-#include <atomic>
-
+#include <ControllerBase.h>
 
 
-extern "C" {
-  void AffActionExampleInfo();
-}
 
 namespace aff
 {
 
-class ExampleGui : public Rcs::ExampleBase
+class ExampleJointControl : public Rcs::ExampleBase
 {
 public:
 
-  ExampleGui();
-  ExampleGui(int argc, char** argv);
-  virtual ~ExampleGui();
+  ExampleJointControl();
+  ExampleJointControl(int argc, char** argv);
+  virtual ~ExampleJointControl();
 
   // From ExampleBase
   virtual bool initParameters();
@@ -79,67 +74,43 @@ public:
   const RcsGraph* getGraph() const;
   RcsGraph* getCurrentGraph();
   const RcsGraph* getCurrentGraph() const;
-  GraphicsWindow* getViewer();
-  bool eraseViewer();
-  const EntityBase& getEntity() const;
-  EntityBase& getEntity();
   void addComponentArgument(const std::string& arg);
-  bool eraseComponent(ComponentBase* component);   // Remove and delete
-  std::string getComponentArguments() const;
-  const std::vector<ComponentBase*>& getComponentsRef() const;
-  void addComponent(ComponentBase* component);
-  void addHardwareComponent(ComponentBase* component);
-
-  void lockStepMtx() const;
-  void unlockStepMtx() const;
-
-  std::string xmlFileName;
-  std::string configDirectory;
-
-  bool blockingMainThread;
-  unsigned int speedUp;
-  double dt;
-  bool enableWireframeToggle;
-  bool enableRealGraphVisualization;
-
-
-
 
 protected:
-
-  EntityBase entity;
-  std::string componentArgs;
-  double dt_max, dt_max2, dtProcess, dtEvents;
-  bool withRobot, pause;
-  unsigned int loopCount;
-  std::atomic<bool> processingAction;
-
-  GraphicsWindow* viewer;
-  GraphComponent* graphC;
-
-  std::unique_ptr<Rcs::ControllerBase> controller;
-
-
-  void setEnableRobot(bool enable);
-  bool getRobotEnabled() const;
 
   // Subscribed callbacks
   void onQuit();
   void onPrint();
-  void onProcess();
 
-  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph;
-  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics;
-  ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand;
-  ES::SubscriberCollectionDecay<>* setRenderCommand;
+  EntityBase entity;
+  std::string xmlFileName;
+  std::string configDirectory;
+  std::string componentArgs;
+  std::string renderStringHUD;
 
-  mutable std::mutex stepMtx;
+  bool blockingMainThread = false;
+  double dt = 0.01;
+  double tmc = 0.1;
+
+  double dt_max = 0.0, dtProcess = 0.0;
+  unsigned int loopCount = 0;
+
+  GraphicsWindow* viewer = nullptr;
+  GraphComponent* graphC = nullptr;
+  JointGuiComponent* jguiC = nullptr;
+
+  std::unique_ptr<Rcs::ControllerBase> controller;
+
+  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph = nullptr;
+  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph = nullptr;
+  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics = nullptr;
+  ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand = nullptr;
+  ES::SubscriberCollectionDecay<>* setRenderCommand = nullptr;
+
   std::vector<ComponentBase*> hwc;
   std::vector<ComponentBase*> components;
-  RcsGraph* graphToInitializeWith;
 };
 
 }   // namespace aff
 
-#endif   // AFF_EXAMPLEGUI_H
+#endif   // AFF_EXAMPLEJOINTCONTROL_H

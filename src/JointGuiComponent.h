@@ -109,22 +109,22 @@ public:
 
 private:
 
-  virtual void subscribeAll();
   void guiCallback();
   void onStart();
   void onStop();
   void onInitialize(const RcsGraph* target);
   void onFilterAndUpdateGui(RcsGraph* from);
+  void onRender();
   void onEmergencyStop();
   void onEmergencyRecover();
   void onGoalPose(std::string goalPose);
 
-  RcsGraph* graph;
-  MatNd* q_des;
-  MatNd* q_curr;
-  MatNd* q_des_filt;
-  Rcs::RampFilterND* filt;
-  Rcs::JointGui* jGui;
+  RcsGraph* guiGraph = nullptr;
+  MatNd* q_des = nullptr;
+  MatNd* q_curr = nullptr;
+  MatNd* q_des_filt = nullptr;
+  Rcs::RampFilterND* filt = nullptr;
+  Rcs::JointGui* jGui = nullptr;
   mutable pthread_mutex_t mtx;
 
   JointGuiComponent(const JointGuiComponent&);

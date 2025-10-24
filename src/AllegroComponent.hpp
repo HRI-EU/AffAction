@@ -133,7 +133,7 @@ public:
       if (b && b->nShapes>0)
       {
         strcpy(b->shapes[0].color, col.c_str());
-        RLOG_CPP(1, "pressure " << i << " is: " << col);
+        //RLOG_CPP(1, "pressure " << i << " is: " << col);
       }
     }
 
@@ -162,7 +162,7 @@ private:
 
   void onInitFromState(const RcsGraph* target)
   {
-    RLOG(0, "AllegroComponent::onInitFromState()");
+    RLOG(1, "AllegroComponent::onInitFromState()");
     onSetJointPosition(target->q);
     this->jointCommandsPrev = this->jointCommands;
 
@@ -171,7 +171,7 @@ private:
       const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
       RCHECK_MSG(jnt, "Joint '%s' not found in graph",
                  jntNameIdPairs[i].jointName.c_str());
-      RLOG(0, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
+      RLOG(1, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
     }
   }
 
@@ -231,7 +231,6 @@ private:
       if (recv_json.contains("finger_tip_force"))
       {
         ftf = recv_json["finger_tip_force"].get<std::vector<double>>();
-        RLOG_CPP(1, "ftf: " << ftf[0] << " " << ftf[1] << " "  << ftf[2]  << " " << ftf[3]);
       }
 
       if ((q.size()==jntNameIdPairs.size()) &&

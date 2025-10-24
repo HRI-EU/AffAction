@@ -209,7 +209,7 @@ bool EntityBase::initialize(RcsGraph* graph)
   RLOG_CPP(3, "InitFromState++ took " << nIter << " process() calls, queue is "
            << queueSize());
 
-  RPAUSE_MSG_DL(3, "Enter runLoop");
+  RPAUSE_MSG_DL(3, "Initialization finished");
 
   return true;
 }

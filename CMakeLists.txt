@@ -292,7 +292,7 @@ examples/ExampleActionsECS.cpp
 examples/ExampleRetarget.cpp
 examples/ExampleFlowMatching.cpp
 examples/ExampleViapoints.cpp
-examples/ExampleGui.cpp
+examples/ExampleJointControl.cpp
 src/JacoShmComponent.cpp
 src/AzureBodyTrackingComponent.cpp
 )

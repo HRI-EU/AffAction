@@ -93,7 +93,7 @@ namespace aff
 /*******************************************************************************
  *
  ******************************************************************************/
-void onSetLogLevel(int dl)
+static void onSetLogLevel(int dl)
 {
   RcsLogLevel = dl;
 }
@@ -2871,16 +2871,16 @@ RCS_REGISTER_EXAMPLE(ExamplePTUDriver, "RoboDrivers", "PTUDriver");
 /*******************************************************************************
  *
  ******************************************************************************/
-class ExampleAllegroDriver : public ExampleActionsECS
+class ExampleAllegroDriverRight : public ExampleActionsECS
 {
 public:
 
-  ExampleAllegroDriver(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  ExampleAllegroDriverRight(int argc, char** argv) : ExampleActionsECS(argc, argv)
   {
     RMSG("Start bin/AllegroDriver -m 1");
   }
 
-  virtual ~ExampleAllegroDriver()
+  virtual ~ExampleAllegroDriverRight()
   {
   }
 
@@ -2904,6 +2904,44 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleAllegroDriver, "RoboDrivers", "AllegroDriver");
+RCS_REGISTER_EXAMPLE(ExampleAllegroDriverRight, "RoboDrivers", "AllegroDriverRight");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAllegroDriverLeft : public ExampleActionsECS
+{
+public:
+
+  ExampleAllegroDriverLeft(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleAllegroDriverLeft()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_robo_left.xml";
+    configDirectory = "config/xml/Allegro";
+    speedUp = 1;
+    addComponentArgument("-allegroZmq_left");
+    enableRealGraphVisualization = true;
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/AllegroDriver -m 1\n\n";
+    str += ExampleActionsECS::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAllegroDriverLeft, "RoboDrivers", "AllegroDriverLeft");
 
 }   // namespace aff

@@ -30,11 +30,10 @@
 
 *******************************************************************************/
 
-#include "ExampleGui.h"
+#include "ExampleJointControl.h"
 #include "HardwareComponent.h"
 #include "SceneJsonHelpers.h"
 #include "ComponentFactory.h"
-#include "JointGuiComponent.h"
 
 #include <EventGui.h>
 
@@ -66,45 +65,18 @@ static void onSetLogLevel(int dl)
   RcsLogLevel = dl;
 }
 
-
-
 /*******************************************************************************
  *
  ******************************************************************************/
-RCS_REGISTER_EXAMPLE(ExampleGui, "Gui", "Joint Gui");
-
-ExampleGui::ExampleGui() : ExampleGui(0, NULL)
+ExampleJointControl::ExampleJointControl() : ExampleJointControl(0, NULL)
 {
 }
 
-ExampleGui::ExampleGui(int argc, char** argv) :
-  ExampleBase(argc, argv), entity(), graphToInitializeWith(NULL)
+ExampleJointControl::ExampleJointControl(int argc, char** argv) : ExampleBase(argc, argv), entity()
 {
-  dt = 0.01;
-  dt_max = 0.0;
-  dt_max2 = 0.0;
-  speedUp = 1;
-  loopCount = 0;
-  blockingMainThread = false;
-  enableWireframeToggle = true;   // Show wireframe if collisions are deactivated
-  enableRealGraphVisualization = false;
-
-  pause = false;
-  withRobot = false;
-  dtProcess = 0.0;
-  dtEvents = 0.0;
-
-  updateGraph = nullptr;
-  postUpdateGraph = nullptr;
-  computeKinematics = nullptr;
-  setJointCommand = nullptr;
-  setRenderCommand = nullptr;
-
-  viewer = nullptr;
-  graphC = nullptr;
 }
 
-ExampleGui::~ExampleGui()
+ExampleJointControl::~ExampleJointControl()
 {
   stop();
 
@@ -121,11 +93,10 @@ ExampleGui::~ExampleGui()
   }
 
   Rcs_removeResourcePath(configDirectory.c_str());
-  RcsGraph_destroy(graphToInitializeWith);
-  RLOG_CPP(5, "Done deleting ExampleGui");
+  RLOG_CPP(5, "Done deleting ExampleJointControl");
 }
 
-bool ExampleGui::initParameters()
+bool ExampleJointControl::initParameters()
 {
   xmlFileName = "g_attentive_support.xml";
   configDirectory = "config/xml/examples";
@@ -133,10 +104,9 @@ bool ExampleGui::initParameters()
   return true;
 }
 
-bool ExampleGui::parseArgs(Rcs::CmdLineParser* parser)
+bool ExampleJointControl::parseArgs(Rcs::CmdLineParser* parser)
 {
   parser->getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
-  parser->getArgument("-speedUp", &speedUp, "Speed-up factor (default: %d)", speedUp);
   parser->getArgument("-dt", &dt, "Time step (default is %f)", dt);
   parser->getArgument("-f", &xmlFileName, "Configuration file name "
                       "(default is %s)", xmlFileName.c_str());
@@ -158,7 +128,7 @@ bool ExampleGui::parseArgs(Rcs::CmdLineParser* parser)
   return true;
 }
 
-bool ExampleGui::initAlgo()
+bool ExampleJointControl::initAlgo()
 {
   Rcs_addResourcePath(RCS_CONFIG_DIR);
   Rcs_addResourcePath(configDirectory.c_str());
@@ -167,9 +137,8 @@ bool ExampleGui::initAlgo()
   entity.registerEvent<>("EmergencyRecover");
   entity.registerEvent<>("Quit");
   entity.subscribe("SetLogLevel", &onSetLogLevel);
-  entity.subscribe("Quit", &ExampleGui::onQuit, this);
-  entity.subscribe("Print", &ExampleGui::onPrint, this);
-  entity.subscribe("Process", &ExampleGui::onProcess, this);
+  entity.subscribe("Quit", &ExampleJointControl::onQuit, this);
+  entity.subscribe("Print", &ExampleJointControl::onPrint, this);
 
   entity.setDt(dt);
   updateGraph = entity.registerEvent<RcsGraph*>("UpdateGraph");
@@ -178,25 +147,14 @@ bool ExampleGui::initAlgo()
   setRenderCommand = entity.registerEvent<>("Render");
   postUpdateGraph = entity.registerEvent<RcsGraph*, RcsGraph*>("PostUpdateGraph");
 
-  if (pause)
-  {
-    entity.call("TogglePause");
-  }
-
-  if (!controller)
-  {
-    RcsGraph* graph = RcsGraph_create(xmlFileName.c_str());
-    RCHECK(RcsGraph_check(graph, NULL, NULL));
-    controller = std::make_unique<Rcs::ControllerBase>(graph);
-  }
+  RcsGraph* graph = RcsGraph_create(xmlFileName.c_str());
+  RCHECK(RcsGraph_check(graph, NULL, NULL));
+  controller = std::make_unique<Rcs::ControllerBase>(graph);
 
   // Graph component contains "sensed" graph
   graphC = new aff::GraphComponent(&entity, getGraph());
   graphC->setEnableRender(false);
-  addComponent(graphC);
-
-  // Remember the state for re-initialization
-  graphToInitializeWith = RcsGraph_clone(getGraph());
+  components.push_back(graphC);
 
   // Initialize robot components from command line and componentArgs
   auto cTmp = createHardwareComponents(entity, getGraph(), nullptr, false, componentArgs);
@@ -204,33 +162,19 @@ bool ExampleGui::initAlgo()
   cTmp = createComponents(entity, getGraph(), nullptr, false, componentArgs);
   this->components.insert(components.end(), cTmp.begin(), cTmp.end());
 
-  if (!hwc.empty())
-  {
-    setEnableRobot(true);
-  }
-
-  // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
-  // "Start" event, starting all component threads.
-  entity.initialize(getCurrentGraph());
-
+  RLOG(0, "Finished initialize");
   return true;
 }
 
 
 
-bool ExampleGui::initGraphics()
+bool ExampleJointControl::initGraphics()
 {
-  if (viewer)
-  {
-    RLOG(1, "Graphics already initialized");
-    return false;
-  }
-
   auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
   viewer = new GraphicsWindow(&entity, syncMode);
-  addComponent(viewer);
+  components.push_back(viewer);
 
-  viewer->setTitle("ExampleGui");
+  viewer->setTitle("ExampleJointControl");
 
   // Apply default camera view, or the transform of a body named 'initial_camera_view'.
   double q_cam[6];
@@ -254,13 +198,20 @@ bool ExampleGui::initGraphics()
   viewer->setKeyCallback('q', [this](char k)
   {
     RLOG(0, "Quitting");
-    getEntity().publish("Quit");
+    entity.publish("Quit");
   }, "Quit");
 
   viewer->setKeyCallback('e', [this](char k)
   {
-    auto ew = new aff::EventWidget(&entity);
-    ew->show();
+    if (blockingMainThread)
+    {
+      auto ew = new aff::EventWidget(&entity);
+      ew->show();
+    }
+    else
+    {
+      new aff::EventGui(&entity);
+    }
   }, "Launch event gui");
 
   viewer->setKeyCallback('x', [this](char k)
@@ -275,31 +226,23 @@ bool ExampleGui::initGraphics()
     switch (viewMode)
     {
       case 0:
-        RLOG(0, "Showing both (Real is solid)");
-        getEntity().publish("RenderCommand", std::string("Physics"),
-                            std::string("show"));
-        getEntity().publish("RenderCommand", std::string("IK"),
-                            std::string("show"));
-        getEntity().publish("RenderCommand", std::string("IK"),
-                            std::string("setGhostMode"));
+        entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+        entity.publish("RenderCommand", std::string("Gui"), std::string("show"));
+        entity.publish("RenderCommand", std::string("Gui"), std::string("setGhostMode"));
+        renderStringHUD = "Showing commands (shadow) and sensory state (solid)";
         break;
 
       case 1:
-        RLOG(0, "Showing IK");
-        getEntity().publish("RenderCommand", std::string("Physics"),
-                            std::string("hide"));
-        getEntity().publish("RenderCommand", std::string("IK"),
-                            std::string("show"));
-        getEntity().publish("RenderCommand", std::string("IK"),
-                            std::string("unsetGhostMode"));
+        entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
+        entity.publish("RenderCommand", std::string("Gui"), std::string("show"));
+        entity.publish("RenderCommand", std::string("Gui"), std::string("unsetGhostMode"));
+        renderStringHUD = "Showing desired commands";
         break;
 
       case 2:
-        RLOG(0, "Showing Real");
-        getEntity().publish("RenderCommand", std::string("Physics"),
-                            std::string("show"));
-        getEntity().publish("RenderCommand", std::string("IK"),
-                            std::string("hide"));
+        entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+        entity.publish("RenderCommand", std::string("Gui"), std::string("hide"));
+        renderStringHUD = "Showing sensory state";
         break;
     }
 
@@ -307,41 +250,37 @@ bool ExampleGui::initGraphics()
 
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));
   entity.publish("RenderCommand", std::string("Physics"), std::string("hide"));
-  entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-  entity.publish("RenderCommand", std::string("IK"), std::string("unsetGhostMode"));
+  entity.publish("RenderCommand", std::string("Gui"), std::string("show"));
+  entity.publish("RenderCommand", std::string("Gui"), std::string("unsetGhostMode"));
   entity.process();
 
   // Show the graph of the GraphComponent (updated from hardware)
-  if (enableRealGraphVisualization)
-  {
-    graphC->setEnableRender(true);
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
-    entity.publish<std::string, const RcsGraph*>("RenderGraph", "IK", getGraph());
-    entity.process();
-    Timer_waitDT(0.5);
-    entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
-    entity.publish("RenderCommand", std::string("IK"), std::string("show"));
-    getEntity().publish("RenderCommand", std::string("IK"), std::string("setGhostMode"));
-    entity.process();
-  }
-
-  return true;
-}
-
-bool ExampleGui::initGuis()
-{
-  addComponent(new JointGuiComponent(&entity, getGraph(), 0.2));
-
-  return true;
-}
-
-void ExampleGui::run()
-{
-  // Start all threads of components. This has already been published during
-  // the entitie's initialize() method in the initAlgo() method. This Start
-  // event takes carea about all components that have been added later.
-  entity.publish("Start");
+  renderStringHUD = "Showing commands (shadow) and sensory state (solid)";
+  graphC->setEnableRender(true);
+  entity.publish<std::string, const RcsGraph*>("RenderGraph", "Physics", getCurrentGraph());
+  entity.publish<std::string, const RcsGraph*>("RenderGraph", "Gui", getGraph());
   entity.process();
+  Timer_waitDT(0.5);
+  entity.publish("RenderCommand", std::string("Physics"), std::string("show"));
+  entity.publish("RenderCommand", std::string("Gui"), std::string("show"));
+  entity.publish("RenderCommand", std::string("Gui"), std::string("setGhostMode"));
+  entity.process();
+
+  return true;
+}
+
+bool ExampleJointControl::initGuis()
+{
+  jguiC = new JointGuiComponent(&entity, getGraph(), tmc);
+  components.push_back(jguiC);
+  return true;
+}
+
+void ExampleJointControl::run()
+{
+  // Initialization sequence to initialize all graphs from the sensory state.
+  // This also triggers the "Start" event, starting all component threads.
+  entity.initialize(getCurrentGraph());
 
   while (runLoop)
   {
@@ -354,60 +293,41 @@ void ExampleGui::run()
   entity.process();
 }
 
-void ExampleGui::step()
+void ExampleJointControl::step()
 {
   dtProcess = Timer_getSystemTime();
 
-  stepMtx.lock();
   updateGraph->call(getCurrentGraph());
   computeKinematics->call(getCurrentGraph());
   postUpdateGraph->call(getGraph(), getCurrentGraph());
-
-  auto jgcs = getComponents<JointGuiComponent>(components);
-  RCHECK(jgcs.size()==1);
-
-  REXEC(1)
-  {
-    MatNd_printCommentDigits("gui", jgcs[0]->getJointCommandPtr(), 5);
-  }
-
-  setJointCommand->call(jgcs[0]->getJointCommandPtr());
-  RcsGraph_setState(getGraph(), jgcs[0]->getJointCommandPtr(), NULL);
-
+  setJointCommand->call(jguiC->getJointCommandPtr());
   setRenderCommand->call();
-  dtEvents = Timer_getSystemTime() - dtProcess;
   entity.process();
   entity.stepTime();
-  stepMtx.unlock();
 
   dtProcess = Timer_getSystemTime() - dtProcess;
-
 
   if (entity.getTime() > 3.0)
   {
     dt_max = std::max(dt_max, dtProcess);
-    dt_max2 = std::max(dt_max2, dtEvents);
   }
 
   loopCount++;
 
   char timeStr[256];
-  snprintf(timeStr, 256, "[Step joints] Time: %.3f   dt: %.1f dt_max: %.1f %.1f msec\n"
-           "queue: %zu (max: %zu)",
-           entity.getTime(), dtProcess * 1.0e3, dt_max * 1.0e3, dt_max2 * 1.0e3,
-           entity.queueSize(), entity.getMaxQueueSize());
+  snprintf(timeStr, 256, "Time: %.3f   dt: %.1f dt_max: %.1f msec\n"
+           "queue: %zu (max: %zu)\n%s",
+           entity.getTime(), dtProcess * 1.0e3, dt_max * 1.0e3,
+           entity.queueSize(), entity.getMaxQueueSize(), renderStringHUD.c_str());
   entity.publish("SetTextLine", std::string(timeStr), 0);
 
-  if (loopCount % speedUp == 0)
-  {
-    Timer_waitDT(entity.getDt() - dtProcess);
-  }
+  Timer_waitDT(entity.getDt() - dtProcess);
 
   RLOG(6, "Loop end %d", loopCount - 1);
   RLOG_CPP(6, "Loop end: queue size is " << entity.queueSize());
 }
 
-std::string ExampleGui::help()
+std::string ExampleJointControl::help()
 {
   std::stringstream s;
 
@@ -436,7 +356,7 @@ std::string ExampleGui::help()
   return s.str();
 }
 
-void ExampleGui::onQuit()
+void ExampleJointControl::onQuit()
 {
   entity.publish("Stop");
   runLoop = false;
@@ -446,154 +366,54 @@ void ExampleGui::onQuit()
  * Builds a search tree, finds solutions, and handles events.
  ******************************************************************************/
 
-void ExampleGui::onPrint()
+void ExampleJointControl::onPrint()
 {
   std::cout << help();
 }
 
-
-void ExampleGui::setEnableRobot(bool enable)
-{
-  RMSG("***** Real Robot in the loop - speedUp resetted to 1 *****");
-  speedUp = 1;
-  withRobot = enable;
-}
-
-void ExampleGui::addComponent(ComponentBase* component)
-{
-  if (component)
-  {
-    components.push_back(component);
-  }
-}
-
-bool ExampleGui::eraseComponent(ComponentBase* component)
-{
-  bool success = false;
-
-  for (auto it = components.begin(); it != components.end(); ++it)
-  {
-    if (component && ((*it)==component))
-    {
-      delete *it;
-      components.erase(it);
-      success = true;
-      break;
-    }
-  }
-
-  return success;
-}
-
-void ExampleGui::addHardwareComponent(ComponentBase* component)
-{
-  if (component)
-  {
-    hwc.push_back(component);
-    setEnableRobot(true);
-  }
-}
-
-bool ExampleGui::getRobotEnabled() const
-{
-  return withRobot;
-}
-
-RcsGraph* ExampleGui::getGraph()
+RcsGraph* ExampleJointControl::getGraph()
 {
   return controller ? controller->getGraph() : nullptr;
 }
 
-const RcsGraph* ExampleGui::getGraph() const
+const RcsGraph* ExampleJointControl::getGraph() const
 {
   return controller ? controller->getGraph() : nullptr;
 }
 
-RcsGraph* ExampleGui::getCurrentGraph()
+RcsGraph* ExampleJointControl::getCurrentGraph()
 {
   return graphC ? graphC->getGraph() : nullptr;
 }
 
-const RcsGraph* ExampleGui::getCurrentGraph() const
+const RcsGraph* ExampleJointControl::getCurrentGraph() const
 {
   return graphC ? graphC->getGraph() : nullptr;
 }
 
-GraphicsWindow* ExampleGui::getViewer()
-{
-  return viewer;
-}
-
-bool ExampleGui::eraseViewer()
-{
-  bool success = eraseComponent(viewer);
-  viewer = nullptr;
-  return success;
-}
-
-const EntityBase& ExampleGui::getEntity() const
-{
-  return entity;
-}
-
-EntityBase& ExampleGui::getEntity()
-{
-  return entity;
-}
-
-void ExampleGui::startThreaded()
+void ExampleJointControl::startThreaded()
 {
   std::thread t1([&]
   {
     ExampleBase::start();
 
-    RLOG(0, "ExampleGui thread says good bye");
+    RLOG(0, "ExampleJointControl thread says good bye");
   });
   t1.detach();
 }
 
-void ExampleGui::onProcess()
+void ExampleJointControl::updateUI()
 {
-  entity.process();
-}
-
-void ExampleGui::lockStepMtx() const
-{
-  stepMtx.lock();
-}
-
-void ExampleGui::unlockStepMtx() const
-{
-  stepMtx.unlock();
-}
-
-void ExampleGui::addComponentArgument(const std::string& arg)
-{
-  componentArgs += " " + arg;
-}
-
-std::string ExampleGui::getComponentArguments() const
-{
-  return componentArgs;
-}
-
-const std::vector<ComponentBase*>& ExampleGui::getComponentsRef() const
-{
-  return components;
-}
-
-void ExampleGui::updateUI()
-{
-  if (!getViewer())
+  if (!viewer)
   {
     return;
   }
 
-  getViewer()->frame();
+  viewer->frame();
   handleKeys();
 }
 
-void ExampleGui::setSyncMode(std::string syncMode)
+void ExampleJointControl::setSyncMode(std::string syncMode)
 {
   ExampleBase::setSyncMode(syncMode);
 
@@ -602,6 +422,39 @@ void ExampleGui::setSyncMode(std::string syncMode)
     blockingMainThread = true;
   }
 }
+
+void ExampleJointControl::addComponentArgument(const std::string& arg)
+{
+  componentArgs += " " + arg;
+}
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAllegroGui : public ExampleJointControl
+{
+public:
+
+  ExampleAllegroGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+    RMSG("Start bin/AllegroDriver -m 1");
+  }
+
+  virtual ~ExampleAllegroGui() = default;
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_robo.xml";
+    configDirectory = "config/xml/Allegro";
+    addComponentArgument("-allegroZmq_right");
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAllegroGui, "RoboDrivers", "Allegro right Joint-Gui");
 
 
 

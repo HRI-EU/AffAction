@@ -61,17 +61,11 @@ public:
 
 JointGuiComponent::JointGuiComponent(EntityBase* parent, const RcsGraph* g,
                                      double tmc, double vmax) :
-  ComponentBase(parent),
-  graph(NULL),
-  q_des(NULL),
-  q_curr(NULL),
-  q_des_filt(NULL),
-  filt(NULL),
-  jGui(NULL)
+  ComponentBase(parent)
 {
   RCHECK(tmc>=0.0);
   RCHECK(vmax>=0.0);
-  this->graph = RcsGraph_clone(g);
+  this->guiGraph = RcsGraph_clone(g);
   this->q_des = MatNd_clone(g->q);
   this->q_des_filt = MatNd_clone(g->q);
   this->q_curr = MatNd_clone(g->q);
@@ -79,7 +73,14 @@ JointGuiComponent::JointGuiComponent(EntityBase* parent, const RcsGraph* g,
   this->filt = new Rcs::RampFilterND(q_curr->ele, tmc, vmax, parent->getDt(), g->dof);
   pthread_mutex_init(&this->mtx, NULL);
 
-  subscribeAll();
+  subscribe("Start", &JointGuiComponent::onStart);
+  subscribe("Stop", &JointGuiComponent::onStop);
+  subscribe<const RcsGraph*>("InitFromState", &JointGuiComponent::onInitialize);
+  subscribe("ComputeKinematics", &JointGuiComponent::onFilterAndUpdateGui);
+  subscribe("EmergencyStop", &JointGuiComponent::onEmergencyStop);
+  subscribe("EmergencyRecover", &JointGuiComponent::onEmergencyRecover);
+  subscribe("SetModelStatePose", &JointGuiComponent::onGoalPose);
+  subscribe("Render", &JointGuiComponent::onRender);
 }
 
 JointGuiComponent::~JointGuiComponent()
@@ -89,7 +90,7 @@ JointGuiComponent::~JointGuiComponent()
   delete this->jGui;
   delete this->filt;
 
-  RcsGraph_destroy(this->graph);
+  RcsGraph_destroy(this->guiGraph);
   MatNd_destroy(this->q_des);
   MatNd_destroy(this->q_des_filt);
   MatNd_destroy(this->q_curr);
@@ -97,38 +98,15 @@ JointGuiComponent::~JointGuiComponent()
   pthread_mutex_destroy(&this->mtx);
 }
 
-void JointGuiComponent::subscribeAll()
-{
-  subscribe("Start", &JointGuiComponent::onStart);
-  subscribe("Stop", &JointGuiComponent::onStop);
-  subscribe<const RcsGraph*>("InitFromState", &JointGuiComponent::onInitialize);
-  subscribe("ComputeKinematics", &JointGuiComponent::onFilterAndUpdateGui);
-  subscribe("EmergencyStop", &JointGuiComponent::onEmergencyStop);
-  subscribe("EmergencyRecover", &JointGuiComponent::onEmergencyRecover);
-  subscribe("SetModelStatePose", &JointGuiComponent::onGoalPose);
-}
-
 void JointGuiComponent::onStart()
 {
-  jGui = new Rcs::JointGui(this->graph, &this->mtx, this->q_des, this->q_curr);
+  jGui = new Rcs::JointGui(this->guiGraph, &this->mtx, this->q_des, this->q_curr);
   RLOG(1, "Start::start()");
-  MatNd_copy(this->q_des, graph->q);
+  MatNd_copy(this->q_des, guiGraph->q);
 
   JointUpdateCallback* jcb = new JointUpdateCallback(this);
   Rcs::JointWidget* jw = static_cast<Rcs::JointWidget*>(jGui->getWidget());
   jw->registerCallback(jcb);
-
-
-  // int guiHandle = Rcs::JointWidget::create(this->graph, &this->mtx,
-  //                                          this->q_des, this->q_curr);
-
-  // this->handle.push_back(guiHandle);
-
-  // void* ptr = RcsGuiFactory_getPointer(guiHandle);
-  // Rcs::JointWidget* widget = static_cast<Rcs::JointWidget*>(ptr);
-
-  // JointUpdateCallback* jcb = new JointUpdateCallback(this);
-  // widget->registerCallback(jcb);
 }
 
 void JointGuiComponent::guiCallback()
@@ -140,8 +118,8 @@ void JointGuiComponent::guiCallback()
 
 void JointGuiComponent::onGoalPose(std::string goalPose)
 {
-  MatNd* q_goal = MatNd_clone(graph->q);
-  bool ok = RcsGraph_getModelStateFromXML(q_goal, graph, goalPose.c_str(), -1);
+  MatNd* q_goal = MatNd_clone(guiGraph->q);
+  bool ok = RcsGraph_getModelStateFromXML(q_goal, guiGraph, goalPose.c_str(), -1);
 
   if (ok)
   {
@@ -173,7 +151,7 @@ void JointGuiComponent::setGoalPose(const MatNd* q_goal)
 
 const RcsGraph* JointGuiComponent::getGraph() const
 {
-  return this->graph;
+  return this->guiGraph;
 }
 
 void JointGuiComponent::onFilterAndUpdateGui(RcsGraph* from)
@@ -189,15 +167,15 @@ void JointGuiComponent::onFilterAndUpdateGui(RcsGraph* from)
 void JointGuiComponent::onEmergencyStop()
 {
   RLOG(1, "EmergencyStop");
-  MatNd_copy(graph->q, this->q_curr);
-  onInitialize(this->graph);
+  MatNd_copy(guiGraph->q, this->q_curr);
+  onInitialize(this->guiGraph);
 }
 
 void JointGuiComponent::onEmergencyRecover()
 {
   RLOG(1, "EmergencyRecover");
-  MatNd_copy(graph->q, this->q_curr);
-  onInitialize(this->graph);
+  MatNd_copy(guiGraph->q, this->q_curr);
+  onInitialize(this->guiGraph);
 }
 
 void JointGuiComponent::onInitialize(const RcsGraph* target)
@@ -227,4 +205,10 @@ const MatNd* JointGuiComponent::getJointCommandPtr() const
   return this->q_des_filt;
 }
 
-}   // namespace Dc
+void JointGuiComponent::onRender()
+{
+  RcsGraph_setState(this->guiGraph, this->q_des_filt, NULL);
+  getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "Gui", this->guiGraph);
+}
+
+}   // namespace
