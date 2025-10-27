@@ -457,5 +457,41 @@ public:
 RCS_REGISTER_EXAMPLE(ExampleAllegroGui, "RoboDrivers", "Allegro right Joint-Gui");
 
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleJacoGen2_6 : public ExampleJointControl
+{
+public:
+
+  ExampleJacoGen2_6(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  virtual ~ExampleJacoGen2_6()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_kinova_ulw2_6dof.xml";
+    configDirectory = "config/xml/TwoArmJaco7";
+    addComponentArgument("-jacoGen2_6_Zmq");
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/JacoEthernetDriver -m 1 -robo_name wasabi -rt\n\n";
+    str += ExampleJointControl::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleJacoGen2_6, "RoboDrivers", "Jaco 6 (wasabi)");
+
+
 
 }   // namespace aff

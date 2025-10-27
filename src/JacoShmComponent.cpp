@@ -78,9 +78,9 @@ JacoShmComponent::JacoShmComponent(const RcsGraph* graph, JacoType roboType) :
       jntNames.push_back("j2n6s300_joint_4");
       jntNames.push_back("j2n6s300_joint_5");
       jntNames.push_back("j2n6s300_joint_6");
-      jntNames.push_back("j2s7s300_joint_finger_1");
-      jntNames.push_back("j2s7s300_joint_finger_2");
-      jntNames.push_back("j2s7s300_joint_finger_3");
+      jntNames.push_back("j2n6s300_joint_finger_1");
+      jntNames.push_back("j2n6s300_joint_finger_2");
+      jntNames.push_back("j2n6s300_joint_finger_3");
       break;
 
     case Jaco7_right:

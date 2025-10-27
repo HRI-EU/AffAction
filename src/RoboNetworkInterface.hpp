@@ -43,6 +43,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 
 
@@ -84,7 +85,7 @@ public:
 
     RLOG_CPP(0, "RoboNetworkInterface: Waiting for message from " << otherSendEndpoint);
     size_t waitCount = 0;
-    while (!isInitialized.load(std::memory_order_acquire))
+    while (!isInitialized)
     {
       fprintf(stderr, ".");
       fflush(stderr);
@@ -104,13 +105,13 @@ public:
 
   virtual void stop()
   {
-    if (!runLoop.load(std::memory_order_acquire))
+    if (!runLoop)
     {
       RLOG(0, "RoboNetworkInterface already stopped - doing nothing");
       return;
     }
 
-    runLoop.store(false, std::memory_order_release);
+    runLoop = false;
 
     if (send_thread.joinable())
     {
@@ -154,7 +155,15 @@ protected:
 
           if (dataOk)
           {
-            isInitialized.store(true, std::memory_order_release);
+            // That's wrong here. It actually should be set true after the :
+            // - computeKinmatics event, or even more safely,
+            // - after the first completed step() call. This is since there might
+            //   events pending that are needed for completing the intialization
+            //   (Can't think of any right now).
+            // Setting true inside updateGraph() needs to be checked very carefully,
+            // since the kinematics is not computed, and others might not know that
+            // the graph cannot be cloned in that state.
+            isInitialized = true;
           }
           else
           {
@@ -163,7 +172,7 @@ protected:
         }
 
         if ((getMonotonicTimeSeconds() - t_watchdog > max_timeout) &&
-            (isInitialized.load(std::memory_order_acquire)))
+            isInitialized)
         {
           RLOG(0, "Watchdog triggered - robot disconnected");
           watchDogTriggered = true;

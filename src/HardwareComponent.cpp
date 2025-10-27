@@ -32,6 +32,7 @@
 
 #include "HardwareComponent.h"
 #include "JacoShmComponent.h"
+#include "JacoZmqComponent.hpp"
 #include "TTSComponent.h"
 #include "PhysicsComponent.h"
 #include "WebsocketActionComponent.h"
@@ -364,6 +365,42 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoShm6"))
     {
       ComponentBase* c = RoboJacoShmComponent::create(&entity, graph, JacoShmComponent::Jaco6);
+      components.push_back(c);
+    }
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-jacoGen2_7_Zmq_right", "Start with Jaco Gen2 7-dof right");
+    argP.addDescription("-jacoGen2_7_Zmq_left", "Start with Jaco7 left");
+    argP.addDescription("-jacoGen2_6_Zmq", "Start with Jaco6");
+  }
+  else
+  {
+    if (getKey(argvStrVec, "-jacoGen2_7_Zmq_right"))
+    {
+      const double dt_commands = 0.02;
+      std::string otherRecv="tcp://localhost:40020";
+      std::string otherSend="tcp://localhost:40021";
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
+      components.push_back(c);
+    }
+
+    if (getKey(argvStrVec, "-jacoGen2_7_Zmq_left"))
+    {
+      const double dt_commands = 0.02;
+      std::string otherRecv="tcp://localhost:40022";
+      std::string otherSend="tcp://localhost:40023";
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
+      components.push_back(c);
+    }
+
+    if (getKey(argvStrVec, "-jacoGen2_6_Zmq"))
+    {
+      const double dt_commands = 0.02;
+      std::string otherRecv="tcp://localhost:40018";
+      std::string otherSend="tcp://localhost:40019";
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco6", "", otherRecv, otherSend);
       components.push_back(c);
     }
   }

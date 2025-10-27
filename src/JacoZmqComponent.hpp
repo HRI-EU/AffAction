@@ -50,65 +50,75 @@ namespace aff
 {
 
 
-class AllegroComponent : public ComponentBase, public RoboNetworkInterface
+class JacoZmqComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
-  AllegroComponent(EntityBase* parent,
+  JacoZmqComponent(EntityBase* parent,
                    double dt_commands,
+                   std::string roboType,// "Jaco6", "Jaco7"
                    std::string suffix,//="",
-                   std::string otherRecv,//="tcp://localhost:40012",
-                   std::string otherSend)//="tcp://localhost:40013")
+                   std::string otherRecv,
+                   std::string otherSend)
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     RLOG_CPP(1, "suffix: " << suffix << " otherRecv: " << otherRecv << " otherSend: " << otherSend);
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_0_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_1_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_2_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_3_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_4_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_5_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_6_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_7_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_8_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_9_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_10_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_11_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_12_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_13_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_14_0"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_15_0"+suffix));
 
-    fingerTips.push_back(Rcs::BodyNameIndexPair("link_3_0_tip"+suffix));
-    fingerTips.push_back(Rcs::BodyNameIndexPair("link_7_0_tip"+suffix));
-    fingerTips.push_back(Rcs::BodyNameIndexPair("link_11_0_tip"+suffix));
-    fingerTips.push_back(Rcs::BodyNameIndexPair("link_15_0_tip"+suffix));
-    this->fingerTipPressure = std::vector<double>(4, 0.0);
+    if (roboType=="Jaco6")
+    {
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_1"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_2"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_3"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_4"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_5"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_6"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_nonexisting_4"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_finger_1"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_finger_2"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2n6s300_joint_finger_3"+suffix));
+    }
+    else if (roboType=="Jaco7")
+    {
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_1_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_2_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_3_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_4_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_5_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_6_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_7_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_finger_1_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_finger_2_right"+suffix));
+      jntNameIdPairs.push_back(Rcs::JointNameIndexPair("j2s7s300_joint_finger_3_right"+suffix));
+    }
+    else
+    {
+      RFATAL("Unknown roboType: '%s' - must be Jaco6 or Jcao7", roboType.c_str());
+    }
+
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);
-    subscribe("UpdateGraph", &AllegroComponent::onUpdateGraph);
-    subscribe("SetJointCommand", &AllegroComponent::onSetJointPosition);
-    subscribe("InitFromState", &AllegroComponent::onInitFromState);
-    subscribe("EmergencyStop", &AllegroComponent::onEmergencyStop);
-    subscribe("EmergencyRecover", &AllegroComponent::onEmergencyRecover);
-    subscribe("EnableCommands", &AllegroComponent::onEnableCommands);
+    subscribe("UpdateGraph", &JacoZmqComponent::onUpdateGraph);
+    subscribe("SetJointCommand", &JacoZmqComponent::onSetJointPosition);
+    subscribe("InitFromState", &JacoZmqComponent::onInitFromState);
+    subscribe("EmergencyStop", &JacoZmqComponent::onEmergencyStop);
+    subscribe("EmergencyRecover", &JacoZmqComponent::onEmergencyRecover);
+    subscribe("EnableCommands", &JacoZmqComponent::onEnableCommands);
 
     RLOG(0, "Done constructor");
   }
 
-  ~AllegroComponent()
+  ~JacoZmqComponent()
   {
   }
 
   void onUpdateGraph(RcsGraph* graph)
   {
-    std::vector<double> jntPosTmp, jntVelTmp, ftfTmp;
+    std::vector<double> jntPosTmp, jntVelTmp;
 
     {
       std::lock_guard<std::mutex> lock(this->recvMtx);
       jntPosTmp = this->jointPosition;
       jntVelTmp = this->jointVelocity;
-      ftfTmp = this->fingerTipPressure;
     }
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
@@ -122,18 +132,11 @@ public:
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Joint '%s' not found in graph",
                  jntNameIdPairs[i].jointName.c_str());
-      MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
-      MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
-    }
 
-    for (size_t i=0; i<ftfTmp.size(); ++i)
-    {
-      std::string col = std::string("#") + valueToColorRGB(ftfTmp[i]) + std::string("ff");
-      const RcsBody* b = fingerTips[i].getBody(graph);
-      if (b && b->nShapes>0)
+      if (!jnt->constrained)
       {
-        strcpy(b->shapes[0].color, col.c_str());
-        //RLOG_CPP(1, "pressure " << i << " is: " << col);
+        MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
+        MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
       }
     }
 
@@ -162,7 +165,7 @@ private:
 
   void onInitFromState(const RcsGraph* target)
   {
-    RLOG(1, "AllegroComponent::onInitFromState()");
+    RLOG(1, "JacoZmqComponent::onInitFromState()");
     onSetJointPosition(target->q);
     this->jointCommandsPrev = this->jointCommands;
 
@@ -179,7 +182,7 @@ private:
   {
     if (this->eStop == false)
     {
-      RLOG(0, "AllegroComponent::EmergencyStop");
+      RLOG(0, "JacoZmqComponent::EmergencyStop");
     }
 
     this->eStop = true;
@@ -188,7 +191,7 @@ private:
 
   void onEmergencyRecover()
   {
-    RLOG(0, "AllegroComponent::EmergencyRecover");
+    RLOG(0, "JacoZmqComponent::EmergencyRecover");
     this->eStop = false;
     enableCommands = true;
   }
@@ -211,7 +214,7 @@ private:
       // If successful, process the parsed JSON data
       RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
-      std::vector<double> q, qd, tor, ftf;
+      std::vector<double> q, qd;
 
       if (recv_json.contains("position"))
       {
@@ -223,28 +226,12 @@ private:
         qd = recv_json["velocity"].get<std::vector<double>>();
       }
 
-      if (recv_json.contains("torque"))
-      {
-        tor = recv_json["torque"].get<std::vector<double>>();
-      }
-
-      if (recv_json.contains("finger_tip_force"))
-      {
-        ftf = recv_json["finger_tip_force"].get<std::vector<double>>();
-      }
-
       if ((q.size()==jntNameIdPairs.size()) &&
-          (qd.size()==jntNameIdPairs.size()) &&
-          (tor.size()==jntNameIdPairs.size()))
+          (qd.size()==jntNameIdPairs.size()))
       {
         std::lock_guard<std::mutex> lock(this->recvMtx);
         this->jointPosition = q;
         this->jointVelocity = qd;
-        this->jointTorque = tor;
-        if (!ftf.empty())
-        {
-          this->fingerTipPressure = ftf;
-        }
         membersInitialized = true;
       }
 
@@ -269,7 +256,7 @@ private:
 
     nlohmann::json payload =
     {
-      {"robot_name", "my little robot"},
+      {"robot_name", "Jaco Gen2"},
       {"timestamp",  Timer_getSystemTime()},
       {"actuators", nlohmann::json::array()},
       {"quit", false}
@@ -303,72 +290,11 @@ private:
     return cmdJson.dump();
   }
 
-  std::string valueToColorRGB(double value)
-  {
-    // Clamp value between 0 and 500+
-    if (value < 0)
-    {
-      value = 0;
-    }
-
-    int r = 0, g = 0, b = 0;
-
-    if (value <= 124)   // Blue (0,0,255) to Cyan (0,255,255)
-    {
-      double t = value / 124.0;
-      r = 0;
-      g = static_cast<int>(255 * t);
-      b = 255;
-    }
-    else if (value <= 249)   // Cyan (0,255,255) to Green (0,255,0)
-    {
-      double t = (value - 124.0) / (249.0 - 124.0);
-      r = 0;
-      g = 255;
-      b = static_cast<int>(255 * (1 - t));
-    }
-    else if (value <= 375)   // Green to Yellow (255,255,0)
-    {
-      double t = (value - 249.0) / (375.0 - 249.0);
-      r = static_cast<int>(255 * t);
-      g = 255;
-      b = 0;
-    }
-    else if (value <= 500)   // Yellow to Red (255,0,0)
-    {
-      double t = (value - 375.0) / (500.0 - 375.0);
-      r = 255;
-      g = static_cast<int>(255 * (1 - t));
-      b = 0;
-    }
-    else   // Beyond 500: Red
-    {
-      r = 255;
-      g = 0;
-      b = 0;
-    }
-
-    // Clamp values just in case
-    r = Math_iClip(r, 0, 255);
-    g = Math_iClip(g, 0, 255);
-    b = Math_iClip(b, 0, 255);
-
-    std::ostringstream oss;
-    oss << std::uppercase << std::hex << std::setfill('0')
-        << std::setw(2) << r
-        << std::setw(2) << g
-        << std::setw(2) << b;
-
-    return oss.str();
-  }
-
   bool enableCommands = false;
   bool eStop = false;
   std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
-  std::vector<Rcs::BodyNameIndexPair> fingerTips;
-  std::vector<double> jointPosition, jointVelocity, jointTorque;
+  std::vector<double> jointPosition, jointVelocity;
   std::vector<double> jointCommands, jointCommandsPrev;
-  std::vector<double> fingerTipPressure;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
 };
