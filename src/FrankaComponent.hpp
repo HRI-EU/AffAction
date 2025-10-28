@@ -55,9 +55,9 @@ class FrankaComponent : public ComponentBase, public RoboNetworkInterface
 public:
   FrankaComponent(EntityBase* parent,
                   double dt_commands,
-                  std::string suffix="",
-                  std::string otherRecv="tcp://localhost:5555",
-                  std::string otherSend="tcp://localhost:5556")
+                  std::string suffix,
+                  std::string otherRecv,
+                  std::string otherSend)
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint1"+suffix));

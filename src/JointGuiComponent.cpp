@@ -37,6 +37,9 @@
 #include <Rcs_typedef.h>
 #include <Rcs_macros.h>
 #include <Rcs_graphParser.h>
+#include <Rcs_VecNd.h>
+
+#include <chrono>
 
 
 
@@ -61,7 +64,7 @@ public:
 
 JointGuiComponent::JointGuiComponent(EntityBase* parent, const RcsGraph* g,
                                      double tmc, double vmax) :
-  ComponentBase(parent)
+  ComponentBase(parent), sine_amplitude(0.0, 0.0, parent->getDt())
 {
   RCHECK(tmc>=0.0);
   RCHECK(vmax>=0.0);
@@ -71,6 +74,10 @@ JointGuiComponent::JointGuiComponent(EntityBase* parent, const RcsGraph* g,
   this->q_curr = MatNd_clone(g->q);
 
   this->filt = new Rcs::RampFilterND(q_curr->ele, tmc, vmax, parent->getDt(), g->dof);
+
+  const double sine_vmax = RCS_DEG2RAD(1.0);   // 1 deg/sec
+  this->sine_amplitude.init(0.0, sine_vmax, parent->getDt());
+
   pthread_mutex_init(&this->mtx, NULL);
 
   subscribe("Start", &JointGuiComponent::onStart);
@@ -81,6 +88,7 @@ JointGuiComponent::JointGuiComponent(EntityBase* parent, const RcsGraph* g,
   subscribe("EmergencyRecover", &JointGuiComponent::onEmergencyRecover);
   subscribe("SetModelStatePose", &JointGuiComponent::onGoalPose);
   subscribe("Render", &JointGuiComponent::onRender);
+  subscribe("SetSineAmplitudeInDegrees", &JointGuiComponent::onSetSineAmplitude);
 }
 
 JointGuiComponent::~JointGuiComponent()
@@ -100,6 +108,12 @@ JointGuiComponent::~JointGuiComponent()
 
 void JointGuiComponent::onStart()
 {
+  if (jGui)
+  {
+    RLOG_CPP(0, "Joint Gui already running");
+    return;
+  }
+
   jGui = new Rcs::JointGui(this->guiGraph, &this->mtx, this->q_des, this->q_curr);
   RLOG(1, "Start::start()");
   MatNd_copy(this->q_des, guiGraph->q);
@@ -107,6 +121,12 @@ void JointGuiComponent::onStart()
   JointUpdateCallback* jcb = new JointUpdateCallback(this);
   Rcs::JointWidget* jw = static_cast<Rcs::JointWidget*>(jGui->getWidget());
   jw->registerCallback(jcb);
+}
+
+void JointGuiComponent::onStop()
+{
+  delete jGui;
+  jGui = nullptr;
 }
 
 void JointGuiComponent::guiCallback()
@@ -156,11 +176,20 @@ const RcsGraph* JointGuiComponent::getGraph() const
 
 void JointGuiComponent::onFilterAndUpdateGui(RcsGraph* from)
 {
-  RLOG(5, "ComputeKinematics::setState()");
+
+  auto now = std::chrono::steady_clock::now();
+  double t_now = std::chrono::duration<double>(now.time_since_epoch()).count();
+  double phase = std::fmod(2.0*M_PI*t_now*0.5, 2.0*M_PI);
+  sine_amplitude.iterate();
+  double sine_overlay = sine_amplitude.getPosition()*std::sin(phase);
+  RLOG(1, "sime_amplitude = %f", sine_amplitude.getPosition());
+
+
   pthread_mutex_lock(&this->mtx);
   MatNd_copy(this->q_curr, from->q);
   filt->iterate();
   filt->getPosition(q_des_filt->ele);
+  VecNd_constAddSelf(q_des_filt->ele, sine_overlay, filt->getDim());
   pthread_mutex_unlock(&this->mtx);
 }
 
@@ -194,12 +223,6 @@ void JointGuiComponent::onInitialize(const RcsGraph* target)
   pthread_mutex_unlock(&this->mtx);
 }
 
-void JointGuiComponent::onStop()
-{
-  delete jGui;
-  jGui = NULL;
-}
-
 const MatNd* JointGuiComponent::getJointCommandPtr() const
 {
   return this->q_des_filt;
@@ -209,6 +232,11 @@ void JointGuiComponent::onRender()
 {
   RcsGraph_setState(this->guiGraph, this->q_des_filt, NULL);
   getEntity()->publish<std::string,const RcsGraph*>("RenderGraph", "Gui", this->guiGraph);
+}
+
+void JointGuiComponent::onSetSineAmplitude(double new_amplitude)
+{
+  this->sine_amplitude.setTarget(RCS_DEG2RAD(new_amplitude));
 }
 
 }   // namespace

@@ -474,6 +474,16 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
                                                     otherRecv, otherSend));
     }
 
+    if (getKey(argvStrVec, "-frankaZmq_right"))
+    {
+      std::string suffix = "_right";
+      std::string otherRecv = "tcp://localhost:40008";
+      std::string otherSend = "tcp://localhost:40009";
+      const double dt_commands = 0.01;
+      components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
+                                                    otherRecv, otherSend));
+    }
+
     if (getKey(argvStrVec, "-frankaZmq_left"))
     {
       std::string suffix = "_left";

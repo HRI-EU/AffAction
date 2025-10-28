@@ -82,13 +82,13 @@ ExampleJointControl::~ExampleJointControl()
 
   for (size_t i = 0; i < hwc.size(); ++i)
   {
-    RLOG_CPP(5, "Deleting hardware component " << i);
+    RLOG_CPP(0*5, "Deleting hardware component " << i);
     delete hwc[i];
   }
 
   for (size_t i = 0; i < components.size(); ++i)
   {
-    RLOG_CPP(5, "Deleting component " << i << ": " << components[i]->getName());
+    RLOG_CPP(0*5, "Deleting component " << i << ": " << components[i]->getName());
     delete components[i];
   }
 
@@ -490,7 +490,117 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleJacoGen2_6, "RoboDrivers", "Jaco 6 (wasabi)");
+RCS_REGISTER_EXAMPLE(ExampleJacoGen2_6, "RoboDrivers", "Jaco 6 Joint-Gui (wasabi)");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleFrankaRightGui : public ExampleJointControl
+{
+public:
+
+  ExampleFrankaRightGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  virtual ~ExampleFrankaRightGui()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_robo_tablemount.xml";
+    configDirectory = "config/xml/Franka";
+    componentArgs = "-frankaZmq_right ";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/FrankaDriver -m 1 -robo_name franka_right\n\n";
+    str += ExampleJointControl::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleFrankaRightGui, "RoboDrivers", "Franka right with Joint-Gui");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleFrankaLeftGui : public ExampleJointControl
+{
+public:
+
+  ExampleFrankaLeftGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  virtual ~ExampleFrankaLeftGui()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_robo_left_tablemount.xml";
+    configDirectory = "config/xml/Franka";
+    componentArgs = "-frankaZmq_left ";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start bin/FrankaDriver -m 1 -robo_name franka_left\n\n";
+    str += ExampleJointControl::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleFrankaLeftGui, "RoboDrivers", "Franka left with Joint-Gui");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleFrankaBimanualGui : public ExampleJointControl
+{
+public:
+
+  ExampleFrankaBimanualGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  virtual ~ExampleFrankaBimanualGui()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_robo_bimanual_tablemount.xml";
+    configDirectory = "config/xml/Franka";
+    componentArgs = "-frankaZmq_left -frankaZmq_right ";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start:\n";
+    str = "  bin/FrankaDriver -m 1 -robo_name laplace\n";
+    str = "  bin/FrankaDriver -m 1 -robo_name riemann\n\n";
+    str += ExampleJointControl::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleFrankaBimanualGui, "RoboDrivers", "Franka both arms with Joint-Gui");
 
 
 

@@ -118,6 +118,7 @@ private:
   void onEmergencyStop();
   void onEmergencyRecover();
   void onGoalPose(std::string goalPose);
+  void onSetSineAmplitude(double amplitude);
 
   RcsGraph* guiGraph = nullptr;
   MatNd* q_des = nullptr;
@@ -126,6 +127,7 @@ private:
   Rcs::RampFilterND* filt = nullptr;
   Rcs::JointGui* jGui = nullptr;
   mutable pthread_mutex_t mtx;
+  Rcs::Ramp1D sine_amplitude;
 
   JointGuiComponent(const JointGuiComponent&);
   JointGuiComponent& operator=(const JointGuiComponent&);
