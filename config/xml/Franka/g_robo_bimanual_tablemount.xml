@@ -1,0 +1,90 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+
+  <Body name="table" color="PEWTER" >
+    <Shape type="BOX" extents="2.0 2.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" 
+            graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+
+  <Group name="_left" prev="table" transform="0 0.3 0 0 0 90" >
+    <xi:include href="fr3.xml"/>
+  </Group>
+
+  <Group name="_right" prev="table" transform="0 -0.3 0 0 0 -90">
+    <xi:include href="fr3.xml"/>
+  </Group>
+
+  <!-- FR3 joint ranges:
+       1: -166/166 deg
+       2: -105/105 deg
+       3: -166/166 deg
+       4: -176/-7 deg
+       5: -165/165 deg
+       6:  25/265 deg
+       7: -175/175 deg
+  -->
+  
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="fr3_joint1_left" position="-140" />
+    <joint_state joint="fr3_joint2_left" position="70" />
+    <joint_state joint="fr3_joint3_left" position="120" />
+    <joint_state joint="fr3_joint4_left" position="-140" />
+    <joint_state joint="fr3_joint5_left" position="0" />
+    <joint_state joint="fr3_joint6_left" position="180" />
+    <joint_state joint="fr3_joint7_left" position="90" />
+
+    <joint_state joint="fr3_joint1_right" position="-140" />
+    <joint_state joint="fr3_joint2_right" position="70" />
+    <joint_state joint="fr3_joint3_right" position="120" />
+    <joint_state joint="fr3_joint4_right" position="-140" />
+    <joint_state joint="fr3_joint5_right" position="0" />
+    <joint_state joint="fr3_joint6_right" position="180" />
+    <joint_state joint="fr3_joint7_right" position="90" />
+  </model_state>
+
+  <model_state model="zero" time_stamp="0">
+    <joint_state joint="fr3_joint1_left" position="0" />
+    <joint_state joint="fr3_joint2_left" position="0" />
+    <joint_state joint="fr3_joint3_left" position="0" />
+    <joint_state joint="fr3_joint4_left" position="-30" />
+    <joint_state joint="fr3_joint5_left" position="0" />
+    <joint_state joint="fr3_joint6_left" position="180" />
+    <joint_state joint="fr3_joint7_left" position="0" />
+  </model_state>
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="fr3_link0_left" />
+  </BroadPhase>
+
+  
+</Graph>

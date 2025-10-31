@@ -1,0 +1,190 @@
+<Graph name="DefaultPose" resourcePath="config/franka_description/meshes" >
+
+  <Body name="franka_mount_link" physics="fixed" mass="4.972778" cogVector="-0.008033 -0.000001 0.101497" inertia="0.04572 -9e-09 -0.003044   -9e-09 0.040855 -1.3e-08   -0.003044 -1.3e-08 0.024995" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3_duo/mount/collision/fr3_duo_mount.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3_duo/mount/collision/fr3_duo_mount.stl" />
+  </Body>
+
+  <!-- <Body name="cover_link" prev="franka_mount_link" physics="fixed" mass="3.055586" cogVector="0.016592 -0.000068 0.212452" inertia="0.0714 -5.937e-06 0.001668   -5.937e-06 0.062361 -1.002e-05   0.001668 -1.002e-05 0.056693" > -->
+  <!--   <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3_duo/cover/visual/fr3_duo_cover.stl" /> -->
+  <!--   <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3_duo/cover/collision/fr3_duo_cover.stl" /> -->
+  <!-- </Body> -->
+
+
+
+
+
+  
+  <Body name="left_base" prev="franka_mount_link" transform="0.03467 0.050681 0.202 -50.381527 14.528626 -24.485038" >
+  </Body>
+
+  <Body name="left_fr3_link0" prev="left_base" physics="fixed" mass="3.85" cogVector="-0.0172 0.0004 0.0745" inertia="0.009 0 0.002   0 0.0115 0   0.002 0 0.0085" color="WHITE" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link0.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link0.stl" />
+  </Body>
+
+  <Body name="left_fr3_link1" prev="left_fr3_link0" physics="dynamic" mass="2.4377" cogVector="-0.00458 0.027016 -0.0618" inertia="0.02324 0.000333 -0.000676   0.000333 0.02146 0.003739   -0.000676 0.003739 0.0055" color="WHITE" >
+    <Joint name="fr3_joint1_left" range="-157.20243 0 157.20243" type="RotZ" transform="0 0 0.333 0 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link1.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link1.stl" />
+  </Body>
+
+  <Body name="left_fr3_link2" prev="left_fr3_link1" physics="dynamic" mass="2.2375" cogVector="-0.003473 -0.168509 -0.010479" inertia="0.019026 0.001241 0.000499   0.001241 0.00566 -0.001804   0.000499 -0.001804 0.017114" color="WHITE" >
+    <Joint name="fr3_joint2_left" range="-102.198482 0 102.198482" type="RotZ" transform="0 0 0 -90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link2.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link2.stl" />
+  </Body>
+
+  <Body name="left_fr3_link3" prev="left_fr3_link2" physics="dynamic" mass="2.185794" cogVector="0.092968 0.01801 0.033533" inertia="0.010225 0.001144 0.003497   0.001144 0.012398 0.002156   0.003497 0.002156 0.006877" color="WHITE" >
+    <Joint name="fr3_joint3_left" range="-166.197868 0 166.197868" type="RotZ" transform="0 -0.316 0 90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link3.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link3.stl" />
+  </Body>
+
+  <Body name="left_fr3_link4" prev="left_fr3_link3" physics="dynamic" mass="2.175867" cogVector="-0.068745 0.092947 0.011195" inertia="0.008878 -0.003749 0.001139   -0.003749 0.007628 -0.00046   0.001139 -0.00046 0.010295" color="WHITE" >
+    <Joint name="fr3_joint4_left" range="-174.299491 -91.498495 -8.697499" type="RotZ" transform="0.0825 0 0 90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link4.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link4.stl" />
+  </Body>
+
+  <Body name="left_fr3_link5" prev="left_fr3_link4" physics="dynamic" mass="2.174817" cogVector="-0.004197 0.010257 -0.058103" inertia="0.031874 0.000134 -0.000265   0.000134 0.029674 -0.004734   -0.000265 -0.004734 0.004751" color="WHITE" >
+    <Joint name="fr3_joint5_left" range="-160.800605 0 160.800605" type="RotZ" transform="-0.0825 0.384 0 -90 0 0" torqueLimit="12" speedLimit="301.3758" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link5.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link5.stl" />
+  </Body>
+
+  <Body name="left_fr3_link6" prev="left_fr3_link5" physics="dynamic" mass="1.567617" cogVector="0.070958 -0.014137 -0.035324" inertia="0.00286 -0.000553 -0.000638   -0.000553 0.00391 -0.00024   -0.000638 -0.00024 0.00453" color="WHITE" >
+    <Joint name="fr3_joint6_left" range="31.197552 144.998429 258.799306" type="RotZ" transform="0 0 0 90 0 0" torqueLimit="12" speedLimit="239.496358" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link6.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link6.stl" />
+  </Body>
+
+  <Body name="left_fr3_link7" prev="left_fr3_link6" physics="dynamic" mass="0.682876" cogVector="0.008204 0.001156 0.061016" inertia="0.000899 0 -1.3e-05   0 0.001099 -2.2e-05   -1.3e-05 -2.2e-05 0.000702" color="WHITE" >
+    <Joint name="fr3_joint7_left" range="-172.798341 0 172.798341" type="RotZ" transform="0.088 0 0 90 0 0" torqueLimit="12" speedLimit="301.3758" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link7.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link7.stl" />
+  </Body>
+
+
+<!--
+  <Body name="left_fr3_link8" prev="left_fr3_link7" transform="0 0 0.107 0 0 0" >
+  </Body>
+
+  <Body name="left_fr3_hand" prev="left_fr3_link8" transform="0 0 0 0 0 -45" physics="fixed" mass="0.6544" cogVector="-0.000038 0.011913 0.020726" inertia="0.00186 0 0   0 0.0003 -2e-05   0 -2e-05 0.00174" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/hand.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_ee/franka_hand_white/collision/hand.stl" />
+  </Body>
+
+  <Body name="left_fr3_hand_tcp" prev="left_fr3_hand" transform="0 0 0.1034 0 0 0" >
+  </Body>
+
+  <Body name="left_fr3_leftfinger" prev="left_fr3_hand" physics="dynamic" mass="0.0291" inertia="8.49e-06 0 0   0 8.53e-06 -1.06e-06   0 -1.06e-06 1.77e-06" >
+    <Joint name="left_fr3_finger_joint1" range="0 0.02 0.04" type="TransY" transform="0 0 0.0584 0 0 0" torqueLimit="100" speedLimit="0.2" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/finger.stl" />
+    <Shape type="BOX" extents="0.022 0.015 0.02" distance="true" physics="true" graphics="false" transform="0 0.0185 0.011 0 0 0" />
+    <Shape type="BOX" extents="0.022 0.0088 0.0038" distance="true" physics="true" graphics="false" transform="0 0.0068 0.0022 0 0 0" />
+    <Shape type="BOX" extents="0.0175 0.007 0.0235" distance="true" physics="true" graphics="false" transform="0 0.0159 0.02835 30 0 0" />
+    <Shape type="BOX" extents="0.0175 0.0152 0.0185" distance="true" physics="true" graphics="false" transform="0 0.00758 0.04525 0 0 0" />
+  </Body>
+
+  <Body name="left_fr3_rightfinger" prev="left_fr3_hand" physics="dynamic" mass="0.0291" inertia="8.49e-06 0 0   0 8.53e-06 -1.06e-06   0 -1.06e-06 1.77e-06" >
+    <Joint name="left_fr3_finger_joint2" range="0 0.02 0.04" constraint="true" type="TransY" transform="0 0 0.0584 0 0 180" torqueLimit="100" speedLimit="0.2" coupledTo="left_fr3_finger_joint1" couplingFactor="1"/>
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/finger.stl" />
+    <Shape type="BOX" extents="0.022 0.015 0.02" distance="true" physics="true" graphics="false" transform="0 0.0185 0.011 0 0 0" />
+    <Shape type="BOX" extents="0.022 0.0088 0.0038" distance="true" physics="true" graphics="false" transform="0 0.0068 0.0022 0 0 0" />
+    <Shape type="BOX" extents="0.0175 0.007 0.0235" distance="true" physics="true" graphics="false" transform="0 0.0159 0.02835 30 0 180" />
+    <Shape type="BOX" extents="0.0175 0.0152 0.0185" distance="true" physics="true" graphics="false" transform="0 0.00758 0.04525 0 0 0" />
+  </Body>
+-->
+
+
+
+
+
+  
+  <Body name="right_base" prev="franka_mount_link" transform="0.03467 -0.050681 0.202 50.381527 14.528626 24.485038" >
+  </Body>
+
+  <Body name="right_fr3_link0" prev="right_base" physics="fixed" mass="3.85" cogVector="-0.0172 0.0004 0.0745" inertia="0.009 0 0.002   0 0.0115 0   0.002 0 0.0085" color="WHITE" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link0.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link0.stl" />
+  </Body>
+
+  <Body name="right_fr3_link1" prev="right_fr3_link0" physics="dynamic" mass="2.4377" cogVector="-0.00458 0.027016 -0.0618" inertia="0.02324 0.000333 -0.000676   0.000333 0.02146 0.003739   -0.000676 0.003739 0.0055" color="WHITE" >
+    <Joint name="fr3_joint1_right" range="-157.20243 0 157.20243" type="RotZ" transform="0 0 0.333 0 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link1.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link1.stl" />
+  </Body>
+
+  <Body name="right_fr3_link2" prev="right_fr3_link1" physics="dynamic" mass="2.2375" cogVector="-0.003473 -0.168509 -0.010479" inertia="0.019026 0.001241 0.000499   0.001241 0.00566 -0.001804   0.000499 -0.001804 0.017114" color="WHITE" >
+    <Joint name="fr3_joint2_right" range="-102.198482 0 102.198482" type="RotZ" transform="0 0 0 -90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link2.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link2.stl" />
+  </Body>
+
+  <Body name="right_fr3_link3" prev="right_fr3_link2" physics="dynamic" mass="2.185794" cogVector="0.092968 0.01801 0.033533" inertia="0.010225 0.001144 0.003497   0.001144 0.012398 0.002156   0.003497 0.002156 0.006877" color="WHITE" >
+    <Joint name="fr3_joint3_right" range="-166.197868 0 166.197868" type="RotZ" transform="0 -0.316 0 90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link3.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link3.stl" />
+  </Body>
+
+  <Body name="right_fr3_link4" prev="right_fr3_link3" physics="dynamic" mass="2.175867" cogVector="-0.068745 0.092947 0.011195" inertia="0.008878 -0.003749 0.001139   -0.003749 0.007628 -0.00046   0.001139 -0.00046 0.010295" color="WHITE" >
+    <Joint name="fr3_joint4_right" range="-174.299491 -91.498495 -8.697499" type="RotZ" transform="0.0825 0 0 90 0 0" torqueLimit="87" speedLimit="150.114942" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link4.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link4.stl" />
+  </Body>
+
+  <Body name="right_fr3_link5" prev="right_fr3_link4" physics="dynamic" mass="2.174817" cogVector="-0.004197 0.010257 -0.058103" inertia="0.031874 0.000134 -0.000265   0.000134 0.029674 -0.004734   -0.000265 -0.004734 0.004751" color="WHITE" >
+    <Joint name="fr3_joint5_right" range="-160.800605 0 160.800605" type="RotZ" transform="-0.0825 0.384 0 -90 0 0" torqueLimit="12" speedLimit="301.3758" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link5.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link5.stl" />
+  </Body>
+
+  <Body name="right_fr3_link6" prev="right_fr3_link5" physics="dynamic" mass="1.567617" cogVector="0.070958 -0.014137 -0.035324" inertia="0.00286 -0.000553 -0.000638   -0.000553 0.00391 -0.00024   -0.000638 -0.00024 0.00453" color="WHITE" >
+    <Joint name="fr3_joint6_right" range="31.197552 144.998429 258.799306" type="RotZ" transform="0 0 0 90 0 0" torqueLimit="12" speedLimit="239.496358" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link6.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link6.stl" />
+  </Body>
+
+  <Body name="right_fr3_link7" prev="right_fr3_link6" physics="dynamic" mass="0.682876" cogVector="0.008204 0.001156 0.061016" inertia="0.000899 0 -1.3e-05   0 0.001099 -2.2e-05   -1.3e-05 -2.2e-05 0.000702" color="WHITE" >
+    <Joint name="fr3_joint7_right" range="-172.798341 0 172.798341" type="RotZ" transform="0.088 0 0 90 0 0" torqueLimit="12" speedLimit="301.3758" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_arms/fr3/visual/link7.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_arms/fr3/collision/link7.stl" />
+  </Body>
+
+
+<!--
+  <Body name="right_fr3_link8" prev="right_fr3_link7" transform="0 0 0.107 0 0 0" >
+  </Body>
+
+  <Body name="right_fr3_hand" prev="right_fr3_link8" transform="0 0 0 0 0 -45" physics="fixed" mass="0.6544" cogVector="-0.000038 0.011913 0.020726" inertia="0.00186 0 0   0 0.0003 -2e-05   0 -2e-05 0.00174" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/hand.stl" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" meshFile="robot_ee/franka_hand_white/collision/hand.stl" />
+  </Body>
+
+  <Body name="right_fr3_hand_tcp" prev="right_fr3_hand" transform="0 0 0.1034 0 0 0" >
+  </Body>
+
+  <Body name="right_fr3_leftfinger" prev="right_fr3_hand" physics="dynamic" mass="0.0291" inertia="8.49e-06 0 0   0 8.53e-06 -1.06e-06   0 -1.06e-06 1.77e-06" >
+    <Joint name="right_fr3_finger_joint1" range="0 0.02 0.04" type="TransY" transform="0 0 0.0584 0 0 0" torqueLimit="100" speedLimit="0.2" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/finger.stl" />
+    <Shape type="BOX" extents="0.022 0.015 0.02" distance="true" physics="true" graphics="false" transform="0 0.0185 0.011 0 0 0" />
+    <Shape type="BOX" extents="0.022 0.0088 0.0038" distance="true" physics="true" graphics="false" transform="0 0.0068 0.0022 0 0 0" />
+    <Shape type="BOX" extents="0.0175 0.007 0.0235" distance="true" physics="true" graphics="false" transform="0 0.0159 0.02835 30 0 0" />
+    <Shape type="BOX" extents="0.0175 0.0152 0.0185" distance="true" physics="true" graphics="false" transform="0 0.00758 0.04525 0 0 0" />
+  </Body>
+
+  <Body name="right_fr3_rightfinger" prev="right_fr3_hand" physics="dynamic" mass="0.0291" inertia="8.49e-06 0 0   0 8.53e-06 -1.06e-06   0 -1.06e-06 1.77e-06" >
+    <Joint name="right_fr3_finger_joint2" range="0 0.02 0.04" constraint="true" type="TransY" transform="0 0 0.0584 0 0 180" torqueLimit="100" speedLimit="0.2" coupledTo="right_fr3_finger_joint1" couplingFactor="1"/>
+    <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="robot_ee/franka_hand_white/visual/finger.stl" />
+    <Shape type="BOX" extents="0.022 0.015 0.02" distance="true" physics="true" graphics="false" transform="0 0.0185 0.011 0 0 0" />
+    <Shape type="BOX" extents="0.022 0.0088 0.0038" distance="true" physics="true" graphics="false" transform="0 0.0068 0.0022 0 0 0" />
+    <Shape type="BOX" extents="0.0175 0.007 0.0235" distance="true" physics="true" graphics="false" transform="0 0.0159 0.02835 30 0 180" />
+    <Shape type="BOX" extents="0.0175 0.0152 0.0185" distance="true" physics="true" graphics="false" transform="0 0.00758 0.04525 0 0 0" />
+  </Body>
+
+<model_state model="DefaultPose" time_stamp="0">
+</model_state>
+-->
+
+</Graph>

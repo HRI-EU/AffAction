@@ -511,7 +511,8 @@ public:
   bool initParameters()
   {
     ExampleJointControl::initParameters();
-    xmlFileName = "g_robo_tablemount.xml";
+    //xmlFileName = "g_robo_tablemount.xml";
+    xmlFileName = "g_franka_duomount.xml";
     configDirectory = "config/xml/Franka";
     componentArgs = "-frankaZmq_right ";
     return true;
@@ -547,7 +548,8 @@ public:
   bool initParameters()
   {
     ExampleJointControl::initParameters();
-    xmlFileName = "g_robo_left_tablemount.xml";
+    //xmlFileName = "g_robo_left_tablemount.xml";
+    xmlFileName = "g_franka_duomount.xml";
     configDirectory = "config/xml/Franka";
     componentArgs = "-frankaZmq_left ";
     return true;
@@ -583,7 +585,8 @@ public:
   bool initParameters()
   {
     ExampleJointControl::initParameters();
-    xmlFileName = "g_robo_bimanual_tablemount.xml";
+    //xmlFileName = "g_robo_bimanual_tablemount.xml";
+    xmlFileName = "g_franka_duomount.xml";
     configDirectory = "config/xml/Franka";
     componentArgs = "-frankaZmq_left -frankaZmq_right ";
     return true;
