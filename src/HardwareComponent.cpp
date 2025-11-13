@@ -52,6 +52,7 @@
 #include "AzureSkeletonTracker.h"
 #include "AgentWelcomeComponent.hpp"
 #include "ImageTracker.h"
+#include "EyeModelIKComponent.h"
 
 //#define WITH_WEBSOCKETCLIENTCOMPONENT
 #if defined WITH_WEBSOCKETCLIENTCOMPONENT
@@ -428,7 +429,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     }
     else if (getKey(argvStrVec, "-pw70_zmq"))
     {
-      const double dt_commands = 0.01;
+      const double dt_commands = 0.02;
       components.push_back(new PW70ZmqComponent(&entity, dt_commands));
     }
   }
@@ -499,7 +500,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string otherRecv="tcp://localhost:40012";
       std::string otherSend="tcp://localhost:40013";
-      const double dt_commands = 0.01;
+      const double dt_commands = 0.02;
       components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
                                                      otherRecv, otherSend));
     }
@@ -509,7 +510,7 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string otherRecv="tcp://localhost:40014";
       std::string otherSend="tcp://localhost:40015";
-      const double dt_commands = 0.01;
+      const double dt_commands = 0.02;
       components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
                                                      otherRecv, otherSend));
     }
@@ -549,6 +550,18 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   auto extraArgsVec = Rcs::String_split(extraArgs, " ");
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
+
+  if (dryRun)
+  {
+    argP.hasArgument("-eye_ik", "Start with eye model");
+    argP.hasArgument("-eye_ik.camera_name", "Name of camera body for eye model");
+  }
+  else if (getKey(argvStrVec, "-eye_ik"))
+  {
+    std::string camera_name = "camera_0";
+    getKeyValuePair<std::string>(argvStrVec, "-eye_ik.camera_name", camera_name);
+    components.push_back(new EyeModelIKComponent(&entity, graph, camera_name));
+  }
 
   if (dryRun)
   {

@@ -106,6 +106,7 @@ public:
   std::vector<std::pair<std::string,VirtualCamera*>> getVirtualCameras();
   bool addVirtualCamera(std::string camera_name, std::string camera_type, int width, int height);
   void addComponentArgument(const std::string& arg);
+  bool hasComponentArgument(const std::string& arg) const;
   bool eraseComponent(ComponentBase* component);   // Remove and delete
   std::string getComponentArguments() const;
   const std::vector<ComponentBase*>& getComponentsRef() const;

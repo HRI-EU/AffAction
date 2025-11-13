@@ -546,8 +546,15 @@ bool ExampleActionsECS::initAlgo()
   {
     if (EyeModelIKComponent::hasEyeModel(getGraph()))
     {
-      auto eyeIK = new EyeModelIKComponent(&entity, getGraph(), landmarksCamera);
-      addComponent(eyeIK);
+      if (!hasComponentArgument("-eye_ik"))
+      {
+        componentArgs += " -eye_ik";
+      }
+
+      if (!hasComponentArgument("-eye_ik.camera_name"))
+      {
+        componentArgs += " -eye_ik -eye_ik.camera_name " + landmarksCamera;
+      }
     }
     else
     {
@@ -2194,6 +2201,17 @@ std::string ExampleActionsECS::getComponentArguments() const
   return componentArgs;
 }
 
+bool ExampleActionsECS::hasComponentArgument(const std::string& arg) const
+{
+  if (componentArgs.find(arg) != std::string::npos)
+  {
+    return true;
+  }
+
+  return false;
+}
+
+
 const std::vector<ComponentBase*>& ExampleActionsECS::getComponentsRef() const
 {
   return components;
@@ -2943,5 +2961,37 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleAllegroDriverLeft, "RoboDrivers", "AllegroDriverLeft");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleCharmSim : public ExampleActionsECS
+{
+public:
+
+  ExampleCharmSim(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleCharmSim()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_example_handover.xml";
+    configDirectory = "config/xml/Franka";
+    speedUp = 1;
+    landmarksCamera = "azure_kinect_rgb_frame";
+    //addComponentArgument("-allegroZmq_left");
+    //enableRealGraphVisualization = true;
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleCharmSim, "Charm", "Franka setup (sim)");
 
 }   // namespace aff

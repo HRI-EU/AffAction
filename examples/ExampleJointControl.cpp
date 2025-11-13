@@ -432,16 +432,16 @@ void ExampleJointControl::addComponentArgument(const std::string& arg)
 /*******************************************************************************
  *
  ******************************************************************************/
-class ExampleAllegroGui : public ExampleJointControl
+class ExampleAllegroGuiRight : public ExampleJointControl
 {
 public:
 
-  ExampleAllegroGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  ExampleAllegroGuiRight(int argc, char** argv) : ExampleJointControl(argc, argv)
   {
-    RMSG("Start bin/AllegroDriver -m 1");
+    RMSG("Start bin/AllegroDriver -m 1 -robo_name allegro_right");
   }
 
-  virtual ~ExampleAllegroGui() = default;
+  virtual ~ExampleAllegroGuiRight() = default;
 
   bool initParameters()
   {
@@ -454,7 +454,35 @@ public:
 
 };
 
-RCS_REGISTER_EXAMPLE(ExampleAllegroGui, "RoboDrivers", "Allegro right Joint-Gui");
+RCS_REGISTER_EXAMPLE(ExampleAllegroGuiRight, "RoboDrivers", "Allegro right Joint-Gui");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleAllegroGuiLeft : public ExampleJointControl
+{
+public:
+
+  ExampleAllegroGuiLeft(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+    RMSG("Start bin/AllegroDriver -m 1 -robo_name allegro_left");
+  }
+
+  virtual ~ExampleAllegroGuiLeft() = default;
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_robo_left.xml";
+    configDirectory = "config/xml/Allegro";
+    addComponentArgument("-allegroZmq_left");
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleAllegroGuiLeft, "RoboDrivers", "Allegro left Joint-Gui");
 
 
 /*******************************************************************************
