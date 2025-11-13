@@ -23,9 +23,14 @@ joint_15_0:     -8.0    -1.7    108.0
 -->
 <Graph name="DefaultPose" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
 
-  <Body name="palm_link" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
+  <Body name="hand_base" transform="0 0 0.102 0 0 180" >
+    	<Shape type="FRAME" scale="0.1" />
+  </Body>
+  
+  <Body name="palm_link" prev="hand_base" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 -179.908748 0.000073 90.045626" meshFile="allegro_hand_description/meshes/palm.stl" color="#333333ff" />
     <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 -179.908748 0.000073 90.045626" meshFile="allegro_hand_description/meshes/palm.stl" />
+    	<xxShape type="FRAME" scale="0.1" />
   </Body>
 
   <Body name="link_0_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >

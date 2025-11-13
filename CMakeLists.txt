@@ -29,7 +29,7 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 
 IF (APPLE)
   CMAKE_MINIMUM_REQUIRED(VERSION 3.25)

@@ -1,0 +1,406 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+
+  <Body name="default_camera_view" transform=" 3.607222 1.473585 3.453121   7.993 -31.286 -156.944" />
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.31 1.00025 0 0 0" type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" textureFile="Smile/textures/floor.jpg"
+           graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+
+
+  <!-- The model for a simple camera. -->
+  <Group prev="aruco_base" rigid_body_joints="0.4 0 1.8 0 40 0" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+
+  
+  <Body name="Stand" prev="aruco_base" transform="0 0 0 0 0 0" >
+    <Shape type="BOX" extents="1 1 1" graphics="true" distance="true" transform="0 0 0.5 0 0 0" color="DARKGRAY" />
+  </Body>
+
+  <!-- Dual arm FR3 setup -->
+  <Group prev="Stand" transform="0.4 0 1 0 0 0" >
+    <xi:include href="g_franka_duomount.xml"/>
+  </Group>
+
+  <!-- Left Allegro hand -->
+  <Group name="_left" prev="left_fr3_link8" transform="0 0 0 0 0 45" >
+    <xi:include href="../Allegro/g_hand_left.xml"/>
+
+    <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 90 0 90" >
+      <Shape type="FRAME" scale="0.3"/>
+    </Body>
+    <Body name="hand_powergrasp" prev="hand_robot" transform="0 0 0 0 0 0">
+      <Shape type="FRAME" scale="0.1"/>
+    </Body>
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 -0.04 0 0 0 -60">
+      <Shape type="FRAME" scale="0.15"/>
+    </Body>
+
+    <Manipulator body="hand_robot" types="hand hand_left allegro_left">
+      <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
+      <PowergraspCapability frame="hand_powergrasp" />
+      <PincergraspCapability frame="hand_pincergrasp" />
+    </Manipulator>
+  </Group>
+
+
+  <!-- Right Allegro hand -->
+  <Group name="_right" prev="right_fr3_link8" transform="0 0 0 0 0 45" >
+    <xi:include href="../Allegro/g_hand_right.xml"/>
+
+    <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 -90 0 -90" >
+      <Shape type="FRAME" scale="0.3"/>
+    </Body>
+    <Body name="hand_powergrasp" prev="hand_robot" transform="0 -0.0 -0.0 0 -0 0">
+      <Shape type="FRAME" scale="0.1"/>
+    </Body>
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 0.04 0 0 0 60">
+      <Shape type="FRAME" scale="0.15"/>
+    </Body>
+
+    <Manipulator body="hand_robot" types="hand hand_right allegro_right">
+      <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
+      <PowergraspCapability frame="hand_powergrasp" />
+      <PincergraspCapability frame="hand_pincergrasp" />
+    </Manipulator>
+  </Group>
+
+
+
+
+
+  
+  <!-- Schunk PW70 PTU -->
+  <Body name="ptu_link" prev="Stand" transform="0.4 0 1.4 0 0 90" physics="none" mass="0.01"
+        inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
+    <Shape type="CYLINDER" radius="0.035" length="0.04" distance="false" physics="false" graphics="true"
+	   transform="0 0 0.022 0 0 0" />
+  </Body>
+
+  <Body name="ptu_pan_link" prev="ptu_link" physics="none" mass="0.01"
+        inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
+    <Joint name="ptu_pan_joint" range="90" type="RotZ" transform="0 0 0.095 0 0 0" torqueLimit="200"
+           speedLimit="70" constraint="false" weightJL="0" weightMetric="0.1" />
+    <Shape type="BOX" extents="0.09 0.07 0.111" distance="false" physics="false" graphics="true"
+	   transform="0 0 0 -180 0 0" />
+  </Body>
+
+  <Body name="ptu_tilt_link" prev="ptu_pan_link" physics="none" mass="0.01"
+        inertia="0.001 0 0 0 0.001 0 0 0 0.001" color="GRAY" >
+    <Joint name="ptu_tilt_joint" range="85" was_range="-45 30 45" type="RotX" torqueLimit="12"
+	   speedLimit="40" constraint="false" weightJL="0" weightMetric="0.1" />
+    <Shape type="BOX" extents="0.107 0.07 0.008" distance="false" physics="false" graphics="true"
+	   transform="0 0 0.066 0 0 0" />
+    <Shape type="BOX" extents="0.007 0.07 0.07" distance="false" physics="false" graphics="true"
+	   transform="0.05 0 0.028 0 0 0" />
+    <Shape type="BOX" extents="0.007 0.07 0.07" distance="false" physics="false" graphics="true"
+	   transform="-0.05 0 0.028 0 0 0" />
+    <Shape type="CYLINDER" radius="0.035" length="0.025" distance="false" physics="false" graphics="true"
+	   transform="-0.05875 0 0 0 90 0" />
+    <Shape type="CYLINDER" radius="0.035" length="0.025" distance="false" physics="false" graphics="true"
+	   transform="0.05875 0 0 0 90 0" />
+    <Shape type="BOX" extents="0.07 0.07 0.025" distance="false" physics="false" graphics="true"
+	   transform="0.06575 0 0 0 90 0" />
+  </Body>
+
+  <Body name="ptu_tool_link" prev="ptu_tilt_link" transform="0 0 0.07 0 0 0" mass="0.01"
+        inertia="0.001 0 0 0 0.001 0 0 0 0.001" />
+  
+  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
+  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
+    <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
+  </Group>
+  
+  <!-- The gaze model of the robot (testing).-->
+  <Group prev="head_shell" transform="0 0 0 0 0 0">
+    <xi:include href="../TwoArmJaco7/g_gazemodel.xml" />
+  </Group>
+
+  <Body name="GazePoint" >
+    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
+  </Body>
+  
+
+  <xManipulator body="head_kinect_link" types="head">
+    <GazeCapability frame="head_kinect_lens" />
+  </xManipulator>
+
+  <noAgent body="Johnnie" types="robot" name="Johnnie" >
+    <!-- <Component manipulator="hand_robot_left3" /> -->
+    <!-- <Component manipulator="hand_robot_right3" /> -->
+    <!-- <Component manipulator="hand_robot_left" />
+	 <Component manipulator="hand_robot_right" />
+	 <xComponent manipulator="head_kinect_link" /> -->
+  </noAgent>
+
+  <!--  Scene -->
+  <Group prev="aruco_base" transform="1.2 0 0.1 0 0 0">
+    <xi:include href="g_scene.xml"/>
+  </Group>
+
+
+	<!-- The agent sitting in front of the robot. -->
+  <Group prev="aruco_base" name="Michael" color="ORANGE" transform="2 0 0.5 0 0 0" >
+    <xi:include href="../examples/g_human_agent.xml"/>
+  </Group>
+
+
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="fr3_joint1_left" position="140" />
+    <joint_state joint="fr3_joint2_left" position="60" />
+    <joint_state joint="fr3_joint3_left" position="-100" />
+    <joint_state joint="fr3_joint4_left" position="-120" />
+    <joint_state joint="fr3_joint5_left" position="-40" />
+    <joint_state joint="fr3_joint6_left" position="170" />
+    <joint_state joint="fr3_joint7_left" position="0" />
+
+    <joint_state joint="fr3_joint1_right" position="-140" />
+    <joint_state joint="fr3_joint2_right" position="60" />
+    <joint_state joint="fr3_joint3_right" position="100" />
+    <joint_state joint="fr3_joint4_right" position="-120" />
+    <joint_state joint="fr3_joint5_right" position="40" />
+    <joint_state joint="fr3_joint6_right" position="170" />
+    <joint_state joint="fr3_joint7_right" position="-90" />
+    
+    <joint_state joint="joint_0_0_left" position="0" />
+    <joint_state joint="joint_1_0_left" position="52.5" />
+    <joint_state joint="joint_2_0_left" position="49.5" />
+    <joint_state joint="joint_3_0_left" position="50" />
+    <joint_state joint="joint_4_0_left" position="0" />
+    <joint_state joint="joint_5_0_left" position="52.5" />
+    <joint_state joint="joint_6_0_left" position="49.5" />
+    <joint_state joint="joint_7_0_left" position="50" />
+    <joint_state joint="joint_8_0_left" position="0" />
+    <joint_state joint="joint_9_0_left" position="52.5" />
+    <joint_state joint="joint_10_0_left" position="49.5" />
+    <joint_state joint="joint_11_0_left" position="50" />
+    <joint_state joint="joint_12_0_left" position="-52.5" />
+    <joint_state joint="joint_13_0_left" position="140" />
+    <joint_state joint="joint_14_0_left" position="-50.5" />
+    <joint_state joint="joint_15_0_left" position="-50" />
+	  
+    <joint_state joint="joint_0_0_right" position="0" />
+    <joint_state joint="joint_1_0_right" position="52.5" />
+    <joint_state joint="joint_2_0_right" position="49.5" />
+    <joint_state joint="joint_3_0_right" position="50" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="52.5" />
+    <joint_state joint="joint_6_0_right" position="49.5" />
+    <joint_state joint="joint_7_0_right" position="50" />
+    <joint_state joint="joint_8_0_right" position="0" />
+    <joint_state joint="joint_9_0_right" position="52.5" />
+    <joint_state joint="joint_10_0_right" position="49.5" />
+    <joint_state joint="joint_11_0_right" position="50" />
+    <joint_state joint="joint_12_0_right" position="52.5" />
+    <joint_state joint="joint_13_0_right" position="50.5" />
+    <joint_state joint="joint_14_0_right" position="50.5" />
+    <joint_state joint="joint_15_0_right" position="50" />
+  </model_state>
+
+  <model_state model="default_up" time_stamp="0">
+    <joint_state joint="fr3_joint1_left" position="0" />
+    <joint_state joint="fr3_joint2_left" position="0" />
+    <joint_state joint="fr3_joint3_left" position="0" />
+    <joint_state joint="fr3_joint4_left" position="-90" />
+    <joint_state joint="fr3_joint5_left" position="0" />
+    <joint_state joint="fr3_joint6_left" position="145" />
+    <joint_state joint="fr3_joint7_left" position="0" />
+    <joint_state joint="joint_0_0_left" position="0" />
+    <joint_state joint="joint_1_0_left" position="52.5" />
+    <joint_state joint="joint_2_0_left" position="49.5" />
+    <joint_state joint="joint_3_0_left" position="50" />
+    <joint_state joint="joint_4_0_left" position="0" />
+    <joint_state joint="joint_5_0_left" position="52.5" />
+    <joint_state joint="joint_6_0_left" position="49.5" />
+    <joint_state joint="joint_7_0_left" position="50" />
+    <joint_state joint="joint_8_0_left" position="0" />
+    <joint_state joint="joint_9_0_left" position="52.5" />
+    <joint_state joint="joint_10_0_left" position="49.5" />
+    <joint_state joint="joint_11_0_left" position="50" />
+    <joint_state joint="joint_12_0_left" position="-52.5" />
+    <joint_state joint="joint_13_0_left" position="140" />
+    <joint_state joint="joint_14_0_left" position="-50.5" />
+    <joint_state joint="joint_15_0_left" position="-50" />
+    <joint_state joint="fr3_joint1_right" position="0" />
+    <joint_state joint="fr3_joint2_right" position="0" />
+    <joint_state joint="fr3_joint3_right" position="0" />
+    <joint_state joint="fr3_joint4_right" position="-90" />
+    <joint_state joint="fr3_joint5_right" position="0" />
+    <joint_state joint="fr3_joint6_right" position="145" />
+    <joint_state joint="fr3_joint7_right" position="0" />
+    <joint_state joint="joint_0_0_right" position="0" />
+    <joint_state joint="joint_1_0_right" position="52.5" />
+    <joint_state joint="joint_2_0_right" position="49.5" />
+    <joint_state joint="joint_3_0_right" position="50" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="52.5" />
+    <joint_state joint="joint_6_0_right" position="49.5" />
+    <joint_state joint="joint_7_0_right" position="50" />
+    <joint_state joint="joint_8_0_right" position="0" />
+    <joint_state joint="joint_9_0_right" position="52.5" />
+    <joint_state joint="joint_10_0_right" position="49.5" />
+    <joint_state joint="joint_11_0_right" position="50" />
+    <joint_state joint="joint_12_0_right" position="52.5" />
+    <joint_state joint="joint_13_0_right" position="50.5" />
+    <joint_state joint="joint_14_0_right" position="50.5" />
+    <joint_state joint="joint_15_0_right" position="50" />
+  </model_state>
+
+  <model_state model="open_fingers" time_stamp="0">
+    <joint_state joint="joint_0_0_left" position="0" />
+    <joint_state joint="joint_1_0_left" position="0" />
+    <joint_state joint="joint_2_0_left" position="0" />
+    <joint_state joint="joint_3_0_left" position="0" />
+    <joint_state joint="joint_4_0_left" position="0" />
+    <joint_state joint="joint_5_0_left" position="0" />
+    <joint_state joint="joint_6_0_left" position="0" />
+    <joint_state joint="joint_7_0_left" position="0" />
+    <joint_state joint="joint_8_0_left" position="0" />
+    <joint_state joint="joint_9_0_left" position="0" />
+    <joint_state joint="joint_10_0_left" position="0" />
+    <joint_state joint="joint_11_0_left" position="0" />
+    <joint_state joint="joint_12_0_left" position="0" />
+    <joint_state joint="joint_13_0_left" position="90" />
+    <joint_state joint="joint_14_0_left" position="0" />
+    <joint_state joint="joint_15_0_left" position="0" />
+
+    <joint_state joint="joint_0_0_right" position="0" />
+    <joint_state joint="joint_1_0_right" position="0" />
+    <joint_state joint="joint_2_0_right" position="0" />
+    <joint_state joint="joint_3_0_right" position="0" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="0" />
+    <joint_state joint="joint_6_0_right" position="0" />
+    <joint_state joint="joint_7_0_right" position="0" />
+    <joint_state joint="joint_8_0_right" position="0" />
+    <joint_state joint="joint_9_0_right" position="0" />
+    <joint_state joint="joint_10_0_right" position="0" />
+    <joint_state joint="joint_11_0_right" position="0" />
+    <joint_state joint="joint_12_0_right" position="0" />
+    <joint_state joint="joint_13_0_right" position="0" />
+    <joint_state joint="joint_14_0_right" position="0" />
+    <joint_state joint="joint_15_0_right" position="0" />
+  </model_state>
+
+  <model_state model="close_fingers" time_stamp="0">
+    <joint_state joint="joint_0_0_left" position="0" />
+    <joint_state joint="joint_1_0_left" position="52.5" />
+    <joint_state joint="joint_2_0_left" position="49.5" />
+    <joint_state joint="joint_3_0_left" position="50" />
+    <joint_state joint="joint_4_0_left" position="0" />
+    <joint_state joint="joint_5_0_left" position="52.5" />
+    <joint_state joint="joint_6_0_left" position="49.5" />
+    <joint_state joint="joint_7_0_left" position="50" />
+    <joint_state joint="joint_8_0_left" position="0" />
+    <joint_state joint="joint_9_0_left" position="52.5" />
+    <joint_state joint="joint_10_0_left" position="49.5" />
+    <joint_state joint="joint_11_0_left" position="50" />
+    <joint_state joint="joint_12_0_left" position="-52.5" />
+    <joint_state joint="joint_13_0_left" position="140" />
+    <joint_state joint="joint_14_0_left" position="-50.5" />
+    <joint_state joint="joint_15_0_left" position="-50" />
+
+    <joint_state joint="joint_0_0_right" position="0" />
+    <joint_state joint="joint_1_0_right" position="52.5" />
+    <joint_state joint="joint_2_0_right" position="49.5" />
+    <joint_state joint="joint_3_0_right" position="50" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="52.5" />
+    <joint_state joint="joint_6_0_right" position="49.5" />
+    <joint_state joint="joint_7_0_right" position="50" />
+    <joint_state joint="joint_8_0_right" position="0" />
+    <joint_state joint="joint_9_0_right" position="52.5" />
+    <joint_state joint="joint_10_0_right" position="49.5" />
+    <joint_state joint="joint_11_0_right" position="50" />
+    <joint_state joint="joint_12_0_right" position="52.5" />
+    <joint_state joint="joint_13_0_right" position="50.5" />
+    <joint_state joint="joint_14_0_right" position="50.5" />
+    <joint_state joint="joint_15_0_right" position="50" />
+  </model_state>
+
+  <model_state model="pincer_grasp_left" time_stamp="0">
+    <joint_state joint="joint_0_0_left" position="5" />
+    <joint_state joint="joint_1_0_left" position="30" />
+    <joint_state joint="joint_2_0_left" position="30" />
+    <joint_state joint="joint_3_0_left" position="40" />
+    <joint_state joint="joint_4_0_left" position="0" />
+    <joint_state joint="joint_5_0_left" position="30" />
+    <joint_state joint="joint_6_0_left" position="30" />
+    <joint_state joint="joint_7_0_left" position="50" />
+    <joint_state joint="joint_8_0_left" position="-6" />
+    <joint_state joint="joint_9_0_left" position="30" />
+    <joint_state joint="joint_10_0_left" position="30" />
+    <joint_state joint="joint_11_0_left" position="50" />
+    <joint_state joint="joint_12_0_left" position="-90" />
+    <joint_state joint="joint_13_0_left" position="160" />
+    <joint_state joint="joint_14_0_left" position="-35" />
+    <joint_state joint="joint_15_0_left" position="-35" />
+  </model_state>
+
+  <model_state model="pincer_grasp_right" time_stamp="0">
+    <joint_state joint="joint_0_0_right" position="-5" />
+    <joint_state joint="joint_1_0_right" position="30" />
+    <joint_state joint="joint_2_0_right" position="30" />
+    <joint_state joint="joint_3_0_right" position="40" />
+    <joint_state joint="joint_4_0_right" position="0" />
+    <joint_state joint="joint_5_0_right" position="30" />
+    <joint_state joint="joint_6_0_right" position="30" />
+    <joint_state joint="joint_7_0_right" position="50" />
+    <joint_state joint="joint_8_0_right" position="6" />
+    <joint_state joint="joint_9_0_right" position="30" />
+    <joint_state joint="joint_10_0_right" position="30" />
+    <joint_state joint="joint_11_0_right" position="50" />
+    <joint_state joint="joint_12_0_right" position="90" />
+    <joint_state joint="joint_13_0_right" position="20" />
+    <joint_state joint="joint_14_0_right" position="35" />
+    <joint_state joint="joint_15_0_right" position="35" />
+  </model_state>
+
+  
+
+  <!-- For collision checking -->
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_base"/>
+    <Tree root="right_base"/>
+    <Body name="head_kinect_link"/>
+  </BroadPhase>
+
+
+</Graph>
