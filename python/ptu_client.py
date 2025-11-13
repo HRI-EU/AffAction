@@ -33,6 +33,22 @@ import zmq
 import json
 import time
 import math
+import signal
+import sys
+
+
+
+running = True
+
+def signal_handler(sig, frame):
+    global running
+    print("\n[Ctrl-C] Stopping subscriber...")
+    running = False
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+
 
 
 def _send_payload_once(payload: dict, endpoint: str) -> None:
@@ -60,14 +76,95 @@ def ptu_command_once(pan_in_degrees: float, tilt_in_degrees: float, endpoint: st
         ZeroMQ PUB socket endpoint (default: "tcp://localhost:5560").
     """
     payload = {
-        "joints": {
-          "pan": { "index": 0, "position_command": math.radians(pan_in_degrees), "novmax": 0.2, "notmc": 0.1 },
-          "tilt": { "index": 1, "position_command": math.radians(tilt_in_degrees), "novmax": 0.2, "notmc": 0.1 }
-        },
+        "robot_name": "PW70",
+        "timestamp": 0,
+        "actuators": [],
         "quit": False
     }
+
+    payload["actuators"].append({
+        "id": "joint_1",
+        "type": "joint",
+        "index": 0,
+        "position": math.radians(pan_in_degrees),
+        "no_vmax": 0.2,
+        "no_tmc": 0.1
+    })
+
+    payload["actuators"].append({
+        "id": "joint_2",
+        "type": "joint",
+        "index": 1,
+        "position": math.radians(tilt_in_degrees),
+        "no_vmax": 0.2,
+        "no_tmc": 0.1
+    })
+    
     _send_payload_once(payload, endpoint)
 
+
+
+def ptu_feedback_loop(endpoint: str = "tcp://localhost:40006"):
+    """Subscribe to a ZMQ feedback stream and print the incoming data."""
+    global running
+    
+    # Create ZeroMQ subscriber
+    ctx = zmq.Context()
+    sub = ctx.socket(zmq.SUB)
+    sub.connect(endpoint)
+    sub.setsockopt_string(zmq.SUBSCRIBE, "")
+
+    print(f"[feedback_subscriber] Connected to {endpoint}")
+
+    try:
+        while running:
+            try:
+                # Non-blocking receive
+                try:
+                    msg = sub.recv(flags=zmq.NOBLOCK)
+                except zmq.Again:
+                    time.sleep(0.01)
+                    continue
+
+                # Parse JSON safely
+                try:
+                    j = json.loads(msg.decode('utf-8'))
+                    print(json.dumps(j, indent=2))
+                except json.JSONDecodeError as e:
+                    print(f"JSON parse error: {e}")
+                    continue
+
+            except Exception as e:
+                print(f"Error while receiving feedback: {e}")
+                time.sleep(0.01)
+                continue
+
+            time.sleep(0.01)
+
+    finally:
+        print(f"feedback loop says goodbye")
+        sub.close()
+        ctx.term()
+        running = True
+
+
+def ptu_feedback_once(endpoint: str = "tcp://localhost:40006"):
+    """Receive a single JSON feedback message and print it to the console."""
+    ctx = zmq.Context()
+    sub = ctx.socket(zmq.SUB)
+    sub.connect(endpoint)
+    sub.setsockopt_string(zmq.SUBSCRIBE, "")
+
+    try:
+        msg = sub.recv()
+        j = json.loads(msg.decode("utf-8"))
+        print(json.dumps(j, indent=2))
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        sub.close()
+        ctx.term()
+        
 
 def ptu_quit(endpoint: str = "tcp://localhost:40007") -> None:
     """

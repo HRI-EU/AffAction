@@ -91,21 +91,36 @@ static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const st
 {
   try
   {
-    // Check if key exists and is structured correctly
-    if (!entry.contains(key))
+    // Check if entry actually contains the key and it is an object
+    if (!entry.is_object() || !entry.contains(key))
     {
-      std::cerr << "Missing key: " << key << std::endl;
+      RLOG_CPP(1, "Entry missing key: " << key);
       return std::vector<int>();
     }
 
-    const auto& box_array = entry.at(key).at("bounding_box");
+    const auto& sub = entry.at(key);
+    if (!sub.is_object())
+    {
+      RLOG_CPP(1, "Value under key '" << key << "' is not an object");
+      return std::vector<int>();
+    }
+
+    // Check if "bounding_box" exists and is an array
+    if (!sub.contains("bounding_box"))
+    {
+      RLOG_CPP(1, "Missing bounding_box for key: " << key);
+      return std::vector<int>();
+    }
+
+    const auto& box_array = sub.at("bounding_box");
     if (!box_array.is_array() || box_array.size() != 4)
     {
       RLOG_CPP(1, "Invalid bounding_box format for key: " << key);
       return std::vector<int>();
     }
 
-    // Safely extract and validate all 4 integers
+    std::vector<int> bb_vec;
+    bb_vec.reserve(4);
     for (size_t i = 0; i < 4; ++i)
     {
       if (!box_array[i].is_number_integer())
@@ -113,13 +128,9 @@ static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const st
         RLOG_CPP(1, "Non-integer value in bounding box at index " << i);
         return std::vector<int>();
       }
+      bb_vec.push_back(box_array[i].get<int>());
     }
 
-    std::vector<int> bb_vec;
-    bb_vec.push_back(box_array[0].get<int>());
-    bb_vec.push_back(box_array[1].get<int>());
-    bb_vec.push_back(box_array[2].get<int>());
-    bb_vec.push_back(box_array[3].get<int>());
     return bb_vec;
   }
   catch (const std::exception& e)
@@ -128,6 +139,61 @@ static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const st
     return std::vector<int>();
   }
 }
+
+
+
+
+// static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const std::string& key)
+// {
+//   try
+//   {
+//     RLOG_CPP(0, "A: key is " << key << " entry is " << entry.dump(2));
+
+//     // Check if key exists and is structured correctly
+//     if (!entry.contains(key) || !entry.at(key).contains("bounding_box"))
+//     {
+//       std::cerr << "Missing key or bounding box: " << key << std::endl;
+//       return std::vector<int>();
+//     }
+//     RLOG_CPP(0, "B: key is " << key << " entry is " << entry.dump(2));
+
+//     // if (!entry.at(key).contains("bounding_box"))
+//     // {
+//     //   std::cerr << "Missing bounding box: " << key << std::endl;
+//     //   return std::vector<int>();
+//     // }
+
+
+//     const auto& box_array = entry.at(key).at("bounding_box");
+//     if (!box_array.is_array() || box_array.size() != 4)
+//     {
+//       RLOG_CPP(1, "Invalid bounding_box format for key: " << key);
+//       return std::vector<int>();
+//     }
+
+//     // Safely extract and validate all 4 integers
+//     for (size_t i = 0; i < 4; ++i)
+//     {
+//       if (!box_array[i].is_number_integer())
+//       {
+//         RLOG_CPP(1, "Non-integer value in bounding box at index " << i);
+//         return std::vector<int>();
+//       }
+//     }
+
+//     std::vector<int> bb_vec;
+//     bb_vec.push_back(box_array[0].get<int>());
+//     bb_vec.push_back(box_array[1].get<int>());
+//     bb_vec.push_back(box_array[2].get<int>());
+//     bb_vec.push_back(box_array[3].get<int>());
+//     return bb_vec;
+//   }
+//   catch (const std::exception& e)
+//   {
+//     RLOG_CPP(1, "Exception while parsing bounding box: " << e.what());
+//     return std::vector<int>();
+//   }
+// }
 
 
 typedef enum
@@ -888,29 +954,33 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
   // corrMap[3] = -1
   // corrMap[4] = -1
   //
-  // The running index denots the skeleton, the corrMap index is the pose id
+  // The running index denotes the skeleton, the corrMap index is the pose id
   // of the incoming json string matching the corresponding pose.
   std::vector<int> corrMap = findCorrespondences(markerMap);
 
   for (size_t i=0; i<corrMap.size(); ++i)
   {
-    if (corrMap[i] != -1)
+    if (corrMap[i] == -1)
     {
-      skeletons[i]->lastUpdate = time;
-      skeletons[i]->markers = markerMap[corrMap[i]];
-
-      if (jsonHeader.contains("frame_id"))
-      {
-        skeletons[i]->bb_head.x_min = boundingBoxMap[corrMap[i]][0];
-        skeletons[i]->bb_head.y_min = boundingBoxMap[corrMap[i]][1];
-        skeletons[i]->bb_head.x_max = boundingBoxMap[corrMap[i]][2];
-        skeletons[i]->bb_head.y_max = boundingBoxMap[corrMap[i]][3];
-        skeletons[i]->bb_head.camera = jsonHeader["frame_id"];
-      }
-
+      continue;
     }
 
-    NLOG(0, "corrMap[%zu] = %d", i, corrMap[i]);
+    skeletons[i]->lastUpdate = time;
+    skeletons[i]->markers = markerMap[corrMap[i]];
+
+    if (jsonHeader.contains("frame_id") && !boundingBoxMap.empty())
+    {
+      auto it = boundingBoxMap.find(corrMap[i]);
+      if (it != boundingBoxMap.end() && (it->second.size()>=4))
+      {
+        skeletons[i]->bb_head.x_min = it->second[0];
+        skeletons[i]->bb_head.y_min = it->second[1];
+        skeletons[i]->bb_head.x_max = it->second[2];
+        skeletons[i]->bb_head.y_max = it->second[3];
+        skeletons[i]->bb_head.camera = jsonHeader["frame_id"];
+      }
+    }
+
   }
 
 }
