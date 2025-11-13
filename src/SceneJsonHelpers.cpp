@@ -135,7 +135,7 @@ void getSceneState(nlohmann::json& stateJson,
 
     if (bodyColor == "unknown")
     {
-      RLOG_CPP(1, "Couldn't find color for entity " << e.name);
+      RLOG_CPP(3, "Couldn't find color for entity " << e.name);
     }
 
     entityJson["name"] = e.name;

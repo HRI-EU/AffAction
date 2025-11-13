@@ -110,7 +110,8 @@ public:
    *         function thus returns: x = 1-y/175, or x = 1-y/0.175 since the
    *         fingerTipDistance is given in meters
    */
-  std::vector<double> fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const;
+  std::vector<double> fingerAnglesFromFingerTipDistance(const RcsGraph* graph,
+                                                        double fingerTipDistanceInMeters) const;
 
   /*! \brief For a given AffordanceEntity, the function returns the
    *         manipulator's capability and the entitie's affordance

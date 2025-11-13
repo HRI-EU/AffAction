@@ -312,7 +312,8 @@ const RcsBody* Manipulator::getBaseJointBody(const RcsGraph* graph) const
   return baseBdy;
 }
 
-std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double fingerTipDistanceInMeters) const
+std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(const RcsGraph* graph,
+                                                                   double fingerTipDistanceInMeters) const
 {
   if (isOfType("ROBOTIQ-2F140"))
   {
@@ -322,6 +323,14 @@ std::vector<double> Manipulator::fingerAnglesFromFingerTipDistance(double finger
     // 140 -> 0
     // 0 -> RCS_DEG2RAD(40)
     return std::vector<double>(1, RCS_DEG2RAD(40.0)*(1.0-fingerTipDistanceInMeters/0.14));
+  }
+  else if (isOfType("allegro_left"))
+  {
+    return getFingerAnglesFromModelState(graph, "pincer_grasp_left");
+  }
+  else if (isOfType("allegro_right"))
+  {
+    return getFingerAnglesFromModelState(graph, "pincer_grasp_right");
   }
 
   return std::vector<double>(3, 1.0-fingerTipDistanceInMeters/0.175);

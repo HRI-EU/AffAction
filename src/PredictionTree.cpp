@@ -54,7 +54,7 @@
 static double defaultTurboDurationScale = TURBO_DURATION_SCALER;
 
 // No action is shorter than this
-#define MINIMUM_ACTION_DURATION (3.0)
+#define MINIMUM_ACTION_DURATION (5.0)
 
 
 namespace aff

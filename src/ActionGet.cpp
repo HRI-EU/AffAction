@@ -467,8 +467,6 @@ bool ActionGet::initialize(const ActionScene& domain,
   RCHECK(hand);   // Never happens since already checked in constructor
 
   // Initialize hand open and close with defaults. We currently update it for the BallGrasp
-  // handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);
-  // handClosed = std::vector<double>(hand->getNumFingers(), fingersClosed);
   handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
   handClosed = hand->getFingerAnglesFromModelState(graph, "close_fingers");
 
@@ -492,7 +490,8 @@ bool ActionGet::initialize(const ActionScene& domain,
     BallGraspable* bg = dynamic_cast<BallGraspable*>(winningAff);
     //handOpen = std::vector<double>(hand->getNumFingers(), fingersOpen);//fingersHalfClosed);
     handOpen = hand->getFingerAnglesFromModelState(graph, "open_fingers");
-    handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*bg->radius);
+    handClosed = hand->fingerAnglesFromFingerTipDistance(graph, 2.0*bg->radius);
+    //handClosed = hand->getFingerAnglesFromModelState(graph, "close_fingers");
     graspType = GraspType::BallGrasp;
     const double* pt = bg->getFrame(graph)->A_BI.org;
     I_graspPoint = std::vector<double>(pt, pt+3);
@@ -501,7 +500,7 @@ bool ActionGet::initialize(const ActionScene& domain,
   else if (dynamic_cast<TwistGraspable*>(winningAff))   // This is true for Twistables as well
   {
     TwistGraspable* tg = dynamic_cast<TwistGraspable*>(winningAff);
-    handClosed = hand->fingerAnglesFromFingerTipDistance(2.0*tg->radius);
+    handClosed = hand->fingerAnglesFromFingerTipDistance(graph, 2.0*tg->radius);
     graspType = GraspType::TopGrasp;
   }
   else if (dynamic_cast<CircularGraspable*>(winningAff))
