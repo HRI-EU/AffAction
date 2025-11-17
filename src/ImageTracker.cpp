@@ -92,8 +92,6 @@ void ImageTracker::parse(const nlohmann::json& header, const nlohmann::json& dat
       return;
     }
 
-
-
     // Serialize image JSON
     int stamp = header.at("seq").get<int>();
     std::string image_str = data.dump();
@@ -232,10 +230,16 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene,
   for (const auto& v : vertices)
   {
     // We assume that the camera is oriented with x pointing forward, and z
-    // pointing up
+    // pointing up. Here, we rotate it such that z points outwards, y points
+    // downwards, and y points right.
     double x_std = -v[1];  // Y
     double y_std = -v[2];  // Z
     double z_std =  v[0];  // X
+    //RLOG(0, "VERTEX: %f %f %f", x_std, y_std, z_std);
+
+    x_std = v[0];
+    y_std = v[1];
+    z_std = v[2];
 
     // Convert to image coordinates using pinhole model
     double x = phCam.fx * (x_std / z_std) + phCam.cx;

@@ -128,7 +128,11 @@ def crop_bbox(img, bbox, margin=0, clip=True, round_coords=True, inclusive_max=F
         x1 = max(0, x1); y1 = max(0, y1)
         x2 = min(w, x2); y2 = min(h, y2)
     if x2 <= x1 or y2 <= y1:
-        raise ValueError(f"Invalid bbox after processing: {(x1,y1,x2,y2)}")
+        logger.warning(f"Invalid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
+        return img.copy()
+        raise ValueError(f"Invalid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
+
+    logger.warning(f"Valid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
     return img[y1:y2, x1:x2].copy()
 
 def resize_min_dim(img, target_min=160):
@@ -222,8 +226,10 @@ def main():
     sim_manager = SimulatorManager(scene="g_attentive_support.xml")
     sim_manager.setup("build")
     sim = sim_manager.sim
-    sim.addComponentArgument("-virtual_image_tracking -virtual_image_tracking.width 640 -virtual_image_tracking.height 480 -virtual_image_tracking.camera_type AzureKinect_WFOV")
-    sim.addLandmarkRouter(camera_name="camera_0")
+    #sim.addComponentArgument("-virtual_image_tracking -virtual_image_tracking.width 640 -virtual_image_tracking.height 480 -virtual_image_tracking.camera_type AzureKinect_WFOV")
+    sim.addComponentArgument("-image_tracking -skeleton_tracking -aruco_tracking ")
+    #sim.addLandmarkRouter(camera_name="camera_0")
+    sim.addLandmarkRouter(camera_name="azure_kinect_rgb_frame2")
     sim.init(True)
     sim.callEvent("Start")
     sim.callEvent("Process")
