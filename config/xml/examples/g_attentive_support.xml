@@ -65,6 +65,10 @@
   <Body name="azure_kinect_rgb_frame" prev="camera_0" transform="0 -0.032 0.0195 -90 90 0" >
     <Shape type="FRAME" scale="0.03" />
   </Body>
+
+  <Body name="azure_kinect_rgb_frame2" prev="aruco_base" rigid_body_joints="0 -0.032 0.0195 -90 90 0" >
+    <Shape type="FRAME" scale="0.03" />
+  </Body>
   
   <Body name="azure_kinect_depth_frame" prev="camera_0" transform="0 0 0.0195 -90 90 0" >
     <Shape type="FRAME" scale="0.03" />
