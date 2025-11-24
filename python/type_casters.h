@@ -27,7 +27,6 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
-
 #ifndef SRC_TYPE_CASTERS_H_
 #define SRC_TYPE_CASTERS_H_
 
@@ -136,14 +135,7 @@ public:
   /**
    * Function signature for documentation
    */
-#if PYBIND11_VERSION_MINOR >= 3
   static constexpr auto name = _("MatNd");
-#else
-  static PYBIND11_DESCR name()
-  {
-    return type_descr(_("MatNd"));
-  }
-#endif
 
 
 protected:
