@@ -92,7 +92,7 @@ public:
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
     {
-      RLOG(0, "No data yet received");
+      RLOG(1, "No data yet received");
       return;
     }
 
