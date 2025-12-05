@@ -607,7 +607,12 @@ std::string Manipulator::computeBaseJointName_(const ActionScene* scene,
     jnt = RCSJOINT_BY_ID(graph, jnt->prevId);
   }
 
-  return jnts.back() ? jnts.back()->name : std::string();
+  if (jnts.empty())
+  {
+    return std::string();  // or return {};
+  }
+
+  return jnts.back()->name;
 }
 
 double Manipulator::computeReach(const ActionScene* scene,
