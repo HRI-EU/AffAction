@@ -112,6 +112,7 @@ bool ExampleJointControl::parseArgs(Rcs::CmdLineParser* parser)
                       "(default is %s)", xmlFileName.c_str());
   parser->getArgument("-dir", &configDirectory, "Configuration file directory "
                       "(default is %s)", configDirectory.c_str());
+  parser->getArgument("-noGraphics", &noGraphics, "Run without graphics window (default: off)");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -170,6 +171,11 @@ bool ExampleJointControl::initAlgo()
 
 bool ExampleJointControl::initGraphics()
 {
+  if (noGraphics)
+  {
+    return true;
+  }
+
   auto syncMode = blockingMainThread ? GraphicsWindow::SyncMode::External : GraphicsWindow::SyncMode::Threaded;
   viewer = new GraphicsWindow(&entity, syncMode);
   components.push_back(viewer);

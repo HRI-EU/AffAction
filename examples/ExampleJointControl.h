@@ -88,6 +88,7 @@ protected:
   std::string componentArgs;
   std::string renderStringHUD;
 
+  bool noGraphics = false;
   bool blockingMainThread = false;
   double dt = 0.01;
   double tmc = 0.1;
