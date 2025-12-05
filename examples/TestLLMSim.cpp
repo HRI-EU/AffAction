@@ -86,6 +86,8 @@ static int testLLMSim_blocking(int argc, char** argv)
     return -1;
   }
 
+  if (ex->getViewer())
+  {
   ex->getViewer()->setKeyCallback('q', [](char k)
   {
     RLOG(0, "Quitting");
@@ -95,6 +97,7 @@ static int testLLMSim_blocking(int argc, char** argv)
       QCoreApplication::quit();
     }, Qt::QueuedConnection);
   }, "Quit");
+  }
 
   QApplication app(argc, argv);
   std::setlocale(LC_ALL, "C");
