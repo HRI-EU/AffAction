@@ -1057,7 +1057,19 @@ bool ExampleActionsECS::initGraphics()
 
     auto scene = getScene();
     auto om = scene->getOccupiedManipulators(getGraph());
-    RLOG_CPP(0, "Found " << om.size() << " occupied manipulators");
+
+    // Erase all Manipulators that are not a hand
+    auto it = om.begin();
+    while (it != om.end())
+    {
+      if ((*it)->getNumFingers() == 0)
+      {
+        RLOG_CPP(0, "ERASING " << (*it)->name);
+      }
+      it = ((*it)->getNumFingers()==0) ? om.erase(it) : it + 1;
+    }
+
+    RLOG_CPP(0, "Found " << om.size() << " occupied hands");
 
     if (om.empty())
     {

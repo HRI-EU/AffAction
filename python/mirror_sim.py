@@ -128,11 +128,8 @@ def crop_bbox(img, bbox, margin=0, clip=True, round_coords=True, inclusive_max=F
         x1 = max(0, x1); y1 = max(0, y1)
         x2 = min(w, x2); y2 = min(h, y2)
     if x2 <= x1 or y2 <= y1: 
-        logger.warning(f"Invalid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
-        return img.copy()
+        #return img.copy()
         raise ValueError(f"Invalid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
-
-    #logger.warning(f"Valid bbox after processing: ({x1},{y1},{x2},{y2}). h={h} w={w}")
     return img[y1:y2, x1:x2].copy()
 
 def resize_min_dim(img, target_min=160):

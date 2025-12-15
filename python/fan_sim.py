@@ -135,9 +135,9 @@ def main():
     global sim   # For interactive console needed
     sim = sim_manager.sim
     sim.init(True)
-    sim.addVirtualCamera("camera_0", 320, 240)
-    sim.addVirtualCamera("camera_1", 320, 240)
-    sim.addVirtualCamera("camera_2", 320, 240)
+    sim.addVirtualCamera("camera_0", "AzureKinect_WFOV", 320, 240)
+    sim.addVirtualCamera("camera_1", "AzureKinect_WFOV", 320, 240)
+    sim.addVirtualCamera("camera_2", "AzureKinect_WFOV", 320, 240)
     sim.callEvent("Start")
     sim.callEvent("Process")
 
