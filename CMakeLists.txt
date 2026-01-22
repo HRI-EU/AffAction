@@ -29,11 +29,11 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ################################################################################
-CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 IF (APPLE)
   CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
-  CMAKE_POLICY(SET CMP0142 NEW)   # Skip duplicate build type library paths 
+  CMAKE_POLICY(SET CMP0142 NEW)   # Skip duplicate build type library paths
 ENDIF(APPLE)
 
 SET(BST_INSTALL_CATEGORY Libraries)

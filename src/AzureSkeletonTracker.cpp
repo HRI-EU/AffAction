@@ -1031,7 +1031,10 @@ std::vector<int> AzureSkeletonTracker::findCorrespondences(std::map<int, std::ve
       const double* pelvisMemorizedPos = (skeletons[poseIdx]->isVisible) ? pelvisPreviousPos : pelvisDefaultPos;
 
       // This can also be a better distance function if needed.
-      double dist = Vec3d_distance(pelvisMemorizedPos, pelvisCurrentPos);
+      // double dist = Vec3d_distance(pelvisMemorizedPos, pelvisCurrentPos);
+
+      // This is the 2d projected distance, ignoring pelvis height
+      double dist = sqrt(VecNd_sqrDiff(pelvisMemorizedPos, pelvisCurrentPos, 2));
       MatNd_set(dMat, frameIdx, poseIdx, dist);
     }
 

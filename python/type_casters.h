@@ -27,6 +27,7 @@
  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
+
 #ifndef SRC_TYPE_CASTERS_H_
 #define SRC_TYPE_CASTERS_H_
 

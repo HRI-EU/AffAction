@@ -88,15 +88,15 @@ static int testLLMSim_blocking(int argc, char** argv)
 
   if (ex->getViewer())
   {
-  ex->getViewer()->setKeyCallback('q', [](char k)
-  {
-    RLOG(0, "Quitting");
-    QMetaObject::invokeMethod(qApp, []()
+    ex->getViewer()->setKeyCallback('q', [](char k)
     {
-      qDebug() << "Quitting from thread:" << QThread::currentThread();
-      QCoreApplication::quit();
-    }, Qt::QueuedConnection);
-  }, "Quit");
+      RLOG(0, "Quitting");
+      QMetaObject::invokeMethod(qApp, []()
+      {
+        qDebug() << "Quitting from thread:" << QThread::currentThread();
+        QCoreApplication::quit();
+      }, Qt::QueuedConnection);
+    }, "Quit");
   }
 
   QApplication app(argc, argv);

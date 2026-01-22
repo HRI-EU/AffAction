@@ -113,12 +113,14 @@ public:
 
     runLoop = false;
 
+    RLOG(1, "Stopping command sender thread");
     if (send_thread.joinable())
     {
       send_thread.join();
       RLOG(0, "Joined socket send thread");
     }
 
+    RLOG(1, "Stopping feedback receiver thread");
     if (recv_thread.joinable())
     {
       recv_thread.join();
@@ -245,6 +247,7 @@ protected:
       loopCount++;
     }   // while ...
 
+    RLOG(1, "Finished sendThreadFunc() runLoop - now sending termination message");
 
 
     // Before we quit the command sender thread, we sened a final quit command

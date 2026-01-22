@@ -191,7 +191,7 @@ private:
         qd = recv_json["velocity"].get<std::vector<double>>();
       }
 
-      if ((q.size()==2) && (qd.size()==2))
+      if ((q.size()==jntNameIdPairs.size()) && (qd.size()==jntNameIdPairs.size()))
       {
         std::lock_guard<std::mutex> lock(this->recvMtx);
         this->jointPosition = q;

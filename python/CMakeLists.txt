@@ -39,6 +39,7 @@ ENDIF(WIN32)
 
 IF (EXISTS "${PYBIND_DIR_HINT}" AND IS_DIRECTORY "${PYBIND_DIR_HINT}")
 
+  FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
   MESSAGE(STATUS "pybind11 found - creating python wrapper")
   ADD_SUBDIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}/../../pybind11" "${CMAKE_BINARY_DIR}/pybind11")
   SET(MODULE_SRCS module.cpp)
@@ -55,41 +56,9 @@ IF (EXISTS "${PYBIND_DIR_HINT}" AND IS_DIRECTORY "${PYBIND_DIR_HINT}")
   TARGET_LINK_LIBRARIES(pyPushT PUBLIC AffAction)
   TARGET_INCLUDE_DIRECTORIES(pyPushT SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
 
-
-  # Setup site-packages link for python build mode. This has issues if you don't have write permissions
-  OPTION(SETUP_PYTHON_DEVEL "Add the build output dir to the pythonpath")
-  IF (SETUP_PYTHON_DEVEL)
-    # Find site-packages dir
-    EXECUTE_PROCESS(
-        COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"
-        OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    SET(RCSPYSIM_PTH "${PYTHON_SITE_PACKAGES_DIR}/rcspysim.pth")
-  
-    MESSAGE(STATUS "-- Linking output directory onto python path")
-    FILE(WRITE "${RCSPYSIM_PTH}" "\
-${LIBRARY_OUTPUT_PATH}
-${CMAKE_SOURCE_DIR}/src/python")
-
-  ENDIF(SETUP_PYTHON_DEVEL)
-
 ELSE()
 
-  SET(PYBIND_DIR_HINT_ROS "/opt/ros/galactic/share/cmake/pybind11")
-  FIND_PACKAGE(pybind11 CONFIG HINTS ${PYBIND_DIR_HINT_ROS})
-
-  IF (pybind11_FOUND)
-    MESSAGE(STATUS "pybind11 found - creating python wrapper")
-    # The link-time optimization has an internal error when used from ToolBos, so disable it.
-    PYBIND11_ADD_MODULE(pyAffaction module.cpp)
-    TARGET_COMPILE_DEFINITIONS(pyAffaction PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-    TARGET_LINK_LIBRARIES(pyAffaction PUBLIC AffAction)
-    # Mark pybind11 include dirs as system to supress warnings in pybind11 code
-    TARGET_INCLUDE_DIRECTORIES(pyAffaction SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
-ELSE(pybind11_FOUND) 
   MESSAGE(STATUS "pybind11 not found - skipping python wrapper")
-  ENDIF(pybind11_FOUND)
   
 ENDIF()
 

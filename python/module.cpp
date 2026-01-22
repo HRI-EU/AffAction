@@ -698,6 +698,7 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("stop", &aff::ExampleActionsECS::stop)
   .def("isRunning", &aff::ExampleActionsECS::isRunning)
   .def("addComponentArgument", &aff::ExampleActionsECS::addComponentArgument)
+  .def("cleanup", &aff::ExampleActionsECS::cleanup)
 
   //////////////////////////////////////////////////////////////////////////////
   // Scales the durations of actions (global scope)

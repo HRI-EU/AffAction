@@ -51,6 +51,8 @@ IKComponent::IKComponent(EntityBase* parent, Rcs::ControllerBase* controller_,
   collisionCheck(true), applySpeedAndAccLimits(true)
 {
   this->draggerTorque = MatNd_create(1, controller->getGraph()->dof);   // largest possible alloc
+  MatNd_reshape(this->draggerTorque, 1, controller->getGraph()->nJ);
+
   switch (ik)
   {
     case RMR:

@@ -76,7 +76,13 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& c
   lastUpdateTime(0.0), mesh(nullptr), landmarks(nullptr), viewer(nullptr),
   faceName(nameOfFaceBody), agentName(nameOfAgent)
 {
-  std::string meshFile = Rcs::getAbsoluteFileName("hri_scitos_description/FaceMesh-holes-478.obj");
+
+  std::vector<std::string> candidates = {
+    "hri_scitos_description/FaceMesh-holes-478.obj",
+    "hri_description/meshes/FaceMesh-holes-478.obj"
+  };
+
+  std::string meshFile = Rcs::getAbsoluteFileName(candidates);
   this->mesh = RcsMesh_createFromFile(meshFile.c_str());
   if (!this->mesh)
   {

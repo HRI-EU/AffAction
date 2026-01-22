@@ -278,6 +278,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   singleThreaded = false;
   verbose = true;
   processingAction = false;
+  runFunctionRunning= false;
   turbo = true;
   earlyExitAction = true;
 
@@ -304,23 +305,46 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
 
 ExampleActionsECS::~ExampleActionsECS()
 {
+  cleanup();
+}
+
+void ExampleActionsECS::cleanup()
+{
   stop();
+
+  while (runFunctionRunning)
+  {
+    Timer_waitDT(0.1);
+  }
+
+  RLOG(1, "Run function finished");
 
   for (size_t i = 0; i < hwc.size(); ++i)
   {
-    RLOG_CPP(5, "Deleting hardware component " << i);
+    RLOG_CPP(1, "Deleting hardware component " << i);
     delete hwc[i];
   }
+  hwc.clear();
 
   for (size_t i = 0; i < components.size(); ++i)
   {
-    RLOG_CPP(5, "Deleting component " << i << ": " << components[i]->getName());
+    RLOG_CPP(1, "Deleting component " << i << ": " << components[i]->getName());
     delete components[i];
   }
+  components.clear();
 
   Rcs_removeResourcePath(configDirectory.c_str());
-  RcsGraph_destroy(graphToInitializeWith);
-  RLOG_CPP(5, "Done deleting ExampleActionsECS");
+  RcsGraph_destroy(this->graphToInitializeWith);
+  this->graphToInitializeWith = nullptr;
+
+  this->viewer = nullptr;
+  this->actionC = nullptr;
+  this->graphC = nullptr;
+  this->trajC = nullptr;
+  this->ikc = nullptr;
+  this->textGui = nullptr;
+
+  RLOG_CPP(1, "Done deleting ExampleActionsECS");
 }
 
 bool ExampleActionsECS::initParameters()
@@ -1299,6 +1323,7 @@ void ExampleActionsECS::run()
   // Start all threads of components. This has already been published during
   // the entitie's initialize() method in the initAlgo() method. This Start
   // event takes carea about all components that have been added later.
+  this->runFunctionRunning = true;
   entity.publish("Start");
   entity.process();
 
@@ -1307,10 +1332,14 @@ void ExampleActionsECS::run()
     step();
   }
 
+  RLOG(1, "Quitting run loop");
+
   // The runLoop is ended with ExampleBase::stop(). We still need to call each
   // component's stop event.
   entity.publish("Stop");
   entity.process();
+  this->runFunctionRunning = false;
+  RLOG(1, "Returning from run() after stopping with events");
 }
 
 void ExampleActionsECS::step()

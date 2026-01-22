@@ -39,7 +39,6 @@
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
 #include <Rcs_math.h>
-#include <Rcs_dynamics.h>
 #include <Rcs_utilsCPP.h>
 
 #include <mutex>
@@ -49,54 +48,46 @@
 namespace aff
 {
 
-
-class FrankaComponent : public ComponentBase, public RoboNetworkInterface
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class CubemarsComponent : public ComponentBase, public RoboNetworkInterface
 {
 public:
-  FrankaComponent(EntityBase* parent,
-                  double dt_commands,
-                  std::string suffix,
-                  std::string otherRecv,
-                  std::string otherSend)
+  CubemarsComponent(EntityBase* parent,
+                    double dt_commands,
+                    std::string suffix="",
+                    std::string otherRecv="tcp://localhost:40028",
+                    std::string otherSend="tcp://localhost:40029")
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint1"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint2"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint3"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint4"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint5"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint6"+suffix));
-    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint7"+suffix));
-
-    baseFtsName = "fts_base_" + suffix;
-    eeFtsName = "fts_ee_" + suffix;
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_pan_joint"+suffix));
+    //jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_tilt_joint"+suffix));
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);
-    subscribe("UpdateGraph", &FrankaComponent::onUpdateGraph);
-    subscribe("SetJointCommand", &FrankaComponent::onSetJointPosition);
-    subscribe("InitFromState", &FrankaComponent::onInitFromState);
-    subscribe("EmergencyStop", &FrankaComponent::onEmergencyStop);
-    subscribe("EmergencyRecover", &FrankaComponent::onEmergencyRecover);
-    subscribe("EnableCommands", &FrankaComponent::onEnableCommands);
+    subscribe("UpdateGraph", &CubemarsComponent::onUpdateGraph);
+    subscribe("SetJointCommand", &CubemarsComponent::onSetJointPosition);
+    subscribe("InitFromState", &CubemarsComponent::onInitFromState);
+    subscribe("EmergencyStop", &CubemarsComponent::onEmergencyStop);
+    subscribe("EmergencyRecover", &CubemarsComponent::onEmergencyRecover);
+    subscribe("EnableCommands", &CubemarsComponent::onEnableCommands);
 
     RLOG(0, "Done constructor");
   }
 
-  ~FrankaComponent()
+  ~CubemarsComponent()
   {
   }
 
   void onUpdateGraph(RcsGraph* graph)
   {
-    std::vector<double> jntPosTmp, jntVelTmp, wrench_base, wrench_ee;
+    std::vector<double> jntPosTmp, jntVelTmp;
 
     {
       std::lock_guard<std::mutex> lock(this->recvMtx);
       jntPosTmp = this->jointPosition;
       jntVelTmp = this->jointVelocity;
-      wrench_base = this->wrench_in_base;
-      wrench_ee = this->wrench_in_ee;
     }
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
@@ -105,33 +96,13 @@ public:
       return;
     }
 
-    // Update joint angles and velocities
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
-      RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph",
+      RCHECK_MSG(jnt, "Robot joint '%s' not found in graph",
                  jntNameIdPairs[i].jointName.c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
       MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
-    }
-
-    // Update virtual force sensors
-    if (!wrench_base.empty())
-    {
-      RcsSensor* s = RcsGraph_getSensorByName(graph, baseFtsName.c_str());
-      if (s && s->type==RCSSENSOR_LOAD_CELL)
-      {
-        VecNd_copy(s->rawData->ele, wrench_base.data(), 6);
-      }
-    }
-
-    if (!wrench_ee.empty())
-    {
-      RcsSensor* s = RcsGraph_getSensorByName(graph, eeFtsName.c_str());
-      if (s && s->type==RCSSENSOR_LOAD_CELL)
-      {
-        VecNd_copy(s->rawData->ele, wrench_ee.data(), 6);
-      }
     }
 
   }
@@ -145,23 +116,23 @@ private:
       return;
     }
 
-    std::vector<double> q7(jntNameIdPairs.size());
+    std::vector<double> q_des_vec(jntNameIdPairs.size());
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
       RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
                  jntNameIdPairs[i].jointName.c_str());
-      q7[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
+      q_des_vec[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
     }
 
     std::lock_guard<std::mutex> lock(cmdMtx);
-    this->jointCommands = q7;
+    jointCommands = q_des_vec;
   }
 
   void onInitFromState(const RcsGraph* target)
   {
-    RLOG(0, "FrankaComponent::onInitFromState()");
+    RLOG(0, "CubemarsComponent::onInitFromState()");
     onSetJointPosition(target->q);
-    this->jointCommandsPrev = this->jointCommands;
+    jointCommandsPrev = jointCommands;
 
     for (size_t i = 0; i < jntNameIdPairs.size(); ++i)
     {
@@ -176,7 +147,7 @@ private:
   {
     if (this->eStop == false)
     {
-      RLOG(0, "FrankaComponent::EmergencyStop");
+      RLOG(0, "CubemarsComponent::EmergencyStop");
     }
 
     this->eStop = true;
@@ -185,7 +156,7 @@ private:
 
   void onEmergencyRecover()
   {
-    RLOG(0, "FrankaComponent::EmergencyRecover");
+    RLOG(0, "CubemarsComponent::EmergencyRecover");
     this->eStop = false;
     enableCommands = true;
   }
@@ -206,9 +177,9 @@ private:
       recv_json = nlohmann::json::parse(recv_msg);
 
       // If successful, process the parsed JSON data
-      RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
+      RLOG_CPP(1, "Parsed joint angles: " << recv_json.dump(4));
 
-      std::vector<double> q, qd, tor, wrench_base, wrench_ee;
+      std::vector<double> q, qd;
 
       if (recv_json.contains("position"))
       {
@@ -220,29 +191,11 @@ private:
         qd = recv_json["velocity"].get<std::vector<double>>();
       }
 
-      if (recv_json.contains("torque"))
-      {
-        tor = recv_json["torque"].get<std::vector<double>>();
-      }
-
-      if (recv_json.contains("wrench_in_base"))
-      {
-        wrench_base = recv_json["wrench_in_base"].get<std::vector<double>>();
-      }
-
-      if (recv_json.contains("wrench_in_ee"))
-      {
-        wrench_ee = recv_json["wrench_in_ee"].get<std::vector<double>>();
-      }
-
-      if ((q.size()==7) && (qd.size()==7) && (tor.size()==7))
+      if ((q.size()==jntNameIdPairs.size()) && (qd.size()==jntNameIdPairs.size()))
       {
         std::lock_guard<std::mutex> lock(this->recvMtx);
         this->jointPosition = q;
         this->jointVelocity = qd;
-        this->jointTorque = tor;
-        this->wrench_in_base = wrench_base;
-        this->wrench_in_ee = wrench_ee;
         membersInitialized = true;
       }
 
@@ -267,14 +220,14 @@ private:
 
     nlohmann::json payload =
     {
-      {"robot_name", "my little robot"},
+      {"robot_name", "Cubemars"},
       {"timestamp",  Timer_getSystemTime()},
       {"actuators", nlohmann::json::array()},
       {"quit", false}
     };
 
     auto& acts = payload["actuators"];
-    for (int i = 0; i < 7; ++i)
+    for (int i = 0; i < jointCommands.size(); ++i)
     {
       acts.push_back(
       {
@@ -306,9 +259,7 @@ private:
   bool enableCommands = false;
   bool eStop = false;
   std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
-  std::string baseFtsName, eeFtsName;
-  std::vector<double> jointPosition, jointVelocity, jointTorque;
-  std::vector<double> wrench_in_base, wrench_in_ee;
+  std::vector<double> jointPosition, jointVelocity;
   std::vector<double> jointCommands, jointCommandsPrev;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;

@@ -42,6 +42,7 @@
 #include "FaceGestureComponent.h"
 #include "PW70Component.h"
 #include "PW70ZmqComponent.hpp"
+#include "CubemarsZmqComponent.hpp"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
 #include "FrankaComponent.hpp"
@@ -375,14 +376,19 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     argP.addDescription("-jacoGen2_7_Zmq_right", "Start with Jaco Gen2 7-dof right");
     argP.addDescription("-jacoGen2_7_Zmq_left", "Start with Jaco7 left");
     argP.addDescription("-jacoGen2_6_Zmq", "Start with Jaco6");
+    argP.addDescription("-jacoGen2_7_Zmq_right.ip", "Jaco Gen2 7-dof right ip address (Default: localhost)");
+    argP.addDescription("-jacoGen2_7_Zmq_left.ip", "Jaco7 left ip address (Default: localhost)");
+    argP.addDescription("-jacoGen2_6_Zmq.ip", "Jaco6 ip address (Default: localhost)");
   }
   else
   {
     if (getKey(argvStrVec, "-jacoGen2_7_Zmq_right"))
     {
       const double dt_commands = 0.02;
-      std::string otherRecv="tcp://localhost:40020";
-      std::string otherSend="tcp://localhost:40021";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_right.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40020";
+      std::string otherSend="tcp://" + other_ip + ":40021";
       ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
       components.push_back(c);
     }
@@ -390,8 +396,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen2_7_Zmq_left"))
     {
       const double dt_commands = 0.02;
-      std::string otherRecv="tcp://localhost:40022";
-      std::string otherSend="tcp://localhost:40023";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_left.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40022";
+      std::string otherSend="tcp://" + other_ip + ":40023";
       ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
       components.push_back(c);
     }
@@ -399,8 +407,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen2_6_Zmq"))
     {
       const double dt_commands = 0.02;
-      std::string otherRecv="tcp://localhost:40018";
-      std::string otherSend="tcp://localhost:40019";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_left.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40018";
+      std::string otherSend="tcp://" + other_ip + ":40019";
       ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco6", "", otherRecv, otherSend);
       components.push_back(c);
     }
@@ -414,6 +424,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     argP.addDescription("-pw70_tilt_joint_name", "Name of PW70 pan joint (default: empty string)");
     argP.addDescription("-pw70_control_frequency", "PW70 PTU control frequency (Must be 1, 10, 25, 50 or 100. Default: 50)");
     argP.addDescription("-pw70_vel", "Start with PW70 PTU in velocity mode");
+    argP.addDescription("-pw70_zmq", "Start with PW70 PTU client connecting through zmq");
+    argP.addDescription("-pw70_zmq.ip", "For -pw70_zmq option only: PW70 ip address (Default: localhost)");
   }
   else
   {
@@ -430,26 +442,38 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     else if (getKey(argvStrVec, "-pw70_zmq"))
     {
       const double dt_commands = 0.02;
-      components.push_back(new PW70ZmqComponent(&entity, dt_commands));
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-pw70_zmq.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40006";
+      std::string otherSend="tcp://" + other_ip + ":40007";
+      components.push_back(new PW70ZmqComponent(&entity, dt_commands, "", otherRecv, otherSend));
     }
   }
 
   if (dryRun)
   {
     argP.addDescription("-jacoGen3Zmq_left", "Start with Kinova Kortex component (left arm)");
+    argP.addDescription("-jacoGen3Zmq_left.ip", "Kinova Kortex server ip (left arm, default: localhost)");
     argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component (right arm)");
+    argP.addDescription("-jacoGen3Zmq_right.ip", "Kinova Kortex server ip (right arm, default: localhost)");
     argP.addDescription("-frankaZmq_left", "Start with Franka component (left arm)");
+    argP.addDescription("-frankaZmq_left.ip", "Franka server ip (left arm, default: localhost)");
     argP.addDescription("-frankaZmq_right", "Start with Franka component (right arm)");
+    argP.addDescription("-frankaZmq_right.ip", "Franka server ip (right arm, default: localhost)");
     argP.addDescription("-allegroZmq_left", "Start with Allegro component (left hand)");
+    argP.addDescription("-allegroZmq_left.ip", "Allegro server ip (left hand, default: localhost)");
     argP.addDescription("-allegroZmq_right", "Start with Allegro component (right hand)");
+    argP.addDescription("-allegroZmq_right.ip", "Allegro server ip (right hand, default: localhost)");
   }
   else
   {
     if (getKey(argvStrVec, "-jacoGen3Zmq_left"))
     {
       std::string suffix = "_left";
-      std::string otherRecv="tcp://localhost:40004";
-      std::string otherSend="tcp://localhost:40005";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq_left.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40004";
+      std::string otherSend="tcp://" + other_ip + ":40005";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv, otherSend));
@@ -458,8 +482,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv="tcp://localhost:40002";
-      std::string otherSend="tcp://localhost:40003";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq_right.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40002";
+      std::string otherSend="tcp://" + other_ip + ":40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv, otherSend));
@@ -468,8 +494,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
     {
       std::string suffix = "";
-      std::string otherRecv="tcp://localhost:40002";
-      std::string otherSend="tcp://localhost:40003";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40002";
+      std::string otherSend="tcp://" + other_ip + ":40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
                                                     otherRecv, otherSend));
@@ -478,8 +506,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-frankaZmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv = "tcp://localhost:40008";
-      std::string otherSend = "tcp://localhost:40009";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_right.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40008";
+      std::string otherSend="tcp://" + other_ip + ":40009";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
                                                     otherRecv, otherSend));
@@ -488,8 +518,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-frankaZmq_left"))
     {
       std::string suffix = "_left";
-      std::string otherRecv="tcp://localhost:40010";
-      std::string otherSend="tcp://localhost:40011";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_left.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40010";
+      std::string otherSend="tcp://" + other_ip + ":40011";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
                                                     otherRecv, otherSend));
@@ -498,8 +530,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-allegroZmq_right"))
     {
       std::string suffix = "_right";
-      std::string otherRecv="tcp://localhost:40012";
-      std::string otherSend="tcp://localhost:40013";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_right.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40012";
+      std::string otherSend="tcp://" + other_ip + ":40013";
       const double dt_commands = 0.02;
       components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
                                                      otherRecv, otherSend));
@@ -508,13 +542,29 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     if (getKey(argvStrVec, "-allegroZmq_left"))
     {
       std::string suffix = "_left";
-      std::string otherRecv="tcp://localhost:40014";
-      std::string otherSend="tcp://localhost:40015";
+      std::string other_ip = "localhost";
+      getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_left.ip", other_ip);
+      std::string otherRecv="tcp://" + other_ip + ":40014";
+      std::string otherSend="tcp://" + other_ip + ":40015";
       const double dt_commands = 0.02;
       components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
                                                      otherRecv, otherSend));
     }
 
+  }
+
+
+  if (dryRun)
+  {
+    argP.addDescription("-cubemars", "Start with Cubemars client connecting through zmq");
+  }
+  else if (getKey(argvStrVec, "-cubemars"))
+  {
+    const double dt_commands = 0.02;
+    std::string other_ip = "localhost";
+    std::string otherRecv="tcp://" + other_ip + ":40028";
+    std::string otherSend="tcp://" + other_ip + ":40029";
+    components.push_back(new CubemarsComponent(&entity, dt_commands, "", otherRecv, otherSend));
   }
 
 #if defined USE_ROS

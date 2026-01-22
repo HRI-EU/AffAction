@@ -123,6 +123,8 @@ public:
   bool isProcessingAction() const;
   void setProcessingAction(bool isProcessing);
 
+  void cleanup();   // Can be called several times, does memory cleanup (used from constructor and py modules)
+
   std::string xmlFileName;
   std::string configDirectory;
   std::vector<ActionResult> lastActionResult;
@@ -174,6 +176,7 @@ protected:
   bool zigzag, singleThreaded;
   unsigned int loopCount;
   std::atomic<bool> processingAction;
+  std::atomic<bool> runFunctionRunning;
 
   GraphicsWindow* viewer;
   ActionComponent* actionC;
