@@ -260,7 +260,7 @@ public:
 
     // Create an instance of PW70CANInterface with the callbacks
     const int frequency = 50;   // 1, 10, 25, 50 or 100
-    this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency, this->dummy_mode);
+    this->pw70 = aff::PW70CANInterface::create(limit_check, position_update, this, frequency, this->dummy_mode ? "" : "can0");
     this->pw70->reset_stop();
 
     // Wait a moment to allow the interface to initialize
@@ -513,8 +513,10 @@ static void initializePan()
 {
   auto pw70 = aff::PW70CANInterface::create();
   std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->reset_stop();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reference_pan();
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  std::this_thread::sleep_for(std::chrono::seconds(15));
 }
 
 /*******************************************************************************
@@ -524,8 +526,32 @@ static void initializeTilt()
 {
   auto pw70 = aff::PW70CANInterface::create();
   std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->reset_stop();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reference_tilt();
   std::this_thread::sleep_for(std::chrono::seconds(5));
+}
+
+/*******************************************************************************
+ *
+ *******************************************************************************/
+static void resetErrors()
+{
+  auto pw70 = aff::PW70CANInterface::create();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->ack_errors();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+/*******************************************************************************
+ *
+ *******************************************************************************/
+static void resetPTU()
+{
+  auto pw70 = aff::PW70CANInterface::create();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  pw70->reset_stop();
+  std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 /*******************************************************************************
@@ -554,8 +580,6 @@ static void movePanTilt(int argc, char** argv)
                       RCS_DEG2RAD(pan_vel_in_deg),
                       RCS_DEG2RAD(tilt_vel_in_deg));
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  pw70->stop();
-  pw70->cleanup();
 }
 
 /*******************************************************************************
@@ -580,6 +604,7 @@ int main(int argc, char** argv)
       printf("\t-m 3   Initialize tilt motor\n");
       printf("\t-m 4   Move to pan and tilt position (in degrees)\n");
       printf("\t-m 5   Reset PTU\n");
+      printf("\t-m 6   Reset errors\n");
       printf("\n");
       argP.print();
       break;
@@ -601,24 +626,18 @@ int main(int argc, char** argv)
       break;
 
     case 5:
-    {
-      auto pw70 = aff::PW70CANInterface::create();
-      std::this_thread::sleep_for(std::chrono::seconds(1));
-      pw70->reset_stop();
-      std::this_thread::sleep_for(std::chrono::seconds(1));
+      resetPTU();
       break;
-    }
 
+    case 6:
+      resetErrors();
+      break;
 
     default:
       RLOG_CPP(0, "No mode " << mode);
   };
 
   RLOG_CPP(0, "Thanks, that's it for mode " << mode);
-
-
-
-
 
   return 0;
 }
