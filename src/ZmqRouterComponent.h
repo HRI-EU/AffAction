@@ -41,6 +41,7 @@
 #include <mutex>
 #include <queue>
 #include <tuple>
+#include <fstream>
 
 
 namespace aff
@@ -57,10 +58,14 @@ public:
 private:
 
   void zmqThreadFunc(const std::string& connection);
+  void fromFileThreadFunc(const std::string& fileName);
   void startZmqThread();
   void stopZmqThread();
   void onSetPerceptionCommand(std::string command, int repetitions);
   void onTriggerPerception(std::string target_id, int repetitions, std::string jsonString);
+  void onStartLogging();
+  void onStopLogging();
+  void onLogToFile(std::string logStr);
 
   std::string connectionStr;
   bool threadRunning;
@@ -68,6 +73,7 @@ private:
   std::thread zmqThread;
   std::mutex commandMtx;
   std::queue<std::tuple<std::string,int,std::string>> commandQueue;
+  std::ofstream logFile;
 };
 
 } // namespace

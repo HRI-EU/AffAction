@@ -44,6 +44,148 @@
 
 #include <mutex>
 
+/*
+Here's the command data for the hands. The tmc and vmax values can be skipped if not needed.
+Positions are in radians.
+{
+    "actuators": [
+        {
+            "id": "joint_1",
+            "index": 0,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.06981317007977311,
+            "type": "joint"
+        },
+        {
+            "id": "joint_2",
+            "index": 1,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_3",
+            "index": 2,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_4",
+            "index": 3,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_5",
+            "index": 4,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_6",
+            "index": 5,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_7",
+            "index": 6,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_8",
+            "index": 7,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_9",
+            "index": 8,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_10",
+            "index": 9,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_11",
+            "index": 10,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_12",
+            "index": 11,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_13",
+            "index": 12,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_14",
+            "index": 13,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_15",
+            "index": 14,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        },
+        {
+            "id": "joint_16",
+            "index": 15,
+            "tmc": 0.1,
+            "vmax": 0.2,
+            "position": 0.03490658503988659,
+            "type": "joint"
+        }
+    ],
+    "quit": false,
+    "robot_name": "my little robot",
+    "timestamp": 1770883111.328081
+}
+
+*/
+
+
 
 
 namespace aff
@@ -55,9 +197,9 @@ class AllegroComponent : public ComponentBase, public RoboNetworkInterface
 public:
   AllegroComponent(EntityBase* parent,
                    double dt_commands,
-                   std::string suffix,//="",
-                   std::string otherRecv,//="tcp://localhost:40012",
-                   std::string otherSend)//="tcp://localhost:40013")
+                   std::string suffix,
+                   std::string otherRecv,
+                   std::string otherSend)
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     RLOG_CPP(1, "suffix: " << suffix << " otherRecv: " << otherRecv << " otherSend: " << otherSend);
@@ -133,10 +275,14 @@ public:
       if (b && b->nShapes>0)
       {
         strcpy(b->shapes[0].color, col.c_str());
-        //RLOG_CPP(1, "pressure " << i << " is: " << col);
       }
     }
 
+  }
+
+  void setWrongThumbMode(bool enable)
+  {
+    this->wrongThumb = enable;
   }
 
 private:
@@ -153,6 +299,7 @@ private:
     {
       RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
                  jntNameIdPairs[i].jointName.c_str());
+
       q[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
     }
 
@@ -237,6 +384,15 @@ private:
           (qd.size()==jntNameIdPairs.size()) &&
           (tor.size()==jntNameIdPairs.size()))
       {
+        if (wrongThumb)
+        {
+          q[12] *= -1.0;
+          q[13] *= -1.0;
+          q[13] += RCS_DEG2RAD(190.0);
+          q[14] *= -1.0;
+          q[15] *= -1.0;
+        }
+
         std::lock_guard<std::mutex> lock(this->recvMtx);
         this->jointPosition = q;
         this->jointVelocity = qd;
@@ -278,12 +434,27 @@ private:
     auto& acts = payload["actuators"];
     for (int i = 0; i < jointCommands.size(); ++i)
     {
+      double q_des_i = this->jointCommands[i];
+
+      if (wrongThumb)
+      {
+        if (i==12 || i==14 || i==15)
+        {
+          q_des_i *= -1.0;
+        }
+        else if (i==13)
+        {
+          q_des_i -= RCS_DEG2RAD(190.0);
+          q_des_i *= -1.0;
+        }
+      }
+
       acts.push_back(
       {
         {"id",    "joint_" + std::to_string(i + 1)},
         {"type",  "joint"},
         {"index", i},
-        {"position", jointCommands[i]},
+        {"position", q_des_i},
         {"no_vmax", 0.2},
         {"no_tmc",  0.1}
       });
@@ -364,6 +535,7 @@ private:
 
   bool enableCommands = false;
   bool eStop = false;
+  bool wrongThumb = false;
   std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
   std::vector<Rcs::BodyNameIndexPair> fingerTips;
   std::vector<double> jointPosition, jointVelocity, jointTorque;

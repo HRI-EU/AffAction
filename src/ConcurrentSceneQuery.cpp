@@ -115,18 +115,20 @@ bool SceneQueryPool::test(const ExampleActionsECS* sim)
 
 
 ConcurrentSceneQuery::ConcurrentSceneQuery(const ExampleActionsECS* sim_) :
-  sim(sim_), graph(NULL), broadphase(nullptr), selfCA(nullptr)
+  sim(sim_), desiredGraph(NULL), currentGraph(NULL), broadphase(nullptr), selfCA(nullptr)
 {
   RCHECK(sim);
   sim->lockStepMtx();
-  graph = RcsGraph_clone(sim->getGraph());
-  scene = *(sim->getScene());
+  this->desiredGraph = RcsGraph_clone(sim->getGraph());
+  this->currentGraph = RcsGraph_clone(sim->getCurrentGraph());
+  this->scene = *(sim->getScene());
   sim->unlockStepMtx();
 }
 
 ConcurrentSceneQuery::~ConcurrentSceneQuery()
 {
-  RcsGraph_destroy(graph);
+  RcsGraph_destroy(this->desiredGraph);
+  RcsGraph_destroy(this->currentGraph);
   RcsBroadPhase_destroy(this->broadphase);
   RcsCollisionModel_destroy(this->selfCA);
 }
@@ -140,15 +142,15 @@ void ConcurrentSceneQuery::update(bool withBroadphase)
 
 void ConcurrentSceneQuery::updateNoMutex(bool withBroadphase)
 {
-  RcsGraph_copy(this->graph, sim->getGraph());
+  RcsGraph_copy(this->desiredGraph, sim->getGraph());
   this->scene = *(sim->getScene());
 
   if (withBroadphase)
   {
     RcsBroadPhase_destroy(this->broadphase);
-    this->broadphase = RcsBroadPhase_clone(sim->getBroadPhase(), graph);
+    this->broadphase = RcsBroadPhase_clone(sim->getBroadPhase(), desiredGraph);
     RcsCollisionModel_destroy(this->selfCA);
-    this->selfCA = RcsCollisionModel_clone(sim->getSelfCollisionModel(), this->graph);
+    this->selfCA = RcsCollisionModel_clone(sim->getSelfCollisionModel(), this->desiredGraph);
   }
 }
 
@@ -157,7 +159,7 @@ nlohmann::json ConcurrentSceneQuery::getSceneState()
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
   nlohmann::json json;
-  aff::getSceneState(json, &scene, graph);
+  aff::getSceneState(json, &scene, desiredGraph);
   return json;
 }
 
@@ -165,14 +167,14 @@ std::string ConcurrentSceneQuery::getURDF()
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return Rcs::URDFGenerator(graph).toString();
+  return Rcs::URDFGenerator(desiredGraph).toString();
 }
 
 nlohmann::json ConcurrentSceneQuery::getOccludedObjectsForAgent(const std::string& agentName)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return aff::getOccludedObjectsForAgent(agentName, &scene, graph);
+  return aff::getOccludedObjectsForAgent(agentName, &scene, desiredGraph);
 }
 
 nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::string& agentName,
@@ -180,7 +182,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectOccludersForAgent(const std::strin
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return aff::getObjectOccludersForAgent(agentName, objectName, &scene, graph);
+  return aff::getObjectOccludersForAgent(agentName, objectName, &scene, desiredGraph);
 }
 
 nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& objectName,
@@ -188,7 +190,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectInCamera(const std::string& object
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return aff::getObjectInCamera(objectName, cameraName, &scene, graph);
+  return aff::getObjectInCamera(objectName, cameraName, &scene, desiredGraph);
 }
 
 nlohmann::json ConcurrentSceneQuery::getObjectsInCamera(const std::vector<std::string>& entityNames,
@@ -196,7 +198,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectsInCamera(const std::vector<std::s
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return aff::getObjectsInCamera(entityNames, cameraName, &scene, graph);
+  return aff::getObjectsInCamera(entityNames, cameraName, &scene, desiredGraph);
 }
 
 std::string ConcurrentSceneQuery::getParentEntity(const std::string& objectName)
@@ -210,14 +212,14 @@ std::string ConcurrentSceneQuery::getParentEntity(const std::string& objectName)
     RLOG_CPP(0, "No entity found with name " << objectName);
     return std::string();
   }
-  const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
+  const AffordanceEntity* parent = scene.getParentAffordanceEntity(desiredGraph, ntt);
 
   if (parent)
   {
     return parent->name;
   }
 
-  const Manipulator* holdingHand = scene.getParentManipulator(graph, ntt);
+  const Manipulator* holdingHand = scene.getParentManipulator(desiredGraph, ntt);
 
   return holdingHand ? holdingHand->name : std::string();
 }
@@ -234,14 +236,14 @@ std::string ConcurrentSceneQuery::getClosestParentAffordance(const std::string& 
     return std::string();
   }
 
-  const RcsBody* nttBdy = ntt->body(graph);
+  const RcsBody* nttBdy = ntt->body(desiredGraph);
   if (!nttBdy)
   {
     RLOG_CPP(1, "Entity " << objectName << " has no RcsBody attached");
     return std::string();
   }
 
-  const AffordanceEntity* parent = scene.getParentAffordanceEntity(graph, ntt);
+  const AffordanceEntity* parent = scene.getParentAffordanceEntity(desiredGraph, ntt);
   if (!parent)
   {
     RLOG_CPP(1, "No parent entity found for " << objectName);
@@ -261,7 +263,7 @@ std::string ConcurrentSceneQuery::getClosestParentAffordance(const std::string& 
       continue;
     }
 
-    const RcsBody* frm_i = parentAff->getFrame(graph);
+    const RcsBody* frm_i = parentAff->getFrame(desiredGraph);
     if (frm_i)
     {
       double d = Vec3d_distance(frm_i->A_BI.org, nttBdy->A_BI.org);
@@ -286,7 +288,7 @@ bool ConcurrentSceneQuery::isAgentBusy(const std::string& agentName, double dist
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update();
-  return aff::isAgentBusy(agentName, &scene, graph, distanceThreshold);
+  return aff::isAgentBusy(agentName, &scene, desiredGraph, distanceThreshold);
 }
 
 std::unique_ptr<PredictionTree>
@@ -300,7 +302,7 @@ ConcurrentSceneQuery::planActionTree(PredictionTree::SearchType searchType,
   std::lock_guard<std::mutex> lock(reentrancyLock);
   update(true);
 
-  return PredictionTree::planActionTree(searchType, scene, graph, broadphase, nullptr, actions,
+  return PredictionTree::planActionTree(searchType, scene, desiredGraph, broadphase, nullptr, actions,
                                         dt, maxThreads,
                                         earlyExitSearch, earlyExitAction);
 }
@@ -371,7 +373,7 @@ std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgen
   RLOG_CPP(1, "Before pan-tilt: " << resolvedTarget);
 
   // This calls the actual pan-tilt calculation
-  int iter = robo->getPanTilt(graph, resolvedTarget, panTilt, maxIter, eps, err);
+  int iter = robo->getPanTilt(desiredGraph, resolvedTarget, panTilt, maxIter, eps, err);
 
   // Can't retrieve joints / bodies etc.
   if (iter==-1)
@@ -385,7 +387,7 @@ std::vector<double> ConcurrentSceneQuery::getPanTilt(const std::string& roboAgen
   {
     RLOG(0, "Pan tilt computation did not converge for gaze Target '%s' (resolvedTarget: '%s')",
          gazeTarget.c_str(), resolvedTarget.c_str());
-    const RcsBody* gazeBdy = RcsGraph_getBodyByName(graph, resolvedTarget.c_str());
+    const RcsBody* gazeBdy = RcsGraph_getBodyByName(desiredGraph, resolvedTarget.c_str());
     if (gazeBdy)
     {
       RLOG(0, "Goal position: %f %f %f", gazeBdy->A_BI.org[0], gazeBdy->A_BI.org[1], gazeBdy->A_BI.org[2]);
@@ -429,12 +431,30 @@ nlohmann::json ConcurrentSceneQuery::getObjects()
   return json;
 }
 
+std::vector<HTr> ConcurrentSceneQuery::getBodyTransforms(const std::vector<std::string>& bodies,
+                                                         bool uesCurrentGraph)
+{
+  std::vector<HTr> bdyTransforms;
+  RcsGraph* graph = uesCurrentGraph ? this->currentGraph : this->desiredGraph;
 
+  sim->lockStepMtx();
+  RcsGraph_copy(graph, sim->getGraph());
+  sim->unlockStepMtx();
 
+  for (const auto& body : bodies)
+  {
+    const RcsBody* b = RcsGraph_getBodyByName(graph, body.c_str());
+    if (!b)
+    {
+      RLOG_CPP(1, "Body " << body << " not found - returning empty transformation vector");
+      return std::vector<HTr>();
+    }
 
+    bdyTransforms.push_back(b->A_BI);
+  }
 
-
-
+  return bdyTransforms;
+}
 
 nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& agentName,
                                                              bool key_is_hands)
@@ -492,9 +512,9 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
       for (const auto& n : ntts)
       {
         const AffordanceEntity* a = scene.getAffordanceEntity(n);
-        const RcsBody* aBdy = a->body(graph);
+        const RcsBody* aBdy = a->body(desiredGraph);
 
-        if (hand->canReachTo(&scene, graph, aBdy))
+        if (hand->canReachTo(&scene, desiredGraph, aBdy))
         {
           json[hand->name].push_back(a->bdyName);
         }
@@ -506,12 +526,12 @@ nlohmann::json ConcurrentSceneQuery::getObjectReachabilities(const std::string& 
     for (const auto& n : ntts)
     {
       const AffordanceEntity* a = scene.getAffordanceEntity(n);
-      const RcsBody* aBdy = a->body(graph);
+      const RcsBody* aBdy = a->body(desiredGraph);
       json[a->bdyName] = std::vector<std::string>();
 
       for (const auto& hand : hands)
       {
-        if (hand->canReachTo(&scene, graph, aBdy))
+        if (hand->canReachTo(&scene, desiredGraph, aBdy))
         {
           json[a->bdyName].push_back(hand->name);
         }
@@ -541,7 +561,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectsHeldBy(const std::string& agentNa
 
   for (const auto& h : hands)
   {
-    auto graspedNtts = h->getGraspedEntities(scene, graph);
+    auto graspedNtts = h->getGraspedEntities(scene, desiredGraph);
 
     for (const auto& ntt : graspedNtts)
     {
@@ -583,7 +603,7 @@ std::string ConcurrentSceneQuery::getHoldingHand(const std::string& objectName)
 
   for (const auto& ntt : ntts)
   {
-    const Manipulator* hand = scene.getGraspingHand(graph, ntt);
+    const Manipulator* hand = scene.getGraspingHand(desiredGraph, ntt);
     if (hand)
     {
       return hand->name;
@@ -671,12 +691,12 @@ nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& 
       for (const auto& n : ntts)
       {
         const AffordanceEntity* a = scene.getAffordanceEntity(n);
-        const RcsBody* aBdy = a->body(graph);
+        const RcsBody* aBdy = a->body(desiredGraph);
 
         std::string errMsg;
         std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
         update(true);
-        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
+        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, desiredGraph,
                                                    broadphase, nullptr, actions, sim->dt);
 
         if (!tree || tree->findSolutionPathAsStrings().empty())
@@ -700,7 +720,7 @@ nlohmann::json ConcurrentSceneQuery::getObjectGraspabilities(const std::string& 
         std::string errMsg;
         std::vector<std::string> actions = {"get " + a->bdyName + " " + hand->name};
         update(true);
-        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, graph,
+        auto tree = PredictionTree::planActionTree(aff::PredictionTree::SearchType::DFSMT, scene, desiredGraph,
                                                    broadphase, nullptr, actions, sim->dt);
 
         if (!tree || tree->findSolutionPathAsStrings().empty())

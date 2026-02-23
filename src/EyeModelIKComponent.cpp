@@ -292,6 +292,15 @@ void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current
   goalFilt.iterate();
   goalFilt.getPosition(x_des->ele);
 
+  // This is purely cosmetic, showing the position of the gaze point. We assume that the gaze
+  // point has no parent with any transform.
+  RcsBody* gazePoint = RcsGraph_getBodyByName(desired, ActionEyeGaze::getGazePointName().c_str());
+  double* pt = RcsBody_getStatePtr(desired, gazePoint);
+  if (pt)
+  {
+    goalFilt.getPosition(pt);
+  }
+
   MatNd_setElementsTo(this->a_des, 1.0);
   setTaskActivation(taskNameLeftEyeBallDir, false);
   setTaskActivation(taskNameRightEyeBallDir, false);

@@ -545,6 +545,55 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns an array of positions and quaternions for the set of bodies passed.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_body_transforms", [](aff::ExampleActionsECS& ex,
+                                 const std::vector<std::string>& bodyNames,
+                                 bool useCurrentGraph) -> py::tuple
+  {
+    if (bodyNames.empty())
+    {
+      auto pos  = py::array_t<double>(py::array::ShapeContainer{py::ssize_t(0), py::ssize_t(3)});
+      auto quat = py::array_t<double>(py::array::ShapeContainer{py::ssize_t(0), py::ssize_t(4)});
+      return py::make_tuple(pos, quat);
+    }
+
+    auto transforms = ex.getQuery()->getBodyTransforms(bodyNames, useCurrentGraph);
+
+    if (transforms.size() != bodyNames.size())
+    {
+      throw py::value_error("Body transform computation failed (no results returned).");
+    }
+
+    const py::ssize_t N = static_cast<py::ssize_t>(transforms.size());
+
+    py::array_t<double> pos(py::array::ShapeContainer{N, py::ssize_t(3)});
+    py::array_t<double> quat(py::array::ShapeContainer{N, py::ssize_t(4)});
+
+    double* pd = pos.mutable_data();   // contiguous N*3
+    double* qd = quat.mutable_data();  // contiguous N*4
+
+    for (py::ssize_t i = 0; i < N; ++i)
+    {
+      auto& trf = transforms[i];
+      Vec3d_copy(pd + 3*i, trf.org);
+      Quat_fromRotationMatrix(qd + 4*i, trf.rot);
+    }
+
+    return py::make_tuple(pos, quat);
+  },
+  py::arg("bodyNames"),
+  py::arg("useCurrentGraph") = true,
+  R"doc(
+Return body transforms as two NumPy arrays: (pos, quat). If one of the elements in bodyNames
+cannot be retrieved, a value_error is thrown.
+
+pos:  (N,3) float64 array [px, py, pz]
+quat: (N,4) float64 array [qw, qx, qy, qz]
+)doc"
+)
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns a json in the form:
   // {"hand_name_1": ['iphone', 'red_glass', 'fanta_bottle'],
   //  "hand_name_2": ['iphone', 'green_glass', 'milk_bottle']}

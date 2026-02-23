@@ -115,6 +115,11 @@ public:
   static void setAnimationMode(int mode);
   static int toggleAnimationMode();
 
+  static int checkState(const Rcs::ControllerBase* controller,
+                        bool speedLimitCheck, bool jointLimitCheck,
+                        bool collisionCheck, bool verbose,
+                        ActionResult& resMsg);
+
   tropic::TrajectoryControllerBase* tc;
   Rcs::IkSolverRMR* ikSolver;
   RcsCollisionMdl* selfCA;
@@ -134,10 +139,6 @@ private:
    */
   static void addWristNullspace(const RcsGraph* graph, MatNd* dH);
 
-  static int checkState(const Rcs::ControllerBase* controller,
-                        bool speedLimitCheck, bool jointLimitCheck,
-                        bool collisionCheck, bool verbose,
-                        ActionResult& resMsg);
 
   TrajectoryPredictor(const TrajectoryPredictor&) = delete;
   TrajectoryPredictor& operator=(const TrajectoryPredictor&) = delete;

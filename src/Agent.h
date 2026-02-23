@@ -45,14 +45,13 @@ class Agent : public SceneEntity
 {
 public:
 
+  virtual ~Agent() = default;
   std::vector<std::string> manipulators;
 
-  Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
-  virtual ~Agent() = default;
-
   static Agent* createAgent(const xmlNodePtr node, const std::string& groupSuffix, ActionScene* scene);
+  virtual void parseComponents(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene);
   virtual void print() const;
-  virtual Agent* clone() const;
+  virtual Agent* clone() const = 0;
   virtual std::string isLookingAt() const;
   virtual bool canReachTo(const ActionScene* scene,
                           const RcsGraph* graph,
@@ -60,12 +59,14 @@ public:
   std::vector<const AffordanceEntity*> getObjectsInReach(const ActionScene* scene,
                                                          const RcsGraph* graph) const;
   virtual bool isVisible() const;
-  virtual bool check(const ActionScene* scene,
-                     const RcsGraph* graph) const;
+  virtual bool check(const ActionScene* scene, const RcsGraph* graph) const;
   virtual std::vector<const Manipulator*> getManipulatorsOfType(const ActionScene* scene,
                                                                 const std::string& type) const;
   static Agent* getAgentOwningManipulator(const ActionScene* scene,
                                           const std::string& manipulatorName);
+
+protected:
+  Agent(const xmlNodePtr node, const std::string& groupSuffix);
 };
 
 class RobotAgent : public Agent
@@ -85,6 +86,19 @@ public:
 class HumanAgent : public Agent
 {
 public:
+
+  enum class BodyType
+  {
+    Head,
+    ShoulderLeft,
+    ShoulderRight,
+    ElbowLeft,
+    ElbowRight,
+    HandLeft,
+    HandRight,
+    None
+  };
+
   HumanAgent(const xmlNodePtr node,
              const std::string& groupSuffix,
              const ActionScene* scene);
@@ -97,6 +111,7 @@ public:
   double getDefaultPosition(size_t index) const;
   std::vector<double> getDefaultPosition() const;
   void setDefaultPosition(const double pos[3]);
+  virtual void print() const;
 
   // Remembers old one in gazeTargetPrev
   void setGazeTarget(const std::string& newGazeTarget);
@@ -119,6 +134,8 @@ public:
   bool computeAABBHead(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
   bool check(const ActionScene* scene, const RcsGraph* graph) const;
   std::vector<int> bb_head;
+  std::vector<double> fingersLeft, fingersRight;
+  std::map<HumanAgent::BodyType,std::string> trackedFrames;
 
 private:
   double lastTimeSeen;
@@ -131,8 +148,6 @@ private:
   std::string gazeTarget;
   std::string gazeTargetPrev;
   std::string headBdyName;
-  std::string leftHandBdyName;
-  std::string rightHandBdyName;
 };
 
 } // namespace aff

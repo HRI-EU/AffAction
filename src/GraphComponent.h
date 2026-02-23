@@ -106,6 +106,10 @@ public:
    */
   bool getEnableRender() const;
 
+  /*! \brief Enables or disables the velocity calculation.
+   */
+  void setEnableDifferentialKinematics(bool enable);
+
 private:
 
   virtual void subscribeAll();
@@ -125,6 +129,7 @@ private:
 
   RcsGraph* graph;
   bool enableRender;
+  bool enableDifferentialKinematics;
 
 
   GraphComponent(const GraphComponent&);

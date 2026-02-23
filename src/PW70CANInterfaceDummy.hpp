@@ -56,13 +56,18 @@ public:
     recv_thread = std::thread(&PW70CANInterfaceDummy::receive_messages, this, freq);
     this->pan_tilt[0] = 0.6;   // Initialize with some non-zero angles to test initialization
     this->pan_tilt[1] = 0.2;
+    this->runLoop = true;
   }
 
-  ~PW70CANInterfaceDummy() = default;
+  ~PW70CANInterfaceDummy()
+  {
+    cleanup();
+  }
 
   // Public Methods
   void cleanup()
   {
+    runLoop = false;
     if (recv_thread.joinable())
     {
       recv_thread.join();
@@ -122,6 +127,12 @@ public:
     return false;
   }
 
+  bool ack_errors()
+  {
+    return true;
+  }
+
+
   //static void limit_check(double pan, double tilt, void* param);
   //static void position_update(double pan, double tilt, double timestamp, void* param);
   //static int test();
@@ -130,7 +141,7 @@ public:
   void receive_messages(int update_frequency)
   {
 
-    while (true)
+    while (runLoop)
     {
       double pan_value_radians = this->pan_tilt[0];
       double tilt_value_radians = this->pan_tilt[1];
@@ -158,6 +169,7 @@ private:
   std::thread recv_thread;
   double pan_tilt[2];
   int freq;
+  bool runLoop = false;
 };
 
 }   // namespace

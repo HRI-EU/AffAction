@@ -96,10 +96,18 @@ private:
             else if (recognized != res.second)
             {
               text = "Hello " + recognized + " nice to see you!";
+              std::string speak_text = "{\"tool_name\": \"analyse_webcam_image\", \"arguments\": {\"question\": \"You see a person in the image. Say something nice to the person, relating to the clothes, or anything else that sticks out from the image. Adress the person directly and brief. For instance: Nice blue shirt you are wearing, or: Wow, that's cool glasses you have, or: your long and curly hair look nice, or: I'm glad you are smiling.\"}}";
+              speak_text = "{\"tool_name\": \"analyse_webcam_image\", \"arguments\": {\"question\": \"You are a movie actor whos role is the bad guy. You see a person in the image. You know the person well, it is a good friend, and it is ok to make a joke. Say something to the person relating to the clothes, or anything else that sticks out from the person. Adress the person directly and brief, say only a short sentence. For instance: Pretty ugly glasses you have, or: Wow, that color combination of clothes is from the last century, or: your hair looks like it needs a wash, or: What's up that you look like Mr. Grumpy?\"}}";
+              speak_text = "{\"tool_name\": \"analyse_webcam_image\", \"arguments\": {\"question\": \"Roast this person with a short, witty comment.\"}}";
+              entity->publish("fire_tool_and_wait", speak_text);
             }
             else
             {
               text = "Hello again, " + recognized;
+              std::string speak_text = "{\"tool_name\": \"analyse_webcam_image\", \"arguments\": {\"question\": \"You are a movie actor whos role is the bad guy. You see a person in the image. You know the person well, it is a good friend, and it is ok to make a joke. Say something to the person relating to the clothes, or anything else that sticks out from the person. Adress the person directly and brief, say only a short sentence. For instance: Pretty ugly glasses you have, or: Wow, that color combination of clothes is from the last century, or: your hair looks like it needs a wash, or: What's up that you look like Mr. Grumpy?\"}}";
+              speak_text = "{\"tool_name\": \"analyse_webcam_image\", \"arguments\": {\"question\": \"Roast this person with a short, witty comment.\"}}";
+
+              entity->publish("fire_tool_and_wait", speak_text);
             }
 
             // It is better to publish it, because otherwise we might face

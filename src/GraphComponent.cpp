@@ -43,14 +43,16 @@ namespace aff
 {
 
 GraphComponent::GraphComponent(EntityBase* parent, const std::string& cfgFile) :
-  ComponentBase(parent), graph(RcsGraph_create(cfgFile.c_str())), enableRender(true)
+  ComponentBase(parent), graph(RcsGraph_create(cfgFile.c_str())),
+  enableRender(true), enableDifferentialKinematics(false)
 {
   RCHECK(graph);
   subscribeAll();
 }
 
 GraphComponent::GraphComponent(EntityBase* parent, const RcsGraph* graph_) :
-  ComponentBase(parent), graph(RcsGraph_clone(graph_)), enableRender(true)
+  ComponentBase(parent), graph(RcsGraph_clone(graph_)),
+  enableRender(true), enableDifferentialKinematics(false)
 {
   RCHECK(graph);
   subscribeAll();
@@ -80,7 +82,15 @@ std::string GraphComponent::getName() const
 
 void GraphComponent::onForwardKinematics(RcsGraph* graph)
 {
+  if (enableDifferentialKinematics)
+  {
+    RcsGraph_setState(graph, NULL, graph->q_dot);
+  }
+  else
+{
   RcsGraph_setState(graph, NULL, NULL);
+}
+
 }
 
 RcsGraph* GraphComponent::getGraph()
@@ -187,5 +197,11 @@ void GraphComponent::onPrint() const
 {
   RcsGraph_fprintModelState(stdout, this->graph, this->graph->q, NULL, 0);
 }
+
+void GraphComponent::setEnableDifferentialKinematics(bool enable)
+{
+  this->enableDifferentialKinematics = enable;
+}
+
 
 }   // namespace aff

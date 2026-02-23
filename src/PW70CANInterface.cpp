@@ -58,34 +58,38 @@ std::unique_ptr<PW70CANInterface> PW70CANInterface::create(std::function<void(do
                                                            std::function<void(double, double, double, void*)> position_callback,
                                                            void* param,
                                                            int frequency,
-                                                           bool dummy_mode)
+                                                           const std::string& can_id)
 {
   std::unique_ptr<PW70CANInterface> pw70;
 
-  if (dummy_mode)
+  if (can_id.empty())
   {
+    RLOG(0, "Creating PW70CANInterfaceDummy");
     return std::make_unique<PW70CANInterfaceDummy>(limit_check_callback, position_callback, param, frequency);
   }
 
 #if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
+  RLOG(0, "Creating PW70CANInterfaceWin");
   pw70 = std::make_unique<PW70CANInterfaceWin>(limit_check_callback, position_callback, param, frequency);
 #elif defined(__linux__) && !defined(__APPLE__)
-  pw70 = std::make_unique<PW70CANInterfaceLinux>(limit_check_callback, position_callback, param, frequency);
+  RLOG(0, "Creating PW70CANInterfaceLinuxPW70CANInterfaceWin");
+  pw70 = std::make_unique<PW70CANInterfaceLinux>(limit_check_callback, position_callback, param, frequency, can_id);
 #else
+  RLOG(0, "Creating PW70CANInterfaceDummy");
   pw70 = std::make_unique<PW70CANInterfaceDummy>(limit_check_callback, position_callback, param, frequency);
 #endif
 
   return pw70;
 }
 
-std::unique_ptr<PW70CANInterface> PW70CANInterface::create()
+std::unique_ptr<PW70CANInterface> PW70CANInterface::create(const std::string& can_id)
 {
   std::unique_ptr<PW70CANInterface> pw70;
 
 #if defined (_MSC_VER) && defined (AFFACTION_WITH_PCAN_BASIC)
   pw70 = std::make_unique<PW70CANInterfaceWin>();
 #elif defined(__linux__) && !defined(__APPLE__)
-  pw70 = std::make_unique<PW70CANInterfaceLinux>();
+  pw70 = std::make_unique<PW70CANInterfaceLinux>(can_id);
 #else
   pw70 = std::make_unique<PW70CANInterfaceDummy>(nullptr, nullptr, nullptr, 0);
 #endif

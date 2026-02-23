@@ -108,7 +108,7 @@ def pour_into(SIMULATION, source_container_name: str, target_container_name: str
         f"pose default"
     )
     results = SIMULATION.plan_fb_rich(action_command)
-    logger.info(f"Planning result: {json.dumps(results, indent=2)}")
+    logger.info(f"Planning result for {action_command=}: \n{json.dumps(results, indent=2)}")
 
     if not results:
         logger.info(f"First planning run failed - trying more robust one ...")
@@ -142,7 +142,7 @@ def main():
     sim.callEvent("Process")
 
     # grounded_actions = pour_into(sim, "bottle_of_pesto_sauce", "glass_blue", "hand_robot_left")
-    grounded_actions = pour_into(sim, "bottle_of_gin", "glass_green", "hand_robot_right3")
+    grounded_actions = pour_into(sim, "bottle_of_gin", "glass_green", "hand_robot_right")
     # grounded_actions = pour_into(sim, "bottle_of_tomato_sauce", "glass_green", "hand_robot_right")
     
     if not grounded_actions:
@@ -180,7 +180,7 @@ def main():
             key = cv2.waitKey(1)
 
             controls = sim.getControls(["hand_robot_left3", "hand_robot_right3"])
-            logger.info("Controls:\n%s", json.dumps(controls, indent=2))
+            logger.debug("Controls:\n%s", json.dumps(controls, indent=2))
     except KeyboardInterrupt:
         print("Exiting simulation loop via Ctrl-C...")        
         sim.callEvent("Stop")

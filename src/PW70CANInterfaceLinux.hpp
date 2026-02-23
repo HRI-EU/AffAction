@@ -40,6 +40,9 @@
 #include <vector>
 #include <mutex>
 #include <linux/can.h>
+#include <iomanip>
+
+
 
 namespace aff
 {
@@ -47,10 +50,10 @@ namespace aff
 class PW70CANInterfaceLinux : public PW70CANInterface
 {
 public:
-  PW70CANInterfaceLinux();
+  PW70CANInterfaceLinux(const std::string& can_id="can0");
   PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
                         std::function<void(double, double, double, void*)> position_callback,
-                        void* param, int freq);
+                        void* param, int freq, const std::string& can_id);
   ~PW70CANInterfaceLinux();
 
   void cleanup();
@@ -66,6 +69,8 @@ public:
   bool set_target_position(double pan_radians, double tilt_radians);
   bool move_position(double pan_radians, double tilt_radians, double pan_velocity_radians, double tilt_velocity_radians);
   bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians);
+  bool ack_errors();
+
 
   static void limit_check(double pan, double tilt, void* param);
   static void position_update(double pan, double tilt, double timestamp, void* param);
@@ -77,7 +82,7 @@ private:
   std::thread recv_thread;
   bool running;
   void receive_messages();
-  int init_can() const;
+  int init_can(const std::string& can_id) const;
 };
 
 }   // namespace
@@ -105,18 +110,18 @@ namespace aff
 {
 
 
-PW70CANInterfaceLinux::PW70CANInterfaceLinux()
+PW70CANInterfaceLinux::PW70CANInterfaceLinux(const std::string& can_id)
   : PW70CANInterface(nullptr, nullptr, nullptr, 0), running(false)
 {
-  this->s = init_can();
+  this->s = init_can(can_id);
 }
 
 PW70CANInterfaceLinux::PW70CANInterfaceLinux(std::function<void(double, double, void*)> limit_check_callback,
                                              std::function<void(double, double, double, void*)> position_callback,
-                                             void* param, int freq)
+                                             void* param, int freq, const std::string& can_id)
   : PW70CANInterface(limit_check_callback, position_callback, param, freq), running(true)
 {
-  this->s = init_can();
+  this->s = init_can(can_id);
 
   // Start the receive thread
   recv_thread = std::thread(&PW70CANInterfaceLinux::receive_messages, this);
@@ -128,14 +133,16 @@ PW70CANInterfaceLinux::PW70CANInterfaceLinux(std::function<void(double, double, 
 // Destructor
 PW70CANInterfaceLinux::~PW70CANInterfaceLinux()
 {
-  if (running)
-  {
-    cleanup();
-  }
+  //if (running)
+  //{
+  cleanup();
+  //}
 }
 
-int PW70CANInterfaceLinux::init_can() const
+int PW70CANInterfaceLinux::init_can(const std::string& can_id) const
 {
+  RLOG_CPP(0, "Opening CAN " << can_id);
+
   int s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
   // Open CAN socket
@@ -146,7 +153,7 @@ int PW70CANInterfaceLinux::init_can() const
   }
 
   struct ifreq ifr;
-  std::strcpy(ifr.ifr_name, "can0");
+  std::strcpy(ifr.ifr_name, can_id.c_str());
   if (ioctl(s, SIOCGIFINDEX, &ifr) < 0)
   {
     RLOG(0, "Error in ioctl: %s (%d)", strerror(errno), errno);
@@ -170,24 +177,33 @@ int PW70CANInterfaceLinux::init_can() const
 // Cleanup method
 void PW70CANInterfaceLinux::cleanup()
 {
-  disable_frequent_position_update();
+  RLOG(0, "Setting velocities to zero");
+  move_velocity(0.0, 0.0);
 
   // Stop and fast stop to disable motor current and engage brakes.
-  //stop();
-  fast_stop();   // With brakes
+  RLOG(0, "Stopping PTU");
+  stop();
+  // fast_stop();   // With brakes
 
-  // Stop the receive thread
-  std::cout << "Joining CAN receiver thread" << std::endl;
-  running = false;
-  if (recv_thread.joinable())
+  if (running)
   {
-    recv_thread.join();
+    disable_frequent_position_update();
+
+    // Stop the receive thread
+    RLOG(0, "Joining CAN receiver thread");
+    running = false;
+    if (recv_thread.joinable())
+    {
+      recv_thread.join();
+    }
+
+    RLOG(0, "Done joining CAN receiver thread - now closing socket");
   }
 
   // Close the socket
-  std::cout << "Done joining CAN receiver thread - now closing socket" << std::endl;
+  RLOG(0, "Done joining CAN receiver thread - now closing socket");
   close(s);
-  std::cout << "Dnoe closing socket - finished cleanup" << std::endl;
+  RLOG(0, "Done closing socket - finished cleanup");
 }
 
 // Send method
@@ -273,7 +289,7 @@ void PW70CANInterfaceLinux::receive_messages()
         }
       }   // if (id == 0x70D || id == 0x70E)
 
-      else if (((id >> 8) & 0x7) == 0x3)            // spontaneous ERROR/WARN/INFO: const uint8_t type = (id >> 8) & 0x7;   // 0x7=status, 0x3=error/…
+      else if (((id >> 8) & 0x7) == 0x3)            // spontaneous ERROR/WARN/INFO: const uint8_t type = (id >> 8) & 0x7;   // 0x7=status, 0x3=error
       {
         const uint8_t dlen = frame.data[0];
         if (dlen < 2)
@@ -286,13 +302,21 @@ void PW70CANInterfaceLinux::receive_messages()
         switch (cmd)
         {
           case 0x88:  // fatal error
-            RLOG(0, "PW70 ERROR 0x%02X - send CMD_ACK (0x8B) to clear", code);
+            RLOG_CPP(0, "PW70 ERROR 0x" << std::hex << std::uppercase << std::setw(2)
+                     << std::setfill('0') << static_cast<int>(code)
+                     << " - send CMD_ACK (0x8B) to clear");
+
+
             break;
           case 0x89:  // warning
-            RLOG(0, "PW70 WARNING 0x%02X", code);
+            RLOG_CPP(0, "PW70 WARNING 0x" << std::uppercase << std::hex << std::setw(2)
+                     << std::setfill('0') << static_cast<int>(code));
             break;
           case 0x8A:  // info
-            RLOG(0, "PW70 INFO 0x%02X", code);
+            RLOG_CPP(0, "PW70 INFO 0x" << std::uppercase << std::hex << std::setw(2)
+                     << std::setfill('0') << static_cast<int>(code));
+
+
             break;
         }
       }
@@ -544,5 +568,24 @@ bool PW70CANInterfaceLinux::move_velocity(double pan_velocity_radians, double ti
 
   return send({msg1, msg2});
 }
+
+// Acknowledge errors (clears ERROR EMERGENCY STOP after fast_stop)
+bool PW70CANInterfaceLinux::ack_errors()
+{
+  struct can_frame pan = {};
+  pan.can_id  = 0x50E;  // pan
+  pan.can_dlc = 2;
+  pan.data[0] = 0x01;
+  pan.data[1] = 0x8B;   // ACK
+
+  struct can_frame tilt = {};
+  tilt.can_id  = 0x50D; // tilt
+  tilt.can_dlc = 2;
+  tilt.data[0] = 0x01;
+  tilt.data[1] = 0x8B;  // ACK
+
+  return send({tilt, pan});
+}
+
 
 }   // namespace

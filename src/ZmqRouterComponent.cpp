@@ -41,6 +41,7 @@
 
 #include "ZmqRouterComponent.h"
 
+#include <Rcs_utilsCPP.h>
 #include <Rcs_macros.h>
 
 #include <json.hpp>
@@ -75,6 +76,10 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   subscribe("EstimateCameraPose", &LandmarkBase::estimateCameraPose);
   subscribe("EnableDebugGraphics", &LandmarkBase::enableDebugGraphics);
 
+  subscribe("StartLogging", &ZmqRouterComponent::onStartLogging);
+  subscribe("StopLogging", &ZmqRouterComponent::onStopLogging);
+  subscribe("LogToFile", &ZmqRouterComponent::onLogToFile);
+
   getEntity()->subscribe("Speak", [this](std::string text) mutable
   {
     nlohmann::json payload =
@@ -86,6 +91,8 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
 
     getEntity()->publish("TriggerPerception", std::string("tts"), 0, payload.dump());
   });
+
+  LandmarkBase::onFreezePerception(true);
 }
 
 ZmqRouterComponent::~ZmqRouterComponent()
@@ -94,6 +101,7 @@ ZmqRouterComponent::~ZmqRouterComponent()
   {
     stopZmqThread();
   }
+
 }
 
 void ZmqRouterComponent::onSetPerceptionCommand(std::string command, int repetitions)
@@ -125,7 +133,17 @@ void ZmqRouterComponent::startZmqThread()
 
   RLOG(1, "startZmqThread()");
   threadRunning = true;
-  zmqThread = std::thread(&ZmqRouterComponent::zmqThreadFunc, this, connectionStr);
+
+  if (Rcs::String_endsWith(connectionStr, ".json") ||
+      Rcs::String_endsWith(connectionStr, ".dat") ||
+      Rcs::String_endsWith(connectionStr, ".txt"))
+  {
+    zmqThread = std::thread(&ZmqRouterComponent::fromFileThreadFunc, this, connectionStr);
+  }
+  else
+  {
+    zmqThread = std::thread(&ZmqRouterComponent::zmqThreadFunc, this, connectionStr);
+  }
 
   // Ideally, we should join it in the onStop() function. For some reasons,
   // this does not work on all platforms, maybe due to some dangling zmq
@@ -191,14 +209,25 @@ static zmq::socket_t create_router_socket(zmq::context_t& ctx, const std::string
   }
 }
 
-
 void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 {
   this->threadFunctionCompleted = false;
 
   // ZeroMQ context & socket setup
   zmq::context_t ctx{1};
-  zmq::socket_t router = create_router_socket(ctx, connection);
+  zmq::socket_t router;
+
+  try
+  {
+    router = create_router_socket(ctx, connection);
+  }
+  catch (const std::exception& e)
+  {
+    RLOG_CPP(0, "Couldn't create router socket for connection '" << connection << "': " << e.what());
+    this->threadFunctionCompleted = true;
+    return;
+  }
+
 
   // State: worker‑id, last‑heartbeat‑time
   std::unordered_map<std::string, Clock::time_point> workers;
@@ -274,8 +303,6 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
           }
 
           RLOG(0, "Tracker for '%s' %s", id.c_str(), trackerExists ? "exists" : "not loaded");
-
-
         }
         workers[id] = Clock::now();              // refresh liveness
 
@@ -283,6 +310,7 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
         {
           nlohmann::json json = nlohmann::json::parse(payLoadStr);
           setJsonInput(json);
+          getEntity()->publish("LogToFile", payLoadStr);
           getEntity()->publish("ZmqDealerMessage", id, payLoadStr);
         }
         catch (const nlohmann::json::parse_error& e)
@@ -404,6 +432,124 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
   }   // while (threadRunning)
 
   threadFunctionCompleted = true;
+}
+
+void ZmqRouterComponent::onStartLogging()
+{
+
+  if (logFile.is_open())
+  {
+    RLOG_CPP(0, "Logging already started");
+    return;
+  }
+
+  RLOG_CPP(0, "Logging starts");
+  logFile.open("tracking.json", std::ios::out | std::ios::app);
+  if (!logFile)
+  {
+    throw std::runtime_error("Failed to open file: " + this->connectionStr);
+  }
+
+  RLOG_CPP(0, "Logging to " << this->connectionStr << " starts");
+}
+
+void ZmqRouterComponent::onStopLogging()
+{
+  if (!logFile.is_open())
+  {
+    RLOG_CPP(0, "Logging already stopped");
+    return;
+  }
+
+  RLOG_CPP(0, "Logging stops");
+  logFile.flush();
+  logFile.close();
+  logFile.clear();
+}
+
+void ZmqRouterComponent::onLogToFile(std::string logStr)
+{
+  if (!logFile.is_open())
+  {
+    RLOG_CPP(1, "Not logging - file not opened");
+    return;
+  }
+
+  RLOG_CPP(0, "Logging");
+  logFile << logStr << '\n';
+}
+
+void ZmqRouterComponent::fromFileThreadFunc(const std::string& fileName)
+{
+  this->threadFunctionCompleted = false;
+  std::ifstream in(fileName);
+  if (!in.is_open())
+  {
+    RLOG_CPP(0, "Failed to open file: " << fileName);
+    this->threadFunctionCompleted = true;
+    return;
+  }
+
+
+  while (this->threadRunning)
+  {
+    double t_prev = 0.0, t_curr = 0.0;
+    std::string line;
+
+    while (std::getline(in, line) && this->threadRunning)
+    {
+      // Skip empty lines (common if your file has trailing newlines).
+      if (line.empty())
+      {
+        continue;
+      }
+
+      try
+      {
+        nlohmann::json j = nlohmann::json::parse(line);
+
+        // Skip all jsons that doesn't have header and data keys
+        if (!j.is_object() || !j.contains("header") || !j["header"].is_object() ||
+            !j.contains("data") || !j["data"].is_object())
+        {
+          continue;
+        }
+
+        // Compute time difference between incoming packages
+        t_prev = t_curr;
+        t_curr = j["header"]["timestamp"];
+
+        // Set time stamp to current time so that agent is always visible in tracker
+        // RPAUSE();
+        j["header"]["timestamp"] = getCurrentTime();
+        setJsonInput(j);
+        RLOG_CPP(1, j.dump(2));
+
+        // Wait for computed time period except for first (invalid) dt
+        if (t_prev>0.0)
+        {
+          std::chrono::duration<double> dt_package(t_curr-t_prev);
+          std::this_thread::sleep_for(dt_package);
+        }
+      }
+      catch (const nlohmann::json::parse_error& e)
+      {
+        RLOG_CPP(0, "JSON parse error: " << e.what() << "\n  line: " << line);
+      }
+      catch (const std::exception& e)
+      {
+        RLOG_CPP(0, "line: " << line);
+        RLOG_CPP(0, "Exception: " << e.what());
+      }
+
+    }   // while (std::getline(in, line))
+
+    in.clear();
+    in.seekg(0, std::ios::beg);
+
+  }   // while (threadRunning)
+
+  this->threadFunctionCompleted = true;
 }
 
 }   // namespace

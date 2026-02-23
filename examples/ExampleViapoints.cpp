@@ -40,6 +40,8 @@
 #include <PolarConstraint.h>
 #include <VectorConstraint.h>
 
+#include <fstream>
+
 
 
 namespace aff

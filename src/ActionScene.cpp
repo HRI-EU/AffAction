@@ -92,6 +92,11 @@ static void MyParseRecursive(const xmlNodePtr node, aff::ActionScene* self, std:
   {
     return;
   }
+  else if (isXMLNodeName(node, "Controller"))
+  {
+    MyParseRecursive(node->children, self, suffix, parse);
+    MyParseRecursive(node->next, self, suffix, parse);
+  }
   else if (isXMLNodeName(node, "Graph"))
   {
     MyParseRecursive(node->children, self, suffix, parse);
@@ -140,7 +145,7 @@ ActionScene::ActionScene(const std::string& xmlFile)
 
   if (File_exists(xmlFile.c_str()))
   {
-    node = parseXMLFile(xmlFile.c_str(), "Graph", &doc);
+    node = parseXMLFile(xmlFile.c_str(), NULL, &doc);
   }
   else
   {
@@ -261,6 +266,8 @@ void ActionScene::print() const
     m.print();
   }
 
+  std::cout << "Scene has " << agents.size() << " agents:"
+            << std::endl;
   for (const auto& a : agents)
   {
     a->print();

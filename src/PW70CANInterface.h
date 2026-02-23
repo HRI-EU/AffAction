@@ -35,6 +35,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 
 namespace aff
@@ -46,13 +47,13 @@ public:
 
   virtual ~PW70CANInterface() = default;
 
-  static std::unique_ptr<PW70CANInterface> create();
+  static std::unique_ptr<PW70CANInterface> create(const std::string& can_id="can0");
 
   static std::unique_ptr<PW70CANInterface> create(std::function<void(double, double, void*)> limit_callback,
                                                   std::function<void(double, double, double, void*)> pos_callback,
                                                   void* param,
                                                   int frequency,
-                                                  bool dummy_mode=false);
+                                                  const std::string& can_id="can0");
 
   // Public Methods
   virtual void cleanup() = 0;
@@ -68,6 +69,7 @@ public:
   virtual bool move_position(double pan_radians, double tilt_radians,
                              double pan_velocity_radians, double tilt_velocity_radians) = 0;
   virtual bool move_velocity(double pan_velocity_radians, double tilt_velocity_radians) = 0;
+  virtual bool ack_errors() = 0;
 
 protected:
 

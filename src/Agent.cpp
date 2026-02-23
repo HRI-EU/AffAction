@@ -51,24 +51,30 @@
 #include <algorithm>
 #include <exception>
 #include <cfloat>
+#include <unordered_map>
+
 
 
 namespace aff
 {
 
-Agent::Agent(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene) : SceneEntity(node, groupSuffix)
+Agent::Agent(const xmlNodePtr node, const std::string& groupSuffix) : SceneEntity(node, groupSuffix)
 {
-  xmlNodePtr child = node->children;
+}
+
+void Agent::parseComponents(const xmlNodePtr node, const std::string& groupSuffix, const ActionScene* scene)
+{
+  xmlNodePtr child = node;
 
   while (child)
   {
     if (isXMLNodeNameNoCase(child, "Component"))
     {
       std::string manipulatorName = Rcs::getXMLNodePropertySTLString(child, "manipulator");
-      manipulatorName += groupSuffix;
 
       if (!manipulatorName.empty())
       {
+        manipulatorName += groupSuffix;
         const Manipulator* m = scene->getManipulator(manipulatorName);
         RCHECK_MSG(m, "Manipulator '%s' of agent '%s' not found in scene",
                    manipulatorName.c_str(), name.c_str());
@@ -81,11 +87,6 @@ Agent::Agent(const xmlNodePtr node, const std::string& groupSuffix, const Action
 
     child = child->next;
   }
-}
-
-Agent* Agent::clone() const
-{
-  return new Agent(*this);
 }
 
 std::string Agent::isLookingAt() const
@@ -148,8 +149,7 @@ bool Agent::isVisible() const
   return true;
 }
 
-bool Agent::check(const ActionScene* scene,
-                  const RcsGraph* graph) const
+bool Agent::check(const ActionScene* scene, const RcsGraph* graph) const
 {
   return true;
 }
@@ -211,11 +211,16 @@ std::vector<const AffordanceEntity*> Agent::getObjectsInReach(const ActionScene*
   return nullptr;
 }
 
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 RobotAgent::RobotAgent(const xmlNodePtr node,
                        const std::string& groupSuffix,
-                       const ActionScene* scene) :
-  Agent(node, groupSuffix, scene)
+                       const ActionScene* scene) : Agent(node, groupSuffix)
 {
+  parseComponents(node->children, groupSuffix, scene);
 }
 
 Agent* RobotAgent::clone() const
@@ -377,11 +382,64 @@ bool RobotAgent::canReachTo(const ActionScene* scene,
   return false;
 }
 
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+static const std::unordered_map<std::string, HumanAgent::BodyType> kBodyTypeFromString =
+{
+  {"Head", HumanAgent::BodyType::Head},
+  {"ShoulderLeft", HumanAgent::BodyType::ShoulderLeft},
+  {"ShoulderRight", HumanAgent::BodyType::ShoulderRight},
+  {"ElbowLeft", HumanAgent::BodyType::ElbowLeft},
+  {"ElbowRight", HumanAgent::BodyType::ElbowRight},
+  {"HandLeft", HumanAgent::BodyType::HandLeft},
+  {"HandRight", HumanAgent::BodyType::HandRight},
+};
+
+static HumanAgent::BodyType parseBodyType(const std::string& id)
+{
+  auto it = kBodyTypeFromString.find(id);
+  if (it == kBodyTypeFromString.end())
+  {
+    RLOG_CPP(0, "Unknown BodyType id: " << id);
+    return HumanAgent::BodyType::None;
+  }
+  return it->second;
+}
+
+static std::string bodyTypeToId(HumanAgent::BodyType t)
+{
+  using BT = HumanAgent::BodyType;
+  switch (t)
+  {
+    case BT::Head:
+      return "Head";
+    case BT::ShoulderLeft:
+      return "ShoulderLeft";
+    case BT::ShoulderRight:
+      return "ShoulderRight";
+    case BT::ElbowLeft:
+      return "ElbowLeft";
+    case BT::ElbowRight:
+      return "ElbowRight";
+    case BT::HandLeft:
+      return "HandLeft";
+    case BT::HandRight:
+      return "HandRight";
+  }
+
+  return "None"; // fallback for unhandled values / future-proofing
+}
 HumanAgent::HumanAgent(const xmlNodePtr node,
                        const std::string& groupSuffix,
                        const ActionScene* scene) :
-  Agent(node, groupSuffix, scene), lastTimeSeen(0.0), visible(false)
+  Agent(node, groupSuffix),
+  lastTimeSeen(0.0), visible(false)
 {
+  parseComponents(node->children, groupSuffix, scene);
+
   defaultPos.resize(3, 0.0);
   defaultRadius = DBL_MAX;
 
@@ -391,10 +449,37 @@ HumanAgent::HumanAgent(const xmlNodePtr node,
 
   auto m = getManipulatorsOfType(scene, "head");
   headBdyName = m.empty() ? "" : m[0]->bdyName;
-  m = getManipulatorsOfType(scene, "hand_left");
-  leftHandBdyName = m.empty() ? "" : m[0]->bdyName;
-  m = getManipulatorsOfType(scene, "hand_right");
-  rightHandBdyName = m.empty() ? "" : m[0]->bdyName;
+
+
+  xmlNodePtr trackedFrames = getXMLChildByName(node, "TrackedFrames");
+
+  if (trackedFrames)
+  {
+    xmlNodePtr child = trackedFrames->children;
+    while (child)
+    {
+      if (isXMLNodeNameNoCase(child, "BodyFrame"))
+      {
+        std::string id = Rcs::getXMLNodePropertySTLString(child, "id");
+
+        HumanAgent::BodyType bt = parseBodyType(id);
+        if (bt != HumanAgent::BodyType::None)
+        {
+          std::string trackedBody = Rcs::getXMLNodePropertySTLString(child, "frame");
+          this->trackedFrames[bt] = trackedBody + groupSuffix;
+        }
+        else
+        {
+          RLOG_CPP(0, "BodyType for id '" << id << "' not found");
+        }
+
+      }
+
+
+      child = child->next;
+    }
+  }
+
 }
 
 Agent* HumanAgent::clone() const
@@ -558,8 +643,7 @@ bool HumanAgent::computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices
   return true;
 }
 
-bool HumanAgent::check(const ActionScene* scene,
-                       const RcsGraph* graph) const
+bool HumanAgent::check(const ActionScene* scene, const RcsGraph* graph) const
 {
   std::vector<std::string> effectors = {"head", "hand_left", "hand_right"};
 
@@ -572,6 +656,18 @@ bool HumanAgent::check(const ActionScene* scene,
       return false;
     }
   }
+
+  for (const auto& f : trackedFrames)
+  {
+    const RcsBody* frm = RcsGraph_getBodyByName(graph, f.second.c_str());
+    if (!frm)
+    {
+      RLOG_CPP(1, "Tracked frame " << f.second << " for id "
+               << bodyTypeToId(f.first) << " not found in graph");
+      return false;
+    }
+  }
+
 
   return Agent::check(scene, graph);
 }
@@ -626,6 +722,18 @@ bool HumanAgent::gazeTargetChanged() const
 std::string HumanAgent::getGazeTarget() const
 {
   return gazeTarget;
+}
+
+void HumanAgent::print() const
+{
+  Agent::print();
+
+  std::cout << "\nTacked frames:" << std::endl;
+
+  for (const auto& f : trackedFrames)
+  {
+    std::cout << "   " << f.second << std::endl;
+  }
 }
 
 

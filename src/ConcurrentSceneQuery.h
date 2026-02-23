@@ -233,6 +233,9 @@ public:
    */
   std::vector<double> getPanTilt(const std::string& agentName,
                                  const std::string& sceneEntity);
+
+  std::vector<HTr> getBodyTransforms(const std::vector<std::string>& bodies,
+                                     bool uesCurrentGraph);
   nlohmann::json getGazeData();
   nlohmann::json getRecordedTransformations(double start_time, double end_time);
   void loadTransformationDataFromFile(const std::string& filename);
@@ -245,7 +248,8 @@ private:
   void updateNoMutex(bool withBroadphase = false);
 
   const ExampleActionsECS* sim;
-  RcsGraph* graph;
+  RcsGraph* desiredGraph;
+  RcsGraph* currentGraph;
   RcsBroadPhase* broadphase;
   RcsCollisionMdl* selfCA;
   ActionScene scene;

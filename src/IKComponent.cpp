@@ -133,7 +133,8 @@ void IKComponent::onTaskCommand(const MatNd* a, const MatNd* x)
   // We only print this once after the e-stop being triggered, therefore the second comparison
   if ((ikOk<0) && (eStop==false))
   {
-    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason);
+    RLOG_CPP(0, "ikOK = " << ikOk << " E-Stopping, error = " << resMsg.error << " reason = " << resMsg.reason
+             << " developer = " << resMsg.developer);
     getEntity()->publish("EmergencyStop");
     RcsCollisionModel_fprint(stderr, collisionAvoidanceModel);
   }
