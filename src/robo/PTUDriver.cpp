@@ -529,7 +529,7 @@ static void initializeTilt()
   pw70->reset_stop();
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reference_tilt();
-  std::this_thread::sleep_for(std::chrono::seconds(5));
+  std::this_thread::sleep_for(std::chrono::seconds(15));
 }
 
 /*******************************************************************************
