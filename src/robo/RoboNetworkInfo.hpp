@@ -61,40 +61,6 @@ public:
 
   static const RoboNetworkInfo* getNetworkInfo(const std::string roboName)
   {
-    // 7-dof Jaco Gen3 (right mounted)
-    RoboNetworkInfo rummenigge;
-    rummenigge.robo_ip = "10.107.149.2";
-    rummenigge.roboToRemotePort = 40002;// was 5555
-    rummenigge.remoteToRoboPort = 40003;// was 5556
-    rummenigge.robo_computer_ip = "localhost";
-    rummenigge.roboSender = "tcp://*:" + std::to_string(rummenigge.roboToRemotePort);
-    rummenigge.roboReceiver = "tcp://*:" + std::to_string(rummenigge.remoteToRoboPort);
-    rummenigge.remoteReceiver = "tcp://" + rummenigge.robo_computer_ip + ":" + std::to_string(rummenigge.roboToRemotePort);
-    rummenigge.remoteSender = "tcp://" + rummenigge.robo_computer_ip + ":" + std::to_string(rummenigge.remoteToRoboPort);
-    rummenigge.roboMode = "LowLevel";
-    rummenigge.q_default_deg = { 220.0, 80.0, 80.0, -100.0, 0.0, -40.0, -110.0 };
-
-    // 7-dof Jaco Gen3 (left mounted)
-    RoboNetworkInfo littbarski;
-    littbarski.robo_ip = "10.107.149.3";
-    littbarski.roboToRemotePort = 40004;// was 5557
-    littbarski.remoteToRoboPort = 40005;// was 5558
-    littbarski.robo_computer_ip = "localhost";
-    littbarski.roboSender = "tcp://*:" + std::to_string(littbarski.roboToRemotePort);
-    littbarski.roboReceiver = "tcp://*:" + std::to_string(littbarski.remoteToRoboPort);
-    littbarski.remoteReceiver = "tcp://" + littbarski.robo_computer_ip + ":" + std::to_string(littbarski.roboToRemotePort);
-    littbarski.remoteSender = "tcp://" + littbarski.robo_computer_ip + ":" + std::to_string(littbarski.remoteToRoboPort);
-    littbarski.roboMode = "LowLevel";
-    littbarski.q_default_deg = { -40.0, -80.0, -80.0, 100.0, 0.0, 40.0, 110.0 };
-
-    // Just Jaco Gen3 right simulation
-    RoboNetworkInfo test_right = rummenigge;
-    test_right.roboMode = "TestWithoutRobot";
-
-    // Just Jaco Gen3 left simulation
-    RoboNetworkInfo test_left = littbarski;
-    test_left.roboMode = "TestWithoutRobot";
-
     // PTU
     RoboNetworkInfo ptu;
     ptu.robo_ip = "";
@@ -112,82 +78,12 @@ public:
     RoboNetworkInfo ptu_test = ptu;
     ptu_test.roboMode = "TestWithoutRobot";
 
-    // Franka right
-    RoboNetworkInfo riemann;
-    riemann.robo_ip = "192.168.42.11";
-    riemann.roboToRemotePort = 40008;
-    riemann.remoteToRoboPort = 40009;
-    riemann.robo_computer_ip = "localhost";
-    riemann.roboSender = "tcp://*:" + std::to_string(riemann.roboToRemotePort);
-    riemann.roboReceiver = "tcp://*:" + std::to_string(riemann.remoteToRoboPort);
-    riemann.remoteReceiver = "tcp://" + riemann.robo_computer_ip + ":" + std::to_string(riemann.roboToRemotePort);
-    riemann.remoteSender = "tcp://" + riemann.robo_computer_ip + ":" + std::to_string(riemann.remoteToRoboPort);
-    riemann.roboMode = "";
-    riemann.q_default_deg = std::vector<double>(7, 0.0);
-
-    // Franka left
-    RoboNetworkInfo laplace;
-    laplace.robo_ip = "192.168.43.11";
-    laplace.roboToRemotePort = 40010;
-    laplace.remoteToRoboPort = 40011;
-    laplace.robo_computer_ip = "localhost";
-    laplace.roboSender = "tcp://*:" + std::to_string(laplace.roboToRemotePort);
-    laplace.roboReceiver = "tcp://*:" + std::to_string(laplace.remoteToRoboPort);
-    laplace.remoteReceiver = "tcp://" + laplace.robo_computer_ip + ":" + std::to_string(laplace.roboToRemotePort);
-    laplace.remoteSender = "tcp://" + laplace.robo_computer_ip + ":" + std::to_string(laplace.remoteToRoboPort);
-    laplace.roboMode = "";
-    laplace.q_default_deg = std::vector<double>(7, 0.0);
-
-    // Franka right simulation
-    RoboNetworkInfo riemann_sim = riemann;
-    riemann_sim.roboMode = "TestWithoutRobot";
-
-    // Franka left simulation
-    RoboNetworkInfo laplace_sim = laplace;
-    laplace_sim.roboMode = "TestWithoutRobot";
-
-    // Allegro hand right
-    RoboNetworkInfo allegro_right;
-    allegro_right.robo_ip = "can0";
-    allegro_right.roboToRemotePort = 40012;
-    allegro_right.remoteToRoboPort = 40013;
-    allegro_right.robo_computer_ip = "localhost";
-    allegro_right.roboSender = "tcp://*:" + std::to_string(allegro_right.roboToRemotePort);
-    allegro_right.roboReceiver = "tcp://*:" + std::to_string(allegro_right.remoteToRoboPort);
-    allegro_right.remoteReceiver = "tcp://" + allegro_right.robo_computer_ip + ":" + std::to_string(allegro_right.roboToRemotePort);
-    allegro_right.remoteSender = "tcp://" + allegro_right.robo_computer_ip + ":" + std::to_string(allegro_right.remoteToRoboPort);
-    allegro_right.roboMode = "right";
-    allegro_right.q_default_deg = std::vector<double>(16, 0.0);
-
-    // Allegro hand left
-    RoboNetworkInfo allegro_left;
-    allegro_left.robo_ip = "can1";
-    allegro_left.roboToRemotePort = 40014;
-    allegro_left.remoteToRoboPort = 40015;
-    allegro_left.robo_computer_ip = "localhost";
-    allegro_left.roboSender = "tcp://*:" + std::to_string(allegro_left.roboToRemotePort);
-    allegro_left.roboReceiver = "tcp://*:" + std::to_string(allegro_left.remoteToRoboPort);
-    allegro_left.remoteReceiver = "tcp://" + allegro_left.robo_computer_ip + ":" + std::to_string(allegro_left.roboToRemotePort);
-    allegro_left.remoteSender = "tcp://" + allegro_left.robo_computer_ip + ":" + std::to_string(allegro_left.remoteToRoboPort);
-    allegro_left.roboMode = "left";
-    allegro_left.q_default_deg = std::vector<double>(16, 0.0);
-
 
 
     static std::map<std::string, RoboNetworkInfo> nwInfo =
     {
-      { "rummenigge",    rummenigge    },
-      { "littbarski",    littbarski    },
-      { "test_right",    test_right    },
-      { "test_left",     test_left     },
       { "ptu",           ptu           },
-      { "ptu_test",      ptu_test      },
-      { "riemann",       riemann       },
-      { "laplace",       laplace       },
-      { "riemann_sim",   riemann_sim   },
-      { "laplace_sim",   laplace_sim   },
-      { "allegro_right", allegro_right },
-      { "allegro_left",  allegro_left  }
+      { "ptu_test",      ptu_test      }
     };
 
     auto it = nwInfo.find(roboName);

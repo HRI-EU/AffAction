@@ -509,9 +509,9 @@ static void runPTU(int argc, char** argv)
 /*******************************************************************************
  *
  ******************************************************************************/
-static void initializePan()
+static void initializePan(const std::string& can_id="can0")
 {
-  auto pw70 = aff::PW70CANInterface::create();
+  auto pw70 = aff::PW70CANInterface::create(can_id);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reset_stop();
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -522,9 +522,9 @@ static void initializePan()
 /*******************************************************************************
  *
  *******************************************************************************/
-static void initializeTilt()
+static void initializeTilt(const std::string& can_id="can0")
 {
-  auto pw70 = aff::PW70CANInterface::create();
+  auto pw70 = aff::PW70CANInterface::create(can_id);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reset_stop();
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -535,9 +535,9 @@ static void initializeTilt()
 /*******************************************************************************
  *
  *******************************************************************************/
-static void resetErrors()
+static void resetErrors(const std::string& can_id="can0")
 {
-  auto pw70 = aff::PW70CANInterface::create();
+  auto pw70 = aff::PW70CANInterface::create(can_id);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->ack_errors();
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -546,9 +546,9 @@ static void resetErrors()
 /*******************************************************************************
  *
  *******************************************************************************/
-static void resetPTU()
+static void resetPTU(const std::string& can_id="can0")
 {
-  auto pw70 = aff::PW70CANInterface::create();
+  auto pw70 = aff::PW70CANInterface::create(can_id);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->reset_stop();
   std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -557,7 +557,7 @@ static void resetPTU()
 /*******************************************************************************
  *
  *******************************************************************************/
-static void movePanTilt(int argc, char** argv)
+static void movePanTilt(int argc, char** argv, const std::string& can_id="can0")
 {
   Rcs::CmdLineParser argP(argc, argv);
 
@@ -573,7 +573,7 @@ static void movePanTilt(int argc, char** argv)
     return;
   }
 
-  auto pw70 = aff::PW70CANInterface::create();
+  auto pw70 = aff::PW70CANInterface::create(can_id);
   std::this_thread::sleep_for(std::chrono::seconds(1));
   pw70->move_position(RCS_DEG2RAD(pan_in_deg),
                       RCS_DEG2RAD(tilt_in_deg),
@@ -590,9 +590,11 @@ int main(int argc, char** argv)
   signal(SIGINT, quit);   // Ctrl-C stops threads
 
   int mode = 0;
+  std::string can_id = "can0";
   Rcs::CmdLineParser argP(argc, argv);
   argP.getArgument("-dl", &RcsLogLevel, "Debug level (default is 0)");
   argP.getArgument("-m", &mode, "Mode (default is %d)", mode);
+  argP.getArgument("-can_id", &can_id, "CAN bus device (default is %s)", can_id.c_str());
 
   switch (mode)
   {
@@ -614,23 +616,23 @@ int main(int argc, char** argv)
       break;
 
     case 2:
-      initializePan();
+      initializePan(can_id);
       break;
 
     case 3:
-      initializeTilt();
+      initializeTilt(can_id);
       break;
 
     case 4:
-      movePanTilt(argc, argv);
+      movePanTilt(argc, argv, can_id);
       break;
 
     case 5:
-      resetPTU();
+      resetPTU(can_id);
       break;
 
     case 6:
-      resetErrors();
+      resetErrors(can_id);
       break;
 
     default:

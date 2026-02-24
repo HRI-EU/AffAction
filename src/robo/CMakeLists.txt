@@ -32,59 +32,6 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
-OPTION(AFFACTION_WITH_KINOVA_GEN3 "Enable Kinova Gen3 Kortex driver" OFF)
-OPTION(AFFACTION_WITH_LIBFRANKA "Enable libfranka driver" OFF)
-
-
-
-##############################################################################
-# Kinova Kortex Gen3 driver
-##############################################################################
-ADD_EXECUTABLE(KortexDriver KortexDriver.cpp RoboDriver.cpp)
-TARGET_LINK_LIBRARIES(KortexDriver RcsCore ${ZMQ_LIBRARIES})
-TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
-
-IF(APPLE)
-  FIND_PACKAGE(PkgConfig REQUIRED)
-  PKG_CHECK_MODULES(ZMQ REQUIRED libzmq)
-  TARGET_LINK_DIRECTORIES(KortexDriver PRIVATE ${ZMQ_LIBRARY_DIRS})
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${ZMQ_INCLUDE_DIRS})
-ELSEIF(UNIX)
-  TARGET_COMPILE_DEFINITIONS(KortexDriver PRIVATE -D_OS_UNIX)
-  TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wall")
-  TARGET_COMPILE_OPTIONS(KortexDriver PRIVATE "-Wno-reorder")
-ELSEIF(WIN32)
-  TARGET_COMPILE_DEFINITIONS(KortexDriver PRIVATE -D_OS_WINDOWS -D_USE_MATH_DEFINES)
-ENDIF()
-
-IF (AFFACTION_WITH_KINOVA_GEN3)
-  
-  SET(KORTEX_BASE_DIR "$ENV{SIT}/External/Kinova-kortex2_Gen3_G3L")
-  IF (UNIX)
-    SET(KORTEX_DIR "${KORTEX_BASE_DIR}/api_cpp/examples/kortex_api")
-  ELSE()
-    SET(KORTEX_DIR "${KORTEX_BASE_DIR}/api_cpp/examples/kortex_api/MD")
-  ENDIF()
-
-  IF(UNIX)
-    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/libKortexApiCpp.a)
-  ELSEIF(WIN32)
-    TARGET_LINK_LIBRARIES(KortexDriver ${KORTEX_DIR}/lib/release/KortexApiCpp.lib)
-  ENDIF()
-
-  # Add Include Directories
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_DIR}/include)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_DIR}/include/client)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_DIR}/include/common)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_DIR}/include/messages)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_DIR}/include/client_stubs)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_BASE_DIR}/api_cpp/examples)
-  TARGET_INCLUDE_DIRECTORIES(KortexDriver PRIVATE ${KORTEX_BASE_DIR}/api_cpp/examples/thirdParty/cxxopts)
-
-  TARGET_COMPILE_DEFINITIONS(KortexDriver PRIVATE -DAFFACTION_WITH_KINOVA_GEN3)
-
-ENDIF(AFFACTION_WITH_KINOVA_GEN3)
-
 
 ##############################################################################
 # Socket CAN Schunk PW70 driver
@@ -99,48 +46,3 @@ IF (APPLE)
 ENDIF()
 
 TARGET_LINK_LIBRARIES(PTUDriver RcsCore ${ZMQ_LIBRARIES})
-
-
-
-##############################################################################
-# libfranka driver. Here's the cmake vars for pinocchio and Franka:
-# PINOCCHIO_INCLUDE_DIRS PINOCCHIO_LIBRARIES
-# Franka_INCLUDE_DIRS Franka_LIBRARIES
-# The policy is required to make *_ROOT honored by find_package
-# pinocchio_ROOT needs to point to the pinocchio install directory
-# Franka_ROOT  needs to point to the libfranka install directory
-##############################################################################
-ADD_EXECUTABLE(FrankaDriver FrankaDriver.cpp RoboDriver.cpp)
-TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../external") # for json
-TARGET_LINK_LIBRARIES(FrankaDriver RcsCore ${ZMQ_LIBRARIES})
-
-IF (AFFACTION_WITH_LIBFRANKA AND UNIX AND NOT APPLE)
-
-  CMAKE_POLICY(SET CMP0074 NEW)
-  SET(pinocchio_ROOT "" CACHE PATH "Pinocchio install prefix")
-  FIND_PACKAGE(pinocchio REQUIRED)
-  SET(Franka_ROOT "" CACHE PATH "libfranka install prefix")
-  FIND_PACKAGE(Franka REQUIRED)
-  FIND_PACKAGE(Eigen3 REQUIRED)
-
-  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${EIGEN3_INCLUDE_DIR}")
-  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${PINOCCHIO_INCLUDE_DIRS}")
-  TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE "${Franka_INCLUDE_DIRS}")
-  TARGET_LINK_LIBRARIES(FrankaDriver ${PINOCCHIO_LIBRARIES} ${Franka_LIBRARIES})
-
-  IF(APPLE)
-    FIND_PACKAGE(PkgConfig REQUIRED)
-    PKG_CHECK_MODULES(ZMQ REQUIRED libzmq)
-    TARGET_LINK_DIRECTORIES(FrankaDriver PRIVATE ${ZMQ_LIBRARY_DIRS})
-    TARGET_INCLUDE_DIRECTORIES(FrankaDriver PRIVATE ${ZMQ_INCLUDE_DIRS})
-  ELSEIF(UNIX)
-    TARGET_COMPILE_DEFINITIONS(FrankaDriver PRIVATE -D_OS_UNIX)
-    TARGET_COMPILE_OPTIONS(FrankaDriver PRIVATE "-Wall")
-    TARGET_COMPILE_OPTIONS(FrankaDriver PRIVATE "-Wno-reorder")
-  ELSEIF(WIN32)
-    TARGET_COMPILE_DEFINITIONS(FrankaDriver PRIVATE -D_OS_WINDOWS -D_USE_MATH_DEFINES)
-  ENDIF()
-
-  TARGET_COMPILE_DEFINITIONS(FrankaDriver PRIVATE -DAFFACTION_WITH_LIBFRANKA)
-
-ENDIF(AFFACTION_WITH_LIBFRANKA AND UNIX AND NOT APPLE)
