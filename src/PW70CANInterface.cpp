@@ -72,7 +72,7 @@ std::unique_ptr<PW70CANInterface> PW70CANInterface::create(std::function<void(do
   RLOG(0, "Creating PW70CANInterfaceWin");
   pw70 = std::make_unique<PW70CANInterfaceWin>(limit_check_callback, position_callback, param, frequency);
 #elif defined(__linux__) && !defined(__APPLE__)
-  RLOG(0, "Creating PW70CANInterfaceLinuxPW70CANInterfaceWin");
+  RLOG(0, "Creating PW70CANInterfaceLinuxPW70CANInterfaceLinux");
   pw70 = std::make_unique<PW70CANInterfaceLinux>(limit_check_callback, position_callback, param, frequency, can_id);
 #else
   RLOG(0, "Creating PW70CANInterfaceDummy");

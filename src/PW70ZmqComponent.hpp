@@ -209,6 +209,7 @@ private:
     return membersInitialized;
   }
 
+#if 0
   std::string generate_command_message()
   {
     nlohmann::json cmdJson;
@@ -253,6 +254,79 @@ private:
 
     return cmdJson.dump();
   }
+#endif
+
+
+
+
+
+  std::string generate_command_message()
+  {
+    nlohmann::json cmdJson;
+
+    if (!enableCommands || jointCommands.empty() || (jointCommands==jointCommandsPrev))
+    {
+      return std::string();
+    }
+
+    nlohmann::json payload =
+    {
+      {
+        "joints", {
+          {
+            "pan", {
+              {"index", 0},
+              {"position_command", jointCommands[0]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          },
+          {
+            "tilt", {
+              {"index", 1},
+              {"position_command", jointCommands[1]},
+              {"novmax", 0.2},
+              {"notmc", 0.1}
+            }
+          }
+        }
+      },
+      {"quit", false}
+    };
+
+    auto& acts = payload["actuators"];
+    for (int i = 0; i < jointCommands.size(); ++i)
+    {
+      acts.push_back(
+      {
+        {"id",    "joint_" + std::to_string(i + 1)},
+        {"type",  "joint"},
+        {"index", i},
+        {"position", jointCommands[i]},
+        {"no_vmax", 0.2},
+        {"no_tmc",  0.1}
+      });
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(cmdMtx);
+      if (!jointCommands.empty() && (jointCommands!=jointCommandsPrev))
+      {
+        cmdJson = payload;
+      }
+    }
+
+    // Memorize previous state
+    jointCommandsPrev = jointCommands;
+
+    return cmdJson.dump();
+  }
+
+
+
+
+
+
 
 
 

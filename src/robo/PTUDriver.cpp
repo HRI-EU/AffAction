@@ -156,7 +156,7 @@ public:
     }
 
     // Here comes the command
-    RoboCommand copyOfCmd;
+    RoboCommand copyOfCmd{};
     {
       std::lock_guard<std::mutex> lock(self->cmdMtx);
       if (self->cmd.newCommand)
