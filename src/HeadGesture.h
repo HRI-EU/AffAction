@@ -34,6 +34,7 @@
 #define AFF_HEADGESTURE_H
 
 #include <ControllerBase.h>
+#include <Rcs_utilsCPP.h>
 
 #include <vector>
 #include <string>
@@ -58,30 +59,29 @@ public:
 protected:
   void updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
                        double pan_gesture, double tilt_gesture);
-  virtual std::vector<double> computePanTilt(double t) = 0;
+  virtual std::vector<double> computePanTilt(double t, double maxSpeed) = 0;
 
   std::string name;
   double t_gesture;
   double gestureDuration;
   double amplitude;
   int numTurns;
-  int panJointId;
-  int tiltJointId;
   std::vector<int> jointIds;
+  Rcs::JointNameIndexPair panJoint, tiltJoint, rollJoint;
 };
 
 class HeadNod : public HeadGesture
 {
 public:
   HeadNod(const std::string& name, double duration, std::vector<int> jointIds);
-  std::vector<double> computePanTilt(double t);
+  std::vector<double> computePanTilt(double t, double maxSpeed);
 };
 
 class HeadShake : public HeadGesture
 {
 public:
   HeadShake(const std::string& name, double duration, std::vector<int> jointIds);
-  std::vector<double> computePanTilt(double t);
+  std::vector<double> computePanTilt(double t, double maxSpeed);
 };
 
 

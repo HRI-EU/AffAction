@@ -70,6 +70,7 @@ namespace py = pybind11;
 #include <Rcs_timer.h>
 #include <Rcs_typedef.h>
 #include <Rcs_utilsCPP.h>
+#include <Rcs_body.h>
 #include <json.hpp>
 
 #include <SegFaultHandler.h>
@@ -407,6 +408,46 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns the position of a rigid body, outside the step function.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getBodyPosition", [](aff::ExampleActionsECS& ex, std::string bdyName) -> std::vector<double>
+  {
+    const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), bdyName.c_str());
+    double* rbj = RcsBody_getStatePtr(ex.getGraph(), bdy);
+
+    if (!rbj)
+    {
+      return std::vector<double>();
+    }
+
+    ex.lockStepMtx();
+    std::vector<double> body_pos(rbj, rbj+3);
+    ex.unlockStepMtx();
+    return body_pos;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the position of a rigid body, outside the step function.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setBodyPosition", [](aff::ExampleActionsECS& ex, std::string bdyName, double x, double y, double z) -> bool
+  {
+    ex.lockStepMtx();
+    const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), bdyName.c_str());
+    double* rbj = RcsBody_getStatePtr(ex.getGraph(), bdy);
+
+    if (!rbj)
+    {
+      ex.unlockStepMtx();
+      return false;
+    }
+
+    Vec3d_set(rbj, x, y, z);
+    RcsGraph_setState(ex.getGraph(), nullptr, nullptr);
+    ex.unlockStepMtx();
+    return true;
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
   // -1: grow down, 0: symmetric, 1: grow up
   // Returns number of changed shapes
   // Fatal error if body
@@ -453,8 +494,11 @@ PYBIND11_MODULE(pyAffaction, m)
   {
     std::vector<double> org {x, y, z};
     RcsGraph* ikGraph = ex.getGraph();
-    RLOG(1, "***");
     ex.getEntity().publish("ChangeShapeOrigin", ikGraph, bodyName, org);
+  })
+  .def("clearLastActionResult", [](aff::ExampleActionsECS& ex)
+  {
+    ex.lastActionResult.clear();
   })
   .def("reset", [](aff::ExampleActionsECS& ex)
   {
@@ -467,6 +511,10 @@ PYBIND11_MODULE(pyAffaction, m)
   .def("process", [](aff::ExampleActionsECS& ex)
   {
     ex.getEntity().process();
+  })
+  .def("processUntilEmpty", [](aff::ExampleActionsECS& ex)
+  {
+    ex.getEntity().processUntilEmpty();
   })
   .def("showGraphicsWindow", [](aff::ExampleActionsECS& ex) -> bool
   {
@@ -852,6 +900,8 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   .def_readwrite("dt", &aff::ExampleActionsECS::dt)
   .def_readwrite("enableWireframeToggle", &aff::ExampleActionsECS::enableWireframeToggle)
   .def_readwrite("enableRealGraphVisualization", &aff::ExampleActionsECS::enableRealGraphVisualization)
+  .def_readwrite("landmarksCamera", &aff::ExampleActionsECS::landmarksCamera)
+  .def_readwrite("changeBackgroundColor", &aff::ExampleActionsECS::changeBackgroundColor)
 
   //////////////////////////////////////////////////////////////////////////////
   // GazeDisambiguation
@@ -918,6 +968,82 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
 
   },
   py::arg("inputFile") = "test_robot_traj.txt")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Franka data collection
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getCollectedData", [](aff::ExampleActionsECS& ex,
+                              std::string end_effector_name,
+                              std::string fts_base_name,
+                              std::string fts_end_effector_name) -> std::vector<std::vector<double>>
+  {
+    std::vector<std::vector<double>> data(8);
+    const RcsGraph* desired = ex.getGraph();
+    const RcsGraph* current = ex.getCurrentGraph();
+    const RcsBody* ee = RcsGraph_getBodyByName(desired, end_effector_name.c_str());
+
+    if (!ee)
+    {
+      throw std::runtime_error("Unknown end effector: " + end_effector_name);
+    }
+
+    std::vector<double> pos_in_world(ee->A_BI.org, ee->A_BI.org+3);
+    double* rmPtr = (double*)ee->A_BI.rot[0];
+    std::vector<double> rotmat_world_to_endeffector(rmPtr, rmPtr+9);
+
+    std::vector<double> twist_in_world(6);
+    for (size_t i=0; i<3; ++i)
+    {
+      twist_in_world[i] = ee->x_dot[i];
+      twist_in_world[i+3] = ee->omega[i];
+    }
+
+    std::vector<double> twist_in_ee(6);
+    double k_vel[3], k_om[3];
+    Vec3d_rotate(k_vel, (double(*)[3])ee->A_BI.rot, ee->x_dot);
+    Vec3d_rotate(k_om, (double(*)[3])ee->A_BI.rot, ee->omega);
+    for (size_t i=0; i<3; ++i)
+    {
+      twist_in_ee[i] = k_vel[i];
+      twist_in_ee[i+3] = k_om[i];
+    }
+
+    std::vector<double> q_curr(current->q->ele, current->q->ele+current->dof);
+    std::vector<double> q_des(desired->q->ele, desired->q->ele+desired->dof);
+
+    std::vector<double> fts_base(6, 0.0), fts_ee(6, 0.0);
+
+    RcsSensor* s = RcsGraph_getSensorByName(current, fts_base_name.c_str());
+    if (s && s->type==RCSSENSOR_LOAD_CELL)
+    {
+      VecNd_copy(fts_base.data(), s->rawData->ele, 6);
+    }
+
+    s = RcsGraph_getSensorByName(current, fts_end_effector_name.c_str());
+    if (s && s->type==RCSSENSOR_LOAD_CELL)
+    {
+      VecNd_copy(fts_ee.data(), s->rawData->ele, 6);
+    }
+
+    data[0] = pos_in_world;
+    data[1] = rotmat_world_to_endeffector;
+    data[2] = twist_in_world;
+    data[3] = twist_in_ee;
+    data[4] = q_curr;
+    data[5] = q_des;
+    data[6] = fts_base;
+    data[7] = fts_ee;
+
+    return data;
+  },
+  "Collects data batch of current time step",
+  py::arg("end_effector_name") = "hand_robot_right_tip",
+  py::arg("fts_base_name") = "fts_base_right",
+  py::arg("fts_end_effector_name") = "fts_ee_right")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // viaPoint action file
+  //////////////////////////////////////////////////////////////////////////////
   .def("createViaPointAction", [](aff::ExampleActionsECS& ex, std::string inputFile)
   {
     RLOG(0, "Creating action file");

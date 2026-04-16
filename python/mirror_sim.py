@@ -66,7 +66,7 @@ class SimulatorManager:
         """
         smile_ws_path = Path(build_directory).resolve()
         os_name = platform.system()
-        logger.debug(f"Running on {os_name} from {smile_ws_path}")
+        logger.info(f"Running on {os_name} from {smile_ws_path}")
 
         if os_name == "Windows":
             # Update sys.path and PATH environment variable for Windows dlls
@@ -84,11 +84,13 @@ class SimulatorManager:
         else:
             logger.error(f"Unknown OS: {os_name}")
             
-        from pyAffaction import (LlmSim, addResourcePath, setLogLevel)
+        from pyAffaction import (LlmSim, addResourcePath, printResourcePath, setLogLevel)
         logger.debug(f"Setting up the simulator. PATH: {os.environ.get('PATH')}")
         setLogLevel(0)
         addResourcePath(str(smile_ws_path / "config"))
         addResourcePath(str(smile_ws_path / "config" / "xml" / "examples"))
+        addResourcePath(str(smile_ws_path / "config" / "xml" / "Franka"))
+        printResourcePath()
 
         self.sim = LlmSim()
         self.sim.noTextGui = True

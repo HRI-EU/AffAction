@@ -149,6 +149,8 @@ public:
   double dt;
   bool enableWireframeToggle;
   bool enableRealGraphVisualization;
+  bool changeBackgroundColor;
+  std::string landmarksCamera;
 
 
   /*! \brief Retrieves the gaze data in JSON format.
@@ -168,7 +170,6 @@ protected:
   std::string sequenceCommand;
   std::string componentArgs;
   std::string physicsEngine;
-  std::string landmarksCamera;
   std::vector<std::string> actionStack;
   IKComponent::IkSolverType ikType;
   double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;

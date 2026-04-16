@@ -308,8 +308,26 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         try
         {
+
+          try
+          {
           nlohmann::json json = nlohmann::json::parse(payLoadStr);
           setJsonInput(json);
+          }
+          catch (const nlohmann::json::parse_error& e)
+          {
+            RLOG_CPP(0, "with payload: " << payLoadStr << std::endl << "Error parsing JSON: " << e.what());
+          }
+          catch (const std::exception& e)
+          {
+            RLOG_CPP(0, "with payload: " << payLoadStr << std::endl << "An error occurred: " << e.what());
+          }
+
+
+
+
+          //nlohmann::json json = nlohmann::json::parse(payLoadStr);
+          //setJsonInput(json);
           getEntity()->publish("LogToFile", payLoadStr);
           getEntity()->publish("ZmqDealerMessage", id, payLoadStr);
         }
@@ -523,7 +541,7 @@ void ZmqRouterComponent::fromFileThreadFunc(const std::string& fileName)
         // RPAUSE();
         j["header"]["timestamp"] = getCurrentTime();
         setJsonInput(j);
-        RLOG_CPP(1, j.dump(2));
+        //RLOG_CPP(1, j.dump(2));
 
         // Wait for computed time period except for first (invalid) dt
         if (t_prev>0.0)

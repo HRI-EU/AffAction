@@ -62,7 +62,8 @@ public:
     : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_pan_joint"+suffix));
-    //jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_tilt_joint"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_tilt_joint"+suffix));
+    jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_roll_joint"+suffix));
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);

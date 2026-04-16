@@ -185,10 +185,13 @@ public:
 
   virtual void frame();
 
+  virtual void setDynamicMeshUpdates(bool enable);
+
+  virtual bool getDynamicMeshUpdates() const;
+
 protected:
 
   virtual void stop();
-  // virtual void subscribeAll(bool startWithStartEvent);
   virtual void handleKeys();
   virtual void print();
 
@@ -222,6 +225,7 @@ protected:
   std::map<char, std::function<void(char)>> keyCallbacks;
   std::vector<std::string> hudText;
   mutable pthread_mutex_t frameMtx;
+  bool enableDynamicMeshUpdates;
 
 private:
 

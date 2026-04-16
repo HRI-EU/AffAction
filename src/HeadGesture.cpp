@@ -50,7 +50,9 @@ namespace aff
  *****************************************************************************/
 HeadGesture::HeadGesture(const std::string& gestureName, double duration, std::vector<int> jntIds) :
   name(gestureName), t_gesture(-1.0), gestureDuration(duration), amplitude(RCS_DEG2RAD(6.0)),
-  numTurns(3), panJointId(-1), tiltJointId(-1), jointIds(jntIds)
+  numTurns(3), //panJointId(-1), tiltJointId(-1), jointMaxSpeed(0.0),
+  jointIds(jntIds),
+  panJoint("ptu_pan_joint"), tiltJoint("ptu_tilt_joint"), rollJoint("ptu_roll_joint")
 {
 }
 
@@ -90,7 +92,9 @@ std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controll
          RCS_RAD2DEG(panStart), RCS_RAD2DEG(tiltStart));
   }
 
-  std::vector<double> panTilt = computePanTilt(t_gesture);
+  const RcsJoint* pan = panJoint.getJoint(controller->getGraph());
+  RCHECK(pan);
+  std::vector<double> panTilt = computePanTilt(t_gesture, pan->speedLimit);
   panTilt[0] += panStart;
   panTilt[1] += tiltStart;
   t_gesture += dt;
@@ -110,7 +114,9 @@ void HeadGesture::step(const RcsGraph* graph, RcsGraph* targetGraph, double dt)
     return;
   }
 
-  std::vector<double> panTilt = computePanTilt(t_gesture);
+  const RcsJoint* pan = panJoint.getJoint(graph);
+  RCHECK(pan);
+  std::vector<double> panTilt = computePanTilt(t_gesture, pan->speedLimit);
   updateHeuristic(graph, targetGraph, panTilt[0], panTilt[1]);
 
   t_gesture += dt;
@@ -120,26 +126,19 @@ void HeadGesture::step(const RcsGraph* graph, RcsGraph* targetGraph, double dt)
 void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
                                   double pan_gesture, double tilt_gesture)
 {
-  if (panJointId == -1)
-  {
-    const RcsJoint* pan = RcsGraph_getJointByName(graph, "ptu_pan_joint");
-    RCHECK(pan);
-    panJointId = pan->id;
-  }
+  const RcsJoint* pan = panJoint.getJoint(graph);
+  const RcsJoint* tilt = tiltJoint.getJoint(graph);
+  RCHECK(pan);
+  RCHECK(tilt);
 
-  if (tiltJointId == -1)
-  {
-    const RcsJoint* tilt = RcsGraph_getJointByName(graph, "ptu_tilt_joint");
-    RCHECK(tilt);
-    tiltJointId = tilt->id;
-  }
+
 
   // Constrain gaze dof in passed graphs
   for (const auto& j : jointIds)
   {
     const unsigned int jidx = graph->joints[j].jointIndex;
 
-    if (graph->joints[j].id == tiltJointId)
+    if (graph->joints[j].id == tilt->id)
     {
       targetGraph->q->ele[jidx] += tilt_gesture;
     }
@@ -160,7 +159,7 @@ void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
     {
       targetGraph->q->ele[graph->joints[j].jointIndex] += tilt_gesture;
     }
-    else if (graph->joints[j].id == panJointId)
+    else if (graph->joints[j].id == pan->id)
     {
       targetGraph->q->ele[jidx] += pan_gesture;
     }
@@ -198,9 +197,9 @@ HeadNod::HeadNod(const std::string& gestureName, double duration, std::vector<in
 {
 }
 
-std::vector<double> HeadNod::computePanTilt(double t)
+std::vector<double> HeadNod::computePanTilt(double t, double maxSpeed)
 {
-  const double vmax = RCS_DEG2RAD(40.0);
+  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(180.0));
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 
@@ -217,9 +216,9 @@ HeadShake::HeadShake(const std::string& gestureName, double duration, std::vecto
 {
 }
 
-std::vector<double> HeadShake::computePanTilt(double t)
+std::vector<double> HeadShake::computePanTilt(double t, double maxSpeed)
 {
-  const double vmax = RCS_DEG2RAD(40.0);
+  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(180.0));
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 

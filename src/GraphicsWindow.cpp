@@ -271,6 +271,7 @@ private:
     mi->bufGraph = RcsGraph_clone(other);
 
     bool success = mi->init(mi->osgGraph, false);
+    mi->setDynamicMeshUpdate(window->getDynamicMeshUpdates());
 
     if (success==false)
     {
@@ -350,7 +351,8 @@ namespace aff
 
 GraphicsWindow::GraphicsWindow(EntityBase* parent, SyncMode syncMode, bool simpleGraphics) :
   aff::ComponentBase(parent),
-  Rcs::Viewer(!simpleGraphics, !simpleGraphics)
+  Rcs::Viewer(!simpleGraphics, !simpleGraphics),
+  enableDynamicMeshUpdates(true)
 {
   pthread_mutex_init(&frameMtx, NULL);
   setWindowSize(0, 0, 640, 480);
@@ -1162,6 +1164,16 @@ void GraphicsWindow::onSetNodeTransform(std::string nodeName, HTr transform)
   {
     nodes[i]->setTransformation(&transform);
   }
+}
+
+void GraphicsWindow::setDynamicMeshUpdates(bool enable)
+{
+  this->enableDynamicMeshUpdates = enable;
+}
+
+bool GraphicsWindow::getDynamicMeshUpdates() const
+{
+  return this->enableDynamicMeshUpdates;
 }
 
 }   // namespace aff

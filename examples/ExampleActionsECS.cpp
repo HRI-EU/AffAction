@@ -439,7 +439,12 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("PlanDFS", &ExampleActionsECS::onPlanActionSequenceDFS, this);
   entity.subscribe("PlanDFSEE", &ExampleActionsECS::onPlanActionSequenceDFSEE, this);
   entity.subscribe("TextCommand", &ExampleActionsECS::onTextCommand, this);
+
+  if (changeBackgroundColor)
+  {
   entity.subscribe("FreezePerception", &ExampleActionsECS::onChangeBackgroundColorFreeze, this);
+  }
+
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
   entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
   entity.subscribe("ClearTrajectory", &ExampleActionsECS::onClearTrajectory, this);
@@ -669,6 +674,8 @@ bool ExampleActionsECS::initAlgo()
   // Initialization sequence to initialize all graphs from the sensory state. This also triggers the
   // "Start" event, starting all component threads.
   entity.initialize(getCurrentGraph());
+
+  RcsGraph_fprintModelState(stdout, getGraph(), getGraph()->q, "init", 0);
 
   this->sceneQuery = std::make_unique<SceneQueryPool>(this, NUM_SCENEQUERIES);
 
@@ -1108,9 +1115,9 @@ bool ExampleActionsECS::initGraphics()
       entity.publish("PlanDFSEE", textCmd);
     }
 
-  }, "Get body under mouse");
+  }, "Get or put body under mouse");
 
-  viewer->setKeyCallback('n', [this](char k)
+  viewer->setKeyCallback('M', [this](char k)
   {
     auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
     if (bn)
@@ -1120,7 +1127,7 @@ bool ExampleActionsECS::initGraphics()
     }
   }, "Get body under mouse");
 
-  viewer->setKeyCallback('N', [this](char k)
+  viewer->setKeyCallback('n', [this](char k)
   {
     auto bn = viewer->getBodyNodeUnderMouse<Rcs::BodyNode*>();
     if (bn)
@@ -1130,6 +1137,19 @@ bool ExampleActionsECS::initGraphics()
     }
 
   }, "Put body under mouse");
+
+  viewer->setKeyCallback('N', [this](char k)
+  {
+    RLOG(0, "No-gesture");
+    getEntity().publish("StartGesture", std::string("no"), RCS_DEG2RAD(10.0), 5);
+  }, "No-gesture");
+
+  viewer->setKeyCallback('Y', [this](char k)
+  {
+    RLOG(0, "Yes-gesture");
+    getEntity().publish("StartGesture", std::string("yes"), RCS_DEG2RAD(10.0), 5);
+  }, "Yes-gesture");
+
 
   viewer->setKeyCallback('l', [this](char k)
   {

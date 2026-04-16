@@ -154,14 +154,14 @@ cv2.imwrite("depth_image.jpg", depth_display)
     if (!cam)
     {
       RLOG_CPP(1, "Camera body " << cameraName << " not found - returning empty array");
-      return py::array_t<double>({ 0, 0, 3 });
+      return py::array_t<uint8_t>({ 0, 0, 3 });
     }
 
     auto virtualCameras = ex.getVirtualCameras();
     if (virtualCameras.empty())
     {
       RLOG_CPP(1, "No virtual cameras found - returning empty array");
-      return py::array_t<double>({ 0, 0, 3 });
+      return py::array_t<uint8_t>({ 0, 0, 3 });
     }
 
 
@@ -192,7 +192,7 @@ cv2.imwrite("depth_image.jpg", depth_display)
       }
 
     RLOG_CPP(1, "Camera " << cameraName << " not found - returning empty array");
-    return py::array_t<double>({ 0, 0, 3 });
+    return py::array_t<uint8_t>({ 0, 0, 3 });
   }, R"pbdoc(
 Renders the desired state of the scene from the given camera. Outputs the color image.
 If there is no virtual camera instantiated in the simulator, this will be done in this
