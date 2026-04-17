@@ -1,0 +1,200 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" >
+  
+  <!-- The optional grapchics window camera perspective when starting up. -->
+  <Body name="default_camera_view" transform="3.922735 1.185923 2.488906   7.597 -22.898 -158.820"/>
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
+    <Shape type="FRAME" extents="0.14 0.14 0"      marker="true"    markerName="aruco_1" scale="0.2" transform="0.16 0.61 0.70025 0 0 0" />
+    <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0.16 0.61 0.70025 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
+    <Shape type="BOX"   extents="3.0 4.0 0.04"     distance="false" physics="true"  graphics="true"  transform="0 0 -0.02 0 0 0"         color="PEWTER" no_textureFile="textures/floor.jpg" />
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <Body name="stand" transform="-1.5 0 0 0 0 0">
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/stand_franka.stl" distance="false" physics="false" graphics="true"
+	   transform="0.384 0.32 0 0 0 -90" color="GRAY" scale="0.001" />
+    <Shape type="BOX" extents="1.2 0.8 0.4" distance="true" physics="false"  graphics="false" transform="0.104 0 0.2 0 0 0" color="RANDOM" />
+    <Shape type="BOX" extents="0.72 0.8 0.3" distance="true" physics="false" graphics="false" transform="-0.136 0 0.55 0 0 0" color="RANDOM" />
+    <Shape type="FRAME" />
+  </Body>
+  
+  <Body name="Johnnie" prev="stand" />
+
+  <Body name="pole" prev="stand" transform="0.284 0 0 0 0 0" >
+    <Joint name="pole_z" range="0 1 1.2" type="TransZ" constraint="true" />
+    <Shape type="BOX" extents="0.12 0.08 0.7" distance="true" physics="false" graphics="true" transform="0 0 -0.35 0 0 0"/>
+    <Shape type="BOX" extents="0.04 0.08 0.24" distance="false" physics="false" graphics="true"
+	   transform="0.14 0 0.04 0 0 0" color="LIGHTGRAY" scale="0.001" description="vertical mount" />
+    <Shape type="BOX" extents="0.22 0.02 0.08" distance="false" physics="false" graphics="true"
+	   transform="0.05 -0.05 -0.04 0 0 0" color="LIGHTGRAY" scale="0.001" description="horizontal mount" />
+    <Shape type="BOX" extents="0.22 0.02 0.08" distance="false" physics="false" graphics="true"
+	   transform="0.05 0.05 -0.04 0 0 0" color="LIGHTGRAY" scale="0.001" description="horizontal mount" />
+    <Shape type="SSL" radius="0.16" length="1.6" transform="0.03 0 -0.8 0 0 0" distance="true" physics="false" graphics="false" color="RANDOM" />
+    <Shape type="FRAME"/>
+  </Body>
+  
+  <!-- Dual arm FR3 setup -->
+  <Group prev="pole">
+    <xi:include href="g_franka_duomount_new.xml"/>
+  </Group>
+
+  <!-- Schunk PW70 PTU with the 4mm base plate. -->
+  <Group prev="pole" transform="0.1196 0 0.15 0 0 0">
+    <xi:include href="../HRI/g_head_v4.xml"/>
+  </Group>
+  
+  <!-- The gaze model of the robot (testing).-->
+  <Group prev="head_shell" transform="0 0 0 0 0 0" >
+    <xi:include href="../HRI/g_gazemodel.xml" />
+  </Group>
+  
+  <Body name="GazePoint" >
+    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
+    <Shape type="SPHERE" radius="0.025" graphics="false" color="GREEN" />
+  </Body>
+
+
+
+  <!-- The model for a simple camera. -->
+  <Body name="camera_0" prev="pole" color="WHITE" mass="0.5" physics="dynamic" rigid_body_joints="0.2 0 0.8 15 45 -30" was_rigid_body_joints="0.2 0 0.8 0 40 0" >
+    <!-- Upper long part -->
+    <Shape type="FRAME" scale="0.05" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.127" transform="-0.0635 0.04 0.026 90 90 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.127" transform="-0.0635 -0.04 0.026 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.08 0.026 0.127" transform="-0.0635 0 0.026 90 90 0" graphics="true" />
+    
+    <!-- Lower short part -->
+    <Shape type="CYLINDER" radius="0.013" length="0.026" transform="-0.013 0.04 0.013 90 90 0" graphics="true" />
+    <Shape type="CYLINDER" radius="0.013" length="0.026" transform="-0.013 -0.04 0.013 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.08 0.026 0.026" transform="-0.013 0 0.013 90 90 0" graphics="true" />
+    <Shape type="BOX" extents="0.106 0.013 0.026" transform="-0.013 0 0.0195 90 90 0" graphics="true" />
+  </Body>
+
+  <Body name="camera_0_rgb_frame" prev="camera_0" transform="0 -0.032 0.0195 -90 90 0" >
+    <Shape type="FRAME" scale="0.03" />
+  </Body>
+  
+  <Body name="camera_0_depth_frame" prev="camera_0" transform="0 0 0.0195 -90 90 0" >
+    <Shape type="FRAME" scale="0.03" />
+  </Body>
+
+  <AffordanceModel body="camera_0" name="camera" >
+    <Supportable frame="camera_0"/>
+  </AffordanceModel>
+
+
+
+
+  
+  <!-- Left Allegro hand -->
+  <Group name="_left" prev="left_fr3_link8" transform="0 0 0 0 0 45">
+    <xi:include href="../Allegro/g_hand_left.xml"/>
+
+    <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 90 0 90">
+      <Shape type="FRAME" scale="0.3"/>
+    </Body>
+    <Body name="hand_powergrasp" prev="hand_robot" transform="0 0 0 0 0 0">
+      <Shape type="FRAME" scale="0.1"/>
+    </Body>
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 -0.04 0 0 0 -60">
+      <Shape type="FRAME" scale="0.15"/>
+    </Body>
+
+    <xxxManipulator body="hand_robot" types="hand hand_left allegro_left robot_0_hand_left">
+      <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
+      <PowergraspCapability frame="hand_powergrasp"/>
+      <PincergraspCapability frame="hand_pincergrasp"/>
+    </xxxManipulator>
+
+  </Group>
+
+  <!-- Right Allegro hand -->
+  <Group name="_right" prev="right_fr3_link8" transform="0 0 0 0 0 45">
+    <xi:include href="../Allegro/g_hand_right.xml"/>
+
+    <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 -90 0 -90">
+      <Shape type="FRAME" scale="0.3"/>
+    </Body>
+    <Body name="hand_powergrasp" prev="hand_robot" transform="0 -0.0 -0.0 0 -0 0">
+      <Shape type="FRAME" scale="0.1"/>
+    </Body>
+    <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 0.04 0 0 0 60">
+      <Shape type="FRAME" scale="0.15"/>
+    </Body>
+    
+    <Manipulator body="hand_robot" types="hand hand_right allegro_right robot_0_hand_right">
+      <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
+      <PowergraspCapability frame="hand_powergrasp"/>
+      <PincergraspCapability frame="hand_pincergrasp"/>
+      <FingerpushCapability frame="hand_pincergrasp"/>
+    </Manipulator>
+
+  </Group>
+
+
+  
+  <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+
+
+  <Group prev="aruco_base" color="GRAY" rigid_body_joints="-0.15 0 0.7 0 0 0" >
+    <xi:include href="g_scene.xml"/>
+  </Group>
+
+  
+  <Manipulator body="head_kinect_link" types="head">
+    <GazeCapability frame="head_kinect_lens" />
+  </Manipulator>
+
+  <Agent body="Johnnie" types="robot" name="Johnnie" >
+    <xxxComponent manipulator="hand_robot_left" />
+    <Component manipulator="hand_robot_right" />
+    <Component manipulator="head_kinect_link" />
+  </Agent>
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="pole"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
+
+  <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)" />
+  
+
+</Graph>

@@ -39,45 +39,44 @@ base right gravity: -9.64772 -0.793742 -1.58981
        usage="&#xA;  Configuration file to load the two-arm Jaco Gen3 robot with arms mounted at the shoulders.
 	      &#xA;  ">
 
-  <Body name="Stand" >
-    <Shape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 0 0 0 -90" scale="0.001" />
+
+  
+  <!-- Aluminum structure -->
+  <Body name="stand" >
+    <Shape type="MESH" meshFile="item24/item_roman_chassis.stl" transform="-0.355 -0.32 -0.058 0 0 -90" scale="0.001" />
   </Body>
 
-  <!-- Aluminum structure including PTU. -->
-  <Group prev="Stand" >
-    <xi:include href="g_item_base_gen3.xml"/>
-  </Group>
-
-  <Body name="adapter_shoulder" prev="center_post_link" transform="-0.04 0 0.5704 0 0 0" >
-    <Shape type="MESH" meshFile="hri_scitos_description/Gen3Mount-V3.stl" scale="0.001" transform="0 0 0.0638 0 0 180" />
+  <Body name="Johnnie" prev="stand" />
+  <Body name="base_footprint" prev="Johnnie" />
+  <Body name="base_link" prev="base_footprint" transform="0 0 0.0498 0 0 0" physics="none" mass="30" />
+  <Body name="center_post_link" prev="base_link" transform_low="-0.075 0 0.5152 0 0 0" transform="-0.075 0 0.9552 0 0 0" physics="none">
+    <Joint name="DofPoleZ" type="TransZ" range="-1 -0.52 1" constraint="true" />
+    <Shape type="MESH" meshFile="item24/item_roman_pole.stl" transform="0.04 0.04 -0.373 0 0 -90" scale="0.001" />
+    <Shape type="SSL" radius="0.06" length="1.2" distance="true" physics="false" graphics="false" transform="0 0 -0.4 0 0 0" color="RED" />
+    <Shape type="FRAME" scale="0.2" transform="-0.05 0 1.3 0 40 0" />
   </Body>
-  
-  <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.073 -0.072 0.058 -10 3 10" />
-
-  <Group name="_right" prev="adapter_shoulder_right_2" transform="0 0 0 90 0 90" >
-    <xi:include href="gJacoGen3_7dof.xml"/>
-	<xi:include href="g_hand_right-gen3.xml"/>
-  </Group>
-
-  <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.073 0.072 0.058 10 -3 -10" xxxrigid_body_joints="0 0 0 5 0 -10" />
-
-  <Group name="_left" prev="adapter_shoulder_left_2" transform="0 0 0 -90 0 -90" >
-    <xi:include href="gJacoGen3_7dof.xml"/>
-	<xi:include href="g_hand_left-gen3.xml"/>
-  </Group>
 
   
+  <!-- Respeaker. Graphics switched on in RespeakerComponent -->
+  <Body name="respeaker" prev="center_post_link" transform="0.13 0 .55 0 0 -90" physics="none">
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
+	   color="BLACK_RUBBER" />
+  </Body>
+  <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none" >
+    <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false" 
+	   color="BLUE_TRANS" transform="0 0 0.01 0 0 0" />
+    <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false" physics="false" transform="0.4 0 0 0 -90 0" />
+  </Body>
+
   
-
-
-
-  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
-  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
-    <xi:include href="../HRI/g_head_v2.xml" />
+  <!-- The new head. Exchange g_head_v4.xml against g_head_v2.xml for old head -->
+  <Group prev="center_post_link" transform="0 0 .631 0 0 0" >
+    <xi:include href="../HRI/g_head_v4.xml"/>
   </Group>
 
+  
   <!-- The gaze model of the robot (testing).-->
-  <Group prev="head_shell" transform="0 0 0 0 0 0">
+  <Group prev="head_shell" transform="0 0 0 0 0 0" >
     <xi:include href="../HRI/g_gazemodel.xml" />
   </Group>
 
@@ -85,8 +84,36 @@ base right gravity: -9.64772 -0.793742 -1.58981
     <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
     <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
     <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
+    <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
   </Body>
+
+  
+  <!-- 3d camera
+  <Group prev="center_post_link" transform="-0.05 0 1.3 0 40 6" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+ -->
+
+  <!-- Dual arm setup -->
+  <Body name="adapter_shoulder" prev="center_post_link" transform="-0.09 0 0.65 0 0 0" >
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Gen3Mount-V3.stl" scale="0.001" transform="0 0 0.0638 0 0 180" />
+  </Body>
+  
+  <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.073 -0.072 0.058 -10 3 10" />
+  <Group name="_right" prev="adapter_shoulder_right_2" transform="0 0 0 90 0 90" >
+    <xi:include href="gJacoGen3_7dof.xml"/>
+    <xi:include href="g_hand_right-gen3.xml"/>
+  </Group>
+
+  <Body name="adapter_shoulder_left_2" prev="adapter_shoulder" transform="-0.073 0.072 0.058 10 -3 -10" />
+  <Group name="_left" prev="adapter_shoulder_left_2" transform="0 0 0 -90 0 -90" >
+    <xi:include href="gJacoGen3_7dof.xml"/>
+    <xi:include href="g_hand_left-gen3.xml"/>
+  </Group>
+
+  
+  
+
   
   <Manipulator body="head_kinect_link" types="head">
     <GazeCapability frame="head_kinect_lens" />

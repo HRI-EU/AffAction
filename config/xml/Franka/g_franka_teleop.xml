@@ -29,6 +29,26 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default">
 
+  <Body name="default_camera_view" transform="-1.676867 -1.658439 2.435608   -11.077 20.900 35.001"/>
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body name="aruco_base" color="PEWTER" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.31 1.00025 0 0 0"
+           type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER"
+           textureFile="textures/floor.jpg"
+           graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <!-- The stand with the dual arm FR3 setup with Allegro hands. -->
+  <Group prev="aruco_base" transform="0 0 0 0 0 0">
+    <!-- <xi:include href="g_franka_with_allegro.xml"/> -->
+
+
+
+
+
     <Body name="stand" transform="0 0 0 0 0 0">
         <Shape type="BOX" extents="0.8 0.8 0.7175" graphics="true" distance="true" transform="0 0 0.51625 0 0 0"
                color="DARKGRAY"/>
@@ -58,15 +78,11 @@
         <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 -0.04 0 0 0 -60">
             <Shape type="FRAME" scale="0.15"/>
         </Body>
-        <Body name="hand_point" prev="hand_robot" transform="0.13 0.05 0.05 180 0 0">
-            <Shape type="FRAME" scale="0.15"/>
-        </Body>
 
         <Manipulator body="hand_robot" types="hand hand_left allegro_left robot_0_hand_left">
             <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
             <PowergraspCapability frame="hand_powergrasp"/>
             <PincergraspCapability frame="hand_pincergrasp"/>
-            <FingerpushCapability frame="hand_point"/>
         </Manipulator>
     </Group>
 
@@ -83,63 +99,73 @@
         <Body name="hand_pincergrasp" prev="hand_robot" transform="0.05 0.04 0 0 0 60">
             <Shape type="FRAME" scale="0.15"/>
         </Body>
-        <Body name="hand_point" prev="hand_robot" transform="0.13 -0.05 0.05 0 0 0">
-            <Shape type="FRAME" scale="0.15"/>
-        </Body>
 
         <Manipulator body="hand_robot" types="hand hand_right allegro_right robot_0_hand_right">
             <Joints names="joint_0_0 joint_1_0 joint_2_0 joint_3_0 joint_4_0 joint_5_0 joint_6_0 joint_7_0 joint_8_0 joint_9_0 joint_10_0 joint_11_0 joint_12_0 joint_13_0 joint_14_0 joint_15_0"/>
             <PowergraspCapability frame="hand_powergrasp"/>
             <PincergraspCapability frame="hand_pincergrasp"/>
-            <FingerpushCapability frame="hand_point"/>
         </Manipulator>
     </Group>
 
-    <Body name="respeaker" prev="stand" transform="0.43 0 1.15 0 0 -90" physics="none">
-        <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
-               color="BLACK_RUBBER"/>
-    </Body>
 
-    <!-- Graphics switched on in RespeakerComponent -->
-    <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none">
-        <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false"
-               color="BLUE_TRANS" transform="0 0 0.01 0 0 0"/>
-        <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false"
-               physics="false" transform="0.4 0 0 0 -90 0"/>
-    </Body>
 
-    <!-- Schunk PW70 PTU with the 4mm base plate. -->
-    <Group prev="stand" transform="0.36 0 1.437 0 0 0">
-        <xi:include href="../HRI/g_ptu_pw70_with_base_plate.xml"/>
-    </Group>
 
-    <!-- The new head. -->
-    <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90">
-        <xi:include href="../HRI/g_head_v2.xml"/>
-    </Group>
 
-    <!-- The gaze model of the new head. -->
-    <Group prev="head_shell" transform="0 0 0 0 0 0">
-        <xi:include href="../HRI/g_gazemodel.xml"/>
-    </Group>
 
-    <Body name="GazePoint">
-        <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5"/>
-        <Joint name="gpy" range="-5 0 5" type="TransY" speedLimit="2" weightJL="0" weightMetric="5"/>
-        <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5"/>
-        <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN"/>
-    </Body>
 
-    <Manipulator body="head_kinect_link" types="head robot_head">
-        <GazeCapability frame="head_kinect_lens"/>
-    </Manipulator>
 
-    <noAgent body="Johnnie" types="robot" name="Johnnie">
-        <!-- <Component manipulator="hand_robot_left3" /> -->
-        <!-- <Component manipulator="hand_robot_right3" /> -->
-        <!-- <Component manipulator="hand_robot_left" />
-         <Component manipulator="hand_robot_right" />
-         <xComponent manipulator="head_kinect_link" /> -->
-    </noAgent>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+  </Group>
+
+  <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)"/>
+  <!-- <xi:include href="g_franka_with_allegro_collision_model.xml"/> -->
+
+
+
+  
+  <!-- The model for a simple camera. -->
+  <!-- <Group prev="aruco_base" rigid_body_joints="0.4 0 1.8 0 40 0"> -->
+  <!--   <xi:include href="../scene/g_azure_kinect.xml"/> -->
+  <!-- </Group> -->
+
+  <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+  <!-- 
+  <Group prev="aruco_base" name="Felix" color="RED" transform="2 -1 0.5 0 0 180" >
+    <xi:include href="../examples/g_human_agent.xml"/>
+  </Group>
+ -->
+
+
+  
 </Graph>

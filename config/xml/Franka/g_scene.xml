@@ -27,10 +27,10 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
-  <Body name="table" prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" physics="kinematic" mass="10" >
+  <Body name="table" physics="kinematic" mass="10" >
     <Shape type="BOX" distance="true" extents="0.8 1.4 0.026" graphics="true" physics="true"
 	   transform="0 0 -0.013 0 0 0" textureFile="textures/table.png"/>
     <Shape scale="0.2" type="FRAME"/>
@@ -242,7 +242,7 @@
 
 
   
-  <Group prev="table_grid_1_4" name="_green" color="GREEN" rigid_body_joints="true" >
+  <Group prev="table_grid_1_4" name="_green" color="GREEN" rigid_body_joints="0 -0.4 0.2 0 0 0" >
     <xi:include href="../scene/g_apple.xml"/>
   </Group>
 

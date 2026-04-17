@@ -18,7 +18,7 @@ joint_12_0:     -4.0    20.8    109.0
 joint_13_0:     -10.0   -13.5   111.0
 joint_14_0:     -9.0    -2.8    110.0
 joint_15_0:     -8.0    -1.7    108.0
-
+ 
 
 0       0.0000000000000000 [mm] (base_joint)
 1       14.69600000000000 [deg] (joint_0_0_right)
@@ -39,136 +39,149 @@ joint_15_0:     -8.0    -1.7    108.0
 16      -47.08000000000000 [deg]        (joint_15_0_right)
 
 
+From the data sheet, these are the home positions (https://www.allegrohand.com/sub/tech/t.php?idx=2#):
+
+
+Finger 			Joint 	Left Hand (Deg) 	Right Hand(Deg)	Range(Deg)
+
+Index		0	0		0		0		-16 : 16
+			1		0		0		-5  : 110
+			2		45		45		-3  : 102
+			3		45		45		-5  : 105  
+
+Middle		1	0		0		0		-16 : 16
+			1		0		0               -5  : 110
+			2		45		45              -3  : 102
+			3		45		45              -5  : 105  
+
+Pinky		2	0		0		0		-16 : 16
+			1		0		0               -5  : 110
+			2		50		50              -3  : 102
+			3		45		45              -5  : 105 
+
+Thumb		3	0		50		50		 0  : 105
+			1		25		25		-6  : 107
+			2		15		15		-5  : 106
+			3		45		45		-4  : 104
+					
 
 
 -->
 
-<Graph name="DefaultPose" >
+<Graph>
 
   <Body name="hand_base" transform="0 0 0.102 0 0 180" >
-    	<Shape type="FRAME" scale="0.1" />
+    <Shape type="FRAME" scale="0.1" />
   </Body>
   
   <Body name="palm_link" prev="hand_base" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 0 0 89.954374" meshFile="allegro_hand_description/meshes/left_hand_G.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 0 0 89.954374" meshFile="allegro_hand_description/meshes/left_hand_G.stl" />
-    	<xxxShape type="FRAME" scale="0.1" />
+    <Shape type="SSR" extents=".1 .06 .08" distance="true" physics="false" graphics="false" color="RED" transform="-0.005 0 -0.03 0 90 0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 0 0 90" meshFile="meshes/allegro_hand_description/meshes/left_hand_G.stl" color="#333333ff" />
   </Body>
 
   <Body name="link_0_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >
-    <Joint name="joint_0_0" range="20" type="RotZ" transform="0.0005 -0.0425 -0.005 5 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" />
+    <Joint name="joint_0_0" range="26" type="RotZ" transform="0.0005 -0.0425 -0.005 5 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
   </Body>
 
   <Body name="link_1_0" prev="link_0_0" physics="dynamic" mass="0.086" inertia="1.86e-05 1.68e-06 -6.16e-06   1.68e-06 4.87e-05 3.51e-07   -6.16e-06 3.51e-07 5.57e-05" >
-    <Joint name="joint_1_0" range="-9 114" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
+    <Joint name="joint_1_0" range="-15 0 120" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l2.stl" />
   </Body>
 
   <Body name="link_2_0" prev="link_1_0" physics="dynamic" mass="0.0367" inertia="3.81e-06 5.72e-09 -9.97e-07   5.72e-09 1.455e-05 2.63e-08   -9.97e-07 2.63e-08 1.29e-05" >
-    <Joint name="joint_2_0" range="-7 106" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
+    <Joint name="joint_2_0" range="-13 45 112" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l3.stl" />
   </Body>
 
   <Body name="link_3_0" prev="link_2_0" physics="dynamic" mass="0.004" inertia="1.17e-06 5.09e-09 0   5.09e-09 2.4e-06 0   0 0 1.67e-06" >
-    <Joint name="joint_3_0" range="-9 109" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
+    <Joint name="joint_3_0" range="-15 45 115" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l4.stl" />
   </Body>
 
   <Body name="link_3_0_tip" prev="link_3_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
+    <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
   </Body>
 
   <Body name="link_4_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >
-    <Joint name="joint_4_0" range="20" type="RotZ" transform="0 0 -0.002 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.167 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.167 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" />
+    <Joint name="joint_4_0" range="26" type="RotZ" transform="0 0 -0.002 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.167 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
   </Body>
 
   <Body name="link_5_0" prev="link_4_0" physics="dynamic" mass="0.086" inertia="1.86e-05 1.68e-06 -6.16e-06   1.68e-06 4.87e-05 3.51e-07   -6.16e-06 3.51e-07 5.57e-05" >
-    <Joint name="joint_5_0" range="-9 114" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
+    <Joint name="joint_5_0" range="-15 0 120" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l2.stl" />
   </Body>
 
   <Body name="link_6_0" prev="link_5_0" physics="dynamic" mass="0.0367" inertia="3.81e-06 5.72e-09 -9.97e-07   5.72e-09 1.455e-05 2.63e-08   -9.97e-07 2.63e-08 1.29e-05" >
-    <Joint name="joint_6_0" range="-7 106" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
+    <Joint name="joint_6_0" range="-13 45 112" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l3.stl" />
   </Body>
 
   <Body name="link_7_0" prev="link_6_0" physics="dynamic" mass="0.004" inertia="1.17e-06 5.09e-09 0   5.09e-09 2.4e-06 0   0 0 1.67e-06" >
-    <Joint name="joint_7_0" range="-9 109" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
+    <Joint name="joint_7_0" range="-15 45 115" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l4.stl" />
   </Body>
 
   <Body name="link_7_0_tip" prev="link_7_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
+    <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
   </Body>
 
   <Body name="link_8_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >
-    <Joint name="joint_8_0" range="20" type="RotZ" transform="0.0005 0.0425 -0.005 -5 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l1.stl" />
+    <Joint name="joint_8_0" range="26" type="RotZ" transform="0.0005 0.0425 -0.005 -5 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.168 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l1.stl" color="#333333ff" />
   </Body>
 
   <Body name="link_9_0" prev="link_8_0" physics="dynamic" mass="0.086" inertia="1.86e-05 1.68e-06 -6.16e-06   1.68e-06 4.87e-05 3.51e-07   -6.16e-06 3.51e-07 5.57e-05" >
-    <Joint name="joint_9_0" range="-9 114" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l2.stl" />
+    <Joint name="joint_9_0" range="-15 0 120" type="RotY" transform="0 0 0.017 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1495 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l2.stl" />
   </Body>
 
   <Body name="link_10_0" prev="link_9_0" physics="dynamic" mass="0.0367" inertia="3.81e-06 5.72e-09 -9.97e-07   5.72e-09 1.455e-05 2.63e-08   -9.97e-07 2.63e-08 1.29e-05" >
-    <Joint name="joint_10_0" range="-7 106" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l3.stl" />
+    <Joint name="joint_10_0" range="-13 45 112" type="RotY" transform="0 0 0.0431 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.1065 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l3.stl" />
   </Body>
 
   <Body name="link_11_0" prev="link_10_0" physics="dynamic" mass="0.004" inertia="1.17e-06 5.09e-09 0   5.09e-09 2.4e-06 0   0 0 1.67e-06" >
-    <Joint name="joint_11_0" range="-9 109" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -89.954374" meshFile="allegro_hand_description/meshes/new_l4.stl" />
+    <Joint name="joint_11_0" range="-15 45 115" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.0625 -0.022 0.0685 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/new_l4.stl" />
   </Body>
 
   <Body name="link_11_0_tip" prev="link_11_0" transform="0 0 0.04 0 0 0" physics="fixed" mass="0.0017" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -89.954374" meshFile="allegro_hand_description/meshes/finger_tip.stl" />
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
+    <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
   </Body>
 
-  <Body name="link_12_0" prev="palm_link" transform="0 0 0 0 90 0" physics="dynamic" mass="0.0446" inertia="5.44e-05 4e-07 -1.12e-07   4e-07 9.19e-06 1.07e-05   -1.12e-07 1.07e-05 4.8e-05" >
-    <Joint name="joint_12_0" range="-109 4" type="RotZ" transform="0.002 -0.027 -0.06342 -175 0 90.091252" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.021 -0.1145 0.0725 45.000083 0 -0.12905" meshFile="allegro_hand_description/meshes/t1_set.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="0.021 -0.1145 0.0725 45.000083 0 -0.12905" meshFile="allegro_hand_description/meshes/t1_set.stl" />
+  <Body name="link_12_0" prev="palm_link" transform="0 0 0 180 -90 180" physics="dynamic" mass="0.0446" inertia="5.44e-05 4e-07 -1.12e-07   4e-07 9.19e-06 1.07e-05   -1.12e-07 1.07e-05 4.8e-05"   >
+    <Joint name="joint_12_0" range="-10 50 115" type="RotZ" transform="0.002 -0.027 -0.06342 5 0 90" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.021 -0.1145 0.0725 45 0 0" meshFile="meshes/allegro_hand_description/meshes/t1_set.stl" color="#333333ff" />
   </Body>
 
-  <Body name="link_13_0" prev="link_12_0" physics="dynamic" mass="0.0173" inertia="1.52e-05 -2.09e-08 -9.8e-09   -2.09e-08 1.3323e-05 -2.04e-06   -9.8e-09 -2.04e-06 2.85e-06" >
-    <Joint name="joint_13_0" range="80 200" type="RotZ" transform="-0.001 0 0.06874 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.138 -0.0605 0.2143 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t2_set.stl" color="#333333ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.138 -0.0605 0.2143 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t2_set.stl" />
+  <Body name="link_13_0" prev="link_12_0" physics="dynamic" mass="0.0173" inertia="1.52e-05 -2.09e-08 -9.8e-09   -2.09e-08 1.3323e-05 -2.04e-06   -9.8e-09 -2.04e-06 2.85e-06" transform="0 0 0 0 180 0" >
+    <Joint name="joint_13_0" range="-16 25 117" type="RotZ" transform="-0.001 0 0.06874 0 180 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.138 -0.0605 0.2143 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/t2_set.stl" color="#333333ff" />
+    <Shape type="SSL" radius="0.02" length="0.04" distance="true" physics="false" graphics="false" transform="0 0 -0.03 0 0 0" color="RED" />
   </Body>
 
   <Body name="link_14_0" prev="link_13_0" physics="dynamic" mass="0.03607" inertia="3.7e-06 2.43e-07 6.48e-07   2.43e-07 1.54e-05 -3.11e-08   6.48e-07 -3.11e-08 1.388e-05" >
-    <Joint name="joint_14_0" range="-110 9" type="RotY" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.1265 -0.061 0.166 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t3_set.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.1265 -0.061 0.166 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t3_set.stl" />
+    <Joint name="joint_14_0" range="-15 15 116" type="RotY" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.1265 -0.061 0.166 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/t3_set.stl" />
   </Body>
 
   <Body name="link_15_0" prev="link_14_0" physics="dynamic" mass="0.0334" inertia="2.94e-06 1.244e-07 3.52e-07   1.244e-07 1.13e-05 -3.11e-08   3.52e-07 -3.11e-08 1.06e-05" >
-    <Joint name="joint_15_0" range="-108 8" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" />
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.149 -0.061 0.096 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t4_set.stl" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.149 -0.061 0.096 0.091325 0.09118 -90.045626" meshFile="allegro_hand_description/meshes/t4_set.stl" />
+    <Joint name="joint_15_0" range="-14 45 114" type="RotY" transform="0 0 0.038 0 0 0" torqueLimit="15" speedLimit="401.070457" weightJL="0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.149 -0.061 0.096 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/t4_set.stl" />
   </Body>
 
   <Body name="link_15_0_tip" prev="link_15_0" transform="0 0 0.05 0 0 0" physics="fixed" mass="0.0014" inertia="9.68e-07 0 0   0 9.68e-07 0   0 0 9.68e-07" >
-    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 179.908748" meshFile="allegro_hand_description/meshes/finger_tip_silicon.stl" color="#e5e5e5ff" />
-    <xShape type="MESH" distance="true" physics="true" graphics="false" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 179.908748" meshFile="allegro_hand_description/meshes/finger_tip_silicon.stl" />
+    <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 180" meshFile="meshes/allegro_hand_description/meshes/finger_tip_silicon.stl" color="#e5e5e5ff" />
+    <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
   </Body>
 
 </Graph>

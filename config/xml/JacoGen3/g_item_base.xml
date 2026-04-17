@@ -113,7 +113,7 @@
 
     <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
       <Shape type="FRAME" scale="0.2"/>
-      <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
+      <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
 	     xtransform="0 0.04 -0.115 0 0 -90" color="BLACK_RUBBER" />
     </Body>
 

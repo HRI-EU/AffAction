@@ -27,7 +27,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" xname="default" >
   
 	<!-- The optional grapchics window camera perspective when starting up. -->
   <Body name="default_camera_view" transform="0.628586 -0.504824 -0.072022   -11.226 12.180 141.17"/>

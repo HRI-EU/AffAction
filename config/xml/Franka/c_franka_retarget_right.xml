@@ -1,0 +1,20 @@
+<Controller xmlns:xi="http://www.w3.org/2001/XInclude" >
+
+  <xi:include href="g_franka_retarget.xml"/>
+
+  <Task name="Right upperarm"  controlVariable="POLAR"   effector="right_fr3_link3"  refBdy="Seat_Felix" />
+  <Task name="Right forearm"   controlVariable="POLAR"   effector="right_fr3_link5"  refBdy="Seat_Felix" />
+  <Task name="Right thumb"     controlVariable="POLAR"   effector="hand_robot_right" refBdy="Seat_Felix" />
+  <Task name="Left upperarm"   controlVariable="POLAR"   effector="left_fr3_link3"   refBdy="Seat_Felix" />
+  <Task name="Left forearm"    controlVariable="POLAR"   effector="left_fr3_link5"   refBdy="Seat_Felix" />
+  <Task name="Left thumb"      controlVariable="POLAR"   effector="hand_robot_left"  refBdy="Seat_Felix" />
+  <Task name="Head"            controlVariable="POLAR"   effector="head_kinect_lens" refBdy="Seat_Felix" />
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+	
+</Controller>

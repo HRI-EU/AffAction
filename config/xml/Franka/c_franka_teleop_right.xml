@@ -1,0 +1,20 @@
+<Controller xmlns:xi="http://www.w3.org/2001/XInclude" >
+
+  <xi:include href="g_franka_teleop.xml"/>
+
+  <Task name="Right pos"   controlVariable="XYZ"   effector="hand_robot_right_tip" />
+  <Task name="Right ori"   controlVariable="ABC"   effector="hand_robot_right_tip" refFrame="hand_robot_right_tip"  />
+  <xTask name="Right ori"   controlVariable="POLAR"   effector="hand_robot_right_tip" />
+
+  <Taskxx name="Right fingers"  controlVariable="Joints"   jnts="joint_0_0_right joint_1_0_right joint_2_0_right joint_3_0_right joint_4_0_right joint_5_0_right joint_6_0_right joint_7_0_right joint_8_0_right joint_9_0_right joint_10_0_right joint_11_0_right joint_12_0_right joint_13_0_right joint_14_0_right joint_15_0_right" />
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
+  
+</Controller>

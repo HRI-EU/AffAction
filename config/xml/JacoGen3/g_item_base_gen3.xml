@@ -27,7 +27,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" >
 
   <Body name="Johnnie" />
   <Body name="base_footprint" prev="Johnnie" />
@@ -56,7 +56,7 @@
   </Group>
 
   <Body name="respeaker" prev="center_post_link" transform="0.13 0 .6 0 0 -90" physics="none">
-    <Shape type="MESH" meshFile="hri_scitos_description/Respeaker_mounting_simplified.stl" scale="0.001"
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
 	   color="BLACK_RUBBER" />
   </Body>
 

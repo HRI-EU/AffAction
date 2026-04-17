@@ -1,0 +1,412 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Group>
+    <!-- The model_states for the Franka with Allegro setup. -->
+
+    <model_state model="default" time_stamp="0">
+      <joint_state joint="fr3_joint1_left" position="120"/>
+      <joint_state joint="fr3_joint2_left" position="80"/>
+      <joint_state joint="fr3_joint3_left" position="-90"/>
+      <joint_state joint="fr3_joint4_left" position="-110"/>
+      <joint_state joint="fr3_joint5_left" position="-30"/>
+      <joint_state joint="fr3_joint6_left" position="170"/>
+      <joint_state joint="fr3_joint7_left" position="0"/>
+
+      <joint_state joint="fr3_joint1_right" position="-120"/>
+      <joint_state joint="fr3_joint2_right" position="80"/>
+      <joint_state joint="fr3_joint3_right" position="90"/>
+      <joint_state joint="fr3_joint4_right" position="-110"/>
+      <joint_state joint="fr3_joint5_right" position="30"/>
+      <joint_state joint="fr3_joint6_right" position="170"/>
+      <joint_state joint="fr3_joint7_right" position="-90"/>
+
+      <joint_state joint="joint_0_0_left" position="0" />
+      <joint_state joint="joint_1_0_left" position="0" />
+      <joint_state joint="joint_2_0_left" position="45" />
+      <joint_state joint="joint_3_0_left" position="45" />
+      <joint_state joint="joint_4_0_left" position="0" />
+      <joint_state joint="joint_5_0_left" position="0" />
+      <joint_state joint="joint_6_0_left" position="45" />
+      <joint_state joint="joint_7_0_left" position="45" />
+      <joint_state joint="joint_8_0_left" position="0" />
+      <joint_state joint="joint_9_0_left" position="0" />
+      <joint_state joint="joint_10_0_left" position="45" />
+      <joint_state joint="joint_11_0_left" position="45" />
+      <joint_state joint="joint_12_0_left" position="50" />
+      <joint_state joint="joint_13_0_left" position="25" />
+      <joint_state joint="joint_14_0_left" position="15" />
+      <joint_state joint="joint_15_0_left" position="45" />
+
+      <joint_state joint="joint_0_0_right" position="0" />
+      <joint_state joint="joint_1_0_right" position="0" />
+      <joint_state joint="joint_2_0_right" position="45" />
+      <joint_state joint="joint_3_0_right" position="45" />
+      <joint_state joint="joint_4_0_right" position="0" />
+      <joint_state joint="joint_5_0_right" position="0" />
+      <joint_state joint="joint_6_0_right" position="45" />
+      <joint_state joint="joint_7_0_right" position="45" />
+      <joint_state joint="joint_8_0_right" position="0" />
+      <joint_state joint="joint_9_0_right" position="0" />
+      <joint_state joint="joint_10_0_right" position="45" />
+      <joint_state joint="joint_11_0_right" position="45" />
+      <joint_state joint="joint_12_0_right" position="50" />
+      <joint_state joint="joint_13_0_right" position="25" />
+      <joint_state joint="joint_14_0_right" position="15" />
+      <joint_state joint="joint_15_0_right" position="45" />
+    </model_state>
+
+    <model_state model="default_fingers_left" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0" />
+      <joint_state joint="joint_1_0_left" position="0" />
+      <joint_state joint="joint_2_0_left" position="45" />
+      <joint_state joint="joint_3_0_left" position="45" />
+      <joint_state joint="joint_4_0_left" position="0" />
+      <joint_state joint="joint_5_0_left" position="0" />
+      <joint_state joint="joint_6_0_left" position="45" />
+      <joint_state joint="joint_7_0_left" position="45" />
+      <joint_state joint="joint_8_0_left" position="0" />
+      <joint_state joint="joint_9_0_left" position="0" />
+      <joint_state joint="joint_10_0_left" position="45" />
+      <joint_state joint="joint_11_0_left" position="45" />
+      <joint_state joint="joint_12_0_left" position="50" />
+      <joint_state joint="joint_13_0_left" position="25" />
+      <joint_state joint="joint_14_0_left" position="15" />
+      <joint_state joint="joint_15_0_left" position="45" />
+    </model_state>
+
+    <model_state model="default_fingers_right" time_stamp="0">
+      <joint_state joint="joint_0_0_right" position="0" />
+      <joint_state joint="joint_1_0_right" position="0" />
+      <joint_state joint="joint_2_0_right" position="45" />
+      <joint_state joint="joint_3_0_right" position="45" />
+      <joint_state joint="joint_4_0_right" position="0" />
+      <joint_state joint="joint_5_0_right" position="0" />
+      <joint_state joint="joint_6_0_right" position="45" />
+      <joint_state joint="joint_7_0_right" position="45" />
+      <joint_state joint="joint_8_0_right" position="0" />
+      <joint_state joint="joint_9_0_right" position="0" />
+      <joint_state joint="joint_10_0_right" position="45" />
+      <joint_state joint="joint_11_0_right" position="45" />
+      <joint_state joint="joint_12_0_right" position="50" />
+      <joint_state joint="joint_13_0_right" position="25" />
+      <joint_state joint="joint_14_0_right" position="15" />
+      <joint_state joint="joint_15_0_right" position="45" />
+    </model_state>
+
+    <model_state model="default_up" time_stamp="0">
+      <joint_state joint="fr3_joint1_left" position="0"/>
+      <joint_state joint="fr3_joint2_left" position="0"/>
+      <joint_state joint="fr3_joint3_left" position="0"/>
+      <joint_state joint="fr3_joint4_left" position="-90"/>
+      <joint_state joint="fr3_joint5_left" position="0"/>
+      <joint_state joint="fr3_joint6_left" position="145"/>
+      <joint_state joint="fr3_joint7_left" position="0"/>
+      <joint_state joint="fr3_joint1_right" position="0"/>
+      <joint_state joint="fr3_joint2_right" position="0"/>
+      <joint_state joint="fr3_joint3_right" position="0"/>
+      <joint_state joint="fr3_joint4_right" position="-90"/>
+      <joint_state joint="fr3_joint5_right" position="0"/>
+      <joint_state joint="fr3_joint6_right" position="145"/>
+      <joint_state joint="fr3_joint7_right" position="0"/>
+    </model_state>
+
+    <model_state model="open_fingers" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0"/>
+      <joint_state joint="joint_1_0_left" position="0"/>
+      <joint_state joint="joint_2_0_left" position="0"/>
+      <joint_state joint="joint_3_0_left" position="0"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="0"/>
+      <joint_state joint="joint_6_0_left" position="0"/>
+      <joint_state joint="joint_7_0_left" position="0"/>
+      <joint_state joint="joint_8_0_left" position="0"/>
+      <joint_state joint="joint_9_0_left" position="0"/>
+      <joint_state joint="joint_10_0_left" position="0"/>
+      <joint_state joint="joint_11_0_left" position="0"/>
+      <joint_state joint="joint_12_0_left" position="0"/>
+      <joint_state joint="joint_13_0_left" position="90"/>
+      <joint_state joint="joint_14_0_left" position="0"/>
+      <joint_state joint="joint_15_0_left" position="0"/>
+
+      <joint_state joint="joint_0_0_right" position="0"/>
+      <joint_state joint="joint_1_0_right" position="0"/>
+      <joint_state joint="joint_2_0_right" position="0"/>
+      <joint_state joint="joint_3_0_right" position="0"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="0"/>
+      <joint_state joint="joint_6_0_right" position="0"/>
+      <joint_state joint="joint_7_0_right" position="0"/>
+      <joint_state joint="joint_8_0_right" position="0"/>
+      <joint_state joint="joint_9_0_right" position="0"/>
+      <joint_state joint="joint_10_0_right" position="0"/>
+      <joint_state joint="joint_11_0_right" position="0"/>
+      <joint_state joint="joint_12_0_right" position="0"/>
+      <joint_state joint="joint_13_0_right" position="0"/>
+      <joint_state joint="joint_14_0_right" position="0"/>
+      <joint_state joint="joint_15_0_right" position="0"/>
+    </model_state>
+
+    <model_state model="point_fingers" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0"/>
+      <joint_state joint="joint_1_0_left" position="0"/>
+      <joint_state joint="joint_2_0_left" position="0"/>
+      <joint_state joint="joint_3_0_left" position="0"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="0"/>
+      <joint_state joint="joint_6_0_left" position="0"/>
+      <joint_state joint="joint_7_0_left" position="0"/>
+      <joint_state joint="joint_8_0_left" position="0"/>
+      <joint_state joint="joint_9_0_left" position="0"/>
+      <joint_state joint="joint_10_0_left" position="0"/>
+      <joint_state joint="joint_11_0_left" position="0"/>
+      <joint_state joint="joint_12_0_left" position="0"/>
+      <joint_state joint="joint_13_0_left" position="90"/>
+      <joint_state joint="joint_14_0_left" position="0"/>
+      <joint_state joint="joint_15_0_left" position="0"/>
+
+      <joint_state joint="joint_0_0_right" position="0"/>
+      <joint_state joint="joint_1_0_right" position="0"/>
+      <joint_state joint="joint_2_0_right" position="0"/>
+      <joint_state joint="joint_3_0_right" position="0"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="0"/>
+      <joint_state joint="joint_6_0_right" position="0"/>
+      <joint_state joint="joint_7_0_right" position="0"/>
+      <joint_state joint="joint_8_0_right" position="0"/>
+      <joint_state joint="joint_9_0_right" position="0"/>
+      <joint_state joint="joint_10_0_right" position="0"/>
+      <joint_state joint="joint_11_0_right" position="0"/>
+      <joint_state joint="joint_12_0_right" position="0"/>
+      <joint_state joint="joint_13_0_right" position="0"/>
+      <joint_state joint="joint_14_0_right" position="0"/>
+      <joint_state joint="joint_15_0_right" position="0"/>
+    </model_state>
+
+    <model_state model="close_fingers" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0"/>
+      <joint_state joint="joint_1_0_left" position="52.5"/>
+      <joint_state joint="joint_2_0_left" position="49.5"/>
+      <joint_state joint="joint_3_0_left" position="50"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="52.5"/>
+      <joint_state joint="joint_6_0_left" position="49.5"/>
+      <joint_state joint="joint_7_0_left" position="50"/>
+      <joint_state joint="joint_8_0_left" position="0"/>
+      <joint_state joint="joint_9_0_left" position="52.5"/>
+      <joint_state joint="joint_10_0_left" position="49.5"/>
+      <joint_state joint="joint_11_0_left" position="50"/>
+      <joint_state joint="joint_12_0_left" position="52.5"/>
+      <joint_state joint="joint_13_0_left" position="50.5"/>
+      <joint_state joint="joint_14_0_left" position="50.5"/>
+      <joint_state joint="joint_15_0_left" position="50"/>
+
+      <joint_state joint="joint_0_0_right" position="0"/>
+      <joint_state joint="joint_1_0_right" position="52.5"/>
+      <joint_state joint="joint_2_0_right" position="49.5"/>
+      <joint_state joint="joint_3_0_right" position="50"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="52.5"/>
+      <joint_state joint="joint_6_0_right" position="49.5"/>
+      <joint_state joint="joint_7_0_right" position="50"/>
+      <joint_state joint="joint_8_0_right" position="0"/>
+      <joint_state joint="joint_9_0_right" position="52.5"/>
+      <joint_state joint="joint_10_0_right" position="49.5"/>
+      <joint_state joint="joint_11_0_right" position="50"/>
+      <joint_state joint="joint_12_0_right" position="52.5"/>
+      <joint_state joint="joint_13_0_right" position="50.5"/>
+      <joint_state joint="joint_14_0_right" position="50.5"/>
+      <joint_state joint="joint_15_0_right" position="50"/>
+    </model_state>
+
+    <model_state model="pincer_grasp_left" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="5"/>
+      <joint_state joint="joint_1_0_left" position="30"/>
+      <joint_state joint="joint_2_0_left" position="30"/>
+      <joint_state joint="joint_3_0_left" position="40"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="30"/>
+      <joint_state joint="joint_6_0_left" position="30"/>
+      <joint_state joint="joint_7_0_left" position="50"/>
+      <joint_state joint="joint_8_0_left" position="-6"/>
+      <joint_state joint="joint_9_0_left" position="30"/>
+      <joint_state joint="joint_10_0_left" position="30"/>
+      <joint_state joint="joint_11_0_left" position="50"/>
+      <joint_state joint="joint_12_0_left" position="90"/>
+      <joint_state joint="joint_13_0_left" position="20"/>
+      <joint_state joint="joint_14_0_left" position="35"/>
+      <joint_state joint="joint_15_0_left" position="35"/>
+    </model_state>
+
+    <model_state model="pincer_grasp_right" time_stamp="0">
+      <joint_state joint="joint_0_0_right" position="-5"/>
+      <joint_state joint="joint_1_0_right" position="30"/>
+      <joint_state joint="joint_2_0_right" position="30"/>
+      <joint_state joint="joint_3_0_right" position="40"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="30"/>
+      <joint_state joint="joint_6_0_right" position="30"/>
+      <joint_state joint="joint_7_0_right" position="50"/>
+      <joint_state joint="joint_8_0_right" position="6"/>
+      <joint_state joint="joint_9_0_right" position="30"/>
+      <joint_state joint="joint_10_0_right" position="30"/>
+      <joint_state joint="joint_11_0_right" position="50"/>
+      <joint_state joint="joint_12_0_right" position="90"/>
+      <joint_state joint="joint_13_0_right" position="20"/>
+      <joint_state joint="joint_14_0_right" position="35"/>
+      <joint_state joint="joint_15_0_right" position="35"/>
+    </model_state>
+
+    <model_state model="open_fingers_right" time_stamp="0">
+      <joint_state joint="joint_0_0_right" position="0"/>
+      <joint_state joint="joint_1_0_right" position="0"/>
+      <joint_state joint="joint_2_0_right" position="0"/>
+      <joint_state joint="joint_3_0_right" position="0"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="0"/>
+      <joint_state joint="joint_6_0_right" position="0"/>
+      <joint_state joint="joint_7_0_right" position="0"/>
+      <joint_state joint="joint_8_0_right" position="0"/>
+      <joint_state joint="joint_9_0_right" position="0"/>
+      <joint_state joint="joint_10_0_right" position="0"/>
+      <joint_state joint="joint_11_0_right" position="0"/>
+      <joint_state joint="joint_12_0_right" position="0"/>
+      <joint_state joint="joint_13_0_right" position="0"/>
+      <joint_state joint="joint_14_0_right" position="0"/>
+      <joint_state joint="joint_15_0_right" position="0"/>
+    </model_state>
+
+    <model_state model="open_fingers_left" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0"/>
+      <joint_state joint="joint_1_0_left" position="0"/>
+      <joint_state joint="joint_2_0_left" position="0"/>
+      <joint_state joint="joint_3_0_left" position="0"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="0"/>
+      <joint_state joint="joint_6_0_left" position="0"/>
+      <joint_state joint="joint_7_0_left" position="0"/>
+      <joint_state joint="joint_8_0_left" position="0"/>
+      <joint_state joint="joint_9_0_left" position="0"/>
+      <joint_state joint="joint_10_0_left" position="0"/>
+      <joint_state joint="joint_11_0_left" position="0"/>
+      <joint_state joint="joint_12_0_left" position="0"/>
+      <joint_state joint="joint_13_0_left" position="0"/>
+      <joint_state joint="joint_14_0_left" position="0"/>
+      <joint_state joint="joint_15_0_left" position="0"/>
+    </model_state>
+
+    <model_state model="close_fingers_right" time_stamp="0">
+      <joint_state joint="joint_0_0_right" position="0"/>
+      <joint_state joint="joint_1_0_right" position="52.5"/>
+      <joint_state joint="joint_2_0_right" position="49.5"/>
+      <joint_state joint="joint_3_0_right" position="50"/>
+      <joint_state joint="joint_4_0_right" position="0"/>
+      <joint_state joint="joint_5_0_right" position="52.5"/>
+      <joint_state joint="joint_6_0_right" position="49.5"/>
+      <joint_state joint="joint_7_0_right" position="50"/>
+      <joint_state joint="joint_8_0_right" position="0"/>
+      <joint_state joint="joint_9_0_right" position="52.5"/>
+      <joint_state joint="joint_10_0_right" position="49.5"/>
+      <joint_state joint="joint_11_0_right" position="50"/>
+      <joint_state joint="joint_12_0_right" position="52.5"/>
+      <joint_state joint="joint_13_0_right" position="50.5"/>
+      <joint_state joint="joint_14_0_right" position="50.5"/>
+      <joint_state joint="joint_15_0_right" position="50"/>
+    </model_state>
+
+    <model_state model="close_fingers_left" time_stamp="0">
+      <joint_state joint="joint_0_0_left" position="0"/>
+      <joint_state joint="joint_1_0_left" position="52.5"/>
+      <joint_state joint="joint_2_0_left" position="49.5"/>
+      <joint_state joint="joint_3_0_left" position="50"/>
+      <joint_state joint="joint_4_0_left" position="0"/>
+      <joint_state joint="joint_5_0_left" position="52.5"/>
+      <joint_state joint="joint_6_0_left" position="49.5"/>
+      <joint_state joint="joint_7_0_left" position="50"/>
+      <joint_state joint="joint_8_0_left" position="0"/>
+      <joint_state joint="joint_9_0_left" position="52.5"/>
+      <joint_state joint="joint_10_0_left" position="49.5"/>
+      <joint_state joint="joint_11_0_left" position="50"/>
+      <joint_state joint="joint_12_0_left" position="52.5"/>
+      <joint_state joint="joint_13_0_left" position="50.5"/>
+      <joint_state joint="joint_14_0_left" position="50.5"/>
+      <joint_state joint="joint_15_0_left" position="50"/>
+    </model_state>
+
+    <model_state model="InitRetarget" time_stamp="0">
+      <joint_state joint="fr3_joint1_left" position="80" />
+      <joint_state joint="fr3_joint2_left" position="60" />
+      <joint_state joint="fr3_joint3_left" position="-150" />
+      <joint_state joint="fr3_joint4_left" position="-110" />
+      <joint_state joint="fr3_joint5_left" position="0" />
+      <joint_state joint="fr3_joint6_left" position="180" />
+      <joint_state joint="fr3_joint7_left" position="30" />
+      <joint_state joint="joint_0_0_left" position="0" />
+      <joint_state joint="joint_1_0_left" position="0" />
+      <joint_state joint="joint_2_0_left" position="45" />
+      <joint_state joint="joint_3_0_left" position="45" />
+      <joint_state joint="joint_4_0_left" position="0" />
+      <joint_state joint="joint_5_0_left" position="0" />
+      <joint_state joint="joint_6_0_left" position="45" />
+      <joint_state joint="joint_7_0_left" position="45" />
+      <joint_state joint="joint_8_0_left" position="0" />
+      <joint_state joint="joint_9_0_left" position="0" />
+      <joint_state joint="joint_10_0_left" position="45" />
+      <joint_state joint="joint_11_0_left" position="45" />
+      <joint_state joint="joint_12_0_left" position="50" />
+      <joint_state joint="joint_13_0_left" position="25" />
+      <joint_state joint="joint_14_0_left" position="15" />
+      <joint_state joint="joint_15_0_left" position="45" />
+      <joint_state joint="fr3_joint1_right" position="-80" />
+      <joint_state joint="fr3_joint2_right" position="60" />
+      <joint_state joint="fr3_joint3_right" position="150" />
+      <joint_state joint="fr3_joint4_right" position="-110" />
+      <joint_state joint="fr3_joint5_right" position="0" />
+      <joint_state joint="fr3_joint6_right" position="180" />
+      <joint_state joint="fr3_joint7_right" position="-120" />
+      <joint_state joint="joint_0_0_right" position="0" />
+      <joint_state joint="joint_1_0_right" position="0" />
+      <joint_state joint="joint_2_0_right" position="45" />
+      <joint_state joint="joint_3_0_right" position="45" />
+      <joint_state joint="joint_4_0_right" position="0" />
+      <joint_state joint="joint_5_0_right" position="0" />
+      <joint_state joint="joint_6_0_right" position="45" />
+      <joint_state joint="joint_7_0_right" position="45" />
+      <joint_state joint="joint_8_0_right" position="0" />
+      <joint_state joint="joint_9_0_right" position="0" />
+      <joint_state joint="joint_10_0_right" position="45" />
+      <joint_state joint="joint_11_0_right" position="45" />
+      <joint_state joint="joint_12_0_right" position="50" />
+      <joint_state joint="joint_13_0_right" position="25" />
+      <joint_state joint="joint_14_0_right" position="15" />
+      <joint_state joint="joint_15_0_right" position="45" />
+    </model_state>
+
+    
+</Group>
