@@ -37,7 +37,6 @@
 #include <Rcs_typedef.h>
 #include <Rcs_math.h>
 #include <Rcs_macros.h>
-#include <Rcs_timer.h>
 #include <Rcs_shape.h>
 #include <Rcs_quaternion.h>
 #include <Rcs_body.h>
@@ -85,6 +84,55 @@ static HTr parsePose(const nlohmann::json& json)
   double confidence = json["confidence"];
 
   return trf;
+}
+
+// static std::vector<double> parseFingers(const nlohmann::json& json)
+// {
+//   std::vector<double> finger_angles(16, 0.0);
+
+//   for (size_t i=0; i<finger_angles.size(); ++i)
+//   {
+//     std::string jnt_id = "joint_" + std::to_string(i+1);
+//     finger_angles[i] = json["position"][jnt_id];
+//   }
+
+//   return finger_angles;
+// }
+
+static std::vector<double> parseFingers(const nlohmann::json& json)
+{
+
+  auto it = json.find("position");
+  if (it == json.end() || !it->is_object())
+  {
+    RLOG_CPP(1, "Warning: missing or invalid 'position' object in finger JSON");
+    return std::vector<double>();
+  }
+
+  std::vector<double> finger_angles(16, 0.0);
+  const auto& pos = *it;
+
+  for (size_t i = 0; i < finger_angles.size(); ++i)
+  {
+    std::string jnt_id = "joint_" + std::to_string(i + 1);
+
+    auto jt = pos.find(jnt_id);
+    if (jt == pos.end())
+    {
+      RLOG_CPP(1, "Warning: missing finger joint '" << jnt_id);
+      return std::vector<double>();
+    }
+
+    if (!jt->is_number())
+    {
+      RLOG_CPP(1, "Warning: finger joint '" << jnt_id << "' is present but not numeric");
+      return std::vector<double>();
+    }
+
+    finger_angles[i] = jt->get<double>();
+  }
+
+  return finger_angles;
 }
 
 static std::vector<int> parse_bounding_box(const nlohmann::json& entry, const std::string& key)
@@ -418,6 +466,7 @@ struct Skeleton
   double alphaPrev;
   double alpha;
   std::vector<HTr> markers;
+  std::vector<double> fingerAnglesLeft, fingerAnglesRight;
   HTr expectedInitialPose;
   std::string agentBdyName;
 
@@ -560,7 +609,6 @@ void Skeleton::updateGraphics()
     sw->setAllChildrenOff();
   }
 
-
   if (visualNodes.size() < visualBodies.size())
   {
     visualNodes.clear();
@@ -647,6 +695,11 @@ std::string AzureSkeletonTracker::getRequestKeyword() const
 
 void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
 {
+  if (frozen)
+  {
+    return;
+  }
+
   {
     std::lock_guard<std::mutex> lock(updateMtx);
     this->A_CI = getCameraTransform(graph);
@@ -661,6 +714,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 {
   if (!scene)
   {
+    RLOG(0, "No scene - skipping agent updates");
     return;
   }
 
@@ -672,6 +726,8 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
     {
       continue;
     }
+
+
 
     //if (!human->bb_head.empty())
     //{
@@ -695,6 +751,8 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
           human->bb_head[1] = skeletons[i]->bb_head.y_min;
           human->bb_head[2] = skeletons[i]->bb_head.x_max;
           human->bb_head[3] = skeletons[i]->bb_head.y_max;
+          human->fingersLeft = skeletons[i]->fingerAnglesLeft;
+          human->fingersRight = skeletons[i]->fingerAnglesRight;
         }
         else
         {
@@ -707,9 +765,10 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 
     }
 
+
     if (human->hasMarkers())
     {
-      const double tmc = 0.05;
+      const double tmc = 0.1;
 
       // Transform pelvis
       const RcsBody* bdy = human->body(graph);
@@ -723,6 +782,11 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
         lpFiltTrf(&graph->q->ele[jidx], &A_MP, tmc);
       }
 
+
+
+
+
+#if 0
       for (const auto& mName : human->manipulators)
       {
         // The marker transforms are represented in world coordinates.
@@ -761,10 +825,89 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
           lpFiltTrf(q_rbj, &A_MP, tmc);
         }
 
-      }
-    }
+      }   // for (const auto& mName : human->manipulators)
+#endif
 
-  }
+
+
+
+      for (const auto& tf : human->trackedFrames)
+      {
+        // The marker transforms are represented in world coordinates.
+        // In order to consider that the manipulator might have a parent
+        // different to the world frame, we transform the raw percepts
+        // into the (M)anipulator's (P)arent frame.
+        // A_PI is the Manipulator's parent transform
+        bdy = RcsGraph_getBodyByName(graph, tf.second.c_str());
+        jidx = RcsBody_getJointIndex(graph, bdy);
+        if (jidx==-1)
+        {
+          RLOG_CPP(1, "Tracked frame not found in graph: " << tf.second);
+          continue;
+        }
+
+        const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
+        double* q_rbj = &graph->q->ele[jidx];
+        HTr A_MP;   // Transform from manipulator's parent to its raw percept
+
+        if (tf.first == HumanAgent::BodyType::Head)
+        {
+          HTr A_MI = human->getMarker(HEAD);   // marker transform in world
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+        }
+        else if (tf.first == HumanAgent::BodyType::ShoulderLeft)
+        {
+          HTr A_MI = human->getMarker(SHOULDER_LEFT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::ShoulderLeft", q_rbj, 3);
+        }
+        else if (tf.first == HumanAgent::BodyType::ShoulderRight)
+        {
+          HTr A_MI = human->getMarker(SHOULDER_RIGHT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::ShoulderRight", q_rbj, 3);
+        }
+        else if (tf.first == HumanAgent::BodyType::ElbowLeft)
+        {
+          HTr A_MI = human->getMarker(ELBOW_LEFT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::ElbowLeft", q_rbj, 3);
+        }
+        else if (tf.first == HumanAgent::BodyType::ElbowRight)
+        {
+          HTr A_MI = human->getMarker(ELBOW_RIGHT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::ElbowRight", q_rbj, 3);
+        }
+        else if (tf.first == HumanAgent::BodyType::HandLeft)
+        {
+          HTr A_MI = human->getMarker(WRIST_LEFT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::HandLeft", q_rbj, 3);
+        }
+        else if (tf.first == HumanAgent::BodyType::HandRight)
+        {
+          HTr A_MI = human->getMarker(WRIST_RIGHT);
+          HTr_invTransform(&A_MP, A_PI, &A_MI);
+          lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::HandRight", q_rbj, 3);
+        }
+
+      }   // for (const auto& mName : human->manipulators)
+
+
+
+
+
+    }   // if (human->hasMarkers())
+
+  }   // for (auto& agent : scene->agents)
 
 }
 
@@ -803,10 +946,9 @@ void AzureSkeletonTracker::updateSkeletons(ActionScene* scene, RcsGraph* graph)
         Agent* namedAgent = scene->getAgent(skeletons[i]->agentBdyName);
         if (!namedAgent)
         {
-          RLOG_CPP(0, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
+          RLOG_CPP(1, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
           continue;
         }
-        RLOG_CPP(0, "scene->getAgent(skeletons[i]->agentBdyName)->name: " << namedAgent->name);
         cb(namedAgent->name, true);
       }
 
@@ -819,10 +961,9 @@ void AzureSkeletonTracker::updateSkeletons(ActionScene* scene, RcsGraph* graph)
         Agent* namedAgent = scene->getAgent(skeletons[i]->agentBdyName);
         if (!namedAgent)
         {
-          RLOG_CPP(0, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
+          RLOG_CPP(1, "Agent with name '" << skeletons[i]->agentBdyName << "' not found in scene");
           continue;
         }
-        RLOG_CPP(0, "scene->getAgent(skeletons[i]->agentBdyName)->name: " << namedAgent->name);
         cb(namedAgent->name, false);
       }
       updateSkeletonGraphics = true;
@@ -851,77 +992,181 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
   }
 
   std::map<int, std::vector<HTr>> markerMap;
+  std::map<int, std::vector<double>> leftFingersMap, rightFingersMap;
   std::map<int, std::vector<int>> boundingBoxMap;
+  std::vector<int> bb;
+
+  std::string tracker = jsonHeader.value("tracker", "AzureKinect");
 
   for (auto& entry : jsonData.items())
   {
-    RCHECK(entry.value().size()==NUM_FRAMES);
-
     const int skeletonId = atoi(entry.key().c_str());
     std::vector<HTr> markers(NUM_FRAMES);
-    RLOG_CPP(5, "json: " << nlohmann::to_string(entry.value()));
+    std::vector<double> q_left_fingers, q_right_fingers;
 
     const nlohmann::json& pose = entry.value();
-    markers[PELVIS] = parsePose(pose["pelvis"]);
 
-    markers[SPINE_NAVEL] = parsePose(pose["spine_navel"]);
-    markers[SPINE_CHEST] = parsePose(pose["spine_chest"]);
-    markers[NECK] = parsePose(pose["neck"]);
-
-    markers[CLAVICLE_LEFT] = parsePose(pose["clavicle_left"]);
-    markers[SHOULDER_LEFT] = parsePose(pose["shoulder_left"]);
-    markers[ELBOW_LEFT] = parsePose(pose["elbow_left"]);
-    markers[WRIST_LEFT] = parsePose(pose["wrist_left"]);
-    markers[HAND_LEFT] = parsePose(pose["hand_left"]);
-    markers[HANDTIP_LEFT] = parsePose(pose["handtip_left"]);
-    markers[THUMB_LEFT] = parsePose(pose["thumb_left"]);
-
-    markers[CLAVICLE_RIGHT] = parsePose(pose["clavicle_right"]);
-    markers[SHOULDER_RIGHT] = parsePose(pose["shoulder_right"]);
-    markers[ELBOW_RIGHT] = parsePose(pose["elbow_right"]);
-    markers[WRIST_RIGHT] = parsePose(pose["wrist_right"]);
-    markers[HAND_RIGHT] = parsePose(pose["hand_right"]);
-    markers[HANDTIP_RIGHT] = parsePose(pose["handtip_right"]);
-    markers[THUMB_RIGHT] = parsePose(pose["thumb_right"]);
-
-    markers[HIP_LEFT] = parsePose(pose["hip_left"]);
-    markers[KNEE_LEFT] = parsePose(pose["knee_left"]);
-    markers[ANKLE_LEFT] = parsePose(pose["ankle_left"]);
-    markers[FOOT_LEFT] = parsePose(pose["foot_left"]);
-
-    markers[HIP_RIGHT] = parsePose(pose["hip_right"]);
-    markers[KNEE_RIGHT] = parsePose(pose["knee_right"]);
-    markers[ANKLE_RIGHT] = parsePose(pose["ankle_right"]);
-    markers[FOOT_RIGHT] = parsePose(pose["foot_right"]);
-
-    markers[HEAD] = parsePose(pose["head"]);
-    markers[NOSE] = parsePose(pose["nose"]);
-    markers[EYE_LEFT] = parsePose(pose["eye_left"]);
-    markers[EAR_LEFT] = parsePose(pose["ear_left"]);
-    markers[EYE_RIGHT] = parsePose(pose["eye_right"]);
-    markers[EAR_RIGHT] = parsePose(pose["ear_right"]);
-
-    // Bounding boxes
-    //"head": {
-    //    "bounding_box": [
-    //        477,
-    //            86,
-    //            520,
-    //            520
-    //    ] , ...
-    //}
-    std::vector<int> bb = parse_bounding_box(pose, "head");
-
-    REXEC(2)
+    if (tracker == "XrFullBodyJointMETA")
     {
-      if (!bb.empty())
+      // REXEC(1)
+      // {
+      //   for (auto it = pose.begin(); it != pose.end(); ++it)
+      //   {
+      //     std::cout << it.key() << "\n";
+      //   }
+      // }
+
+      static const std::pair<int, const char*> kMap[] =
       {
-        RLOG_CPP(0, "bb: ");
-        for (const auto& bbi : bb)
+        {PELVIS,"XR_FULL_BODY_JOINT_ROOT_META"},
+
+        {SPINE_NAVEL,"XR_FULL_BODY_JOINT_HIPS_META"},
+        {SPINE_CHEST,"XR_FULL_BODY_JOINT_CHEST_META"},
+        {NECK,"XR_FULL_BODY_JOINT_NECK_META"},
+
+        {CLAVICLE_LEFT,"XR_FULL_BODY_JOINT_LEFT_SHOULDER_META"},
+        {SHOULDER_LEFT,"XR_FULL_BODY_JOINT_LEFT_ARM_UPPER_META"},
+        {ELBOW_LEFT,"XR_FULL_BODY_JOINT_LEFT_ARM_LOWER_META"},
+        {WRIST_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_WRIST_META"},
+        {HAND_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_PALM_META"},
+        {HANDTIP_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_INDEX_TIP_META"},
+        {THUMB_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_THUMB_TIP_META"},
+
+        {CLAVICLE_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_SHOULDER_META"},
+        {SHOULDER_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_ARM_UPPER_META"},
+        {ELBOW_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_ARM_LOWER_META"},
+        {WRIST_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_WRIST_META"},
+        {HAND_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_PALM_META"},
+        {HANDTIP_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_INDEX_TIP_META"},
+        {THUMB_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_THUMB_TIP_META"},
+
+        {HIP_LEFT,"XR_FULL_BODY_JOINT_LEFT_UPPER_LEG_META"},
+        {KNEE_LEFT,"XR_FULL_BODY_JOINT_LEFT_LOWER_LEG_META"},
+        {ANKLE_LEFT,"XR_FULL_BODY_JOINT_LEFT_FOOT_ANKLE_META"},
+        {FOOT_LEFT,"XR_FULL_BODY_JOINT_LEFT_FOOT_BALL_META"},
+
+        {HIP_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_UPPER_LEG_META"},
+        {KNEE_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_LOWER_LEG_META"},
+        {ANKLE_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_FOOT_ANKLE_META"},
+        {FOOT_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_FOOT_BALL_META"},
+
+        {HEAD,"XR_FULL_BODY_JOINT_HEAD_META"},
+        {NOSE,"unknown"},
+        {EYE_LEFT,"LeftEye"},
+        {EAR_LEFT,"unknown"},
+        {EYE_RIGHT,"RightEye"},
+        {EAR_RIGHT,"unknown"}
+      };
+
+
+      for (const auto& mk : kMap)
+      {
+        const int marker = mk.first;
+        const char* key  = mk.second;
+        auto it = pose.find(key);
+        if (it != pose.end() && it->is_object())
         {
-          std::cout << bbi << " ";
+          markers[marker] = parsePose(*it);
+        }
+        else
+        {
+          RLOG_CPP(4, "Not found: " << key);
         }
       }
+
+      auto finger_it = pose.find("FINGER_ANGLES_LEFT");
+      if (finger_it != pose.end())
+      {
+        auto q = parseFingers(*finger_it);
+        if (!q.empty())
+        {
+          q_left_fingers = std::move(q);
+        }
+      }
+
+      finger_it = pose.find("FINGER_ANGLES_RIGHT");
+      if (finger_it != pose.end())
+      {
+        auto q = parseFingers(*finger_it);
+        if (!q.empty())
+        {
+          q_right_fingers = std::move(q);
+        }
+      }
+
+    }
+    else if (tracker == "AzureKinect")
+    {
+      RCHECK_MSG(entry.value().size()==NUM_FRAMES, "%zu %d",
+                 entry.value().size(), NUM_FRAMES);
+
+      markers[PELVIS] = parsePose(pose["pelvis"]);
+
+      markers[SPINE_NAVEL] = parsePose(pose["spine_navel"]);
+      markers[SPINE_CHEST] = parsePose(pose["spine_chest"]);
+      markers[NECK] = parsePose(pose["neck"]);
+
+      markers[CLAVICLE_LEFT] = parsePose(pose["clavicle_left"]);
+      markers[SHOULDER_LEFT] = parsePose(pose["shoulder_left"]);
+      markers[ELBOW_LEFT] = parsePose(pose["elbow_left"]);
+      markers[WRIST_LEFT] = parsePose(pose["wrist_left"]);
+      markers[HAND_LEFT] = parsePose(pose["hand_left"]);
+      markers[HANDTIP_LEFT] = parsePose(pose["handtip_left"]);
+      markers[THUMB_LEFT] = parsePose(pose["thumb_left"]);
+
+      markers[CLAVICLE_RIGHT] = parsePose(pose["clavicle_right"]);
+      markers[SHOULDER_RIGHT] = parsePose(pose["shoulder_right"]);
+      markers[ELBOW_RIGHT] = parsePose(pose["elbow_right"]);
+      markers[WRIST_RIGHT] = parsePose(pose["wrist_right"]);
+      markers[HAND_RIGHT] = parsePose(pose["hand_right"]);
+      markers[HANDTIP_RIGHT] = parsePose(pose["handtip_right"]);
+      markers[THUMB_RIGHT] = parsePose(pose["thumb_right"]);
+
+      markers[HIP_LEFT] = parsePose(pose["hip_left"]);
+      markers[KNEE_LEFT] = parsePose(pose["knee_left"]);
+      markers[ANKLE_LEFT] = parsePose(pose["ankle_left"]);
+      markers[FOOT_LEFT] = parsePose(pose["foot_left"]);
+
+      markers[HIP_RIGHT] = parsePose(pose["hip_right"]);
+      markers[KNEE_RIGHT] = parsePose(pose["knee_right"]);
+      markers[ANKLE_RIGHT] = parsePose(pose["ankle_right"]);
+      markers[FOOT_RIGHT] = parsePose(pose["foot_right"]);
+
+      markers[HEAD] = parsePose(pose["head"]);
+      markers[NOSE] = parsePose(pose["nose"]);
+      markers[EYE_LEFT] = parsePose(pose["eye_left"]);
+      markers[EAR_LEFT] = parsePose(pose["ear_left"]);
+      markers[EYE_RIGHT] = parsePose(pose["eye_right"]);
+      markers[EAR_RIGHT] = parsePose(pose["ear_right"]);
+
+
+      // Bounding boxes
+      //"head": {
+      //    "bounding_box": [
+      //        477,
+      //            86,
+      //            520,
+      //            520
+      //    ] , ...
+      //}
+      bb = parse_bounding_box(pose, "head");
+
+      REXEC(2)
+      {
+        if (!bb.empty())
+        {
+          RLOG_CPP(0, "bb: ");
+          for (const auto& bbi : bb)
+          {
+            std::cout << bbi << " ";
+          }
+        }
+      }
+
+    }   // tracker=="AzureKinect"
+    else
+    {
+      RLOG_CPP(0, "Unknown tracker: " << tracker);
     }
 
     for (auto& marker : markers)
@@ -940,6 +1185,8 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     }
 
     markerMap[skeletonId] = markers;
+    leftFingersMap[skeletonId] = q_left_fingers;
+    rightFingersMap[skeletonId] = q_right_fingers;
     boundingBoxMap[skeletonId] = bb;
 
     newAzureUpdate = true;
@@ -967,6 +1214,16 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
 
     skeletons[i]->lastUpdate = time;
     skeletons[i]->markers = markerMap[corrMap[i]];
+
+    if (!leftFingersMap[corrMap[i]].empty())
+    {
+      skeletons[i]->fingerAnglesLeft = leftFingersMap[corrMap[i]];
+    }
+
+    if (!rightFingersMap[corrMap[i]].empty())
+    {
+      skeletons[i]->fingerAnglesRight = rightFingersMap[corrMap[i]];
+    }
 
     if (jsonHeader.contains("frame_id") && !boundingBoxMap.empty())
     {

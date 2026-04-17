@@ -258,6 +258,7 @@ src/EntityBase.cpp
 src/GraphicsWindow.cpp
 src/GraphComponent.cpp
 src/IKComponent.cpp
+src/IKTeleOp.cpp
 src/EyeModelIKComponent.cpp
 src/TrajectoryComponent.cpp
 src/ActionComponent.cpp
@@ -290,6 +291,7 @@ examples/ExampleRetarget.cpp
 examples/ExampleFlowMatching.cpp
 examples/ExampleViapoints.cpp
 examples/ExampleJointControl.cpp
+examples/ExampleTeleOp.cpp
 src/JacoShmComponent.cpp
 src/AzureBodyTrackingComponent.cpp
 )

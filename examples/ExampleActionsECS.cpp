@@ -257,6 +257,7 @@ ExampleActionsECS::ExampleActionsECS(int argc, char** argv) :
   blockingMainThread = false;
   enableWireframeToggle = true;   // Show wireframe if collisions are deactivated
   enableRealGraphVisualization = false;
+  changeBackgroundColor = true;
   maxNumThreads = 0;
   numSceneQueries = NUM_SCENEQUERIES;
 
