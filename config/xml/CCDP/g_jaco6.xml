@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default_top" resourcePath="${SIT}/Data/RobotMeshes/1.0/data">
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default_top" resourcePath="${SIT}/Data/RobotMeshes/1.0/data">
 
   <Body name="default_camera_view" rigid_body_joints="-1.998433 -1.690323 2.355891   -11.362 18.636 42.816"/>
   

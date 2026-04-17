@@ -29,7 +29,7 @@
 
 <Controller>
 
-  <Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+  <Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" >
 
     <!-- Complete robot. -->
     <xi:include href="g_robo.xml"/>

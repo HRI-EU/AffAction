@@ -29,75 +29,40 @@
 
 <Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" >
 
-  <!-- Aluminum structure including PTU. -->
-  <xi:include href="g_item_base.xml"/>
-
-  <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
-  <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
-    <xi:include href="g_head_v2.xml" />
-  </Group>
-
-  <!-- Shoulder adaptors and arms with hands. -->
-  <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
-    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+  <Body name="unity_world" transform="2 0 0 0 0 180" >
+    <Shape type="FRAME"/>
   </Body>
 
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body name="aruco_base" color="PEWTER" rigid_body_joints="true">
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.31 1.00025 0 0 0"
+           type="FRAME"/>
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER"
+           textureFile="textures/floor.jpg"
+           graphics="true" physics="true" distance="false"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
 
-
-
-
-  <!-- Right arm -->
-  <Group name="_right" prev="adapter_shoulder" transform="-0.048206 -0.043874 0.028528 70 0 90" >
-    <Body name="adapter2_shoulder" />
-    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 -8.444">
-      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-    </Body>
-    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90">
-      <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
-    </Group>
-    <xi:include href="g_hand_right.xml"/>
+  <!-- The stand with the dual arm FR3 setup with Allegro hands. -->
+  <Group prev="aruco_base" transform="0 0 0 0 0 0">
+    <xi:include href="g_robo.xml"/>
   </Group>
-
-  <!-- Left arm -->
-  <Group name="_left" prev="adapter_shoulder" transform="-0.048206 0.043874 0.028528 -70 0 90">
-    <Body name="adapter2_shoulder" />
-    <Body name="adapter3_shoulder" prev="adapter2_shoulder" transform="0 0 0 30 0 8.444">
-      <Shape type="SSL" radius="0.05" length="0.15" color="RED" distance="true" />
-    </Body>
-    <Group prev="adapter3_shoulder" transform="0 0 0 0 0 -90" >
-      <xi:include href="g_kinova_ulw2_sph_7dof.xml"/>
-    </Group>
-    <xi:include href="g_hand_left.xml"/>
-  </Group>
-
 
 
   
-  
-  <!-- Face mesh (testing). -->
-  <Body name="face" rigid_body_joints="true">
-    <Shape type="MESH" meshFile="hri_scitos_description/FaceMesh-holes-478.obj" resizeable="true" graphics="false" distance="false" physics="false"/>
-    <Shape type="FRAME" scale="1"/>
-  </Body>
-
-  <!-- The gaze model of the robot (testing).-->
-  <Group prev="head_shell" >
-    <xi:include href="g_gazemodel.xml" />
+  <!-- The model for a simple camera. -->
+  <Group prev="aruco_base" rigid_body_joints="-0.125 0 1.78 0 40 0">
+    <xi:include href="../scene/g_azure_kinect.xml"/>
   </Group>
 
-  <Body name="GazePoint" >
-    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Shape type="SPHERE" radius="0.025" graphics="untrue" color="GREEN" />
-  </Body>
+  <!-- <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" > -->
+  <!--   <noShape scale="0.5" type="FRAME"/> -->
+  <!-- </Body> -->
   
 
-
-  <Manipulator body="head_kinect_link" types="head">
-    <GazeCapability frame="head_kinect_lens" />
-  </Manipulator>
-
+  <Group prev="aruco_base" name="Felix" color="RED" transform="2 -1 0.5 0 0 180" >
+    <xi:include href="../examples/g_human_agent.xml"/>
+  </Group>
 
   <!-- All poses. The one refered to in the above Graph attribute must exist in this file. -->
   <model_state model="default" time_stamp="0">
