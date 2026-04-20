@@ -21,6 +21,7 @@
 #include <Rcs_macros.h>
 #include <Rcs_math.h>
 #include <Rcs_typedef.h>
+#include <Rcs_body.h>
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
@@ -367,6 +368,24 @@ PYBIND11_MODULE(pyTeleOp, m)
   // python context (e.g. console).
   //////////////////////////////////////////////////////////////////////////////
   .def("run", &aff::ExampleTeleOpFrankaRight::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the position of a rigid body, outside the step function.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setBodyPosition", [](aff::ExampleTeleOpFrankaRight& ex, std::string bdyName, double x, double y, double z) -> bool
+  {
+    const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), bdyName.c_str());
+    double* rbj = RcsBody_getStatePtr(ex.getGraph(), bdy);
+
+    if (!rbj)
+    {
+      return false;
+    }
+
+    Vec3d_set(rbj, x, y, z);
+    RcsGraph_setState(ex.getGraph(), nullptr, nullptr);
+    return true;
+  })
 
   //////////////////////////////////////////////////////////////////////////////
   // Calls an event without arguments. We must not call process() here, since
