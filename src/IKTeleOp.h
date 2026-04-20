@@ -148,6 +148,7 @@ public:
   void onWrenchCommand(std::array<double, 6> wrench, bool inWorldFrame);
   void onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   double getJointSpeedScaling() const;
+  bool getTasksActive() const;
 
 private:
 
@@ -156,6 +157,7 @@ private:
   void onInitFromState(const RcsGraph* target);
   void onRender();
   void onEnableRetargetting(bool enable);
+  void onEnableTasks(bool enable);
   void print() const;
   void computeIK(const MatNd* a_des, const MatNd* x_des, const MatNd* lambdaArr);
 
@@ -167,6 +169,7 @@ private:
   bool jointLimitCheck;   ///< Default is on
   bool collisionCheck;    ///< Default is on
   bool applySpeedAndAccLimits;    ///< Default is on
+  bool activateTasks;
   Rcs::Ramp1D jointSpeedScaling;
 
   /*! \brief We disallow copying and assigning this class.

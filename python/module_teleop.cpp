@@ -380,6 +380,14 @@ PYBIND11_MODULE(pyTeleOp, m)
   {
     ex.getEntity().process();
   })
+  .def("enableRetargetting", [](aff::ExampleTeleOpFrankaRight& ex, bool enable)
+  {
+    ex.getEntity().publish("EnableRetargetting", enable);
+  })
+  .def("enableTasks", [](aff::ExampleTeleOpFrankaRight& ex, bool enable)
+  {
+    ex.getEntity().publish("EnableTasks", enable);
+  })
   .def("setTwist", [](aff::ExampleTeleOpFrankaRight& ex, double vel_x, double vel_y, double vel_z,
                       double vel_thx, double vel_thy, double vel_thz, bool inWorldFrame)
   {
@@ -436,6 +444,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def_readwrite("noLimits", &aff::ExampleTeleOpFrankaRight::noLimits)
   .def_readwrite("enableRealGraphVisualization", &aff::ExampleTeleOpFrankaRight::enableRealGraphVisualization)
   .def_readwrite("inputType", &aff::ExampleTeleOpFrankaRight::inputType)
+  .def_readwrite("dt", &aff::ExampleTeleOpFrankaRight::dt)
 
   //////////////////////////////////////////////////////////////////////////////
   //

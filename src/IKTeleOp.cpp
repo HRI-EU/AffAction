@@ -45,6 +45,7 @@ IKTeleOp::IKTeleOp(EntityBase* parent, Rcs::ControllerBase* controller) :
   eStop(false), alpha(0.05), lambda(1.0e-4),
   speedLimitCheck(true), jointLimitCheck(true),
   collisionCheck(true), applySpeedAndAccLimits(true),
+  activateTasks(true),
   jointSpeedScaling(0.0, 0.33, parent->getDt())   // Transition in 3 seconds
 {
   subscribe("EmergencyStop", &IKTeleOp::onEmergencyStop);
@@ -53,6 +54,7 @@ IKTeleOp::IKTeleOp(EntityBase* parent, Rcs::ControllerBase* controller) :
   subscribe("InitFromState", &IKTeleOp::onInitFromState);
   subscribe("Print", &IKTeleOp::print);
   subscribe("EnableRetargetting", &IKTeleOp::onEnableRetargetting);
+  subscribe("EnableTasks", &IKTeleOp::onEnableTasks);
 }
 
 const MatNd* IKTeleOp::getJointCommandPtr() const
@@ -73,6 +75,12 @@ RcsGraph* IKTeleOp::getGraph()
 void IKTeleOp::onEnableRetargetting(bool enable)
 {
   jointSpeedScaling.setTarget(enable ? 1.0 : 0.0);
+}
+
+void IKTeleOp::onEnableTasks(bool enable)
+{
+  RLOG(0, "onEnableTasks: %s", enable ? "TRUE" : "FALSE");
+  this->activateTasks = enable;
 }
 
 void IKTeleOp::onEmergencyStop()
@@ -177,6 +185,10 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
   {
     shl = RcsGraph_getBodyByName(desired, it->second.c_str());
   }
+  else
+  {
+    RLOG_CPP(0, "HumanAgent::BodyType::ShoulderLeft not found");
+  }
 
   it = agent->trackedFrames.find(HumanAgent::BodyType::ShoulderRight);
   if (it != agent->trackedFrames.end())
@@ -214,7 +226,13 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
     head = RcsGraph_getBodyByName(desired, it->second.c_str());
   }
 
-  RCHECK(shl && shr && ell && elr && hl && hr && head);
+  RCHECK(shl);
+  RCHECK(shr);
+  RCHECK(ell);
+  RCHECK(elr);
+  RCHECK(hl);
+  RCHECK(hr);
+  RCHECK(head);
 
   Rcs::ControllerBase* controller = ikSolver.getController();
 
@@ -402,12 +420,13 @@ void IKTeleOp::onTwistCommand(std::array<double, 6> twist, bool inWorldFrame)
   const double lambdaOri = 0.01;
   MatNd_setElementsTo(lambdaArr, lambdaOri);
   Vec3d_set(lambdaArr->ele, lambda, lambda, lambda);
+
   computeIK(nullptr, dx_des, lambdaArr);
 
   MatNd_destroyN(2, dx_des, lambdaArr);
 }
 
-void IKTeleOp::computeIK(const MatNd* a_des, const MatNd* dx_des, const MatNd* lambdaArr)
+void IKTeleOp::computeIK(const MatNd* a_des_, const MatNd* dx_des_, const MatNd* lambdaArr)
 {
   const double dt = getEntity()->getDt();
   ActionResult resMsg;
@@ -418,9 +437,34 @@ void IKTeleOp::computeIK(const MatNd* a_des, const MatNd* dx_des, const MatNd* l
   MatNd* dH = MatNd_create(1, graph->nJ);
   MatNd* qdot = MatNd_createLike(dq_des);
 
+  MatNd* a_des = MatNd_create(ikSolver.getController()->getNumberOfTasks(), 1);
+  if (!a_des_)
+  {
+    MatNd_setElementsTo(a_des, 1.0);
+  }
+
+  if (activateTasks)
+  {
+    MatNd_setElementsTo(a_des, 1.0);
+  }
+  else
+  {
+    MatNd_setElementsTo(a_des, 0.0);
+  }
+
+  const double globalScaling = jointSpeedScaling.iterate();
+
+  MatNd* dx_des = MatNd_clone(dx_des_);
+  MatNd_constMulSelf(dx_des, globalScaling);
+
+
   controller->computeJointlimitGradient(dH);
   MatNd_constMulSelf(dH, alpha);
   double det = ikSolver.solveRightInverse(dq_des, dx_des, dH, a_des, lambdaArr);
+
+  MatNd_destroy(dx_des);
+  MatNd_destroy(a_des);
+
 
   // We treat a singular configuration as an error. Typically, lambda is
   // set to a value larger than zero, therefore this will probably never
@@ -456,9 +500,9 @@ void IKTeleOp::computeIK(const MatNd* a_des, const MatNd* dx_des, const MatNd* l
   }
 
   // Update ramp for global joint speed scaling
-  const double globalScaling = jointSpeedScaling.iterate();
-  MatNd_constMulSelf(dq_des, globalScaling);
-  MatNd_constMulSelf(qdot, globalScaling);
+  // const double globalScaling = jointSpeedScaling.iterate();
+  // MatNd_constMulSelf(dq_des, globalScaling);
+  // MatNd_constMulSelf(qdot, globalScaling);
 
 
   // Scaling down velocities
@@ -501,6 +545,11 @@ void IKTeleOp::computeIK(const MatNd* a_des, const MatNd* dx_des, const MatNd* l
 double IKTeleOp::getJointSpeedScaling() const
 {
   return jointSpeedScaling.getPosition();
+}
+
+bool IKTeleOp::getTasksActive() const
+{
+  return activateTasks;
 }
 
 

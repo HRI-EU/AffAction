@@ -102,6 +102,7 @@ public:
   std::string inputType;   // "Twist", "Wrench", "Retarget Polar"
   bool noLimits = false;
   bool enableRealGraphVisualization = true;
+  double dt = 0.01;
 
 
 
@@ -128,7 +129,6 @@ protected:
   bool blockingMainThread = true;
   bool runFunctionRunning = false;
   bool withRobo = false;
-  double dt = 0.01;
   double lambda = 1.0e-4;
   double alpha = 0.1;
 

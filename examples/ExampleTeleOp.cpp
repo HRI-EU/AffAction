@@ -250,11 +250,14 @@ bool ExampleTeleOp::initAlgo()
   entity.initialize(getCurrentGraph());
 
   // Initialize desired wrench with current robot's state
-  MatNd wrenchArr = MatNd_fromPtr(wrench_des.size(), 1, wrench_des.data());
-  controller->computeX(&wrenchArr);
+  if (this->inputType=="Wrench")
+  {
+    MatNd wrenchArr = MatNd_fromPtr(wrench_des.size(), 1, wrench_des.data());
+    controller->computeX(&wrenchArr);
+  }
 
   //std::cout << help() << std::endl;
-  RcsGraph_fprintJoints(stdout, getCurrentGraph());
+  //RcsGraph_fprintJoints(stdout, getCurrentGraph());
 
   return true;
 }
@@ -308,6 +311,14 @@ bool ExampleTeleOp::initGraphics()
     RLOG(0, "%s retargeting", enable ? "Enabling" : "Disabling");
     entity.publish("EnableRetargetting", enable);
   }, "Toggle speed scaling for retargetting");
+
+  viewer->setKeyCallback('d', [this](char k)
+  {
+    static bool activateTasks = true;
+    activateTasks = !activateTasks;
+    RLOG(0, "%s tasks", activateTasks ? "Enabling" : "Disabling");
+    entity.publish("EnableTasks", activateTasks);
+  }, "Toggle task cativation");
 
   viewer->setKeyCallback('e', [this](char k)
   {
@@ -540,10 +551,10 @@ void ExampleTeleOp::step()
   char timeStr[256];
   snprintf(timeStr, 256, "Time: %.3f   dt: %.1f dt_max: %.1f msec\n"
            "queue: %zu (max: %zu)\n%s"
-           "Joint speeds: %.0f %%",
+           "Joint speeds: %.0f %%   Tasks: %s",
            entity.getTime(), dtProcess * 1.0e3, dt_max * 1.0e3,
            entity.queueSize(), entity.getMaxQueueSize(), renderStringHUD.c_str(),
-           100.0*ikc->getJointSpeedScaling());
+           100.0*ikc->getJointSpeedScaling(), ikc->getTasksActive() ? "on" : "off");
   entity.publish("SetTextLine", std::string(timeStr), 0);
 
   Timer_waitDT(entity.getDt() - dtProcess);
