@@ -965,7 +965,7 @@ public:
     noLimits = false;
     xmlFileName = "c_franka_retarget_right.xml";
     configDirectory = "config/xml/Franka";
-    addComponentArgument("-landmarks_router -landmarks_connection tracking.json -landmarks_camera unity_world -skeleton_tracking -skeleton_radius 1000 ");
+    addComponentArgument("-landmarks_router -landmarks_connection config/data/meta_tracking_with_fingers.json -landmarks_camera unity_world -skeleton_tracking -skeleton_radius 1000 ");
     //addComponentArgument("-eye_ik -eye_ik.camera_name azure_kinect_rgb_frame ");
 
     return true;
