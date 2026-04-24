@@ -58,8 +58,9 @@ public:
                     double dt_commands,
                     std::string suffix="",
                     std::string otherRecv="tcp://localhost:40028",
-                    std::string otherSend="tcp://localhost:40029")
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
+                    std::string otherSend="tcp://localhost:40029",
+                    bool quitDriverOnExit_=true)
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_pan_joint"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("ptu_tilt_joint"+suffix));
@@ -73,12 +74,11 @@ public:
     subscribe("EmergencyStop", &CubemarsComponent::onEmergencyStop);
     subscribe("EmergencyRecover", &CubemarsComponent::onEmergencyRecover);
     subscribe("EnableCommands", &CubemarsComponent::onEnableCommands);
-
-    RLOG(0, "Done constructor");
   }
 
   ~CubemarsComponent()
   {
+    stop();
   }
 
   void onUpdateGraph(RcsGraph* graph)

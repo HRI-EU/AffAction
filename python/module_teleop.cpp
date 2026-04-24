@@ -433,6 +433,22 @@ PYBIND11_MODULE(pyTeleOp, m)
   py::arg("eul_thy"),
   py::arg("eul_thz"),
   py::arg("inWorldFrame") = true)
+  .def("setBiManualPoseCommand", [](aff::ExampleTeleOpFrankaRight& ex,
+                                    std::vector<double> leftHandPose,
+                                    std::vector<double> rightHandPose,
+                                    std::string rightFingersPose0,
+                                    std::string rightFingersPose1,
+                                    double s_right_01,
+                                    std::string leftFingersPose0,
+                                    std::string leftFingersPose1,
+                                    double s_left_01)
+  {
+    ex.getEntity().publish("SetBiManualPoseCommand",
+                           leftHandPose, rightHandPose,
+                           rightFingersPose0, rightFingersPose1, s_right_01,
+                           leftFingersPose0, leftFingersPose1, s_left_01);
+  },
+  "Set bi-manual pose command for IK")
   .def("setFingerPose", [](aff::ExampleTeleOpFrankaRight& ex, std::string fingerPose)
   {
     ex.getEntity().publish("SetFingerPose", fingerPose);
@@ -457,6 +473,12 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("getCollectedData", &aff::ExampleTeleOpFrankaRight::getCollectedData)
   .def("cleanup", &aff::ExampleTeleOpFrankaRight::cleanup)
   .def("getEndEffectorWrench", &aff::ExampleTeleOpFrankaRight::getEndEffectorWrench)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // 6 x 1 vector with elements x, y, z, thx, thy, thz (Absolute Euler angles)
+  //////////////////////////////////////////////////////////////////////////////
+  .def("getBodyPose", &aff::ExampleTeleOpFrankaRight::getBodyPose)
+
   .def_readwrite("withScene", &aff::ExampleTeleOpFrankaRight::withScene)
   .def_readwrite("xmlFileName", &aff::ExampleTeleOpFrankaRight::xmlFileName)
   .def_readwrite("configDirectory", &aff::ExampleTeleOpFrankaRight::configDirectory)

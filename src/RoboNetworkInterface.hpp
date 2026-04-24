@@ -57,11 +57,15 @@ class RoboNetworkInterface
 {
 public:
 
-  RoboNetworkInterface(std::string otherRecv, std::string otherSend, double dt_commands) :
+  RoboNetworkInterface(std::string otherRecv,
+                       std::string otherSend,
+                       double dt_commands,
+                       bool quitDriverOnExit_) :
     context(1),   // 1 = one I/O thread
     otherRecvEndpoint(otherRecv),
     otherSendEndpoint(otherSend),
-    senderCommandPeriod(dt_commands)
+    senderCommandPeriod(dt_commands),
+    quitDriverOnExit(quitDriverOnExit_)
   {
     RCHECK(senderCommandPeriod > 0.0);
   }
@@ -252,6 +256,8 @@ protected:
 
     // Before we quit the command sender thread, we sened a final quit command
     // to the drivers so that they shut down gracefully
+    if (quitDriverOnExit)
+    {
     try
     {
       pub_socket.send(zmq::buffer("{ \"quit\": true}"), zmq::send_flags::none);
@@ -259,6 +265,7 @@ protected:
     catch (const zmq::error_t& e)
     {
       RLOG_CPP(0, "ZMQ send error on quit command: " << e.what());
+    }
     }
 
     RLOG(0, "Exiting sendThreadFunc()");
@@ -291,6 +298,7 @@ protected:
   std::string otherRecvEndpoint;
   std::string otherSendEndpoint;
   double senderCommandPeriod;
+  bool quitDriverOnExit;
 };
 
 }   // namespace

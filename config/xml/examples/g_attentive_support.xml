@@ -27,7 +27,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" resourcePath="config/xml/AffAction;install/config/xml/AffAction" >
 
   <ActionSequence name="0" text="screw bottle_of_cola; get bottle_of_cola; screw bottle_of_cola; put bottle_of_cola" />
   <ActionSequence name="1" text="get bottle_of_cola;pour bottle_of_cola glass_red;put bottle_of_cola;get glass_red;pass glass_red Felix" />

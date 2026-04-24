@@ -68,12 +68,12 @@ ELSE()
 ENDIF()
 
 IF(UNIX)
-  INSTALL(TARGETS pyAffaction pyPushT
+  INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
           RUNTIME DESTINATION bin 
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib/AffAction)
 ELSE()
-  INSTALL(TARGETS pyAffaction pyPushT
+  INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
           RUNTIME DESTINATION bin 
           LIBRARY DESTINATION bin
           ARCHIVE DESTINATION lib/AffAction)

@@ -88,13 +88,25 @@ public:
   void onSetWrench(double pos_x, double pos_y, double pos_z,
                    double eul_thx, double eul_thy, double eul_thz,
                    bool inWorldFrame);
+  void onSetBiManualPoseCommand(std::vector<double> leftHandPose,
+                                std::vector<double> rightHandPose,
+                                std::string rightFingersPose0,
+                                std::string rightFingersPose1,
+                                double s_right_01,
+                                std::string leftFingersPose0,
+                                std::string leftFingersPose1,
+                                double s_left_01);
   void onSetFingerPose(std::string modelStateName);
   void setBuildPath(const std::string& path);
+  std::vector<double> getBodyPose(std::string bodyName,
+                                  bool fromCurrentGraph) const;
+
 
   std::vector<std::vector<double>> getCollectedData() const;
   void printCollectedData() const;
   void cleanup();
   std::vector<double> getEndEffectorWrench() const;
+  std::vector<std::vector<double>> getBiManualPoseData() const;
 
   bool withScene = false;
   std::string xmlFileName;
@@ -117,7 +129,10 @@ protected:
   // Subscribed callbacks
   void onQuit();
   void onPrint();
-  void onCollectData(RcsGraph* desired, RcsGraph* current);
+  void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
+
+
+  void collectData(RcsGraph* desired, RcsGraph* current);
 
 
   EntityBase entity;
@@ -167,6 +182,18 @@ protected:
   std::string endEffectorName;
   HTr eeTrf;
 
+
+  struct BiManualPoseCommand
+  {
+    std::vector<double> leftHandPose, rightHandPose;
+    std::string rightFingersPose0, rightFingersPose1;
+    double s_right_01;
+    std::string leftFingersPose0, leftFingersPose1;
+    double s_left_01;
+  };
+
+  BiManualPoseCommand biManualPoseCommand;
+  mutable std::mutex biManualPoseCommandMtx;
 
   struct CollectedData
   {

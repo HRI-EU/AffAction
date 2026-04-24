@@ -46,7 +46,7 @@
     <Hardware name="hand_right" component="-allegroZmq_right -allegroZmq_right.ip 192.168.0.101"/>
 
     <!-- Left Allegro hand -->
-    <Group name="_left" prev="left_fr3_link8" transform="0 0 0 0 0 45">
+    <Group name="_left" prev="left_fr3_link8" transform="0 0 0.025 0 0 45">
         <xi:include href="../Allegro/g_hand_left.xml"/>
 
         <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 90 0 90">
@@ -71,7 +71,7 @@
     </Group>
 
     <!-- Right Allegro hand -->
-    <Group name="_right" prev="right_fr3_link8" transform="0 0 0 0 0 45">
+    <Group name="_right" prev="right_fr3_link8" transform="0 0 0.025 0 0 45">
         <xi:include href="../Allegro/g_hand_right.xml"/>
 
         <Body name="hand_robot" prev="hand_base" transform="0.06 0 -0.02 -90 0 -90">

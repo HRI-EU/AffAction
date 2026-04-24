@@ -57,6 +57,10 @@
 #define FACEMESH_IRIS_NUM_VERTICES   (478)
 #define DEFAULT_MAX_AGE (2.0)
 
+static const size_t foreheadTop      = 3 * 10;
+static const size_t chinCenter       = 3 * 152;
+
+
 
 namespace aff
 {
@@ -72,12 +76,13 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 
 // In case the iris is estimated, there are 10 more landmarks
 FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& camera, const std::string& nameOfAgent) :
-  TrackerBase(nameOfFaceBody), newFaceUpdate(false), wasVisible(false), isVisible(false),
+  TrackerBase(nameOfFaceBody), initialFaceHeight(0.0), newFaceUpdate(false), wasVisible(false), isVisible(false),
   lastUpdateTime(0.0), mesh(nullptr), landmarks(nullptr), viewer(nullptr),
   faceName(nameOfFaceBody), agentName(nameOfAgent)
 {
 
-  std::vector<std::string> candidates = {
+  std::vector<std::string> candidates =
+  {
     "hri_scitos_description/FaceMesh-holes-478.obj",
     "hri_description/meshes/FaceMesh-holes-478.obj"
   };
@@ -94,6 +99,10 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& c
   RLOG(5, "Face mesh has %d vertices and %d faces",
        mesh->nVertices, mesh->nFaces);
   this->landmarks = MatNd_create(FACEMESH_IRIS_NUM_VERTICES, 3);
+
+  // For face size normalization
+  this->initialFaceHeight = Vec3d_distance(&mesh->vertices[foreheadTop], &mesh->vertices[chinCenter]);
+  RLOG(5, "Initial face height is %f", initialFaceHeight);
 
   HTr_setIdentity(&this->faceTrf);
 }
@@ -147,6 +156,8 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
   RLOG_CPP(1, "Received face landmarks: " << nFaceLandmarks);
 
+
+
   // We assume that the mesh vertices are contained within the landmarks
   // from the beginning. There might be more landmarks than mesh vertices
   // in case we estimate the iris parameters.
@@ -175,9 +186,6 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
 
 void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 {
-
-
-
   const double age = getWallclockTime() - lastUpdateTime;
 
   this->wasVisible = isVisible;
@@ -214,25 +222,25 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
   HTr* A_FC = &this->faceTrf;   // Camera -> Face
 
   // World -> face
-  HTr A_FI;
-  HTr_transform(&A_FI, &A_CI, A_FC);
+  // HTr A_FI;
+  // HTr_transform(&A_FI, &A_CI, A_FC);
 
   // Amplify the face rotations
-  double tmp6[6];
-  HTr_to6DVector(tmp6, &A_FI);
-  tmp6[5] = Math_fmodAngle(tmp6[5]+M_PI);
-  tmp6[3] *= 2.0;
-  tmp6[4] *= 4.0;
-  tmp6[5] *= 2.0;
-  tmp6[5] += M_PI;
-  HTr_from6DVector(&A_FI, tmp6);
+  // double tmp6[6];
+  // HTr_to6DVector(tmp6, &A_FI);
+  // tmp6[5] = Math_fmodAngle(tmp6[5]+M_PI);
+  // tmp6[3] *= 2.0;
+  // tmp6[4] *= 4.0;
+  // tmp6[5] *= 2.0;
+  // tmp6[5] += M_PI;
+  // HTr_from6DVector(&A_FI, tmp6);
 
   // Shift the face away from the camera. \todo: Improve this.
   //A_FI.org[0] += 1.75 * DISTANCE_FACE_TO_CAM;
-  A_FI.org[0] += 0.95 * DISTANCE_FACE_TO_CAM;
+  // A_FI.org[0] += 0.95 * DISTANCE_FACE_TO_CAM;
 
   // Look down
-  Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(10.0));
+  // Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(10.0));
 
   double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, faceName.c_str()));
   RCHECK_MSG(q6, "Body with name '%s' and six rigid body joints not found - please make sure it exists in the xml file.", faceName.c_str());
@@ -241,6 +249,9 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 
   RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
+
+  const double currentFaceHeight = Vec3d_distance(&this->landmarks->ele[foreheadTop], &this->landmarks->ele[chinCenter]);
+  const double faceScaling = this->initialFaceHeight/currentFaceHeight;
 
   for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
   {
@@ -260,7 +271,11 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
     for (unsigned int i = 0; i < landmarks->m; ++i)
     {
       double* dst = &sh->mesh->vertices[3 * i];
+      //Vec3d_constMul(dst, MatNd_getRowPtr(landmarks, i), faceScaling);
+      //Vec3d_invTransformSelf(dst, A_FC);
+
       Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
+      Vec3d_constMulSelf(dst, faceScaling);
     }
 
   }

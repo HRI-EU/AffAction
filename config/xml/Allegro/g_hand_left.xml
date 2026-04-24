@@ -74,6 +74,10 @@ Thumb		3	0		50		50		 0  : 105
     <Shape type="FRAME" scale="0.1" />
   </Body>
   
+  <Body name="hand_dummy" prev="hand_base" >
+    <Joint name="joint_driving" range="0 0.5 1" type="TransX" weightJL="0" />
+  </Body>
+
   <Body name="palm_link" prev="hand_base" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >
     <Shape type="SSR" extents=".1 .06 .08" distance="true" physics="false" graphics="false" color="RED" transform="-0.005 0 -0.03 0 90 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="0.02 0 -0.1 0 0 90" meshFile="meshes/allegro_hand_description/meshes/left_hand_G.stl" color="#333333ff" />

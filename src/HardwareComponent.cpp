@@ -374,11 +374,16 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   if (dryRun)
   {
     argP.addDescription("-jacoGen2_7_Zmq_right", "Start with Jaco Gen2 7-dof right");
-    argP.addDescription("-jacoGen2_7_Zmq_left", "Start with Jaco7 left");
-    argP.addDescription("-jacoGen2_6_Zmq", "Start with Jaco6");
+    argP.addDescription("-jacoGen2_7_Zmq_right.keepDriverRunning", "Keep driver process running after shutdown");
     argP.addDescription("-jacoGen2_7_Zmq_right.ip", "Jaco Gen2 7-dof right ip address (Default: localhost)");
+
+    argP.addDescription("-jacoGen2_7_Zmq_left", "Start with Jaco7 left");
+    argP.addDescription("-jacoGen2_7_Zmq_left.keepDriverRunning", "Keep driver process running after shutdown");
     argP.addDescription("-jacoGen2_7_Zmq_left.ip", "Jaco7 left ip address (Default: localhost)");
+
+    argP.addDescription("-jacoGen2_6_Zmq", "Start with Jaco6");
     argP.addDescription("-jacoGen2_6_Zmq.ip", "Jaco6 ip address (Default: localhost)");
+    argP.addDescription("-jacoGen2_6_Zmq.keepDriverRunning", "Keep driver process running after shutdown");
   }
   else
   {
@@ -387,9 +392,11 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       const double dt_commands = 0.02;
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_right.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen2_7_Zmq_right.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40020";
       std::string otherSend="tcp://" + other_ip + ":40021";
-      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right",
+                                              otherRecv, otherSend, !keepDriverOnExit);
       components.push_back(c);
     }
 
@@ -398,9 +405,11 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       const double dt_commands = 0.02;
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_left.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen2_7_Zmq_left.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40022";
       std::string otherSend="tcp://" + other_ip + ":40023";
-      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right", otherRecv, otherSend);
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco7", "_right",
+                                              otherRecv, otherSend, !keepDriverOnExit);
       components.push_back(c);
     }
 
@@ -408,10 +417,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     {
       const double dt_commands = 0.02;
       std::string other_ip = "localhost";
-      getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_7_Zmq_left.ip", other_ip);
+      getKeyValuePair<std::string>(argvStrVec, "-jacoGen2_6_Zmq.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen2_6_Zmq.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40018";
       std::string otherSend="tcp://" + other_ip + ":40019";
-      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco6", "", otherRecv, otherSend);
+      ComponentBase* c = new JacoZmqComponent(&entity, dt_commands, "Jaco6", "",
+                                              otherRecv, otherSend, !keepDriverOnExit);
       components.push_back(c);
     }
   }
@@ -444,9 +455,10 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       const double dt_commands = 0.02;
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-pw70_zmq.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-pw70_zmq.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40006";
       std::string otherSend="tcp://" + other_ip + ":40007";
-      components.push_back(new PW70ZmqComponent(&entity, dt_commands, "", otherRecv, otherSend));
+      components.push_back(new PW70ZmqComponent(&entity, dt_commands, "", otherRecv, otherSend, !keepDriverOnExit));
     }
   }
 
@@ -454,16 +466,26 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   {
     argP.addDescription("-jacoGen3Zmq_left", "Start with Kinova Kortex component (left arm)");
     argP.addDescription("-jacoGen3Zmq_left.ip", "Kinova Kortex server ip (left arm, default: localhost)");
+    argP.addDescription("-jacoGen3Zmq_left.keepDriverRunning", "Keep driver process running after shutdown");
+
     argP.addDescription("-jacoGen3Zmq_right", "Start with Kinova Kortex component (right arm)");
     argP.addDescription("-jacoGen3Zmq_right.ip", "Kinova Kortex server ip (right arm, default: localhost)");
+    argP.addDescription("-jacoGen3Zmq_right.keepDriverRunning", "Keep driver process running after shutdown");
+
     argP.addDescription("-frankaZmq_left", "Start with Franka component (left arm)");
     argP.addDescription("-frankaZmq_left.ip", "Franka server ip (left arm, default: localhost)");
     argP.addDescription("-frankaZmq_right", "Start with Franka component (right arm)");
     argP.addDescription("-frankaZmq_right.ip", "Franka server ip (right arm, default: localhost)");
+    argP.addDescription("-frankaZmq_right.keepDriverRunning", "Keep driver process running after shutdown");
+
     argP.addDescription("-allegroZmq_left", "Start with Allegro component (left hand)");
     argP.addDescription("-allegroZmq_left.ip", "Allegro server ip (left hand, default: localhost)");
+    argP.addDescription("-allegroZmq_left.keepDriverRunning", "Keep driver process running after shutdown");
+
     argP.addDescription("-allegroZmq_right", "Start with Allegro component (right hand)");
     argP.addDescription("-allegroZmq_right.ip", "Allegro server ip (right hand, default: localhost)");
+    argP.addDescription("-allegroZmq_right.keepDriverRunning", "Keep driver process running after shutdown");
+    argP.addDescription("-allegroZmq_wrongThumb", "Temporary fix for left Allegro hand with screwed-up thumb angles");
   }
   else
   {
@@ -472,11 +494,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq_left.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen3Zmq_left.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40004";
       std::string otherSend="tcp://" + other_ip + ":40005";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend));
+                                                    otherRecv, otherSend, !keepDriverOnExit));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq_right"))
@@ -484,11 +507,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq_right.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen3Zmq_right.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40002";
       std::string otherSend="tcp://" + other_ip + ":40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend));
+                                                    otherRecv, otherSend, !keepDriverOnExit));
     }
 
     if (getKey(argvStrVec, "-jacoGen3Zmq"))
@@ -496,11 +520,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-jacoGen3Zmq.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-jacoGen3Zmq.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40002";
       std::string otherSend="tcp://" + other_ip + ":40003";
       const double dt_commands = 0.01;
       components.push_back(new aff::KortexComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend));
+                                                    otherRecv, otherSend, !keepDriverOnExit));
     }
 
     if (getKey(argvStrVec, "-frankaZmq_right"))
@@ -508,11 +533,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_right.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-frankaZmq_right.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40008";
       std::string otherSend="tcp://" + other_ip + ":40009";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend));
+                                                    otherRecv, otherSend, !keepDriverOnExit));
     }
 
     if (getKey(argvStrVec, "-frankaZmq_left"))
@@ -520,11 +546,12 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_left.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-frankaZmq_left.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40010";
       std::string otherSend="tcp://" + other_ip + ":40011";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend));
+                                                    otherRecv, otherSend, !keepDriverOnExit));
     }
 
     if (getKey(argvStrVec, "-allegroZmq_right"))
@@ -532,11 +559,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_right";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_right.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-allegroZmq_right.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40012";
       std::string otherSend="tcp://" + other_ip + ":40013";
       const double dt_commands = 0.02;
-      components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
-                                                     otherRecv, otherSend));
+      auto ac = new aff::AllegroComponent(&entity, dt_commands, suffix,
+                                          otherRecv, otherSend, !keepDriverOnExit);
+      components.push_back(ac);
     }
 
     if (getKey(argvStrVec, "-allegroZmq_left"))
@@ -544,11 +573,15 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string suffix = "_left";
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_left.ip", other_ip);
+      bool keepDriverOnExit = getKey(argvStrVec, "-allegroZmq_left.keepDriverRunning");
       std::string otherRecv="tcp://" + other_ip + ":40014";
       std::string otherSend="tcp://" + other_ip + ":40015";
       const double dt_commands = 0.02;
-      components.push_back(new aff::AllegroComponent(&entity, dt_commands, suffix,
-                                                     otherRecv, otherSend));
+      auto ac = new aff::AllegroComponent(&entity, dt_commands, suffix,
+                                          otherRecv, otherSend, !keepDriverOnExit);
+      bool wrongThumbMode = getKey(argvStrVec, "-allegroZmq_wrongThumb");
+      ac->setWrongThumbMode(wrongThumbMode);
+      components.push_back(ac);
     }
 
   }
@@ -564,7 +597,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     std::string other_ip = "localhost";
     std::string otherRecv="tcp://" + other_ip + ":40028";
     std::string otherSend="tcp://" + other_ip + ":40029";
-    components.push_back(new CubemarsComponent(&entity, dt_commands, "", otherRecv, otherSend));
+    bool keepDriverOnExit = getKey(argvStrVec, "-cubemars.keepDriverRunning");
+    components.push_back(new CubemarsComponent(&entity, dt_commands, "", otherRecv, otherSend, !keepDriverOnExit));
   }
 
 #if defined USE_ROS

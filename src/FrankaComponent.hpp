@@ -57,8 +57,9 @@ public:
                   double dt_commands,
                   std::string suffix,
                   std::string otherRecv,
-                  std::string otherSend)
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
+                  std::string otherSend,
+                  bool quitDriverOnExit_=true)
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint1"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint2"+suffix));
@@ -85,6 +86,7 @@ public:
 
   ~FrankaComponent()
   {
+    stop();
   }
 
   void onUpdateGraph(RcsGraph* graph)

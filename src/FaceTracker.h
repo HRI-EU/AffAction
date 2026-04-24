@@ -91,6 +91,7 @@ private:
 
   bool addGraphics(Rcs::Viewer* viewer, const HTr* cameraFrame);
 
+  double initialFaceHeight;
   bool newFaceUpdate;
   bool wasVisible;
   bool isVisible;

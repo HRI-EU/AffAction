@@ -35,10 +35,50 @@
 
 #include <Rcs_typedef.h>
 #include <Rcs_macros.h>
+#include <Rcs_utilsCPP.h>
 
 
 namespace aff
 {
+
+
+static std::vector<double> interpolateModelStatess(const RcsGraph* graph,
+                                                   std::string name_ms1,
+                                                   std::string name_ms2,
+                                                   double s)
+{
+  // std::map<std::string, std::vector<std::pair<int, double>>>
+  static auto mdlStateMap = Rcs::RcsGraph_getModelStates(graph);
+  std::vector<double> res;
+
+  auto it = mdlStateMap.find(name_ms1);
+  RCHECK(it != mdlStateMap.end());
+  const auto& ms1 = it->second;
+
+  it = mdlStateMap.find(name_ms2);
+  RCHECK(it != mdlStateMap.end());
+  const auto& ms2 = it->second;
+
+  RCHECK(ms1.size() == ms2.size());
+
+  if (s < 0.0)
+  {
+    s = 0.0;
+  }
+  else if (s > 1.0)
+  {
+    s = 1.0;
+  }
+
+  for (size_t i=0; i<ms1.size(); ++i)
+  {
+    res.push_back((1.0 - s) * ms1[i].second + s * ms2[i].second);
+  }
+
+  return res;
+}
+
+
 
 IKTeleOp::IKTeleOp(EntityBase* parent, Rcs::ControllerBase* controller) :
   ComponentBase(parent), ikSolver(controller),
@@ -185,10 +225,6 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
   {
     shl = RcsGraph_getBodyByName(desired, it->second.c_str());
   }
-  else
-  {
-    RLOG_CPP(0, "HumanAgent::BodyType::ShoulderLeft not found");
-  }
 
   it = agent->trackedFrames.find(HumanAgent::BodyType::ShoulderRight);
   if (it != agent->trackedFrames.end())
@@ -226,15 +262,12 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
     head = RcsGraph_getBodyByName(desired, it->second.c_str());
   }
 
-  RCHECK(shl);
-  RCHECK(shr);
-  RCHECK(ell);
-  RCHECK(elr);
-  RCHECK(hl);
-  RCHECK(hr);
-  RCHECK(head);
+  RCHECK(shl && shr && ell && elr && hl && hr && head);
 
   Rcs::ControllerBase* controller = ikSolver.getController();
+
+  MatNd* a_des = MatNd_create(ikSolver.getController()->getNumberOfTasks(), 1);
+  MatNd_setElementsTo(a_des, 1.0);
 
   MatNd* x_des = MatNd_create(controller->getTaskDim(), 1);
   controller->computeX(x_des);
@@ -337,7 +370,7 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
   MatNd* lambdaArr = MatNd_createLike(dx_des);
   MatNd_setElementsTo(lambdaArr, lambda);
 
-  computeIK(nullptr, dx_des, lambdaArr);
+  computeIK(a_des, dx_des, lambdaArr);
 
 
   if (!agent->fingersLeft.empty())
@@ -348,7 +381,32 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
       double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
       if (q_ptr)
       {
+        const RcsJoint* drivingJnt = RcsGraph_getJointByName(desired, "joint_driving_left");
+        if (drivingJnt)
+        {
+          const double s = desired->q->ele[drivingJnt->jointIndex];
+          std::vector<double> q = interpolateModelStatess(desired, "open_fingers_left", "pincer_grasp_left", s);
+          RCHECK(q.size() == agent->fingersLeft.size());
+          VecNd_copy(q_ptr, q.data(), q.size());
+        }
+        else
+      {
         VecNd_copy(q_ptr, agent->fingersLeft.data(), agent->fingersLeft.size());
+      }
+    }
+  }
+    else
+    {
+      jnt = RcsGraph_getJointByName(desired, "finger_joint_left");   // Gen3
+      if (jnt)
+      {
+        double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
+        if (q_ptr)
+        {
+          // input: 0: open, RCS_DEG2RAD(90): close
+          // output: 0: open, RCS_DEG2RAD(40): close
+          *q_ptr = 0.5*agent->fingersLeft[1];
+        }
       }
     }
   }
@@ -361,14 +419,39 @@ void IKTeleOp::onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionSce
       double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
       if (q_ptr)
       {
+        const RcsJoint* drivingJnt = RcsGraph_getJointByName(desired, "joint_driving_right");
+        if (drivingJnt)
+        {
+          const double s = desired->q->ele[drivingJnt->jointIndex];
+          std::vector<double> q = interpolateModelStatess(desired, "open_fingers_right", "pincer_grasp_right", s);
+          RCHECK(q.size()== agent->fingersRight.size());
+          VecNd_copy(q_ptr, q.data(), q.size());
+        }
+        else
+        {
         VecNd_copy(q_ptr, agent->fingersRight.data(), agent->fingersRight.size());
+      }
+    }
+  }
+    else
+    {
+      jnt = RcsGraph_getJointByName(desired, "finger_joint_right");   // Gen3
+      if (jnt)
+      {
+        double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
+        if (q_ptr)
+        {
+          // input: 0: open, RCS_DEG2RAD(90): close
+          // output: 0: open, RCS_DEG2RAD(40): close
+          *q_ptr = 0.5*agent->fingersRight[1];
+        }
       }
     }
   }
 
 
 
-  MatNd_destroyN(3, x_des, dx_des, lambdaArr);
+  MatNd_destroyN(4, a_des, x_des, dx_des, lambdaArr);
 }
 
 void IKTeleOp::onWrenchCommand(std::array<double, 6> wrench, bool inWorldFrame)
@@ -404,6 +487,8 @@ void IKTeleOp::onTwistCommand(std::array<double, 6> twist, bool inWorldFrame)
 
   MatNd* dx_des = MatNd_create(controller->getTaskDim(), 1);
   MatNd* lambdaArr = MatNd_createLike(dx_des);
+  MatNd* a_des = MatNd_create(controller->getNumberOfTasks(), 1);
+  MatNd_setElementsTo(a_des, 1.0);
 
   // Transform angular velocities into body frame
   if (inWorldFrame)
@@ -420,10 +505,191 @@ void IKTeleOp::onTwistCommand(std::array<double, 6> twist, bool inWorldFrame)
   const double lambdaOri = 0.01;
   MatNd_setElementsTo(lambdaArr, lambdaOri);
   Vec3d_set(lambdaArr->ele, lambda, lambda, lambda);
+  computeIK(a_des, dx_des, lambdaArr);
 
-  computeIK(nullptr, dx_des, lambdaArr);
+  MatNd_destroyN(3, a_des, dx_des, lambdaArr);
+}
 
-  MatNd_destroyN(2, dx_des, lambdaArr);
+void IKTeleOp::computeBiManualPoseCommand(std::vector<double> poseLeft,
+                                          std::vector<double> poseRight,
+                                          std::string rightFingersPose0,
+                                          std::string rightFingersPose1,
+                                          double s_right_01,
+                                          std::string leftFingersPose0,
+                                          std::string leftFingersPose1,
+                                          double s_left_01)
+{
+  RLOG(1, "computeBiManualPoseCommand");
+  if (this->eStop || (poseLeft.size()!=6) || (poseRight.size()!=6))
+  {
+    RLOG(1, "ERALY EXIT");
+    return;
+  }
+
+  MatNd* a_des = MatNd_create(ikSolver.getController()->getNumberOfTasks(), 1);
+  MatNd* x_des = MatNd_create(ikSolver.getController()->getTaskDim(), 1);
+  MatNd* dx_des = MatNd_createLike(x_des);
+  MatNd* lambdaArr = MatNd_createLike(dx_des);
+  MatNd_setElementsTo(lambdaArr, this->lambda);
+
+  const double lambdaOri = 0.01;
+  int task_idx = -1;
+  int array_idx = -1;
+  std::string taskName;
+
+  // Left arm position
+  taskName = "Left hand xyz";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if ((array_idx != -1) && (task_idx!=-1))
+  {
+    const double* target = poseLeft.data();
+    Vec3d_copy(x_des->ele + array_idx, target);
+    a_des->ele[task_idx] = 1.0;
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+  // Left arm orientation
+  taskName = "Left hand abc";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if (array_idx != -1 && (task_idx!=-1))
+  {
+    const double* target = poseLeft.data() + 3;
+    Vec3d_copy(x_des->ele + array_idx, target);
+    a_des->ele[task_idx] = 1.0;
+    Vec3d_setElementsTo(lambdaArr->ele + array_idx, lambdaOri);
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+  // Left fingers blend
+  taskName = "Left fingers 1d";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if (array_idx != -1 && (task_idx!=-1))
+  {
+    x_des->ele[array_idx] = s_left_01;
+    a_des->ele[task_idx] = 1.0;
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+  // Right arm position
+  taskName = "Right hand xyz";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if (array_idx != -1 && (task_idx!=-1))
+  {
+    const double* target = poseRight.data();
+    Vec3d_copy(x_des->ele + array_idx, target);
+    a_des->ele[task_idx] = 1.0;
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+  // Right arm orientation
+  taskName = "Right hand abc";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if (array_idx != -1 && (task_idx!=-1))
+  {
+    const double* target = poseRight.data() + 3;
+    Vec3d_copy(x_des->ele + array_idx, target);
+    Vec3d_setElementsTo(lambdaArr->ele + array_idx, lambdaOri);
+    a_des->ele[task_idx] = 1.0;
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+  // Right fingers blend
+  taskName = "Right fingers 1d";
+  task_idx = ikSolver.getController()->getTaskIndex(taskName.c_str());
+  array_idx = ikSolver.getController()->getTaskArrayIndex(taskName.c_str());
+  if (array_idx != -1 && (task_idx!=-1))
+  {
+    x_des->ele[array_idx] = s_right_01;
+  }
+  else
+  {
+    RLOG_CPP(1, "Issue in " << taskName);
+  }
+
+
+
+
+  ikSolver.getController()->computeDX(dx_des, x_des);
+  computeIK(a_des, dx_des, lambdaArr);
+
+
+  RcsGraph* desired = ikSolver.getController()->getGraph();
+
+  {
+    const RcsJoint* jnt = RcsGraph_getJointByName(desired, "joint_0_0_left");
+    if (jnt)
+    {
+      double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
+      if (q_ptr)
+      {
+        const RcsJoint* drivingJnt = RcsGraph_getJointByName(desired, "joint_driving_left");
+        if (drivingJnt)
+        {
+          const double s = desired->q->ele[drivingJnt->jointIndex];
+          std::vector<double> q = interpolateModelStatess(desired, leftFingersPose0, leftFingersPose1, s);
+          RLOG_CPP(1, "joint_driving_left " << q.size() << " " << s);
+          VecNd_copy(q_ptr, q.data(), q.size());
+        }
+      }
+    }
+  }
+
+
+  {
+    const RcsJoint* jnt = RcsGraph_getJointByName(desired, "joint_0_0_right");
+    if (jnt)
+    {
+      double* q_ptr = MatNd_getElePtr(desired->q, jnt->jointIndex, 0);
+      if (q_ptr)
+      {
+        const RcsJoint* drivingJnt = RcsGraph_getJointByName(desired, "joint_driving_right");
+        if (drivingJnt)
+        {
+          const double s = desired->q->ele[drivingJnt->jointIndex];
+          std::vector<double> q = interpolateModelStatess(desired, rightFingersPose0, rightFingersPose1, s);
+          RLOG_CPP(1, "joint_driving_right " << q.size() << " " << s);
+          VecNd_copy(q_ptr, q.data(), q.size());
+        }
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  MatNd_destroyN(4, a_des, x_des, dx_des, lambdaArr);
 }
 
 void IKTeleOp::computeIK(const MatNd* a_des_, const MatNd* dx_des_, const MatNd* lambdaArr)
@@ -436,24 +702,11 @@ void IKTeleOp::computeIK(const MatNd* a_des_, const MatNd* dx_des_, const MatNd*
   MatNd* dq_des = MatNd_create(graph->dof, 1);
   MatNd* dH = MatNd_create(1, graph->nJ);
   MatNd* qdot = MatNd_createLike(dq_des);
+  MatNd* a_des = MatNd_clone(a_des_);
 
-  MatNd* a_des = MatNd_create(ikSolver.getController()->getNumberOfTasks(), 1);
-  if (!a_des_)
-  {
-    MatNd_setElementsTo(a_des, 1.0);
-  }
-
-  if (activateTasks)
-  {
-    MatNd_setElementsTo(a_des, 1.0);
-  }
-  else
-  {
-    MatNd_setElementsTo(a_des, 0.0);
-  }
+  MatNd_setElementsTo(a_des, this->activateTasks ? 1.0 : 0.0);
 
   const double globalScaling = jointSpeedScaling.iterate();
-
   MatNd* dx_des = MatNd_clone(dx_des_);
   MatNd_constMulSelf(dx_des, globalScaling);
 

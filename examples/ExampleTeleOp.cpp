@@ -160,7 +160,8 @@ bool ExampleTeleOp::initAlgo()
   entity.subscribe("SetTwist", &ExampleTeleOp::onSetTwist, this);
   entity.subscribe("SetWrench", &ExampleTeleOp::onSetWrench, this);
   entity.subscribe("SetFingerPose", &ExampleTeleOp::onSetFingerPose, this);
-  entity.subscribe("PostUpdateGraph", &ExampleTeleOp::onCollectData, this);
+  entity.subscribe("SetBiManualPoseCommand", &ExampleTeleOp::onSetBiManualPoseCommand, this);
+  entity.subscribe("PostUpdateGraph", &ExampleTeleOp::onPostUpdateGraph, this);
   entity.subscribe("PrintCollectedData", &ExampleTeleOp::printCollectedData, this);
 
 
@@ -176,11 +177,16 @@ bool ExampleTeleOp::initAlgo()
 
   // Get name of end effector
   RCHECK(controller->getNumberOfTasks()>0);
-  RCHECK(controller->getTask(0)->getEffector());
+  if (controller->getTask(0)->getEffector())
+  {
   this->endEffectorName = std::string(controller->getTask(0)->getEffector()->name);
+  }
+
   const RcsBody* ee = RcsGraph_getBodyByName(getGraph(), this->endEffectorName.c_str());
-  RCHECK(ee);
+  if (ee)
+  {
   HTr_copy(&eeTrf, &ee->A_BI);
+  }
 
   // Extract the collision model
   {
@@ -257,7 +263,7 @@ bool ExampleTeleOp::initAlgo()
   }
 
   //std::cout << help() << std::endl;
-  //RcsGraph_fprintJoints(stdout, getCurrentGraph());
+  RcsGraph_fprintJoints(stdout, getCurrentGraph());
 
   return true;
 }
@@ -518,6 +524,18 @@ void ExampleTeleOp::step()
   {
     ikc->onWrenchCommand(this->wrench_des, this->wrench_in_world);
   }
+  else if (this->inputType=="BiManualPose")
+  {
+    BiManualPoseCommand p;
+    {
+      std::lock_guard<std::mutex> lock(this->biManualPoseCommandMtx);
+      p = this->biManualPoseCommand;
+    }
+
+    ikc->computeBiManualPoseCommand(p.leftHandPose, p.rightHandPose,
+                                    p.rightFingersPose0, p.rightFingersPose1, p.s_right_01,
+                                    p.leftFingersPose0, p.leftFingersPose1, p.s_left_01);
+  }
   else
   {
     RLOG_CPP(1, "Unknown input type: " << this->inputType);
@@ -536,7 +554,8 @@ void ExampleTeleOp::step()
   }
   else
   {
-    RLOG_CPP(0, "End effector " << this->endEffectorName << " not found");
+    RLOG_CPP(1, "End effector for wrench not found");
+    RCHECK_MSG(this->inputType!="Wrench", "For input type wrench, no end effector was found");
   }
 
   dtProcess = Timer_getSystemTime() - dtProcess;
@@ -643,6 +662,29 @@ std::vector<double> ExampleTeleOp::getEndEffectorWrench() const
   return wrench;
 }
 
+// std::vector<std::vector<double>> ExampleTeleOp::getBiManualPoseData() const
+// {
+//   std::vector<std::vector<double>> data;
+//   std::lock_guard<std::mutex> lock(this->biManualPoseCommand.mtx);
+
+//   data.push_back(biManualPoseCommand.leftHandPose);
+//   data.push_back(biManualPoseCommand.rightHandPose);
+//   data.push_back(std::vector<double> {biManualPoseCommand.s_left_01});
+//   data.push_back(std::vector<double> {biManualPoseCommand.s_right_01});
+//   return data;
+// }
+
+std::vector<double> ExampleTeleOp::getBodyPose(std::string bodyName,
+                                               bool fromCurrentGraph) const
+{
+  const RcsGraph* graph = fromCurrentGraph ? getCurrentGraph() : getGraph();
+  const RcsBody* bdy = RcsGraph_getBodyByName(graph, bodyName.c_str());
+
+  std::vector<double> pose(6);
+  HTr_to6DVector(pose.data(), &bdy->A_BI);
+
+  return pose;
+}
 
 void ExampleTeleOp::startThreaded()
 {
@@ -717,6 +759,29 @@ void ExampleTeleOp::onSetWrench(double pos_x, double pos_y, double pos_z,
   this->wrench_in_world = true;
 }
 
+void ExampleTeleOp::onSetBiManualPoseCommand(std::vector<double> leftHandPose,
+                                             std::vector<double> rightHandPose,
+                                             std::string rightFingersPose0,
+                                             std::string rightFingersPose1,
+                                             double s_right_01,
+                                             std::string leftFingersPose0,
+                                             std::string leftFingersPose1,
+                                             double s_left_01)
+{
+  RCHECK(leftHandPose.size()==6);
+  RCHECK(rightHandPose.size()==6);
+  std::lock_guard<std::mutex> lock(this->biManualPoseCommandMtx);
+  biManualPoseCommand.leftHandPose = leftHandPose;
+  biManualPoseCommand.rightHandPose = rightHandPose;
+  biManualPoseCommand.rightFingersPose0 = rightFingersPose0;
+  biManualPoseCommand.rightFingersPose1 = rightFingersPose1;
+  biManualPoseCommand.s_right_01 = s_right_01;
+  biManualPoseCommand.leftFingersPose0 = leftFingersPose0;
+  biManualPoseCommand.leftFingersPose1 = leftFingersPose1;
+  biManualPoseCommand.s_left_01 = s_left_01;
+}
+
+
 void ExampleTeleOp::onSetFingerPose(std::string modelStateName)
 {
   if (fingerPoseName==modelStateName)
@@ -758,7 +823,20 @@ void ExampleTeleOp::setBuildPath(const std::string& path)
   this->build_path = path + "/";
 }
 
-void ExampleTeleOp::onCollectData(RcsGraph* desired, RcsGraph* current)
+void ExampleTeleOp::onPostUpdateGraph(RcsGraph* desired, RcsGraph* current)
+{
+  const RcsJoint* fingerDrvLeft_des = RcsGraph_getJointByName(desired, "joint_driving_left");
+  const RcsJoint* fingerDrvLeft_curr = RcsGraph_getJointByName(current, "joint_driving_left");
+
+  if (fingerDrvLeft_des && fingerDrvLeft_curr)
+  {
+    current->q->ele[fingerDrvLeft_curr->jointIndex] = desired->q->ele[fingerDrvLeft_des->jointIndex];
+  }
+
+  collectData(desired, current);
+}
+
+void ExampleTeleOp::collectData(RcsGraph* desired, RcsGraph* current)
 {
   const RcsBody* ee = controller->getTask(0)->getEffector();
   RCHECK(ee);
@@ -1035,6 +1113,53 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleTeleOpJaco3MetaquestFile, "A TeleOp", "Jaco Gen3 retargetting with Metaquest (from log file)");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleTeleOpJaco3Metaquest : public ExampleTeleOp
+{
+public:
+
+  ExampleTeleOpJaco3Metaquest() : ExampleTeleOpJaco3Metaquest(0, NULL)
+  {
+  }
+
+  ExampleTeleOpJaco3Metaquest(int argc, char** argv) : ExampleTeleOp(argc, argv)
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleTeleOp::initParameters();
+    withScene = true;
+    enableRealGraphVisualization = false;
+    inputType = "Retarget Polar";
+    noLimits = false;
+    xmlFileName = "c_robo.xml";
+    configDirectory = "config/xml/JacoGen3";
+    addComponentArgument("-landmarks_router -landmarks_connection tcp://*:40000 -landmarks_camera unity_world -skeleton_tracking -skeleton_radius 1000 ");
+    //addComponentArgument("-eye_ik -eye_ik.camera_name azure_kinect_rgb_frame ");
+
+    return true;
+  }
+
+  bool initAlgo()
+  {
+    if (withRobo)
+    {
+      // addComponentArgument("-frankaZmq_left -frankaZmq_left.ip 192.168.1.101");
+      // addComponentArgument("-frankaZmq_right -frankaZmq_right.ip 192.168.1.101");
+      // addComponentArgument("-pw70_zmq -pw70_zmq.ip 192.168.0.101");
+    }
+
+    return ExampleTeleOp::initAlgo();
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleTeleOpJaco3Metaquest, "A TeleOp", "Jaco Gen3 retargetting with Metaquest");
 
 
 

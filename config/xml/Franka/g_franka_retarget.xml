@@ -29,7 +29,7 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default">
 
-  <Body name="default_camera_view" transform="-1.676867 -1.658439 2.435608   -11.077 20.900 35.001"/>
+  <Body name="default_camera_view" transform="5 -0.35 3.4   0 -30 180"/>
 
   <Body name="unity_world" prev="hand_robot_right" transform="2 0 0 0 0 180" >
     <Shape type="FRAME"/>
@@ -37,8 +37,8 @@
 
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body name="aruco_base" color="PEWTER" rigid_body_joints="true">
-    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.31 1.00025 0 0 0"
-           type="FRAME"/>
+    <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="01.31 0.31 0.875 0 0 0" type="FRAME"/>
+    <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="01.31 0.31 0.87525 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
     <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER"
            textureFile="textures/floor.jpg"
            graphics="true" physics="true" distance="false"/>
@@ -46,32 +46,37 @@
   </Body>
 
   <!-- The stand with the dual arm FR3 setup with Allegro hands. -->
-  <Group prev="aruco_base" transform="0 0 0 0 0 0">
+  <Group prev="aruco_base" >
     <xi:include href="g_franka_with_allegro.xml"/>
   </Group>
 
-  <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)"/>
-  <!-- <xi:include href="g_franka_with_allegro_collision_model.xml"/> -->
-
-
-
+  <!-- The camera's reference frame. -->
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic" rigid_body_joints="0.874 0.495 1.583  -168.161 56.143 73.762" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
   
-  <!-- The model for a simple camera. -->
-  <Group prev="aruco_base" rigid_body_joints="0.4 0 1.8 0 40 0">
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_0" transform="-0.032 0.0195 0 90 0 90" >
     <xi:include href="../scene/g_azure_kinect.xml"/>
-  </Group>
+  </Group> 
 
   <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" >
     <Shape scale="0.5" type="FRAME"/>
   </Body>
   
-
   <Group prev="aruco_base" name="Felix" color="RED" transform="2 -1 0.5 0 0 180" >
     <xi:include href="../examples/g_human_agent.xml"/>
   </Group>
 
 
 
+  <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)"/>
 
-  
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
 </Graph>

@@ -199,8 +199,9 @@ public:
                    double dt_commands,
                    std::string suffix,
                    std::string otherRecv,
-                   std::string otherSend)
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands)
+                   std::string otherSend,
+                   bool quitDriverOnExit_=true)
+    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_)
   {
     RLOG_CPP(1, "suffix: " << suffix << " otherRecv: " << otherRecv << " otherSend: " << otherSend);
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_0_0"+suffix));
@@ -240,6 +241,7 @@ public:
 
   ~AllegroComponent()
   {
+    stop();
   }
 
   void onUpdateGraph(RcsGraph* graph)

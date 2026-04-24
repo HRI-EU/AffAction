@@ -149,6 +149,14 @@ public:
   void onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   double getJointSpeedScaling() const;
   bool getTasksActive() const;
+  void computeBiManualPoseCommand(std::vector<double> poseLeft,
+                                  std::vector<double> poseRight,
+                                  std::string rightFingersPose0,
+                                  std::string rightFingersPose1,
+                                  double s_right_01,
+                                  std::string leftFingersPose0,
+                                  std::string leftFingersPose1,
+                                  double s_left_01);
 
 private:
 
