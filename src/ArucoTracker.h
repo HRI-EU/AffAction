@@ -31,8 +31,8 @@
 
 *******************************************************************************/
 
-#ifndef ARUCOTRACKER_H
-#define ARUCOTRACKER_H
+#ifndef AFF_ARUCOTRACKER_H
+#define AFF_ARUCOTRACKER_H
 
 #include "TrackerBase.h"
 
@@ -190,16 +190,15 @@ private:
 
   std::unique_ptr<ArucoCalibrator> calibration;
 
+  // Will be populated during parse()
   // marker-name (aruco_05 etc.) - 12 + 1 doubles (transform + update time)
   std::map<std::string,std::vector<double>> arucoMap;
 
+  // Will be populated during update()
   std::map<std::string, ArucoTracker::MarkerBodyData> markerMap;
 
   bool newArucoUpdate;
   std::mutex arucoMapMtx;
-
-  //  Tuple: 1. body name, 2. q-index, 3. vector with 6 joint values
-  std::vector<std::tuple<std::string,std::vector<std::string>,int,std::vector<double>>> markers;
 
   static MarkerBodyData computeBodyDofsFromAruco(const RcsGraph* graph,
                                                  const RcsBody* body,
@@ -209,4 +208,4 @@ private:
 
 }   // namespace
 
-#endif // ARUCOTRACKER_H
+#endif // AFF_ARUCOTRACKER_H

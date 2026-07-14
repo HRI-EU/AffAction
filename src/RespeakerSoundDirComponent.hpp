@@ -118,21 +118,21 @@ public:
       libusb_device_descriptor desc;
       if (libusb_get_device_descriptor(device, &desc) == 0)
       {
-        std::cout << "Vendor ID: " << std::hex << desc.idVendor
-                  << ", Product ID: " << desc.idProduct << std::endl;
+        RLOG_CPP(0, "Vendor ID: " << std::hex << desc.idVendor
+                 << ", Product ID: " << desc.idProduct);
 
         //if (desc.idVendor == VENDOR_ID && desc.idProduct == PRODUCT_ID)
         //{
-        //  std::cout << "ReSpeaker device found. Attempting to open..." << std::endl;
+        //  RLOG_CPP(0, "ReSpeaker device found. Attempting to open...");
         //  int r = libusb_open(device, &dev_handle);
         //  if (r == 0)
         //  {
-        //    std::cout << "Successfully opened ReSpeaker device!" << std::endl;
+        //    RLOG_CPP(0, "Successfully opened ReSpeaker device!");
         //    break;
         //  }
         //  else
         //  {
-        //    std::cerr << "Failed to open ReSpeaker device. Error: " << r << std::endl;
+        //    RLOG_CPP(0, "Failed to open ReSpeaker device. Error: " << r);
         //  }
         //}
       }
@@ -141,16 +141,24 @@ public:
     libusb_free_device_list(list, 1);
   }
 
-  int angle_in_degrees()
+  void angle_in_degrees(int* isVoice, int* isSpeech, int* angle)
   {
     // VOICEACTIVITY parameter: id = 19, offset = 32, type = int
-    int isVoice = readParam(19, 32, true);
+    if (isVoice)
+    {
+      *isVoice = readParam(19, 32, true);
+    }
 
     // SPEECHACTIVITY parameter: id = 19, offset = 32, type = int
-    int isSpeech = readParam(19, 22, true);
-    RLOG(0, "isVoice = %d   isSpeech = %d", isVoice, isSpeech);
+    if (isSpeech)
+    {
+      *isSpeech = readParam(19, 22, true);
+    }
 
-    return readParam(21, 0, true); // DOAANGLE is int
+    if (angle)
+    {
+      *angle = readParam(21, 0, true);  // DOAANGLE is int
+    }
   }
 
   unsigned char version()

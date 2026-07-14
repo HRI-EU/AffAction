@@ -71,6 +71,16 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
 
   double time = 0.0;
   const nlohmann::json& json_header = json_data["header"];
+  // RLOG_CPP(1, "This is the header:\n" << json_header.dump(2));
+  // RLOG_CPP(3, "This is the data:\n" << json_data.dump(2));
+  // REXEC(3)
+  // {
+  //   RLOG_CPP(0, trackers.size() << " trackers found:");
+  //   for (const auto& tracker : trackers)
+  //   {
+  //     RLOG_CPP(0, "[" << tracker->getRequestKeyword() << "]");
+  //   }
+  // }
 
   if (syncInputJsonWithWallclockTime)
   {
@@ -88,7 +98,13 @@ void LandmarkBase::setJsonInput(const nlohmann::json& json_data)
     {
       for (const auto& tracker : trackers)
       {
-        if (entry.key() == tracker->getRequestKeyword())
+        const std::string& key = entry.key();
+        const std::string keyword = tracker->getRequestKeyword();
+        //RLOG_CPP(0, "[" << key << "]: " << keyword);
+
+        //if (entry.key() == tracker->getRequestKeyword())
+        if (key.size() >= keyword.size() &&
+            key.compare(0, keyword.size(), keyword) == 0)
         {
           //RLOG_CPP(1, "[" << entry.key() << "]: " << entry.value());
           tracker->parse(json_header, entry.value(), time);

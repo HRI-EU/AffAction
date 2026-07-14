@@ -287,23 +287,23 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
         std::string id(static_cast<char*>(identity.data()), identity.size());
         std::string payLoadStr(static_cast<char*>(payload.data()), payload.size());
-        if (workers.find(id) == workers.end())
-        {
-          // Found first occurrence
-          RLOG_CPP(0, "Worker found for the first time: " << id);
+        // if (workers.find(id) == workers.end())
+        // {
+        //   // Found first occurrence
+        //   RLOG_CPP(0, "Worker found for the first time: " << id);
 
-          bool trackerExists = false;
-          for (const auto& t : getTrackers())
-          {
-            if (t->getRequestKeyword()==id)
-            {
-              trackerExists = true;
-              break;
-            }
-          }
+        //   bool trackerExists = false;
+        //   for (const auto& t : getTrackers())
+        //   {
+        //     if (t->getRequestKeyword()==id)
+        //     {
+        //       trackerExists = true;
+        //       break;
+        //     }
+        //   }
 
-          RLOG(0, "Tracker for '%s' %s", id.c_str(), trackerExists ? "exists" : "not loaded");
-        }
+        //   RLOG(0, "Tracker for '%s' %s", id.c_str(), trackerExists ? "exists" : "not loaded");
+        // }
         workers[id] = Clock::now();              // refresh liveness
 
         try
@@ -311,8 +311,8 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
           try
           {
-          nlohmann::json json = nlohmann::json::parse(payLoadStr);
-          setJsonInput(json);
+            nlohmann::json json = nlohmann::json::parse(payLoadStr);
+            setJsonInput(json);
           }
           catch (const nlohmann::json::parse_error& e)
           {
@@ -382,7 +382,15 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
 
       }
 
-      RLOG_CPP(5, "Going through " << workers.size() << " workers");
+      REXEC(3)
+      {
+        RLOG_CPP(3, "Going through " << workers.size() << " workers:");
+        for (auto& worker : workers)
+        {
+          RLOG_CPP(1, "- " << worker.first);
+        }
+      }
+
       if (!cmdStr.empty())
       {
         for (auto& worker : workers)
@@ -489,7 +497,7 @@ void ZmqRouterComponent::onLogToFile(std::string logStr)
 {
   if (!logFile.is_open())
   {
-    RLOG_CPP(1, "Not logging - file not opened");
+    RLOG_CPP(5, "Not logging - file not opened");
     return;
   }
 
@@ -509,6 +517,7 @@ void ZmqRouterComponent::fromFileThreadFunc(const std::string& fileName)
   }
 
 
+  RLOG_CPP(0, "Start from file: " << fileName);
   while (this->threadRunning)
   {
     double t_prev = 0.0, t_curr = 0.0;
@@ -538,10 +547,8 @@ void ZmqRouterComponent::fromFileThreadFunc(const std::string& fileName)
         t_curr = j["header"]["timestamp"];
 
         // Set time stamp to current time so that agent is always visible in tracker
-        // RPAUSE();
         j["header"]["timestamp"] = getCurrentTime();
         setJsonInput(j);
-        //RLOG_CPP(1, j.dump(2));
 
         // Wait for computed time period except for first (invalid) dt
         if (t_prev>0.0)

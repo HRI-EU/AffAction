@@ -78,6 +78,8 @@ public:
   /*! \brief Returns the RcsBody's transformation (matching bdyName).
    */
   HTr getBodyTransform(const RcsGraph* graph) const;
+
+  std::string getName() const;
 };
 
 class AffordanceEntity : public SceneEntity

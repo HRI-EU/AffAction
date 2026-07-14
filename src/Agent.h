@@ -135,6 +135,7 @@ public:
   bool check(const ActionScene* scene, const RcsGraph* graph) const;
   std::vector<int> bb_head;
   std::vector<double> fingersLeft, fingersRight;
+  double gripperLeft, gripperRight;
   std::map<HumanAgent::BodyType,std::string> trackedFrames;
 
 private:

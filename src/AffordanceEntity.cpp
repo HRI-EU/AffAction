@@ -155,6 +155,11 @@ bool SceneEntity::isOfType(const std::string& type) const
   return true;
 }
 
+std::string SceneEntity::getName() const
+{
+  return name;
+}
+
 
 
 

@@ -54,26 +54,11 @@ void RespeakerUSBComponent::usbThreadFunc()
 
   while (threadRunning)
   {
-#if 0
-    int angle;
-    bool isSpeaking;
+    int isVoice, isSpeech, angle;
+    rinterface->angle_in_degrees(&isVoice, &isSpeech, &angle);
+    RLOG(0, "%d %d %d angle = %d", isVoice, isSpeech, isVoice+isSpeech, angle);
 
-    bool success = rinterface->angle_in_degrees(angle, isSpeaking);
-
-    if (success)
-    {
-      RLOG(0, "angle = %d, isSpeaking = %s", angle, isSpeaking ? "true" : "false");
-    }
-    else
-    {
-      RLOG(0, "Error in angle_in_degrees");
-    }
-#else
-    int angle = rinterface->angle_in_degrees();
-    RLOG(0, "angle = %d", angle);
-#endif
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
 }
 #else

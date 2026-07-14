@@ -84,7 +84,8 @@ FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& c
   std::vector<std::string> candidates =
   {
     "hri_scitos_description/FaceMesh-holes-478.obj",
-    "hri_description/meshes/FaceMesh-holes-478.obj"
+    "hri_description/meshes/FaceMesh-holes-478.obj",
+    "meshes/hri_description/meshes/FaceMesh-holes-478.obj"
   };
 
   std::string meshFile = Rcs::getAbsoluteFileName(candidates);

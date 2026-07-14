@@ -370,7 +370,8 @@ private:
 
     {
       std::lock_guard<std::mutex> lock(cmdMtx);
-      if (!jointCommands.empty() && (jointCommands != jointCommandsPrev))
+      if ((!jointCommands.empty() && (jointCommands != jointCommandsPrev))
+          || (gripper_command != gripper_command_prev))
       {
         cmdJson = payload;
       }

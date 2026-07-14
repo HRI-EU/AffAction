@@ -182,7 +182,7 @@ void JointGuiComponent::onFilterAndUpdateGui(RcsGraph* from)
   double phase = std::fmod(2.0*M_PI*t_now*0.5, 2.0*M_PI);
   sine_amplitude.iterate();
   double sine_overlay = sine_amplitude.getPosition()*std::sin(phase);
-  RLOG(1, "sime_amplitude = %f", sine_amplitude.getPosition());
+  NLOG(1, "sine_amplitude = %f", sine_amplitude.getPosition());
 
 
   pthread_mutex_lock(&this->mtx);

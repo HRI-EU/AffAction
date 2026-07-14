@@ -86,7 +86,7 @@ const RcsBody* ArucoTracker::MarkerBodyData::body(const RcsGraph* graph)
 }
 
 /*******************************************************************************
-*! \brief Given a hierarchy of transforms where I is the world frame, B is
+ *! \brief Given a hierarchy of transforms where I is the world frame, B is
  *         a body frame, P is the bodie's parent frame and M is a marker frame
  *         that is a child of the body, and knowing the transforms T_MI, T_MB
  *         and T_PI, we compute the unknown transform T_BP:
@@ -584,8 +584,21 @@ static std::vector<double> parsePose(const nlohmann::json& json)
  */
 void ArucoTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
+  const std::string frameId = jsonHeader.value("frame_id", "");
+
+  // We accept having no frame_id in the header, that might be the case if
+  // there is only one camera
+  if (!frameId.empty() && frameId != getCameraName())
+  {
+    NLOG(5, "ArucoTracker '%s': ignoring frame '%s'",
+         getCameraName().c_str(), frameId.c_str());
+    return;
+  }
+
   std::map<std::string,std::vector<double>> localArucoMap;
-  RLOG_CPP(2, "Received 'aruco':" << jsonData.dump(2));
+  NLOG_CPP(2, "Received 'aruco':" << jsonData.dump(2));
+  // std::string camera_name = jsonHeader.value("frame_id", "None");
+  // RLOG_CPP(0, "Received 'aruco_camera':" << camera_name);
 
   for (auto& entry : jsonData.items())
   {
@@ -621,9 +634,9 @@ void ArucoTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json&
     localArucoMap[entry.key()] = pose13;
   }
 
-  std::lock_guard<std::mutex> lock(arucoMapMtx);
-  arucoMap = localArucoMap;
-  newArucoUpdate = true;
+  std::lock_guard<std::mutex> lock(this->arucoMapMtx);
+  this->arucoMap = localArucoMap;
+  this->newArucoUpdate = true;
 }
 
 std::string ArucoTracker::getBaseMarkerName() const

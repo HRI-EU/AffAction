@@ -436,6 +436,7 @@ HumanAgent::HumanAgent(const xmlNodePtr node,
                        const std::string& groupSuffix,
                        const ActionScene* scene) :
   Agent(node, groupSuffix),
+  gripperLeft(-1.0), gripperRight(-1.0),
   lastTimeSeen(0.0), visible(false)
 {
   parseComponents(node->children, groupSuffix, scene);
