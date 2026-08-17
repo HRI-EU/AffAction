@@ -1,0 +1,15 @@
+<Controller xmlns:xi="http://www.w3.org/2001/XInclude" >
+
+   <Graph name="default">
+    <xi:include href="g_social_conversation.xml"/>
+   </Graph>
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
+</Controller>

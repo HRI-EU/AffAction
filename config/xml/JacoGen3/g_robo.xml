@@ -81,10 +81,10 @@ base right gravity: -9.64772 -0.793742 -1.58981
   </Group>
 
   <Body name="GazePoint" >
-    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="2" weightJL="0" weightMetric="5" />
-    <Shape type="SPHERE" radius="0.025" graphics="true" color="GREEN" />
+    <Joint name="gpx" range="-5 1.05 5" type="TransX" speedLimit="10" weightJL="0" weightMetric="5" />
+    <Joint name="gpy" range="-5 0 5"    type="TransY" speedLimit="10" weightJL="0" weightMetric="5" />
+    <Joint name="gpz" range="-5 0.35 5" type="TransZ" speedLimit="10" weightJL="0" weightMetric="5" />
+    <Shape type="SPHERE" radius="0.025" graphics="true" distance="false" color="GREEN" />
   </Body>
 
   
@@ -97,6 +97,7 @@ base right gravity: -9.64772 -0.793742 -1.58981
   <!-- Dual arm setup -->
   <Body name="adapter_shoulder" prev="center_post_link" transform="-0.09 0 0.65 0 0 0" >
     <Shape type="MESH" meshFile="meshes/hri_description/meshes/Gen3Mount-V3.stl" scale="0.001" transform="0 0 0.0638 0 0 180" />
+    <Shape type="SSL" length="0.4" radius="0.06" transform="-0.02 0.2 0.11 90 0 0" color="RANDOM" />
   </Body>
   
   <Body name="adapter_shoulder_right_2" prev="adapter_shoulder" transform="-0.073 -0.072 0.058 -10 3 10" />
@@ -110,6 +111,10 @@ base right gravity: -9.64772 -0.793742 -1.58981
     <xi:include href="gJacoGen3_7dof.xml"/>
     <xi:include href="g_hand_left-gen3.xml"/>
   </Group>
+
+  <Body name="shoulder_center" prev="adapter_shoulder" transform="0.1 0 -0.1 0 0 0" xxxtransform="0.4 -0.2 0.2 0 0 0" >
+    <Shape type="FRAME" />
+  </Body>
 
   
   

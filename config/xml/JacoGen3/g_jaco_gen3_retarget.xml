@@ -45,28 +45,70 @@
     <Shape scale="0.5" type="FRAME"/>
   </Body>
 
-  <!-- The stand with the dual arm FR3 setup with Allegro hands. -->
-  <Group prev="aruco_base" transform="0 0 0 0 0 0">
+  <!-- The robot -->
+  <Group prev="aruco_base" >
     <xi:include href="g_robo.xml"/>
   </Group>
 
 
+  <!-- Retargetting frames -->
+  <Body name="upperarm_retarget_right" prev="upperarm_right" transform="0 0 0 90 0 0" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="forearm_retarget_right" prev="forearm_right" transform="0 0 0 90 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="hand_robot_retarget_right" prev="hand_robot_right" transform="0 0 0 -90 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
 
   
-  <!-- The model for a simple camera. -->
-  <Group prev="aruco_base" rigid_body_joints="-0.125 0 1.78 0 40 0">
+  <Body name="upperarm_retarget_left" prev="upperarm_left" transform="0 0 0 90 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="forearm_retarget_left" prev="forearm_left" transform="0 0 0 90 0 0" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="hand_robot_retarget_left" prev="hand_robot_left" transform="0 0 0 90 0 0" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="head_retarget" prev="head_front_glass" transform="0 0 0 0 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+  
+  <Body name="dummy_grippers" prev="aruco_base" >
+    <Joint name="joint_gripper_right" range="0 1" type="TransX" />
+    <Joint name="joint_gripper_left" range="0 1"  type="TransX" />
+  </Body>
+  
+  <Body name="haption" prev="aruco_base" rigid_body_joints="0.412295 -0.495208 1.057115 -117.754032 2.834080 150.121250" >
+    <Shape type="FRAME" />
+  </Body>
+
+  
+  <!-- The camera's reference frame. -->
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic" rigid_body_joints="-0.1 0 1.77 -180 60 90" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
+  
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_0" transform="-0.032 0.0195 0 90 0 90" >
     <xi:include href="../scene/g_azure_kinect.xml"/>
   </Group>
 
-  <!-- <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" > -->
-  <!--   <noShape scale="0.5" type="FRAME"/> -->
-  <!-- </Body> -->
   
 
   <Group prev="aruco_base" name="Felix" color="RED" transform="2 -1 0.5 0 0 180" >
     <xi:include href="../examples/g_human_agent.xml"/>
   </Group>
 
+  <Hardware name="arm_left" component="-jacoGen3Zmq_left -jacoGen3Zmq_left.ip 192.168.1.101"/>
+  <Hardware name="arm_right" component="-jacoGen3Zmq_right -jacoGen3Zmq_right.ip 192.168.1.101"/>
 
 
   <model_state model="default" time_stamp="0">
@@ -89,6 +131,20 @@
     <joint_state joint="finger_joint_left" position="0"/>
   </model_state>
 
+  <model_state model="open_fingers_right" time_stamp="0">
+    <joint_state joint="finger_joint_right" position="0"/>
+  </model_state>
 
-  
+  <model_state model="open_fingers_left" time_stamp="0">
+    <joint_state joint="finger_joint_left" position="0"/>
+  </model_state>
+
+  <model_state model="close_fingers_right" time_stamp="0">
+    <joint_state joint="finger_joint_right" position="40"/>
+  </model_state>
+
+  <model_state model="close_fingers_left" time_stamp="0">
+    <joint_state joint="finger_joint_left" position="40"/>
+  </model_state>
+
 </Graph>

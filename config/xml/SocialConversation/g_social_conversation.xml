@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default">
+
+  <Body name="default_camera_view" transform="5 -0.35 3.4   0 -30 180"/>
+
+  <!-- <Body name="unity_world" prev="hand_robot_right" transform="2 0 0 0 0 180" > -->
+  <!--   <Shape type="FRAME"/> -->
+  <!-- </Body> -->
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body name="aruco_base" color="PEWTER" rigid_body_joints="true">
+    <Shape type="FRAME" extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="0 0 0.8 0 0 0"/>
+    <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0 0 0.80025 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" graphics="true" physics="true" distance="false"/>
+    <Shape type="BOX" distance="true" extents="0.8 0.8 0.026" graphics="true" physics="true" transform="0 0 0.787 0 0 0" textureFile="textures/table.jpg"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <!-- The camera's reference frame. 4.140397   -56.741298   -85.207425 -->
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic"  bbbrigid_body_joints="0.8604060584994007 0.24078818485605002 1.8128052712944395 4.140397   -56.741298   -85.207425"  aaarigid_body_joints="-0.8604060584994007 -0.24078818485605002 1.8128052712944395 4.140397   123.26   94.79"       rigid_body_joints="0.860 0.241 1.813  -0 -110 -90" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
+  
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_0" name="_0" transform="-0.032 0.0195 0 90 0 90" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+  
+  <Group prev="aruco_base" name="Person0" color="RED" transform="1 0 0.5 0 0 180" >
+    <xi:include href="../examples/g_human_agent.xml"/>
+  </Group>
+
+  <!-- The camera's reference frame. -0.5920415683426319 0.1264068111100843 -1.0258464726850878 -->
+  <Body name="camera_1" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic" xxxrigid_body_joints="-0.5920415683426319 0.1264068111100843 1.8258464726850878  -180.1299 56.8392 -87.3738" rigid_body_joints="-0.592 0.126 1.826  -180 60 -90" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
+  
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_1" name="_1" transform="-0.032 0.0195 0 90 0 90" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+  
+  <Group prev="aruco_base" name="Person1" color="GREEN" transform="-1 0 0.5 0 0 0" >
+    <xi:include href="../examples/g_human_agent.xml"/>
+  </Group>
+
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
+</Graph>

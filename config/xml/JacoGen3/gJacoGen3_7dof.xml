@@ -56,22 +56,13 @@
   <Body name="forearm" prev="elbow" physics="dynamic" mass="0.9302" cogVector="-0.000018 -0.075478 -0.015006" inertia="0.008147 -1e-06 0   -1e-06 0.000631 -0.0005   0 -0.0005 0.008316" >
     <Joint name="joint_4" range="-150 0 150" type="RotZ" transform="0 0.006375 -0.21038 90 0 0" ctrlType="Torque" torqueLimit="39" speedLimit="75" weightMetric="0.5" weightCA="1" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="meshes/kortex_description/arms/gen3/7dof/meshes/forearm_link.STL" color="#bfbfbfff" />
-    <Shape type="SSL" length="0.3" radius="0.045" distance="true" physics="false" graphics="false" transform="0 0 -0.04 80 0 90" color="RANDOM" />
-  </Body>
-
-  <Body name="forearm_retarget" prev="forearm" transform="0 0 0 0 90 -90" >
-  </Body>
-
-  <Body name="forearm_retarget2" prev="forearm" transform="0 0 0 0 -90 -90" >
+    <Shape type="SSL" length="0.32" radius="0.045" distance="true" physics="false" graphics="false" transform="0 0 -0.04 82 0 90" color="RANDOM" />
   </Body>
 
   <Body name="spherical_wrist_1_link" prev="forearm" physics="dynamic" mass="0.6781" cogVector="0.000001 -0.009432 -0.063883" inertia="0.001596 0 0   0 0.001607 0.000256   0 0.000256 0.000399" >
     <Joint name="joint_5" range="-720 0 720" type="RotZ" transform="0 -0.20843 -0.006375 -90 0 0" ctrlType="Torque" torqueLimit="9" speedLimit="65" weightMetric="1" weightJL="1" weightCA="0" />
     <Shape type="MESH" distance="false" physics="true" graphics="true" meshFile="meshes/kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.STL" color="#bfbfbfff" />
     <xShape type="SSL" length="0.072239" radius="0.051571" distance="true" physics="false" graphics="false" transform="-0.000165 -0.025866 -0.106649 -17.187742 0.162154 -90.524217" color="RANDOM" />
-  </Body>
-
-  <Body name="wrist_retarget" prev="spherical_wrist_1_link" transform="0 0 0 0 180 0" >
   </Body>
 
   <Body name="spherical_wrist_2_link" prev="spherical_wrist_1_link" physics="dynamic" mass="0.6781" cogVector="0.000001 -0.045483 -0.00965" inertia="0.001641 0 0   0 0.00041 -0.000278   0 -0.000278 0.001641" >
@@ -86,7 +77,7 @@
   </Body>
 
   <Body name="end_effector_link" prev="bracelet_link" transform="0 0 -0.061525 180 0 0" >
-    <noShape type="FRAME" scale="0.1" />
+    <xShape type="FRAME" scale="0.1" />
   </Body>
 
   <!-- <Body name="camera_link" prev="end_effector_link" transform="0 0.05639 -0.00305 0 0 -180" > -->
@@ -108,14 +99,15 @@
   <Body name="robotiq_arg2f_base_link" prev="end_effector_link" transform="0 0 0 0 0 90" physics="fixed" mass="0.82652" was_mass="0.22652" cogVector="0 -0.000005 0.03145" inertia="0.00020005 -4.2442e-10 -2.9069e-10   -4.2442e-10 0.00017832 -3.4402e-08   -2.9069e-10 -3.4402e-08 0.00013478" >
     <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_base_link.stl" color="#191919ff" />
     <xxShape type="MESH" distance="true" physics="true" graphics="false" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_base_link.stl" />
-    <Shape type="SSL" length="0.001585" radius="0.055817" distance="true" physics="false" graphics="false" transform="0.000163 -0.000688 0.043124 -70.185647 0.041055 -90.014792" color="RANDOM" />
+    <Shape type="SSL" length="0.08" radius="0.04" distance="true" physics="false" graphics="false" transform="0 0 -0.03 0 0 0" color="RANDOM" />
+    <Shape type="SSL" length="0.06" radius="0.025" distance="true" physics="false" graphics="false" transform="0.055 0.03 -0.01 90 0 0" color="RANDOM" />
   </Body>
 
   <Body name="left_outer_knuckle" prev="robotiq_arg2f_base_link" transform="0 0 0 0 90 0" physics="dynamic" mass="0.008532" cogVector="-0.0002 0.019944 0.029225" inertia="2.89328e-06 -1.57935e-19 -1.9398e-19   -1.57935e-19 1.8672e-06 -1.21859e-06   -1.9398e-19 -1.21859e-06 1.21905e-06" >
     <Joint name="finger_joint" was_range="0 20 40" range="-360 20 360" type="RotZ" transform="0 -0.030601 0.054905 131.53944 -90 0" ctrlType="Velocity" torqueLimit="1000" speedLimit="114.591559" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/visual/robotiq_arg2f_140_outer_knuckle.stl" color="#cad1edff" />
     <xxShape type="MESH" distance="true" physics="true" graphics="false" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_140_outer_knuckle.stl" />
-    <Shape type="SSL" length="0.044298" radius="0.015026" distance="true" physics="false" graphics="false" transform="0.000177 -0.009245 -0.009049 -48.88781 -0.556005 -89.514777" color="RANDOM" />
+    <xxShape type="SSL" length="0.044298" radius="0.015026" distance="true" physics="false" graphics="false" transform="0.000177 -0.009245 -0.009049 -48.88781 -0.556005 -89.514777" color="RANDOM" />
   </Body>
 
   <Body name="left_outer_finger" prev="left_outer_knuckle" transform="0 0.01822 0.026002 0 0 0" physics="fixed" mass="0.022614" cogVector="0.000301 0.037391 -0.020803" inertia="1.52518e-05 9.76583e-10 -5.43839e-10   9.76583e-10 6.17694e-06 6.78636e-06   -5.43839e-10 6.78636e-06 1.16495e-05" >
@@ -147,7 +139,7 @@
     <Joint name="right_outer_knuckle_joint" range="-40.107046 -20.053523 0" constraint="true" type="RotX" transform="0 0.030601 0.054905 -131.53944 0 -180" torqueLimit="1000" no_speedLimit="114.591559" coupledTo="finger_joint" couplingFactor="-1"/>
     <Shape type="MESH" distance="false" physics="false" graphics="true" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/visual/robotiq_arg2f_140_outer_knuckle.stl" color="#cad1edff" />
     <xxShape type="MESH" distance="true" physics="true" graphics="false" meshFile="meshes/kortex_description/grippers/robotiq_2f_140/meshes/collision/robotiq_arg2f_140_outer_knuckle.stl" />
-    <Shape type="SSL" length="0.044298" radius="0.015026" distance="true" physics="false" graphics="false" transform="0.000177 -0.009245 -0.009049 -48.88781 -0.556005 -89.514777" color="RANDOM" />
+    <xxShape type="SSL" length="0.044298" radius="0.015026" distance="true" physics="false" graphics="false" transform="0.000177 -0.009245 -0.009049 -48.88781 -0.556005 -89.514777" color="RANDOM" />
   </Body>
 
   <Body name="right_outer_finger" prev="right_outer_knuckle" transform="0 0.01822 0.026002 0 0 0" physics="fixed" mass="0.022614" cogVector="0.000301 0.037391 -0.020803" inertia="1.52518e-05 9.76583e-10 -5.43839e-10   9.76583e-10 6.17694e-06 6.78636e-06   -5.43839e-10 6.78636e-06 1.16495e-05" >

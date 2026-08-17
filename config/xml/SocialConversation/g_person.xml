@@ -1,0 +1,117 @@
+<!--
+  Copyright (c) Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<Graph>
+
+  <Body name="Seat_" >
+    <Shape type="CYLINDER" radius="0.2" length="0.02" transform="0 0 -0.01 0 0 0"
+	   distance="false" graphics="true" physics="false" />
+  </Body>
+
+  <!-- The model for a human. -->
+  <Body name="Agent_" prev="Seat_" rigid_body_joints="0 0 0 90 0 90" >
+    <Shape type="SPHERE" distance="false" graphics="true" physics="false" radius="0.05" />
+    <Shape type="FRAME" scale="0.2" />
+  </Body>
+  
+  <Body name="Head_" xprev="Agent_" rigid_body_joints="0 0 0.7 90 -90 0" prev="Seat_" xrigid_body_joints="0 0 0.7 90 170 90">
+    <Shape type="SSL" distance="false" radius="0.1" length="0.1" graphics="true" physics="false" transform="0 0.1 0.05 90 0 0" />
+    <Shape type="BOX" distance="untrue" extents="0.2 0.05 0.25" graphics="true" physics="false" transform="0 0.2 0 0 0 0" color="BRASS" />
+    <Shape type="CYLINDER" distance="false" radius="0.1" length="0.05" graphics="true" physics="false" transform="0 0.25 0 90 0 0" color="BRASS" />
+    <Shape type="SSL" distance="false" graphics="true" length="1.2" physics="false" radius="0.005" transform="0 0.1 0 0 180 0" />
+    <Shape type="FRAME" scale="0.2" />
+  </Body>
+  
+  <Body name="Face_" prev="Head_" rigid_body_joints="0 0.2 0.2 0 0 0" >
+    <Shape type="FRAME" scale="0.15" graphics="true" />
+    <!-- <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="true" distance="false" physics="false" transform="0 0 0 -90 0 -90" /> -->
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="true" distance="false" physics="false" transform="0 -0.1 -0.3 -90 0 90" />
+  </Body>
+  
+  <!-- <Body name="Gaze_" prev="Head_" rigid_body_joints="0.15 0.15 0 -90 0 0" > -->
+  <!--   <Shape type="FRAME" scale="0.5" graphics="true" /> -->
+  <!-- </Body> -->
+  
+  <Body  name="Shoulder_left_" prev="Seat_" rigid_body_joints="0 0.2 0.5 -90 0 90" color="RED" >
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <noShape type="BOX" extents="0.3 0.025 0.025" transform="0.15 0 0 0 0 0" distance="false" graphics="true" physics="false"/>
+  </Body>
+  
+  <Body name="Shoulder_right_" prev="Seat_" rigid_body_joints="0 -0.2 0.5 90 0 90" color="RED" >
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <noShape type="BOX" extents="0.3 0.025 0.025" transform="-0.15 0 0 0 0 0" distance="false" graphics="true" physics="false" />
+  </Body>
+  
+  <Body  name="Elbow_left_" prev="Seat_" rigid_body_joints="0.1 0.3 0.25 -90 0 90" color="GREEN" >
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <noShape type="BOX" extents="0.3 0.025 0.025" transform="0.15 0 0 0 0 0" distance="false" graphics="true" physics="false"/>
+  </Body>
+  
+  <Body name="Elbow_right_" prev="Seat_" rigid_body_joints="0.1 -0.3 0.25 90 0 90" color="GREEN" >
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <noShape type="BOX" extents="0.3 0.025 0.025" transform="-0.15 0 0 0 0 0" distance="false" graphics="true" physics="false" />
+  </Body>
+  
+  <Body  name="Hand_left_" prev="Seat_" rigid_body_joints="0.3 0.3 0.35 180 0 0" transform="0 0 0 90 0 0" >
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <Shape type="BOX" extents="0.2 0.05 0.1" transform="0.1 0 0 0 0 0" distance="false" graphics="true" physics="false" />
+    <Shape type="BOX" extents="0.04 0.05 0.1" transform="0.02 0 0.1 0 0 0" distance="false" graphics="true" physics="false" />
+    <Shape type="FRAME" scale="0.3" />
+  </Body>
+  
+  <Body name="Hand_right_" prev="Seat_" rigid_body_joints="0.3 -0.3 0.35 180 0 0" transform="0 0 0 -90 0 0">
+    <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
+    <Shape type="BOX" extents="0.2 0.05 0.1" transform="0.1 0 0 0 0 0" distance="false" graphics="true" physics="false" />
+    <Shape type="BOX" extents="0.04 0.05 0.1" transform="0.02 0 0.1 0 0 0" distance="false" graphics="true" physics="false" />
+    <Shape type="FRAME" scale="0.3" />
+  </Body>
+  
+  <Manipulator body="Head_" types="head"/>
+  <Manipulator body="Hand_left_" types="hand_left hand"/>
+  <Manipulator body="Hand_right_" types="hand_right hand"/>
+  
+  <Agent name="" body="Agent_" defaultPosition="0 0 0" defaultRadius="0.5" tracker="azure_kinect" types="human">
+    <Component manipulator="Head_"/>
+    <Component manipulator="Hand_left_"/>
+    <Component manipulator="Hand_right_"/>
+
+    <TrackedFrames>
+      <BodyFrame id="Head"          frame="Head_"/>
+      <BodyFrame id="ShoulderLeft"  frame="Shoulder_left_"/>
+      <BodyFrame id="ShoulderRight" frame="Shoulder_right_"/>
+      <BodyFrame id="ElbowLeft"     frame="Elbow_left_"/>
+      <BodyFrame id="ElbowRight"    frame="Elbow_right_"/>
+      <BodyFrame id="HandLeft"      frame="Hand_left_"/>
+      <BodyFrame id="HandRight"     frame="Hand_right_"/>
+    </TrackedFrames>
+
+  </Agent>
+
+
+</Graph>

@@ -1,0 +1,102 @@
+<?xml version="1.0" ?>
+<!--
+  Copyright (c) 2022, Honda Research Institute Europe GmbH
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+
+  3. Neither the name of the copyright holder nor the names of its
+     contributors may be used to endorse or promote products derived from
+     this software without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY EXPRESS OR
+  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default">
+
+  <Body name="default_camera_view" transform="1.568581 3.922798 2.388572   16.560 -10.357 -108.856"/>
+
+  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <Body name="aruco_base" color="PEWTER" rigid_body_joints="true">
+    <Shape type="FRAME" extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="0 0 0.8 0 0 0"/>
+    <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0 0 0.80025 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
+    <Shape type="BOX" extents="3.0 2.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" graphics="true" physics="true" distance="false"/>
+    <Shape type="BOX" distance="true" extents="0.8 0.8 0.026" graphics="true" physics="true" transform="0 0 0.787 0 0 0" textureFile="textures/table.jpg"/>
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
+  <!-- The camera's reference frame. 4.140397   -56.741298   -85.207425 -->
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic"  rigid_body_joints="0.860 0.241 1.813  -0 -110 -90" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
+  
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_0" name="_0" transform="-0.032 0.0195 0 90 0 90" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+
+  
+  <Group prev="aruco_base" name="Person0" color="RED" transform="1 0 0.5 0 0 180" >
+    <xi:include href="g_person.xml"/>
+  </Group>
+
+  <!-- The camera's reference frame. -0.5920415683426319 0.1264068111100843 -1.0258464726850878 -->
+  <Body name="camera_1" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic" rigid_body_joints="-0.592 0.126 1.826  -180 60 -90" >
+    <Shape type="FRAME" scale="0.1" graphics="true" />
+  </Body>
+  
+  <!-- The model for a simple camera. It is aligned so that the RGB frame coincides with the previous camera reference. -->
+  <Group prev="camera_1" name="_1" transform="-0.032 0.0195 0 90 0 90" >
+    <xi:include href="../scene/g_azure_kinect.xml"/>
+  </Group>
+  
+  <!-- The robot -->
+  <Group prev="aruco_base" transform="-0.8 0 0.055 0 0 0" >
+    <xi:include href="../JacoGen3/g_robo.xml"/>
+  </Group>
+  
+
+  <model_state model="default" time_stamp="0">
+    <joint_state joint="joint_1_right" position="170"/>
+    <joint_state joint="joint_2_right" position="70"/>
+    <joint_state joint="joint_3_right" position="80"/>
+    <joint_state joint="joint_4_right" position="-90"/>
+    <joint_state joint="joint_5_right" position="0"/>
+    <joint_state joint="joint_6_right" position="-20"/>
+    <joint_state joint="joint_7_right" position="-90"/>
+    <joint_state joint="finger_joint_right" position="0"/>
+
+    <joint_state joint="joint_1_left" position="10"/>
+    <joint_state joint="joint_2_left" position="-70"/>
+    <joint_state joint="joint_3_left" position="-80"/>
+    <joint_state joint="joint_4_left" position="90"/>
+    <joint_state joint="joint_5_left" position="0"/>
+    <joint_state joint="joint_6_left" position="20"/>
+    <joint_state joint="joint_7_left" position="90"/>
+    <joint_state joint="finger_joint_left" position="0"/>
+  </model_state>
+
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="upperarm_left"/>
+    <Tree root="upperarm_right"/>
+    <Body name="center_post_link"/>
+    <Body name="adapter_shoulder"/>
+  </BroadPhase>
+
+</Graph>

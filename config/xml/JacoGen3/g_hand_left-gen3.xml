@@ -34,12 +34,8 @@
   </Body>
 
   <Body name="hand_robot" prev="hand_base" transform="0 0 -0.1 180 -90 0" >
-    <Shape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
-           transform="0 0 0.2 180 0 0" color="RED"/>
-    <Shape type="FRAME" scale="0.3"/>
-  </Body>
-
-  <Body name="hand_robot_retarget" prev="hand_robot" transform="0 0 0 90 0 0" >
+    <xShape type="SSL" distance="true" physics="false" graphics="false" radius="0.06" length="0.16"
+           was_transform="0 0 0.2 180 0 0" transform="-0.2 0 0 0 90 0" color="RED"/>
     <noShape type="FRAME" scale="0.3"/>
   </Body>
 
