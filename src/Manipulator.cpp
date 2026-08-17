@@ -639,7 +639,7 @@ double Manipulator::computeReach(const ActionScene* scene,
     ee = RcsGraph_getBodyByName(graph, capability->frame.c_str());
     RCHECK(ee);
     arm_reach = std::max(arm_reach, Vec3d_distance(ee->A_BI.org, jnt->A_JI.org));
-    RLOG_CPP(0, "Reach by " << ee->name << " is " << arm_reach);
+    RLOG_CPP(5, "Reach by " << ee->name << " is " << arm_reach);
   }
 
   // Traverse backwards from end effector and collect all unconstrained joints
@@ -659,7 +659,7 @@ double Manipulator::computeReach(const ActionScene* scene,
     for (size_t i = 1; i < jnts.size(); ++i)
     {
       arm_reach += Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org);
-      RLOG(0, "Adding %f", Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org));
+      RLOG(5, "Adding %f", Vec3d_distance(jnts[i-1]->A_JI.org, jnts[i]->A_JI.org));
     }
   }
 

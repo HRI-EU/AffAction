@@ -56,7 +56,7 @@ class AzureSkeletonTracker : public TrackerBase
 {
 public:
 
-  AzureSkeletonTracker(size_t numSkeletons, const std::string& camera);
+  AzureSkeletonTracker(size_t numSkeletons);
 
   virtual ~AzureSkeletonTracker();
 
@@ -90,9 +90,9 @@ private:
   std::vector<int> findCorrespondences(std::map<int, std::vector<HTr>> markerMap) const;
   std::vector<std::unique_ptr<Skeleton>> skeletons;
   std::vector<std::function<void(const std::string&, bool)>> agentAppearDisappearCb;
-  bool newAzureUpdate;
+  bool newAzureUpdate;   // For skeleton graphics updates
   double defaultPosRadius;
-  HTr A_CI;
+  std::map<std::string,HTr> cameraTransformMap;
   size_t skeletonIndex = 0;
   std::mutex updateMtx;
 };

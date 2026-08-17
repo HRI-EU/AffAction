@@ -70,7 +70,8 @@ public:
   static std::vector<int> getObjectBoundingBox(const ActionScene* scene, const RcsGraph* graph,
                                                const std::string objName,
                                                const std::string& cameraName,
-                                               const PinholeCamera& phCam);
+                                               const PinholeCamera& phCam,
+                                               bool isVirtualCamera);
 
   void enableDebugWindow(bool enable);
 

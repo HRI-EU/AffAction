@@ -101,7 +101,7 @@ void bind_mirror_eyes(py::class_<aff::ExampleActionsECS>& cls)
       {
         bb = aff::ImageTracker::getObjectBoundingBox(
           ex.getScene(), ex.getGraph(), objName,
-          tracker->getCameraName(), tracker->getCameraModel());
+          tracker->getCameraName(), tracker->getCameraModel(), false);
       }
 
       // Satisfy the promise (catch in case something races after timeout)

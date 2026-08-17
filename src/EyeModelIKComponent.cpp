@@ -112,7 +112,7 @@ namespace aff
 EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* graph, std::string cameraName) :
   ComponentBase(parent), controller(nullptr), ikSolver(nullptr),
   a_des(nullptr), x_des(nullptr), dx_des(nullptr), dH(nullptr), dq_des(nullptr),
-  goalFilt(0.1, 1.0, parent->getDt(), 3),
+  goalFilt(0.05, 1.0, parent->getDt(), 3),
   eStop(false), alpha(0.05), lambda(1.0e-8), t_gesture(-1.0),
   gazeMode(GazeMode::HeadEyeApproximate), cameraBody(cameraName)
 {
@@ -188,7 +188,7 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   RCHECK(controller->getTask(taskNameGazePointRight));
   RCHECK(controller->getTask(taskNameGazePoint));
 
-  REXEC(1)
+  REXEC(5)
   {
     controller->toXML("cGaze.xml", a_des);
   }
@@ -273,6 +273,20 @@ void EyeModelIKComponent::computeIK_gazeDir(RcsGraph* desired, RcsGraph* current
 
 void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current)
 {
+  // Update speed settings for gaze point
+  const RcsBody* gazePt = RcsGraph_getBodyByName(desired, ActionEyeGaze::getGazePointName().c_str());
+  if (gazePt)
+  {
+    const RcsJoint* joint = RCSJOINT_BY_ID(desired, gazePt->jntId);
+    goalFilt.setMaxVel(joint->speedLimit, 0);
+    RCHECK(joint->nextId>=0);
+    joint = &desired->joints[joint->nextId];
+    goalFilt.setMaxVel(joint->speedLimit, 1);
+    RCHECK(joint->nextId>=0);
+    joint = &desired->joints[joint->nextId];
+    goalFilt.setMaxVel(joint->speedLimit, 2);
+  }
+
   // Update gaze target
   const RcsBody* gazePtDes = RcsGraph_getBodyByName(desired, gazeTargetBody.c_str());
   if (gazePtDes)

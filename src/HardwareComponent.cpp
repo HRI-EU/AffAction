@@ -130,10 +130,105 @@ static void initROS(double rosDt)
   });
 
   t1.detach();
+
 #else
+
   RMSG("You are trying to initialize ROS, but it has not been compiled in");
+
 #endif
 }
+
+
+struct ArucoTrackerSpec
+{
+  std::string camera;
+  std::string baseMarker;
+};
+
+static std::vector<ArucoTrackerSpec> parseArucoTrackerSpecs(std::vector<std::string> argsVec,
+                                                            const RcsGraph* graph,
+                                                            const std::string& suffix)
+{
+  std::vector<ArucoTrackerSpec> specs;
+
+  std::string trackerList;
+  getKeyValuePair<std::string>(argsVec, "-aruco_trackers" + suffix, trackerList);
+
+  if (trackerList.empty())
+  {
+    return specs;
+}
+
+  const auto entries = Rcs::String_split(trackerList, ",");
+
+  for (const auto& rawEntry : entries)
+  {
+    std::string entry = rawEntry;
+    Rcs::String_trim(entry);
+
+    if (entry.empty())
+    {
+      continue;
+    }
+
+    const auto parts = Rcs::String_split(entry, ":");
+
+    if (parts.size() != 2)
+    {
+      RLOG_CPP(0, "Invalid -aruco_trackers" << suffix << " entry '" << entry
+               << "'. Expected format: camera:base");
+      continue;
+    }
+
+    std::string camera = parts[0];
+    std::string baseMarker = parts[1];
+
+    Rcs::String_trim(camera);
+    Rcs::String_trim(baseMarker);
+
+    if (camera.empty() || baseMarker.empty())
+    {
+      RLOG_CPP(0, "Invalid -aruco_trackers" << suffix << " entry '" << entry
+               << "': camera or base marker is empty");
+      continue;
+    }
+
+    if (!RcsGraph_getBodyByName(graph, camera.c_str()))
+    {
+      RLOG_CPP(0, "Couldn't find ArUco camera body '" << camera
+               << "' from -aruco_trackers" << suffix);
+      continue;
+    }
+
+    if (!RcsGraph_getBodyByName(graph, baseMarker.c_str()))
+    {
+      RLOG_CPP(0, "Couldn't find ArUco base marker body '" << baseMarker
+               << "' from -aruco_trackers" << suffix);
+      continue;
+    }
+
+    const bool duplicateCamera = std::any_of(specs.begin(), specs.end(),
+                                             [&](const ArucoTrackerSpec& spec)
+    {
+      return spec.camera == camera;
+    });
+
+    if (duplicateCamera)
+    {
+      RLOG_CPP(1, "Ignoring duplicate ArUco camera '" << camera
+               << "' in -aruco_trackers" << suffix);
+      continue;
+    }
+
+    ArucoTrackerSpec spec;
+    spec.camera = camera;
+    spec.baseMarker = baseMarker;
+    specs.push_back(spec);
+  }
+
+  return specs;
+}
+
 
 enum class LandmarkParentClass
 {
@@ -169,16 +264,15 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 
     if (parentClass==LandmarkParentClass::LandmarkZmqComponent)
     {
-      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      RLOG_CPP(0, "Creating LandmarkZmqComponent");
       LandmarkZmqComponent* lmcz = new LandmarkZmqComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
     }
     else if (parentClass==LandmarkParentClass::ZmqRouterComponent)
     {
-      RLOG_CPP(5, "Creating ZmqRouterComponent with camera "
-               << landmarksCamera << " and connection " << connection);
-      RLOG_CPP(5, "Extra-args: " << extraArgs);
+      RLOG_CPP(0, "Creating ZmqRouterComponent with connection '" << connection << "'");
+      RLOG_CPP(4, "Extra-args: " << extraArgs);
       ZmqRouterComponent* lmcz = new ZmqRouterComponent(&entity, connection);
       lmc = lmcz;
       ret = lmcz;
@@ -186,7 +280,7 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
 #if defined USE_ROS
     else if (parentClass==LandmarkParentClass::LandmarkROSComponent)
     {
-      RLOG_CPP(0, "Creating LandmarkZmqComponent with camera " << landmarksCamera);
+      RLOG_CPP(0, "Creating LandmarkROSComponent with camera " << landmarksCamera);
       LandmarkROSComponent* lmcz = new LandmarkROSComponent(&entity, (RcsGraph*)graph);
       lmc = lmcz;
       ret = lmcz;
@@ -245,6 +339,32 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       entity.subscribe("RenameAgent", &FaceTracker::onRenameAgent, ftr);
     }
 
+    if (getKey(argsVec, "-face_tracking1" + suffix))
+    {
+      std::string faceAgentName, faceBdyName;
+      getKeyValuePair<std::string>(argsVec, "-face_tracking1.agent" + suffix, faceAgentName);
+      getKeyValuePair<std::string>(argsVec, "-face_tracking1.face_body_name" + suffix, faceBdyName);
+
+      if (faceBdyName.empty())
+      {
+        faceBdyName = FaceTracker::findFaceOfAgent(scene, graph, faceAgentName);
+        RCHECK_MSG(!faceBdyName.empty(), "Couldn't find face body for agent '%s'", faceAgentName.c_str());
+      }
+
+      TrackerBase* tr = lmc->addFaceTracker(faceBdyName, landmarksCamera, faceAgentName);
+      FaceTracker* ftr = dynamic_cast<FaceTracker*>(tr);
+      RCHECK(ftr);
+      ftr->registerAgentAppearDisappearCallback([ret](std::string agentName, bool appear)
+      {
+        std::string appearStr = appear ? "' appeared" : "' disappered";
+        RLOG_CPP(1, "Agent '" << agentName << appearStr);
+        ret->getEntity()->publish("AgentChanged", agentName, appear);
+      });
+
+
+      entity.subscribe("RenameAgent", &FaceTracker::onRenameAgent, ftr);
+    }
+
     if (getKey(argsVec, "-aruco_tracking" + suffix))
     {
       std::string arucoBaseBdyName = "aruco_base";
@@ -252,14 +372,30 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
       lmc->addArucoTracker(landmarksCamera, arucoBaseBdyName);
     }
 
+    // Multi-camera ArUco tracker syntax.
+    // Format: -aruco_trackers<suffix> camera:base,camera:base,...
+    if (getKey(argsVec, "-aruco_trackers" + suffix))
+    {
+      const auto arucoSpecs = parseArucoTrackerSpecs(argsVec, graph, suffix);
+
+      for (const auto& spec : arucoSpecs)
+      {
+        RLOG_CPP(0, "Adding ArUco tracker: camera='" << spec.camera
+                 << "', baseMarker='" << spec.baseMarker << "'");
+
+        lmc->addArucoTracker(spec.camera, spec.baseMarker);
+      }
+    }
+
     if (getKey(argsVec, "-skeleton_tracking" + suffix))
     {
-      RLOG(0, "Enabling Azure skeleton tracker");
       double r_agent = DBL_MAX;
       getKeyValuePair<double>(argsVec, "-skeleton_radius" + suffix, r_agent);
+      RLOG_CPP(0, "Enabling Azure skeleton tracker with camera '" << landmarksCamera
+               << "'" << " and skeleton radius " << r_agent);
 
       // Add skeleton tracker and all human agents in the scene
-      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent, landmarksCamera);
+      int numAgents = lmc->addSkeletonTrackerForAgents(scene, r_agent);
 
       auto skeletonTrackers = lmc->getTrackers<AzureSkeletonTracker>();
       if (skeletonTrackers.size()==1)
@@ -273,7 +409,6 @@ static ComponentBase* createLandmarkComponent(EntityBase& entity,
         });
 
       }
-
 
       RLOG(0, "Done adding skeleton tracker with %d agents", numAgents);
     }
@@ -590,6 +725,8 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
   if (dryRun)
   {
     argP.addDescription("-cubemars", "Start with Cubemars client connecting through zmq");
+    argP.addDescription("-cubemars.ip", "Cubemars server ip (right hand, default: localhost)");
+    argP.addDescription("-cubemars.keepDriverRunning", "Keep driver process running after shutdown");
   }
   else if (getKey(argvStrVec, "-cubemars"))
   {

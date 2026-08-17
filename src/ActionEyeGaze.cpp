@@ -267,34 +267,34 @@ std::string ActionEyeGaze::getActionCommand() const
 }
 
 // 0: Neck only, 1: pupils only
-bool ActionEyeGaze::setPupilSpeedWeight(RcsGraph* graph, double weight)
-{
-  if ((weight<0.0) || (weight>1.0))
-  {
-    RLOG(1, "Weight is %f but must be [0...1]", weight);
-    return false;
-  }
+// bool ActionEyeGaze::setPupilSpeedWeight(RcsGraph* graph, double weight)
+// {
+//   if ((weight<0.0) || (weight>1.0))
+//   {
+//     RLOG(1, "Weight is %f but must be [0...1]", weight);
+//     return false;
+//   }
 
-  RcsJoint* pan = RcsGraph_getJointByName(graph, "ptu_pan_joint");
-  RcsJoint* tilt = RcsGraph_getJointByName(graph, "ptu_tilt_joint");
+//   RcsJoint* pan = RcsGraph_getJointByName(graph, "ptu_pan_joint");
+//   RcsJoint* tilt = RcsGraph_getJointByName(graph, "ptu_tilt_joint");
 
-  if (!pan)
-  {
-    RLOG_CPP(1, "Joint with name \"ptu_pan_joint\" not found - skipping setting weight");
-    return false;
-  }
+//   if (!pan)
+//   {
+//     RLOG_CPP(1, "Joint with name \"ptu_pan_joint\" not found - skipping setting weight");
+//     return false;
+//   }
 
-  if (!tilt)
-  {
-    RLOG_CPP(1, "Joint with name \"ptu_tilt_joint\" not found - skipping setting weight");
-    return false;
-  }
+//   if (!tilt)
+//   {
+//     RLOG_CPP(1, "Joint with name \"ptu_tilt_joint\" not found - skipping setting weight");
+//     return false;
+//   }
 
-  pan->weightMetric = 1.0-weight;
-  tilt->weightMetric = 1.0-weight;
+//   pan->weightMetric = 1.0-weight;
+//   tilt->weightMetric = 1.0-weight;
 
-  return true;
-}
+//   return true;
+// }
 
 std::string ActionEyeGaze::resolveGazeTargetBodyName(const ActionScene& scene,
                                                      const RcsGraph* graph,

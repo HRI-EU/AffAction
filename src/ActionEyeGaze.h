@@ -55,7 +55,7 @@ public:
   std::string getGazeTarget() const;
   static bool hasEyeModel(const RcsGraph* graph);
   static bool computePupilCoordinates(const RcsGraph* graph, double p_right[3], double p_left[3]);
-  static bool setPupilSpeedWeight(RcsGraph* graph, double weight);
+  // static bool setPupilSpeedWeight(RcsGraph* graph, double weight);
   static std::string resolveGazeTargetBodyName(const ActionScene& scene, const RcsGraph* graph,
                                                const std::string& nttName);
   static std::vector<std::string> createEyeTasksXML();

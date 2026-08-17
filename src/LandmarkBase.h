@@ -57,8 +57,8 @@ public:
   //void setCameraTransform(const HTr* A_CI);
   void addArucoTracker(const std::string& camera="camera",
                        const std::string& baseMarker="aruco_base");
-  TrackerBase* addSkeletonTracker(size_t numSkeletons, const std::string& camera);
-  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius, const std::string& camera);
+  TrackerBase* addSkeletonTracker(size_t numSkeletons);
+  int addSkeletonTrackerForAgents(const ActionScene* scene, double defaultRadius);
   void setSkeletonTrackerDefaultRadius(double r);
   void setSkeletonTrackerDefaultPosition(size_t skeletonIndex, double x, double y, double z);
 

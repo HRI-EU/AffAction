@@ -265,6 +265,92 @@ PYBIND11_MODULE(pyAffaction, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
+  .def("initializeBlocking", [](aff::ExampleActionsECS& ex, bool headless) -> bool
+  {
+    // Release the GIL for the function's duration
+    pybind11::gil_scoped_release release_gil;
+
+    ex.blockingMainThread = true;
+    bool success = ex.initAlgo();
+
+    if (!headless)
+    {
+      success = ex.initGraphics() && success;
+      success = ex.initGuis() && success;
+    }
+
+    return success;
+  },
+  "Initializes algorithm, guis and graphics",
+  py::arg("headless") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("startBlocking", [](aff::ExampleActionsECS& ex, bool catch_keyboard_interrupt) -> int
+  {
+    // Release the GIL for the function's duration
+    pybind11::gil_scoped_release release_gil;
+
+    int argc = 1;
+    char* argv[] = { (char*)"AppName" };
+    QApplication app(argc, argv);
+
+    std::setlocale(LC_ALL, "C");
+    QApplication::setQuitOnLastWindowClosed(false);
+
+    std::thread t(&aff::ExampleActionsECS::start, &ex);
+    t.detach();
+
+    std::atomic<bool> kb_int{false};   // To be sure
+    const int dt_msec = 16;  // ~60fps
+    const int cycles_per_sec = 200/dt_msec;   // 5 Hz
+    int loopCount = 0;
+    QTimer* timer = new QTimer(&app);  // or any parent
+    QObject::connect(timer, &QTimer::timeout, [&]()
+    {
+      ex.updateUI();
+
+      // Safely check Python signals by acquiring the GIL first, once per second.
+      if (catch_keyboard_interrupt && (++loopCount%cycles_per_sec==0))
+      {
+        pybind11::gil_scoped_acquire guard;
+
+        if (PyErr_CheckSignals() != 0 &&
+            PyErr_ExceptionMatches(PyExc_KeyboardInterrupt))
+        {
+          // 1 clear so ~gil_scoped_acquire won't throw
+          PyErr_Clear();
+          kb_int.store(true, std::memory_order_relaxed);
+
+          // 2 quit Qt cleanly
+          QCoreApplication::quit();
+        }
+      }
+
+    });
+    timer->start(dt_msec);
+
+    int res = app.exec();
+
+    /* ---------- back in the outer C++ stack ---------- */
+    if (catch_keyboard_interrupt && kb_int.load())
+    {
+      pybind11::gil_scoped_acquire guard;       // need GIL
+      PyErr_SetNone(PyExc_KeyboardInterrupt);   // restore
+      throw pybind11::error_already_set();      // safe to throw now
+    }
+
+    return res;
+  },
+  "Start loop with correct threading",
+  py::arg("catch_keyboard_interrupt") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
   .def("quitBlocking", [](aff::ExampleActionsECS& ex) -> bool
   {
     ex.stop();
@@ -1116,7 +1202,7 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
       return 0;
     }
 
-    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents, camera);
+    auto tracker = new aff::AzureSkeletonTracker(numHumanAgents);
     lm.addTracker(std::unique_ptr<aff::AzureSkeletonTracker>(tracker));
     tracker->addAgents(sim->getScene());
     tracker->setSkeletonDefaultPositionRadius(r);

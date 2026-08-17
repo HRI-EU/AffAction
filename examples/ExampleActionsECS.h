@@ -213,7 +213,7 @@ protected:
   void onProcess();
   void onSetTurboMode(bool enable);
   void onClearTrajectory();
-  void onSetPupilSpeedWeight(double weight);
+  //void onSetPupilSpeedWeight(double weight);
   void onPause();
   void onResume();
   void onEventReceived(std::string event);

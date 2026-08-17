@@ -102,6 +102,7 @@ private:
   HTr faceTrf;
   std::mutex landmarksMtx;
   std::string faceName;
+  std::string cameraName;
   std::string agentName;
   osg::ref_ptr<Rcs::COSNode> faceFrameNode;
   osg::ref_ptr<Rcs::MeshNode> faceMeshNode;

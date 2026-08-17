@@ -75,12 +75,11 @@ static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 }
 
 // In case the iris is estimated, there are 10 more landmarks
-FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& camera, const std::string& nameOfAgent) :
+FaceTracker::FaceTracker(const std::string& nameOfFaceBody, const std::string& nameOfCamera, const std::string& nameOfAgent) :
   TrackerBase(nameOfFaceBody), initialFaceHeight(0.0), newFaceUpdate(false), wasVisible(false), isVisible(false),
   lastUpdateTime(0.0), mesh(nullptr), landmarks(nullptr), viewer(nullptr),
-  faceName(nameOfFaceBody), agentName(nameOfAgent)
+  faceName(nameOfFaceBody), cameraName(nameOfCamera), agentName(nameOfAgent)
 {
-
   std::vector<std::string> candidates =
   {
     "hri_scitos_description/FaceMesh-holes-478.obj",
@@ -122,6 +121,13 @@ std::string FaceTracker::getRequestKeyword() const
 // Does not depend on this->mesh
 void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
+  std::string json_camera_name = jsonHeader.value("frame_id", "None");
+  if (this->cameraName != json_camera_name)
+  {
+    //RLOG_CPP(1, "Wrong cam: expecting '" << this->cameraName << "' but received '" << json_camera_name << "'");
+    return;
+  }
+
   std::lock_guard<std::mutex> lock(landmarksMtx);
   newFaceUpdate = true;
   lastUpdateTime = getWallclockTime();
@@ -155,22 +161,19 @@ void FaceTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& 
     }
   }
 
-  RLOG_CPP(1, "Received face landmarks: " << nFaceLandmarks);
-
-
-
   // We assume that the mesh vertices are contained within the landmarks
   // from the beginning. There might be more landmarks than mesh vertices
   // in case we estimate the iris parameters.
   this->faceTrf = estimateFaceTransform(landmarks);
-  HTr C_leftIris, C_rightIris;
-  estimateIrisTransform(landmarks, &faceTrf, &C_leftIris, &C_rightIris);
 
   // Update debug graphics. Locking the viewer mutex might lead to waiting
   // the whole step() cycle. In parse(), it is acceptable, since it is a slow
   // and non-deterministic loop.
   if (sw.valid() && sw->isVisible())
   {
+    HTr C_leftIris, C_rightIris;
+    estimateIrisTransform(landmarks, &faceTrf, &C_leftIris, &C_rightIris);
+
     //viewer->lock();
     faceMeshNode->update(this->mesh);
     faceFrameNode->setTransformation(&faceTrf);
@@ -216,43 +219,11 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
 
   newFaceUpdate = false;
 
-  HTr A_CI = getCameraTransform(graph);
-
-  // The landmarks array is in camera coordinates. We transform it into the
-  // face frame to display this coherently
-  HTr* A_FC = &this->faceTrf;   // Camera -> Face
-
-  // World -> face
-  // HTr A_FI;
-  // HTr_transform(&A_FI, &A_CI, A_FC);
-
-  // Amplify the face rotations
-  // double tmp6[6];
-  // HTr_to6DVector(tmp6, &A_FI);
-  // tmp6[5] = Math_fmodAngle(tmp6[5]+M_PI);
-  // tmp6[3] *= 2.0;
-  // tmp6[4] *= 4.0;
-  // tmp6[5] *= 2.0;
-  // tmp6[5] += M_PI;
-  // HTr_from6DVector(&A_FI, tmp6);
-
-  // Shift the face away from the camera. \todo: Improve this.
-  //A_FI.org[0] += 1.75 * DISTANCE_FACE_TO_CAM;
-  // A_FI.org[0] += 0.95 * DISTANCE_FACE_TO_CAM;
-
-  // Look down
-  // Mat3d_rotateSelfAboutXYZAxis(A_FI.rot, 1, RCS_DEG2RAD(10.0));
-
-  double* q6 = RcsBody_getStatePtr(graph, RcsGraph_getBodyByName(graph, faceName.c_str()));
-  RCHECK_MSG(q6, "Body with name '%s' and six rigid body joints not found - please make sure it exists in the xml file.", faceName.c_str());
-  //lpFiltTrf(q6, &A_FI, 0.05);
-  //RLOG(1, "ea: %f %f %f", q6[3], q6[4], q6[5]);
+  const double currentFaceHeight = Vec3d_distance(&this->landmarks->ele[foreheadTop], &this->landmarks->ele[chinCenter]);
+  const double faceScaling = this->initialFaceHeight/currentFaceHeight;
 
   RcsBody* faceBdy = RcsGraph_getBodyByName(graph, faceName.c_str());
   RCHECK_MSG(faceBdy, "Face body with name '%s' not found - please make sure it exists in the xml file.", faceName.c_str());
-
-  const double currentFaceHeight = Vec3d_distance(&this->landmarks->ele[foreheadTop], &this->landmarks->ele[chinCenter]);
-  const double faceScaling = this->initialFaceHeight/currentFaceHeight;
 
   for (unsigned int i = 0; i < faceBdy->nShapes; ++i)
   {
@@ -272,10 +243,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
     for (unsigned int i = 0; i < landmarks->m; ++i)
     {
       double* dst = &sh->mesh->vertices[3 * i];
-      //Vec3d_constMul(dst, MatNd_getRowPtr(landmarks, i), faceScaling);
-      //Vec3d_invTransformSelf(dst, A_FC);
-
-      Vec3d_invTransform(dst, A_FC, MatNd_getRowPtr(landmarks, i));
+      Vec3d_invTransform(dst, &this->faceTrf, MatNd_getRowPtr(landmarks, i));
       Vec3d_constMulSelf(dst, faceScaling);
     }
 
@@ -284,6 +252,7 @@ void FaceTracker::update(ActionScene* scene, RcsGraph* graph)
   // That's the debug mesh, we transform it to world coordinates to test
   if (sw.valid() && sw->isVisible())
   {
+    HTr A_CI = getCameraTransform(graph);
     for (unsigned int i = 0; i < mesh->nVertices; ++i)
     {
       double* dst = &mesh->vertices[3 * i];
@@ -443,9 +412,6 @@ bool FaceTracker::estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A
   Vec3d_invTransform(F_left_iris_center, A_FC, left_iris_center);
   Vec3d_invTransform(F_right_iris_center, A_FC, right_iris_center);
 
-
-  //RLOG(0, "%f", F_left_eye_center[1]-F_left_iris_center[1]);
-
   HTr_setIdentity(C_leftIris);
   HTr_setIdentity(C_rightIris);
   Vec3d_copy(C_leftIris->org, left_iris_center);
@@ -453,11 +419,6 @@ bool FaceTracker::estimateIrisTransform(const MatNd* faceLandMarks, const HTr* A
 
   return true;
 }
-
-//bool FaceTracker::isVisible() const
-//{
-//  return (landmarks->m>0) ? true : false;
-//}
 
 /*static*/ const std::string& FaceTracker::getFaceMeshDebugString(const std::string& fileName)
 {

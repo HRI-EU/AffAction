@@ -449,7 +449,7 @@ bool ExampleActionsECS::initAlgo()
   entity.subscribe("Process", &ExampleActionsECS::onProcess, this);
   entity.subscribe("SetTurboMode", &ExampleActionsECS::onSetTurboMode, this);
   entity.subscribe("ClearTrajectory", &ExampleActionsECS::onClearTrajectory, this);
-  entity.subscribe("SetPupilSpeedWeight", &ExampleActionsECS::onSetPupilSpeedWeight, this);
+  //entity.subscribe("SetPupilSpeedWeight", &ExampleActionsECS::onSetPupilSpeedWeight, this);
   entity.subscribe("PauseTrajectory", &ExampleActionsECS::onPause, this);
   entity.subscribe("ResumeTrajectory", &ExampleActionsECS::onResume, this);
   entity.subscribe("EventReceived", &ExampleActionsECS::onEventReceived, this);
@@ -2202,10 +2202,10 @@ void ExampleActionsECS::onClearTrajectory()
   actionStack.clear();
 }
 
-void ExampleActionsECS::onSetPupilSpeedWeight(double weight)
-{
-  ActionEyeGaze::setPupilSpeedWeight(getGraph(), weight);
-}
+// void ExampleActionsECS::onSetPupilSpeedWeight(double weight)
+// {
+//   ActionEyeGaze::setPupilSpeedWeight(getGraph(), weight);
+// }
 
 void ExampleActionsECS::onPause()
 {

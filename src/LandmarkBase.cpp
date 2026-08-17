@@ -121,14 +121,14 @@ void LandmarkBase::addArucoTracker(const std::string& camera, const std::string&
   RLOG(0, "Added ArucoTracker");
 }
 
-TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons, const std::string& camera)
+TrackerBase* LandmarkBase::addSkeletonTracker(size_t numSkeletons)
 {
-  auto tracker = new AzureSkeletonTracker(numSkeletons, camera);
+  auto tracker = new AzureSkeletonTracker(numSkeletons);
   addTracker(std::unique_ptr<AzureSkeletonTracker>(tracker));
   return tracker;
 }
 
-int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r, const std::string& camera)
+int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r)
 {
   if (!scene)
   {
@@ -144,7 +144,7 @@ int LandmarkBase::addSkeletonTrackerForAgents(const ActionScene* scene, double r
     return 0;
   }
 
-  auto tracker = std::make_unique<AzureSkeletonTracker>(numHumanAgents, camera);
+  auto tracker = std::make_unique<AzureSkeletonTracker>(numHumanAgents);
   tracker->addAgents(scene);
   tracker->setSkeletonDefaultPositionRadius(r);
   addTracker(std::move(tracker));

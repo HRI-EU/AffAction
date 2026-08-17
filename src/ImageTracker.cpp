@@ -125,7 +125,7 @@ void ImageTracker::update(ActionScene* scene, RcsGraph* graph)
     tmpCam = this->pinhole;
   }
 
-  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), tmpCam);
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), tmpCam, false);
 
   {
     std::lock_guard<std::mutex> lock(imgMtx);
@@ -193,7 +193,8 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene,
                                                     const RcsGraph* graph,
                                                     const std::string objName,
                                                     const std::string& cameraName,
-                                                    const PinholeCamera& phCam)
+                                                    const PinholeCamera& phCam,
+                                                    bool isVirtualCamera)
 {
   nlohmann::json j = getObjectInCamera(objName, cameraName, scene, graph);
 
@@ -229,17 +230,47 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene,
   std::vector<std::array<int, 2>> imgPoints;
   for (const auto& v : vertices)
   {
+    // The assumed camera orientation is:
+    // +X: right
+    // +Y: down
+    // +Z: forward/outward from the camera
+    //
     // We assume that the camera is oriented with x pointing forward, and z
     // pointing up. Here, we rotate it such that z points outwards, y points
-    // downwards, and y points right.
-    double x_std = -v[1];  // Y
-    double y_std = -v[2];  // Z
-    double z_std =  v[0];  // X
+    // downwards, and x points right.
+    // double x_std = -v[1];  // Y
+    // double y_std = -v[2];  // Z
+    // double z_std =  v[0];  // X
     //RLOG(0, "VERTEX: %f %f %f", x_std, y_std, z_std);
 
-    x_std = v[0];
-    y_std = v[1];
-    z_std = v[2];
+    // That's needed for the real camera
+    // x_std = v[0];
+    // y_std = v[1];
+    // z_std = v[2];
+
+    double x_std, y_std, z_std;  // Y
+
+    if (isVirtualCamera)
+    {
+      // The assumed camera orientation is:
+      // +X: right
+      // +Y: down
+      // +Z: forward/outward from the camera
+      //
+      // We assume that the camera is oriented with x pointing forward, and z
+      // pointing up. Here, we rotate it such that z points outwards, y points
+      // downwards, and x points right.
+      x_std = -v[1];  // Y
+      y_std = -v[2];  // Z
+      z_std =  v[0];  // X
+    }
+    else
+    {
+      // That's needed for the real camera
+      x_std = v[0];
+      y_std = v[1];
+      z_std = v[2];
+    }
 
     // Convert to image coordinates using pinhole model
     double x = phCam.fx * (x_std / z_std) + phCam.cx;
@@ -346,7 +377,7 @@ void VirtualImageTracker::update(ActionScene* scene, RcsGraph* graph)
   // RLOG_CPP(0, "image_str is of size " << image_str.size() << " image size: " << colorImageUint8.size());
 
   // Project to pixel coordinates
-  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), pinhole);
+  std::vector<int> bb = getObjectBoundingBox(scene, graph, gazeTarget, getCameraName(), pinhole, true);
 
   {
     std::lock_guard<std::mutex> lock(imgMtx);

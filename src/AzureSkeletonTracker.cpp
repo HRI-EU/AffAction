@@ -55,6 +55,28 @@
 
 namespace aff
 {
+
+static bool HTr_isZero(const HTr* trf)
+{
+  for (int i = 0; i < 3; i++)
+  {
+    if (trf->org[i] != 0.0)
+    {
+      return false;
+    }
+
+    for (int j = 0; j < 3; j++)
+    {
+      if (trf->rot[i][j] != 0.0)
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 static void lpFiltTrf(double filtVec[6], const HTr* raw, double tmc)
 {
   HTr filt;
@@ -85,6 +107,33 @@ static HTr parsePose(const nlohmann::json& json)
 
   return trf;
 }
+
+/*
+
+"finger_angles_right": {
+  "position": {
+    "joint_1": -0.003625154495239258,
+    "joint_2": 0,
+    "joint_3": 0.2989633083343506,
+    "joint_4": 0.041562557220458984,
+    "joint_5": 0.15123319625854492,
+    "joint_6": 0.03959965705871582,
+    "joint_7": 0.28907227516174316,
+    "joint_8": 0,
+    "joint_9": 0.21706104278564453,
+    "joint_10": 0,
+    "joint_11": 0.3374612331390381,
+    "joint_12": 0.13920378684997559,
+    "joint_13": 0.46666693687438965,
+    "joint_14": 0.46666693687438965,
+    "joint_15": 0.527747631072998,
+    "joint_16": 0,
+    "gripper_position_right": 0
+  }
+}
+
+ */
+
 
 // static std::vector<double> parseFingers(const nlohmann::json& json)
 // {
@@ -403,44 +452,100 @@ Left leg
 
  */
 
-static std::vector<std::pair<int,int>> readConnectionData()
+static std::vector<std::pair<int,int>> readConnectionData(std::string trackerName="AzureKinect")
 {
   std::vector<std::pair<int,int>> idx;
-  idx.push_back(std::pair<int,int>(PELVIS, SPINE_NAVEL));
-  idx.push_back(std::pair<int,int>(SPINE_NAVEL, SPINE_CHEST));
-  idx.push_back(std::pair<int,int>(SPINE_CHEST, NECK));
-  idx.push_back(std::pair<int,int>(NECK, HEAD));
-  idx.push_back(std::pair<int,int>(HEAD, NOSE));
-  idx.push_back(std::pair<int,int>(NOSE, EYE_LEFT));
-  idx.push_back(std::pair<int,int>(NOSE, EYE_RIGHT));
-  idx.push_back(std::pair<int,int>(EYE_LEFT, EAR_LEFT));
-  idx.push_back(std::pair<int,int>(EYE_RIGHT, EAR_RIGHT));
 
-  idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_RIGHT));
-  idx.push_back(std::pair<int,int>(CLAVICLE_RIGHT, SHOULDER_RIGHT));
-  idx.push_back(std::pair<int,int>(SHOULDER_RIGHT, ELBOW_RIGHT));
-  idx.push_back(std::pair<int,int>(ELBOW_RIGHT, WRIST_RIGHT));
-  idx.push_back(std::pair<int,int>(WRIST_RIGHT, HAND_RIGHT));
-  idx.push_back(std::pair<int,int>(HAND_RIGHT, HANDTIP_RIGHT));
-  idx.push_back(std::pair<int,int>(HAND_RIGHT, THUMB_RIGHT));
+  if ((trackerName=="AzureKinect") || (trackerName=="BODY_34"))
+  {
+    idx.push_back(std::pair<int,int>(PELVIS, SPINE_NAVEL));
+    idx.push_back(std::pair<int,int>(SPINE_NAVEL, SPINE_CHEST));
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, NECK));
+    idx.push_back(std::pair<int,int>(NECK, HEAD));
+    idx.push_back(std::pair<int,int>(HEAD, NOSE));
+    idx.push_back(std::pair<int,int>(NOSE, EYE_LEFT));
+    idx.push_back(std::pair<int,int>(NOSE, EYE_RIGHT));
+    idx.push_back(std::pair<int,int>(EYE_LEFT, EAR_LEFT));
+    idx.push_back(std::pair<int,int>(EYE_RIGHT, EAR_RIGHT));
 
-  idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_LEFT));
-  idx.push_back(std::pair<int,int>(CLAVICLE_LEFT, SHOULDER_LEFT));
-  idx.push_back(std::pair<int,int>(SHOULDER_LEFT, ELBOW_LEFT));
-  idx.push_back(std::pair<int,int>(ELBOW_LEFT, WRIST_LEFT));
-  idx.push_back(std::pair<int,int>(WRIST_LEFT, HAND_LEFT));
-  idx.push_back(std::pair<int,int>(HAND_LEFT, HANDTIP_LEFT));
-  idx.push_back(std::pair<int,int>(HAND_LEFT, THUMB_LEFT));
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_RIGHT));
+    idx.push_back(std::pair<int,int>(CLAVICLE_RIGHT, SHOULDER_RIGHT));
+    idx.push_back(std::pair<int,int>(SHOULDER_RIGHT, ELBOW_RIGHT));
+    idx.push_back(std::pair<int,int>(ELBOW_RIGHT, WRIST_RIGHT));
+    idx.push_back(std::pair<int,int>(WRIST_RIGHT, HAND_RIGHT));
+    idx.push_back(std::pair<int,int>(HAND_RIGHT, HANDTIP_RIGHT));
+    idx.push_back(std::pair<int,int>(HAND_RIGHT, THUMB_RIGHT));
 
-  idx.push_back(std::pair<int,int>(PELVIS, HIP_RIGHT));
-  idx.push_back(std::pair<int,int>(HIP_RIGHT, KNEE_RIGHT));
-  idx.push_back(std::pair<int,int>(KNEE_RIGHT, ANKLE_RIGHT));
-  idx.push_back(std::pair<int,int>(ANKLE_RIGHT, FOOT_RIGHT));
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_LEFT));
+    idx.push_back(std::pair<int,int>(CLAVICLE_LEFT, SHOULDER_LEFT));
+    idx.push_back(std::pair<int,int>(SHOULDER_LEFT, ELBOW_LEFT));
+    idx.push_back(std::pair<int,int>(ELBOW_LEFT, WRIST_LEFT));
+    idx.push_back(std::pair<int,int>(WRIST_LEFT, HAND_LEFT));
+    idx.push_back(std::pair<int,int>(HAND_LEFT, HANDTIP_LEFT));
+    idx.push_back(std::pair<int,int>(HAND_LEFT, THUMB_LEFT));
 
-  idx.push_back(std::pair<int,int>(PELVIS, HIP_LEFT));
-  idx.push_back(std::pair<int,int>(HIP_LEFT, KNEE_LEFT));
-  idx.push_back(std::pair<int,int>(KNEE_LEFT, ANKLE_LEFT));
-  idx.push_back(std::pair<int,int>(ANKLE_LEFT, FOOT_LEFT));
+    idx.push_back(std::pair<int,int>(PELVIS, HIP_RIGHT));
+    idx.push_back(std::pair<int,int>(HIP_RIGHT, KNEE_RIGHT));
+    idx.push_back(std::pair<int,int>(KNEE_RIGHT, ANKLE_RIGHT));
+    idx.push_back(std::pair<int,int>(ANKLE_RIGHT, FOOT_RIGHT));
+
+    idx.push_back(std::pair<int,int>(PELVIS, HIP_LEFT));
+    idx.push_back(std::pair<int,int>(HIP_LEFT, KNEE_LEFT));
+    idx.push_back(std::pair<int,int>(KNEE_LEFT, ANKLE_LEFT));
+    idx.push_back(std::pair<int,int>(ANKLE_LEFT, FOOT_LEFT));
+  }
+  else if (trackerName=="BODY_38")
+  {
+    // spine (collapse deeper spine)
+    idx.push_back(std::pair<int,int>(PELVIS, SPINE_NAVEL));
+    idx.push_back(std::pair<int,int>(SPINE_NAVEL, SPINE_CHEST));
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, NECK));
+
+    // head (no HEAD in BODY_38: use NOSE)
+    idx.push_back(std::pair<int,int>(NECK, NOSE));
+    idx.push_back(std::pair<int,int>(NOSE, EYE_LEFT));
+    idx.push_back(std::pair<int,int>(NOSE, EYE_RIGHT));
+    idx.push_back(std::pair<int,int>(EYE_LEFT, EAR_LEFT));
+    idx.push_back(std::pair<int,int>(EYE_RIGHT, EAR_RIGHT));
+
+    // right arm
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_RIGHT));
+    idx.push_back(std::pair<int,int>(CLAVICLE_RIGHT, SHOULDER_RIGHT));
+    idx.push_back(std::pair<int,int>(SHOULDER_RIGHT, ELBOW_RIGHT));
+    idx.push_back(std::pair<int,int>(ELBOW_RIGHT, WRIST_RIGHT));
+    idx.push_back(std::pair<int,int>(WRIST_RIGHT, HAND_RIGHT));
+
+    // mapped fingers
+    idx.push_back(std::pair<int,int>(HAND_RIGHT, HANDTIP_RIGHT)); // index_1
+    idx.push_back(std::pair<int,int>(HAND_RIGHT, THUMB_RIGHT));   // thumb_4
+
+    // left arm
+    idx.push_back(std::pair<int,int>(SPINE_CHEST, CLAVICLE_LEFT));
+    idx.push_back(std::pair<int,int>(CLAVICLE_LEFT, SHOULDER_LEFT));
+    idx.push_back(std::pair<int,int>(SHOULDER_LEFT, ELBOW_LEFT));
+    idx.push_back(std::pair<int,int>(ELBOW_LEFT, WRIST_LEFT));
+    idx.push_back(std::pair<int,int>(WRIST_LEFT, HAND_LEFT));
+
+    // mapped fingers
+    idx.push_back(std::pair<int,int>(HAND_LEFT, HANDTIP_LEFT)); // index_1
+    idx.push_back(std::pair<int,int>(HAND_LEFT, THUMB_LEFT));   // thumb_4
+
+    // right leg
+    idx.push_back(std::pair<int,int>(PELVIS, HIP_RIGHT));
+    idx.push_back(std::pair<int,int>(HIP_RIGHT, KNEE_RIGHT));
+    idx.push_back(std::pair<int,int>(KNEE_RIGHT, ANKLE_RIGHT));
+    idx.push_back(std::pair<int,int>(ANKLE_RIGHT, FOOT_RIGHT)); // use BIG_TOE as proxy
+
+    // left leg
+    idx.push_back(std::pair<int,int>(PELVIS, HIP_LEFT));
+    idx.push_back(std::pair<int,int>(HIP_LEFT, KNEE_LEFT));
+    idx.push_back(std::pair<int,int>(KNEE_LEFT, ANKLE_LEFT));
+    idx.push_back(std::pair<int,int>(ANKLE_LEFT, FOOT_LEFT)); // use BIG_TOE as proxy
+  }
+  else
+  {
+    RLOG_CPP(0, "No such connection mode: " << trackerName);
+  }
 
   return idx;
 }
@@ -467,6 +572,7 @@ struct Skeleton
   double alpha;
   std::vector<HTr> markers;
   std::vector<double> fingerAnglesLeft, fingerAnglesRight;
+  double gripperAngleLeft, gripperAngleRight;
   HTr expectedInitialPose;
   std::string agentBdyName;
 
@@ -496,7 +602,8 @@ struct Skeleton
 
 
 Skeleton::Skeleton() : lastUpdate(0.0), age(DBL_MAX), maxAge(DEFAULT_MAX_AGE),
-  wasVisible(false), isVisible(false), alphaPrev(1.0), alpha(1.0), viewer(NULL)
+  wasVisible(false), isVisible(false), alphaPrev(1.0), alpha(1.0), viewer(NULL),
+  gripperAngleLeft(-1.0), gripperAngleRight(-1.0)
 {
   markers.resize(NUM_FRAMES);
   for (auto& m : markers)
@@ -674,10 +781,9 @@ void Skeleton::setAlphaRecursive(osg::Node* node, double newAlpha)
 /*******************************************************************************
  *
  *******************************************************************************/
-AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons, const std::string& camera) :
-  TrackerBase(camera), newAzureUpdate(false), defaultPosRadius(DBL_MAX)
+AzureSkeletonTracker::AzureSkeletonTracker(size_t numSkeletons) :
+  TrackerBase(""), newAzureUpdate(false), defaultPosRadius(DBL_MAX)
 {
-  HTr_setIdentity(&A_CI);
   for (size_t i=0; i<numSkeletons; ++i)
   {
     skeletons.push_back(std::make_unique<Skeleton>());
@@ -700,9 +806,26 @@ void AzureSkeletonTracker::update(ActionScene* scene, RcsGraph* graph)
     return;
   }
 
+  std::map<std::string,HTr> A_camI;
   {
     std::lock_guard<std::mutex> lock(updateMtx);
-    this->A_CI = getCameraTransform(graph);
+    A_camI = this->cameraTransformMap;
+  }
+
+  for (auto& entry : A_camI)
+  {
+    const std::string& camera_name = entry.first;
+    HTr& value = entry.second;
+    RcsBody* cam = RcsGraph_getBodyByName(graph, camera_name.c_str());
+    if (cam)
+    {
+      HTr_copy(&value, &cam->A_BI);
+    }
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(updateMtx);
+    this->cameraTransformMap = A_camI;
   }
 
   updateSkeletons(scene, graph);
@@ -753,6 +876,8 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
           human->bb_head[3] = skeletons[i]->bb_head.y_max;
           human->fingersLeft = skeletons[i]->fingerAnglesLeft;
           human->fingersRight = skeletons[i]->fingerAnglesRight;
+          human->gripperLeft = skeletons[i]->gripperAngleLeft;
+          human->gripperRight = skeletons[i]->gripperAngleRight;
         }
         else
         {
@@ -785,52 +910,6 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
 
 
 
-
-#if 0
-      for (const auto& mName : human->manipulators)
-      {
-        // The marker transforms are represented in world coordinates.
-        // In order to consider that the manipulator might have a parent
-        // different to the world frame, we transform the raw percepts
-        // into the (M)anipulator's (P)arent frame.
-        // A_PI is the Manipulator's parent transform
-        const aff::Manipulator* m = scene->getManipulator(mName);
-        RCHECK_MSG(m, "Manipulator '%s' not found", mName.c_str());
-        bdy = m->body(graph);
-        jidx = RcsBody_getJointIndex(graph, bdy);
-        if (jidx==-1)
-        {
-          continue;
-        }
-        const HTr* A_PI = (bdy->parentId == -1) ? HTr_identity() : &graph->bodies[bdy->parentId].A_BI;
-        double* q_rbj = &graph->q->ele[jidx];
-        HTr A_MP;   // Transform from manipulator's parent to its raw percept
-
-        if (m->isOfType("head"))
-        {
-          HTr A_MI = human->getMarker(HEAD);   // marker transform in world
-          HTr_invTransform(&A_MP, A_PI, &A_MI);
-          lpFiltTrf(q_rbj, &A_MP, tmc);
-        }
-        else if (m->isOfType("hand_left"))
-        {
-          HTr A_MI = human->getMarker(HANDTIP_LEFT);
-          HTr_invTransform(&A_MP, A_PI, &A_MI);
-          lpFiltTrf(q_rbj, &A_MP, tmc);
-        }
-        else if (m->isOfType("hand_right"))
-        {
-          HTr A_MI = human->getMarker(HANDTIP_RIGHT);
-          HTr_invTransform(&A_MP, A_PI, &A_MI);
-          lpFiltTrf(q_rbj, &A_MP, tmc);
-        }
-
-      }   // for (const auto& mName : human->manipulators)
-#endif
-
-
-
-
       for (const auto& tf : human->trackedFrames)
       {
         // The marker transforms are represented in world coordinates.
@@ -855,6 +934,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
           HTr A_MI = human->getMarker(HEAD);   // marker transform in world
           HTr_invTransform(&A_MP, A_PI, &A_MI);
           lpFiltTrf(q_rbj, &A_MP, tmc);
+          // VecNd_printComment("BodyType::Head", q_rbj, 3);
         }
         else if (tf.first == HumanAgent::BodyType::ShoulderLeft)
         {
@@ -985,28 +1065,159 @@ void AzureSkeletonTracker::updateSkeletons(ActionScene* scene, RcsGraph* graph)
 
 void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohmann::json& jsonData, double time)
 {
-  HTr A_camI;
+  if (jsonData.empty())
+  {
+    RLOG_CPP(1, "No data received. Header: " << jsonHeader);
+    return;
+  }
+
+  std::map<std::string,HTr> A_camI;
   {
     std::lock_guard<std::mutex> lock(updateMtx);
-    A_camI = this->A_CI;
+    A_camI = this->cameraTransformMap;
   }
 
   std::map<int, std::vector<HTr>> markerMap;
   std::map<int, std::vector<double>> leftFingersMap, rightFingersMap;
+  std::map<int, double> leftGripperMap, rightGripperMap;
   std::map<int, std::vector<int>> boundingBoxMap;
-  std::vector<int> bb;
 
   std::string tracker = jsonHeader.value("tracker", "AzureKinect");
+  std::string camera_name = jsonHeader.value("frame_id", "None");
+
+  NLOG_CPP(0, "tracker: " << tracker << " camera_name: " << camera_name
+           << " header: " << jsonHeader);
+
 
   for (auto& entry : jsonData.items())
   {
+    std::vector<int> bb;
     const int skeletonId = atoi(entry.key().c_str());
     std::vector<HTr> markers(NUM_FRAMES);
     std::vector<double> q_left_fingers, q_right_fingers;
+    double q_left_gripper = -1.0, q_right_gripper = -1.0;
 
     const nlohmann::json& pose = entry.value();
 
-    if (tracker == "XrFullBodyJointMETA")
+    if (tracker == "BODY_34")
+    {
+      static const std::pair<int, const char*> kMap34[] =
+      {
+        {PELVIS,"PELVIS"},
+        {SPINE_NAVEL,"NAVAL_SPINE"},
+        {SPINE_CHEST,"CHEST_SPINE"},
+        {NECK,"NECK"},
+
+        {CLAVICLE_LEFT,"LEFT_CLAVICLE"},
+        {SHOULDER_LEFT,"LEFT_SHOULDER"},
+        {ELBOW_LEFT,"LEFT_ELBOW"},
+        {WRIST_LEFT,"LEFT_WRIST"},
+        {HAND_LEFT,"LEFT_HAND"},
+        {HANDTIP_LEFT,"XLEFT_HANDTIP"},
+        {THUMB_LEFT,"LEFT_THUMB"},
+
+        {CLAVICLE_RIGHT,"RIGHT_CLAVICLE"},
+        {SHOULDER_RIGHT,"RIGHT_SHOULDER"},
+        {ELBOW_RIGHT,"RIGHT_ELBOW"},
+        {WRIST_RIGHT,"RIGHT_WRIST"},
+        {HAND_RIGHT,"RIGHT_HAND"},
+        {HANDTIP_RIGHT,"RIGHT_HANDTIP"},
+        {THUMB_RIGHT,"RIGHT_THUMB"},
+
+        {HIP_LEFT,"LEFT_HIP"},
+        {KNEE_LEFT,"LEFT_KNEE"},
+        {ANKLE_LEFT,"EFT_ANKLE"},
+        {FOOT_LEFT,"LEFT_FOOT"},
+
+        {HIP_RIGHT,"RIGHT_HIP"},
+        {KNEE_RIGHT,"RIGHT_KNEE"},
+        {ANKLE_RIGHT,"RIGHT_ANKLE"},
+        {FOOT_RIGHT,"RIGHT_FOOT"},
+
+        {HEAD,"HEAD"},
+        {NOSE,"NOSE"},
+        {EYE_LEFT,"LEFT_EYE"},
+        {EAR_LEFT,"LEFT_EAR"},
+        {EYE_RIGHT,"RIGHT_EYE"},
+        {EAR_RIGHT,"RIGHT_EAR"}
+      };
+
+      for (const auto& mk : kMap34)
+      {
+        const int marker = mk.first;
+        const char* key  = mk.second;
+        auto it = pose.find(key);
+        if (it != pose.end() && it->is_object())
+        {
+          markers[marker] = parsePose(*it);
+        }
+        else
+        {
+          RLOG_CPP(4, "Not found: " << key);
+        }
+      }
+
+    }
+    else if (tracker == "BODY_38")
+    {
+      static const std::pair<int, const char*> kMap38[] =
+      {
+        {PELVIS,           "PELVIS"},
+        {SPINE_NAVEL,      "SPINE_1"},
+        {SPINE_CHEST,      "SPINE_2"},
+        {NECK,             "NECK"},
+
+        {CLAVICLE_LEFT,    "LEFT_CLAVICLE"},
+        {SHOULDER_LEFT,    "LEFT_SHOULDER"},
+        {ELBOW_LEFT,       "LEFT_ELBOW"},
+        {WRIST_LEFT,       "LEFT_WRIST"},
+        {HAND_LEFT,        "LEFT_WRIST"},
+        {HANDTIP_LEFT,     "LEFT_HAND_INDEX_1"},
+        {THUMB_LEFT,       "LEFT_HAND_THUMB_4"},
+
+        {CLAVICLE_RIGHT,   "RIGHT_CLAVICLE"},
+        {SHOULDER_RIGHT,   "RIGHT_SHOULDER"},
+        {ELBOW_RIGHT,      "RIGHT_ELBOW"},
+        {WRIST_RIGHT,      "RIGHT_WRIST"},
+        {HAND_RIGHT,      "RIGHT_WRIST"},
+        {HANDTIP_RIGHT,    "RIGHT_HAND_INDEX_1"},
+        {THUMB_RIGHT,      "RIGHT_HAND_THUMB_4"},
+
+        {HIP_LEFT,         "LEFT_HIP"},
+        {KNEE_LEFT,        "LEFT_KNEE"},
+        {ANKLE_LEFT,       "LEFT_ANKLE"},
+        {FOOT_LEFT,        "LEFT_BIG_TOE"},
+
+        {HIP_RIGHT,        "RIGHT_HIP"},
+        {KNEE_RIGHT,       "RIGHT_KNEE"},
+        {ANKLE_RIGHT,      "RIGHT_ANKLE"},
+        {FOOT_RIGHT,       "RIGHT_BIG_TOE"},
+
+        {HEAD,             "NOSE"},   // still proxy
+        {NOSE,             "NOSE"},
+        {EYE_LEFT,         "LEFT_EYE"},
+        {EAR_LEFT,         "LEFT_EAR"},
+        {EYE_RIGHT,        "RIGHT_EYE"},
+        {EAR_RIGHT,        "RIGHT_EAR"}
+      };
+
+      for (const auto& mk : kMap38)
+      {
+        const int marker = mk.first;
+        const char* key  = mk.second;
+        auto it = pose.find(key);
+        if (it != pose.end() && it->is_object())
+        {
+          markers[marker] = parsePose(*it);
+        }
+        else
+        {
+          RLOG_CPP(4, "Not found: " << key);
+        }
+      }
+
+    }
+    else if (tracker == "XrFullBodyJointMETA")
     {
       // REXEC(1)
       // {
@@ -1027,7 +1238,8 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
         {CLAVICLE_LEFT,"XR_FULL_BODY_JOINT_LEFT_SHOULDER_META"},
         {SHOULDER_LEFT,"XR_FULL_BODY_JOINT_LEFT_ARM_UPPER_META"},
         {ELBOW_LEFT,"XR_FULL_BODY_JOINT_LEFT_ARM_LOWER_META"},
-        {WRIST_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_WRIST_META"},
+        // {WRIST_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_WRIST_META"},
+        {WRIST_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_PALM_META"},
         {HAND_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_PALM_META"},
         {HANDTIP_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_INDEX_TIP_META"},
         {THUMB_LEFT,"XR_FULL_BODY_JOINT_LEFT_HAND_THUMB_TIP_META"},
@@ -1035,7 +1247,8 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
         {CLAVICLE_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_SHOULDER_META"},
         {SHOULDER_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_ARM_UPPER_META"},
         {ELBOW_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_ARM_LOWER_META"},
-        {WRIST_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_WRIST_META"},
+        // {WRIST_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_WRIST_META"},
+        {WRIST_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_PALM_META"},
         {HAND_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_PALM_META"},
         {HANDTIP_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_INDEX_TIP_META"},
         {THUMB_RIGHT,"XR_FULL_BODY_JOINT_RIGHT_HAND_THUMB_TIP_META"},
@@ -1093,6 +1306,32 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
           q_right_fingers = std::move(q);
         }
       }
+
+      auto gripper_it = pose.find("GRIPPER_ANGLE_RIGHT");
+      if (gripper_it != pose.end()
+          && gripper_it->contains("position")
+          && (*gripper_it)["position"].is_number())
+      {
+        q_right_gripper = (*gripper_it)["position"].get<double>();
+      }
+
+      gripper_it = pose.find("GRIPPER_ANGLE_LEFT");
+      if (gripper_it != pose.end()
+          && gripper_it->contains("position")
+          && (*gripper_it)["position"].is_number())
+      {
+        q_left_gripper = (*gripper_it)["position"].get<double>();
+      }
+
+      REXEC(5)
+      {
+        for (size_t i=0; i<markers.size(); ++i)
+        {
+          RLOG_CPP(0, "Marker [" + std::to_string(i) + "]: ");
+          HTr_fprint(stderr, &markers[i]);
+        }
+      }
+
 
     }
     else if (tracker == "AzureKinect")
@@ -1169,10 +1408,22 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
       RLOG_CPP(0, "Unknown tracker: " << tracker);
     }
 
+
+    // Will add zero HTr if not exists. In this case, we ignore this data package
+    HTr A_camI_i = A_camI[camera_name];
+    if (HTr_isZero(&A_camI_i))
+    {
+      RLOG_CPP(5, "Adding new zero-transform map entry for camera " << camera_name
+               << ", jsonHeader: " << jsonHeader);
+      std::lock_guard<std::mutex> lock(updateMtx);
+      this->cameraTransformMap[camera_name] = {};   // Set to zero
+      continue;
+    }
+
     for (auto& marker : markers)
     {
       HTr tmp = marker;
-      HTr_transform(&marker, &A_camI, &tmp);
+      HTr_transform(&marker, &A_camI_i, &tmp);
     }
 
     REXEC(5)
@@ -1187,6 +1438,9 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     markerMap[skeletonId] = markers;
     leftFingersMap[skeletonId] = q_left_fingers;
     rightFingersMap[skeletonId] = q_right_fingers;
+    leftGripperMap[skeletonId] = q_left_gripper;
+    rightGripperMap[skeletonId] = q_right_gripper;
+
     boundingBoxMap[skeletonId] = bb;
 
     newAzureUpdate = true;
@@ -1223,6 +1477,16 @@ void AzureSkeletonTracker::parse(const nlohmann::json& jsonHeader, const nlohman
     if (!rightFingersMap[corrMap[i]].empty())
     {
       skeletons[i]->fingerAnglesRight = rightFingersMap[corrMap[i]];
+    }
+
+    if (leftGripperMap[corrMap[i]] >= 0.0)
+    {
+      skeletons[i]->gripperAngleLeft = leftGripperMap[corrMap[i]];
+    }
+
+    if (rightGripperMap[corrMap[i]] >= 0.0)
+    {
+      skeletons[i]->gripperAngleRight = rightGripperMap[corrMap[i]];
     }
 
     if (jsonHeader.contains("frame_id") && !boundingBoxMap.empty())
