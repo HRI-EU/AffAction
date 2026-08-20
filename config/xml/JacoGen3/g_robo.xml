@@ -59,7 +59,7 @@ base right gravity: -9.64772 -0.793742 -1.58981
   
   <!-- Respeaker. Graphics switched on in RespeakerComponent -->
   <Body name="respeaker" prev="center_post_link" transform="0.13 0 .55 0 0 -90" physics="none">
-    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
+    <Shape type="MESH" meshFile="hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
 	   color="BLACK_RUBBER" />
   </Body>
   <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none" >
