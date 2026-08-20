@@ -39,6 +39,7 @@
 #endif
 
 #include "PW70CANInterfaceDummy.hpp"
+#include <Rcs_macros.h>
 
 
 namespace aff
