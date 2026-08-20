@@ -40,9 +40,6 @@
 
 
 
-
-
-
 namespace aff
 {
 /******************************************************************************
@@ -50,8 +47,7 @@ namespace aff
  *****************************************************************************/
 HeadGesture::HeadGesture(const std::string& gestureName, double duration, std::vector<int> jntIds) :
   name(gestureName), t_gesture(-1.0), gestureDuration(duration), amplitude(RCS_DEG2RAD(6.0)),
-  numTurns(3), //panJointId(-1), tiltJointId(-1), jointMaxSpeed(0.0),
-  jointIds(jntIds),
+  numTurns(3), jointIds(jntIds),
   panJoint("ptu_pan_joint"), tiltJoint("ptu_tilt_joint"), rollJoint("ptu_roll_joint")
 {
 }
@@ -74,6 +70,7 @@ std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controll
 {
   static double panStart = 0.0;
   static double tiltStart = 0.0;
+  static double rollStart = 0.0;
 
   if (t_gesture < 0.0)
   {
@@ -88,6 +85,14 @@ std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controll
   {
     controller->getTask("Pan")->computeX(&panStart);
     controller->getTask("Tilt")->computeX(&tiltStart);
+
+    const Rcs::Task* rollTask = controller->getTask("Roll");
+
+    if (rollTask)
+    {
+      controller->getTask("Tilt")->computeX(&tiltStart);
+    }
+
     RLOG(0, "Pan Tilt start[deg]: %.2f %.3f",
          RCS_RAD2DEG(panStart), RCS_RAD2DEG(tiltStart));
   }
@@ -97,6 +102,7 @@ std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controll
   std::vector<double> panTilt = computePanTilt(t_gesture, pan->speedLimit);
   panTilt[0] += panStart;
   panTilt[1] += tiltStart;
+  panTilt[2] += rollStart;
   t_gesture += dt;
 
   return panTilt;
@@ -117,20 +123,23 @@ void HeadGesture::step(const RcsGraph* graph, RcsGraph* targetGraph, double dt)
   const RcsJoint* pan = panJoint.getJoint(graph);
   RCHECK(pan);
   std::vector<double> panTilt = computePanTilt(t_gesture, pan->speedLimit);
-  updateHeuristic(graph, targetGraph, panTilt[0], panTilt[1]);
+  updateHeuristic(graph, targetGraph, panTilt[0], panTilt[1], panTilt[2]);
 
   t_gesture += dt;
 }
 
 // Goes after IK step
 void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
-                                  double pan_gesture, double tilt_gesture)
+                                  double pan_gesture, 
+                                  double tilt_gesture, 
+                                  double roll_gesture)
 {
   const RcsJoint* pan = panJoint.getJoint(graph);
   const RcsJoint* tilt = tiltJoint.getJoint(graph);
   RCHECK(pan);
   RCHECK(tilt);
 
+  const RcsJoint* roll = rollJoint.getJoint(graph);
 
 
   // Constrain gaze dof in passed graphs
@@ -174,6 +183,10 @@ void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
     {
       targetGraph->q->ele[graph->joints[j].jointIndex] += pan_gesture;
     }
+    else if (roll && (graph->joints[j].id == roll->id))
+    {
+      targetGraph->q->ele[jidx] += roll_gesture;
+    }
   }
 
 }
@@ -203,7 +216,7 @@ std::vector<double> HeadNod::computePanTilt(double t, double maxSpeed)
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 
-  std::vector<double> panTilt(2, 0.0);
+  std::vector<double> panTilt(3, 0.0);
   panTilt[1] = -amplitude * sin(phase*t);
   return panTilt;
 }
@@ -222,8 +235,25 @@ std::vector<double> HeadShake::computePanTilt(double t, double maxSpeed)
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 
-  std::vector<double> panTilt(2, 0.0);
+  std::vector<double> panTilt(3, 0.0);
   panTilt[0] = -amplitude * sin(phase*t);
+  return panTilt;
+}
+
+/******************************************************************************
+ *
+ *****************************************************************************/
+HeadIncline::HeadIncline(const std::string& gestureName, double duration, std::vector<int> jntIds) :
+  HeadGesture(gestureName, duration, jntIds)
+{
+  numTurns= 1;
+}
+
+std::vector<double> HeadIncline::computePanTilt(double t, double maxSpeed)
+{
+  std::vector<double> panTilt(3, 0.0);
+  this->gestureDuration = 3.0;
+  panTilt[2] = this->amplitude * std::sin(1.0/gestureDuration*M_PI * t);
   return panTilt;
 }
 

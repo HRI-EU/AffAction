@@ -58,7 +58,7 @@ public:
 
 protected:
   void updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
-                       double pan_gesture, double tilt_gesture);
+                       double pan_gesture, double tilt_gesture, double roll_gesture);
   virtual std::vector<double> computePanTilt(double t, double maxSpeed) = 0;
 
   std::string name;
@@ -74,6 +74,8 @@ class HeadNod : public HeadGesture
 {
 public:
   HeadNod(const std::string& name, double duration, std::vector<int> jointIds);
+
+protected:
   std::vector<double> computePanTilt(double t, double maxSpeed);
 };
 
@@ -81,6 +83,17 @@ class HeadShake : public HeadGesture
 {
 public:
   HeadShake(const std::string& name, double duration, std::vector<int> jointIds);
+
+protected:
+  std::vector<double> computePanTilt(double t, double maxSpeed);
+};
+
+class HeadIncline : public HeadGesture
+{
+public:
+  HeadIncline(const std::string& name, double duration, std::vector<int> jointIds);
+
+protected:
   std::vector<double> computePanTilt(double t, double maxSpeed);
 };
 

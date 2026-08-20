@@ -51,6 +51,7 @@
 
 static const std::string taskNamePan             = "Pan";
 static const std::string taskNameTilt            = "Tilt";
+static const std::string taskNameRoll            = "Roll";
 static const std::string taskNameLeftEyeBallDir  = "LeftEyeBallDir";
 static const std::string taskNameRightEyeBallDir = "RightEyeBallDir";
 static const std::string taskNameGazePointLeft   = "GazeL";
@@ -60,6 +61,7 @@ static const std::string taskNameHeadOri         = "HeadOri";
 
 static const std::string panJointName            = "ptu_pan_joint";
 static const std::string tiltJointName           = "ptu_tilt_joint";
+static const std::string rollJointName           = "ptu_roll_joint";
 
 static const std::string rightEyeBallName        = "RightEyeBall";
 static const std::string leftEyeBallName         = "LeftEyeBall";
@@ -102,6 +104,11 @@ static std::vector<int> getEyeModelJoints(const RcsGraph* graph, std::vector<std
   std::unordered_set<int> unique_elements(allIds.begin(), allIds.end());
   std::vector<int> unique_vec(unique_elements.begin(), unique_elements.end());
 
+  //for (const auto& uid : unique_vec)
+  //{
+  //  RLOG_CPP(0, "JOINT IDX: " << uid << ": " << graph->joints[uid].name);
+  //
+
   return unique_vec;
 }
 
@@ -122,10 +129,12 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
 
   // Add constraints for eye model
   std::vector<std::string> taskVec = createTasksXML();
-  std::vector<Rcs::Task*> tasks = Rcs::TaskFactory::createTasks(taskVec, controller->getGraph());
+  std::vector<Rcs::Task*> tasks = Rcs::TaskFactory::createTasks(taskVec, controller->getGraph(), false);
 
+  RLOG(0, "Found %zu tasks", tasks.size());
   for (auto t : tasks)
   {
+    t->print();
     controller->add(t);
   }
 
@@ -165,6 +174,10 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   shake->setAmplitude(RCS_DEG2RAD(18.0));
   headGestures.push_back(std::unique_ptr<HeadShake>(shake));
 
+  HeadIncline* tilt = new HeadIncline("tilt", 3.0, jointIds);
+  shake->setAmplitude(RCS_DEG2RAD(18.0));
+  headGestures.push_back(std::unique_ptr<HeadIncline>(tilt));
+
   // Event subscriptions
   subscribe("PostUpdateGraph", &EyeModelIKComponent::onComputeIK);
   subscribe("InitFromState", &EyeModelIKComponent::onInitFromState);
@@ -180,8 +193,9 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   //subscribe("Render", &EyeModelIKComponent::onRender);
 
   // Generic checks
-  RCHECK(controller->getTask(taskNamePan));
+  RCHECK_MSG(controller->getTask(taskNamePan), "%s", taskNamePan.c_str());
   RCHECK(controller->getTask(taskNameTilt));
+  //RCHECK(controller->getTask(taskNameRoll));
   RCHECK(controller->getTask(taskNameLeftEyeBallDir));
   RCHECK(controller->getTask(taskNameRightEyeBallDir));
   RCHECK(controller->getTask(taskNameGazePointLeft));
@@ -239,6 +253,7 @@ void EyeModelIKComponent::computeIK_gazeDir(RcsGraph* desired, RcsGraph* current
   setTaskActivation(taskNameGazePoint, false);
   setTaskActivation(taskNamePan, false);
   setTaskActivation(taskNameTilt, false);
+  setTaskActivation(taskNameRoll, false);   // ok if roll does not exist
   setTaskActivation(taskNameGazePointLeft, false);
   setTaskActivation(taskNameGazePointRight, false);
 
@@ -320,6 +335,7 @@ void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current
   setTaskActivation(taskNameRightEyeBallDir, false);
   setTaskActivation(taskNamePan, false);
   setTaskActivation(taskNameTilt, false);
+  setTaskActivation(taskNameRoll, false);
   setTaskActivation(taskNameHeadOri, false);
 
   // Gesture generation - variant 1 (of 2)
@@ -337,6 +353,14 @@ void EyeModelIKComponent::computeIK_headEye(RcsGraph* desired, RcsGraph* current
         x_des->ele[tiltIdx] = panTilt[1];
         setTaskActivation(taskNamePan, true);
         setTaskActivation(taskNameTilt, true);
+
+        // Roll task is optional since it does not exist on old PTUs
+        const int rollIdx = controller->getTaskArrayIndex(taskNameRoll.c_str());
+        if (rollIdx != -1)
+        {
+          x_des->ele[rollIdx] = panTilt[2];
+          setTaskActivation(taskNameRoll, true);
+        }
       }
     }
   }
@@ -582,6 +606,7 @@ std::vector<std::string> EyeModelIKComponent::createTasksXML() const
   tasks.push_back("<Task name=\"" + taskNameLeftEyeBallDir + "\" effector=\"" + leftEyeBallName + "\" controlVariable=\"POLAR\" axisDirection=\"X\" />");
   tasks.push_back("<Task name=\"" + taskNamePan + "\" jnt=\"" + panJointName + "\" controlVariable=\"Joint\" />");
   tasks.push_back("<Task name=\"" + taskNameTilt + "\" jnt=\"" + tiltJointName + "\" controlVariable=\"Joint\" />");
+  tasks.push_back("<Task name=\"" + taskNameRoll + "\" jnt=\"" + rollJointName + "\" controlVariable=\"Joint\" />");
   tasks.push_back("<Task name=\"" + taskNameHeadOri + "\" effector=\"" + ActionEyeGaze::getScreenName() + "\" controlVariable=\"POLAR\" />");
 
   auto eyeTasks = ActionEyeGaze::createEyeTasksXML();
@@ -637,6 +662,7 @@ bool EyeModelIKComponent::setPupilSpeedWeight(RcsGraph* graph, double weight)
 
   RcsJoint* pan = RcsGraph_getJointByName(graph, panJointName.c_str());
   RcsJoint* tilt = RcsGraph_getJointByName(graph, tiltJointName.c_str());
+  RcsJoint* roll = RcsGraph_getJointByName(graph, rollJointName.c_str());
 
   if (!pan)
   {
@@ -650,8 +676,15 @@ bool EyeModelIKComponent::setPupilSpeedWeight(RcsGraph* graph, double weight)
     return false;
   }
 
+  if (!roll)
+  {
+    RLOG_CPP(1, "Joint with name \"" << rollJointName << "\" not found - skipping setting weight");
+    return false;
+  }
+
   pan->weightMetric = 1.0-weight;
   tilt->weightMetric = 1.0-weight;
+  roll->weightMetric = 1.0-weight;
 
   return true;
 }
