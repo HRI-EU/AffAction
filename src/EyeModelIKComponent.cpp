@@ -175,7 +175,7 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   headGestures.push_back(std::unique_ptr<HeadShake>(shake));
 
   HeadIncline* tilt = new HeadIncline("tilt", 3.0, jointIds);
-  shake->setAmplitude(RCS_DEG2RAD(18.0));
+  tilt->setAmplitude(RCS_DEG2RAD(20.0));
   headGestures.push_back(std::unique_ptr<HeadIncline>(tilt));
 
   // Event subscriptions

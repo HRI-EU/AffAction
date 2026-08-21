@@ -1148,7 +1148,8 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('Y', [this](char k)
   {
     RLOG(0, "Yes-gesture");
-    getEntity().publish("StartGesture", std::string("yes"), RCS_DEG2RAD(10.0), 5);
+    //getEntity().publish("StartGesture", std::string("yes"), RCS_DEG2RAD(10.0), 5);
+    getEntity().publish("StartGesture", std::string("tilt"), RCS_DEG2RAD(-40.0), 5);
   }, "Yes-gesture");
 
 

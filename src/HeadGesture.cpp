@@ -47,7 +47,7 @@ namespace aff
  *****************************************************************************/
 HeadGesture::HeadGesture(const std::string& gestureName, double duration, std::vector<int> jntIds) :
   name(gestureName), t_gesture(-1.0), gestureDuration(duration), amplitude(RCS_DEG2RAD(6.0)),
-  numTurns(3), jointIds(jntIds),
+  panStart(0.0), tiltStart(0.0), rollStart(0.0), numTurns(3), jointIds(jntIds),
   panJoint("ptu_pan_joint"), tiltJoint("ptu_tilt_joint"), rollJoint("ptu_roll_joint")
 {
 }
@@ -68,10 +68,6 @@ void HeadGesture::setNumTurns(int turns)
 
 std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controller, MatNd* a_des, RcsGraph* targetGraph, double dt)
 {
-  static double panStart = 0.0;
-  static double tiltStart = 0.0;
-  static double rollStart = 0.0;
-
   if (t_gesture < 0.0)
   {
     return std::vector<double>();
@@ -90,7 +86,11 @@ std::vector<double> HeadGesture::stepPrecise(const Rcs::ControllerBase* controll
 
     if (rollTask)
     {
-      controller->getTask("Tilt")->computeX(&tiltStart);
+      rollTask->computeX(&rollStart);
+    }
+    else
+    {
+      rollStart = 0.0;
     }
 
     RLOG(0, "Pan Tilt start[deg]: %.2f %.3f",

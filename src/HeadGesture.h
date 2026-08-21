@@ -65,6 +65,9 @@ protected:
   double t_gesture;
   double gestureDuration;
   double amplitude;
+  double panStart;
+  double tiltStart;
+  double rollStart;
   int numTurns;
   std::vector<int> jointIds;
   Rcs::JointNameIndexPair panJoint, tiltJoint, rollJoint;
