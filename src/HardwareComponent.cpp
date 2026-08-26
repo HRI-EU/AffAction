@@ -35,7 +35,7 @@
 #include "JacoZmqComponent.hpp"
 #include "TTSComponent.h"
 #include "PhysicsComponent.h"
-#include "WebsocketActionComponent.h"
+//#include "WebsocketActionComponent.h"
 #include "LandmarkZmqComponent.h"
 #include "ZmqRouterComponent.h"
 #include "CameraViewComponent.h"
@@ -55,9 +55,11 @@
 #include "ImageTracker.h"
 #include "EyeModelIKComponent.h"
 
-//#define WITH_WEBSOCKETCLIENTCOMPONENT
+//#define ASIO_NO_DEPRECATED
+#define WITH_WEBSOCKETCLIENTCOMPONENT
 #if defined WITH_WEBSOCKETCLIENTCOMPONENT
 #include "WebsocketClientComponent.hpp"
+#include "EventClient.hpp"
 #endif
 
 
@@ -855,7 +857,9 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     std::string eventToPublish = "ActionSequence";
     getKeyValuePair(argvStrVec, "-websocket_port", port);
     getKeyValuePair(argvStrVec, "-websocket_eventToPublish", eventToPublish);
-    components.push_back(new WebsocketActionComponent(&entity, port, eventToPublish));
+    //components.push_back(new WebsocketActionComponent(&entity, port, eventToPublish));
+
+    components.push_back(new EventProducerComponent(&entity));
   }
 
   // The debug graphics will be handled in initGraphics.

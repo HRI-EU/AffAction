@@ -263,7 +263,7 @@ src/EyeModelIKComponent.cpp
 src/TrajectoryComponent.cpp
 src/ActionComponent.cpp
 src/HardwareComponent.cpp
-src/WebsocketActionComponent.cpp
+#src/WebsocketActionComponent.cpp
 src/LandmarkZmqComponent.cpp
 src/ZmqRouterComponent.cpp
 src/FaceGestureComponent.cpp
