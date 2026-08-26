@@ -131,10 +131,13 @@ EyeModelIKComponent::EyeModelIKComponent(EntityBase* parent, const RcsGraph* gra
   std::vector<std::string> taskVec = createTasksXML();
   std::vector<Rcs::Task*> tasks = Rcs::TaskFactory::createTasks(taskVec, controller->getGraph(), false);
 
-  RLOG(0, "Found %zu tasks", tasks.size());
+  RLOG(1, "Found %zu tasks", tasks.size());
   for (auto t : tasks)
   {
-    t->print();
+    REXEC(1)
+    {
+      t->print();
+    }
     controller->add(t);
   }
 

@@ -130,8 +130,8 @@ void HeadGesture::step(const RcsGraph* graph, RcsGraph* targetGraph, double dt)
 
 // Goes after IK step
 void HeadGesture::updateHeuristic(const RcsGraph* graph, RcsGraph* targetGraph,
-                                  double pan_gesture, 
-                                  double tilt_gesture, 
+                                  double pan_gesture,
+                                  double tilt_gesture,
                                   double roll_gesture)
 {
   const RcsJoint* pan = panJoint.getJoint(graph);
@@ -212,7 +212,7 @@ HeadNod::HeadNod(const std::string& gestureName, double duration, std::vector<in
 
 std::vector<double> HeadNod::computePanTilt(double t, double maxSpeed)
 {
-  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(180.0));
+  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(120.0));
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 
@@ -231,7 +231,7 @@ HeadShake::HeadShake(const std::string& gestureName, double duration, std::vecto
 
 std::vector<double> HeadShake::computePanTilt(double t, double maxSpeed)
 {
-  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(180.0));
+  const double vmax = std::min(maxSpeed, RCS_DEG2RAD(120.0));
   const double phase = vmax/amplitude;
   gestureDuration = numTurns*2.0*M_PI/phase;
 
@@ -252,7 +252,7 @@ HeadIncline::HeadIncline(const std::string& gestureName, double duration, std::v
 std::vector<double> HeadIncline::computePanTilt(double t, double maxSpeed)
 {
   std::vector<double> panTilt(3, 0.0);
-  this->gestureDuration = 3.0;
+  this->gestureDuration = 2.0;
   panTilt[2] = this->amplitude * std::sin(1.0/gestureDuration*M_PI * t);
   return panTilt;
 }
