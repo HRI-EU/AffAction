@@ -40,6 +40,7 @@
 #include <GraphNode.h>
 
 #include <algorithm>
+#include <cmath>
 
 
 
@@ -272,9 +273,42 @@ std::vector<int> ImageTracker::getObjectBoundingBox(const ActionScene* scene,
       z_std = v[2];
     }
 
-    // Convert to image coordinates using pinhole model
-    double x = phCam.fx * (x_std / z_std) + phCam.cx;
-    double y = phCam.fy * (y_std / z_std) + phCam.cy;
+    if (!std::isfinite(z_std) || std::fabs(z_std) < 1.0e-12)
+    {
+      RLOG_CPP(1, "Skipping vertex with invalid camera depth");
+      continue;
+    }
+
+    // Project with the same rational radial/tangential model that
+    // computeCameraGazeDirection inverts.
+    const double xu = x_std / z_std;
+    const double yu = y_std / z_std;
+    const double r2 = xu*xu + yu*yu;
+    const double r4 = r2*r2;
+    const double r6 = r4*r2;
+    const double radialDenominator =
+      1.0 + phCam.k4*r2 + phCam.k5*r4 + phCam.k6*r6;
+    if (!std::isfinite(radialDenominator) ||
+        std::fabs(radialDenominator) < 1.0e-12)
+    {
+      RLOG_CPP(1, "Skipping vertex at which the camera distortion model is singular");
+      continue;
+    }
+
+    const double radial =
+      (1.0 + phCam.k1*r2 + phCam.k2*r4 + phCam.k3*r6) /
+      radialDenominator;
+    const double xd = xu*radial + 2.0*phCam.p1*xu*yu +
+                      phCam.p2*(r2 + 2.0*xu*xu);
+    const double yd = yu*radial + phCam.p1*(r2 + 2.0*yu*yu) +
+                      2.0*phCam.p2*xu*yu;
+    const double x = phCam.fx*xd + phCam.skew*yd + phCam.cx;
+    const double y = phCam.fy*yd + phCam.cy;
+    if (!std::isfinite(x) || !std::isfinite(y))
+    {
+      RLOG_CPP(1, "Skipping vertex with invalid projected coordinates");
+      continue;
+    }
 
     imgPoints.push_back({ static_cast<int>(std::lround(x)), static_cast<int>(std::lround(y)) });
   }

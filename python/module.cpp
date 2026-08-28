@@ -396,6 +396,47 @@ PYBIND11_MODULE(pyAffaction, m)
   })
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns the unit gaze direction through a pixel in camera and world frames.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("pixelToGazeDirections", [](aff::ExampleActionsECS& ex,
+                                   const std::string& cameraName,
+                                   const nlohmann::json& cameraJson,
+                                   int x, int y) -> nlohmann::json
+  {
+    aff::PinholeCamera cameraModel;
+    std::string error;
+    if (!aff::extract_intrinsics(cameraJson, cameraModel, error))
+    {
+      throw py::value_error(error);
+    }
+
+    double cameraRay[3];
+    if (!aff::computeCameraGazeDirection(cameraModel, x, y, cameraRay, error))
+    {
+      throw py::value_error(error);
+    }
+
+    const RcsBody* camera = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
+    if (!camera)
+    {
+      throw py::value_error("Camera body '" + cameraName + "' was not found in the graph");
+    }
+
+    double worldRay[3];
+    Vec3d_transRotate(worldRay, MAT3D_CAST camera->A_BI.rot, cameraRay);
+    if (Vec3d_normalizeSelf(worldRay) == 0.0)
+    {
+      throw py::value_error("Failed to normalize the world gaze direction");
+    }
+
+    return {
+      {"gazedir_in_camera", {cameraRay[0], cameraRay[1], cameraRay[2]}},
+      {"gazedir_in_world", {worldRay[0], worldRay[1], worldRay[2]}}
+    };
+  }, py::arg("camera_name"), py::arg("camera_json"), py::arg("x"), py::arg("y"),
+  "Returns unit gaze directions through a pixel in camera and world coordinates")
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns the position of the objects in camera coordinates
   //////////////////////////////////////////////////////////////////////////////
   .def("getObjectsInCamera", [](aff::ExampleActionsECS& ex, std::vector<std::string> entityNames, std::string cameraName) -> nlohmann::json
@@ -750,12 +791,22 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   py::arg("agentName") = std::string())
 
   //////////////////////////////////////////////////////////////////////////////
-  // Returns empty json if there are no objects or a json in the form:
+  // Returns empty json if there are no agents or a json in the form:
   // {"agents": ['Daniel', 'Felix', 'Robot'] }
   //////////////////////////////////////////////////////////////////////////////
   .def("get_agents", [](aff::ExampleActionsECS& ex, bool onlyVisibleAgents) -> nlohmann::json
   {
     return ex.getQuery()->getAgents();
+  },
+  py::arg("onlyVisibleAgents") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns empty json if there are no human agents or a json in the form:
+  // {"agents": ['Daniel', 'Felix', 'Robot'] }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_human_agents", [](aff::ExampleActionsECS& ex, bool onlyVisibleAgents) -> nlohmann::json
+  {
+    return ex.getQuery()->getHumanAgents();
   },
   py::arg("onlyVisibleAgents") = false)
 

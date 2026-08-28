@@ -678,6 +678,37 @@ double HumanAgent::getDefaultPosition(size_t index) const
   return defaultPos[index];
 }
 
+bool HumanAgent::getTrackedFrameTransform(HTr* A_BI, const RcsGraph* graph,
+                                          const std::string& body_type_str) const
+{
+  HumanAgent::BodyType body_type = parseBodyType(body_type_str);
+
+  if (body_type == HumanAgent::BodyType::None)
+  {
+    RLOG_CPP(1, "Body type " << body_type_str << " unknown - transform remains unchanged");
+    return false;
+  }
+
+  auto it = trackedFrames.find(body_type);
+  if (it == trackedFrames.end())
+  {
+    RLOG_CPP(1, "Body type " << body_type_str << " not in tracked frames - transform remains unchanged");
+    return false;
+  }
+
+  const RcsBody* frm = RcsGraph_getBodyByName(graph, it->second.c_str());
+  if (!frm)
+  {
+    RLOG_CPP(1, "Tracked frame " << it->second << " for id "
+             << bodyTypeToId(it->first) << " not found in graph");
+    return false;
+  }
+
+  HTr_copy(A_BI, &frm->A_BI);
+
+  return true;
+}
+
 std::vector<double> HumanAgent::getDefaultPosition() const
 {
   return defaultPos;

@@ -201,11 +201,20 @@ private:
         }
       });
 
-      con->set_fail_handler([&dead](websocketpp::connection_hdl) { dead = true; });
-      con->set_close_handler([&dead](websocketpp::connection_hdl) { dead = true; });
+      con->set_fail_handler([&dead](websocketpp::connection_hdl)
+      {
+        dead = true;
+      });
+      con->set_close_handler([&dead](websocketpp::connection_hdl)
+      {
+        dead = true;
+      });
 
       endpoint.connect(con);
-      std::thread asio([&endpoint]() { endpoint.run(); });
+      std::thread asio([&endpoint]()
+      {
+        endpoint.run();
+      });
 
       // A handshake that never completes is a dead connection, not a slow one:
       // socket accepted, nothing answers, every event dropped while the log
@@ -261,7 +270,7 @@ private:
       }
       ev["sequence"] = ++sequence;   // diagnostics only; nothing retries a gap
       websocketpp::lib::error_code ec = con->send(ev.dump(),
-                                                 websocketpp::frame::opcode::text);
+                                                  websocketpp::frame::opcode::text);
       if (ec)
       {
         RLOG_CPP(1, "Producer socket lost (" << ec.message()
@@ -302,12 +311,19 @@ public:
   EventProducerComponent(EntityBase* parent)
     : ComponentBase(parent), client("ws://localhost:8443/ws", "smile")
   {
-    client.snapshot = [this]() { return nlohmann::json{{"person", ""}}; };
+    client.snapshot = [this]()
+    {
+      return nlohmann::json{{"person", ""}};
+    };
     client.start();
     subscribe("ObjectGrasped", &EventProducerComponent::onGrasp);
+    subscribe("PublishEvent", &EventProducerComponent::onEvent);
   }
 
-  ~EventProducerComponent() { client.stop(); }
+  ~EventProducerComponent()
+  {
+    client.stop();
+  }
 
 private:
   void onGrasp(std::string object)   // called on the Rcs event loop - must not block
@@ -318,6 +334,28 @@ private:
     // `presence` event with detail {role, text} instead when Erna should speak.
     // Leave `person` empty - StateTable.observe adopts any person on any event.
     client.publish("object_grasped", "scene", {{"object", object}});
+  }
+
+  /*! \brief Forward an arbitrary Rcs event to the protocol-5 event stream.
+   *
+   *  `source` must be one of the collector's supported sources. `extra` may be
+   *  a JSON object; plain text is preserved as {"extra": extra}.
+   */
+  void onEvent(std::string source, std::string name, std::string extra)
+  {
+    RLOG_CPP(0, "PublishEvent: source='" << source
+             << "' name='" << name << "' extra='" << extra << "'");
+
+    nlohmann::json detail = nlohmann::json::parse(extra, nullptr, false);
+    if (detail.is_discarded() || !detail.is_object())
+    {
+      detail = {{"extra", extra}};
+    }
+
+    if (!client.publish(name, source, detail))
+    {
+      RLOG_CPP(1, "Failed to queue event " << source << "/" << name);
+    }
   }
 
   aff::EventClient client;

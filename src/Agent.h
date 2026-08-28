@@ -112,6 +112,8 @@ public:
   std::vector<double> getDefaultPosition() const;
   void setDefaultPosition(const double pos[3]);
   virtual void print() const;
+  bool getTrackedFrameTransform(HTr* A_BI, const RcsGraph* graph,
+                                const std::string& body_type_str) const;
 
   // Remembers old one in gazeTargetPrev
   void setGazeTarget(const std::string& newGazeTarget);

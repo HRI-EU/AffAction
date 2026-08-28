@@ -54,6 +54,7 @@
 #include "AgentWelcomeComponent.hpp"
 #include "ImageTracker.h"
 #include "EyeModelIKComponent.h"
+#include "GazeAttention.hpp"
 
 //#define ASIO_NO_DEPRECATED
 #define WITH_WEBSOCKETCLIENTCOMPONENT
@@ -159,7 +160,7 @@ static std::vector<ArucoTrackerSpec> parseArucoTrackerSpecs(std::vector<std::str
   if (trackerList.empty())
   {
     return specs;
-}
+  }
 
   const auto entries = Rcs::String_split(trackerList, ",");
 
@@ -860,6 +861,22 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
     //components.push_back(new WebsocketActionComponent(&entity, port, eventToPublish));
 
     components.push_back(new EventProducerComponent(&entity));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-gaze_attention",
+                        "Publish events when a human looks at either hand");
+  }
+  else if (getKey(argvStrVec, "-gaze_attention"))
+  {
+    std::string agentName;
+    const auto humanAgents = scene->getAgents<HumanAgent>();
+    if (humanAgents.size() == 1)
+    {
+      agentName = humanAgents[0]->name;
+    }
+    components.push_back(new GazeAttention(&entity, agentName));
   }
 
   // The debug graphics will be handled in initGraphics.

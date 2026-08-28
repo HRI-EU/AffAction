@@ -98,12 +98,16 @@ public:
    */
   nlohmann::json getObjectsHeldBy(const std::string& agentName);
 
-  /*! \brief Returns empty json if there are no objects or a json in the form:
+  /*! \brief Returns empty json if there are no agents or a json in the form:
    *         {"agents": ['Daniel', 'Felix', 'Robot'] }. If onlyVisibleAgents
    *         is true, then only the agents that are currently being tracked
    *         by the skeleton tracker are returned.
    */
   nlohmann::json getAgents(bool onlyVisibleAgents=false);
+
+  /*! \brief Same as getAgents(), but only those of class HumanAgent.
+   */
+  nlohmann::json getHumanAgents(bool onlyVisibleAgents=false);
 
   /*! \brief Legacy function that returns a really large json with the overal
    *         scene information. See SceneJsonHelpers.cpp for details.

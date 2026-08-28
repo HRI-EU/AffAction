@@ -55,6 +55,7 @@ public:
 
   int width, height;      // Pixel resolution
   double fx, fy, cx, cy;  // Camera matrix
+  double skew;            // Camera matrix entry (0, 1)
   double k1, k2;          // Radial distortion
   double p1, p2;          // Tangential distortion
   double k3, k4, k5, k6;  // Higher-order radial distortion
@@ -67,6 +68,11 @@ void showFrame(const QImage& img);
 
 bool extract_intrinsics(const nlohmann::json& data,
                         PinholeCamera& cam,
+                        std::string& err);
+
+bool computeCameraGazeDirection(const PinholeCamera& cam,
+                                int x, int y,
+                                double gazeDir[3],
                         std::string& err);
 
 

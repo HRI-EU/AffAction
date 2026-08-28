@@ -590,6 +590,27 @@ nlohmann::json ConcurrentSceneQuery::getAgents(bool onlyVisibleAgents)
   return json;
 }
 
+nlohmann::json ConcurrentSceneQuery::getHumanAgents(bool onlyVisibleAgents)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json;
+  json["agents"] = std::vector<nlohmann::json>();
+
+  for (const auto& a : scene.agents)
+  {
+    if ((onlyVisibleAgents && a->isVisible()) || (!onlyVisibleAgents))
+    {
+      if (dynamic_cast<HumanAgent*>(a))
+      {
+        json["agents"].push_back(a->name);
+      }
+    }
+  }
+
+  return json;
+}
+
 std::string ConcurrentSceneQuery::getHoldingHand(const std::string& objectName)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);

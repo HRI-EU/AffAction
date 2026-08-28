@@ -36,6 +36,7 @@
 #include "SceneJsonHelpers.h"
 
 #include <Rcs_macros.h>
+#include <Rcs_math.h>
 #include <GraphNode.h>
 
 #include <QByteArray>
@@ -50,6 +51,7 @@
 #include <QRect>
 
 #include <algorithm>
+#include <cmath>
 
 
 namespace aff
@@ -60,7 +62,7 @@ namespace aff
  ******************************************************************************/
 PinholeCamera::PinholeCamera() :
   width(0), height(0),
-  fx(0.0), fy(0.0), cx(0.0), cy(0.0),
+  fx(0.0), fy(0.0), cx(0.0), cy(0.0), skew(0.0),
   k1(0.0), k2(0.0), p1(0.0), p2(0.0),
   k3(0.0), k4(0.0), k5(0.0), k6(0.0)
 {
@@ -74,7 +76,7 @@ nlohmann::json PinholeCamera::toJson() const
     {"height", height},
     {
       "camera_matrix", {
-        {fx, 0.0, cx},
+        {fx, skew, cx},
         {0.0, fy, cy},
         {0.0, 0.0, 1.0}
       }
@@ -236,7 +238,6 @@ bool extract_intrinsics(const nlohmann::json& data,
                         PinholeCamera& cam,
                         std::string& err)
 {
-  bool success = true;
   PinholeCamera tmp;
 
   try
@@ -266,9 +267,21 @@ bool extract_intrinsics(const nlohmann::json& data,
     tmp.fy = cm[1][1].get<double>();
     tmp.cx = cm[0][2].get<double>();
     tmp.cy = cm[1][2].get<double>();
+    tmp.skew = cm[0][1].get<double>();
+
+    if (!std::isfinite(tmp.fx) || !std::isfinite(tmp.fy) ||
+        !std::isfinite(tmp.cx) || !std::isfinite(tmp.cy) ||
+        !std::isfinite(tmp.skew) || tmp.fx == 0.0 || tmp.fy == 0.0)
+    {
+      err = "camera_matrix contains invalid pinhole intrinsics.";
+      return false;
+    }
 
     tmp.width  = data.value("width",  0);
     tmp.height = data.value("height", 0);
+
+    // Keep accepting the legacy top-level coefficient keys. The distortion
+    // array, which is also emitted by PinholeCamera::toJson(), takes precedence.
     tmp.k1 = data.value("k1", 0);
     tmp.k2 = data.value("k2", 0);
     tmp.p1 = data.value("p1", 0);
@@ -277,6 +290,31 @@ bool extract_intrinsics(const nlohmann::json& data,
     tmp.k4 = data.value("k4", 0);
     tmp.k5 = data.value("k5", 0);
     tmp.k6 = data.value("k6", 0);
+
+    auto distortionIt = data.find("distortion");
+    if (distortionIt != data.end())
+    {
+      const auto& distortion = *distortionIt;
+      if (!distortion.is_array() ||
+          (distortion.size() != 4 && distortion.size() != 5 &&
+           distortion.size() != 8))
+      {
+        err = "distortion must contain 4, 5, or 8 coefficients.";
+        return false;
+      }
+
+      double* coefficients[] = {&tmp.k1, &tmp.k2, &tmp.p1, &tmp.p2,
+                                &tmp.k3, &tmp.k4, &tmp.k5, &tmp.k6};
+      for (size_t i = 0; i < distortion.size(); ++i)
+      {
+        *coefficients[i] = distortion[i].get<double>();
+        if (!std::isfinite(*coefficients[i]))
+        {
+          err = "distortion contains a non-finite coefficient.";
+          return false;
+        }
+      }
+    }
   }
   catch (const std::exception& e)
   {
@@ -289,12 +327,72 @@ bool extract_intrinsics(const nlohmann::json& data,
     return false;
   }
 
-  if (success)
+  cam = tmp;
+  err.clear();
+  return true;
+}
+
+/*******************************************************************************
+ * Unit gaze direction through a distorted image pixel in camera coordinates
+ ******************************************************************************/
+bool computeCameraGazeDirection(const PinholeCamera& cam,
+                                int x, int y,
+                                double gazeDir[3],
+                                std::string& err)
+{
+  if (!gazeDir)
   {
-    cam = tmp;
+    err = "gazeDir must not be null.";
+    return false;
+  }
+  if (!std::isfinite(cam.fx) || !std::isfinite(cam.fy) ||
+      !std::isfinite(cam.cx) || !std::isfinite(cam.cy) ||
+      !std::isfinite(cam.skew) || cam.fx == 0.0 || cam.fy == 0.0)
+  {
+    err = "Camera contains invalid pinhole intrinsics.";
+    return false;
   }
 
-  return success;
+  const double yd = (static_cast<double>(y) - cam.cy) / cam.fy;
+  const double xd = (static_cast<double>(x) - cam.cx - cam.skew*yd) / cam.fx;
+  double xu = xd;
+  double yu = yd;
+
+  // Invert the rational radial/tangential camera model iteratively.
+  for (size_t iteration = 0; iteration < 10; ++iteration)
+  {
+    const double r2 = xu*xu + yu*yu;
+    const double r4 = r2*r2;
+    const double r6 = r4*r2;
+    const double radialNumerator = 1.0 + cam.k1*r2 + cam.k2*r4 + cam.k3*r6;
+    if (!std::isfinite(radialNumerator) || std::fabs(radialNumerator) < 1.0e-12)
+    {
+      err = "Distortion model is singular at the requested pixel.";
+      return false;
+    }
+
+    const double inverseRadial =
+      (1.0 + cam.k4*r2 + cam.k5*r4 + cam.k6*r6) / radialNumerator;
+    const double deltaX = 2.0*cam.p1*xu*yu + cam.p2*(r2 + 2.0*xu*xu);
+    const double deltaY = cam.p1*(r2 + 2.0*yu*yu) + 2.0*cam.p2*xu*yu;
+    xu = (xd - deltaX) * inverseRadial;
+    yu = (yd - deltaY) * inverseRadial;
+    if (!std::isfinite(xu) || !std::isfinite(yu))
+    {
+      err = "Failed to undistort the requested pixel.";
+      return false;
+    }
+  }
+
+  const double unnormalized[3] = {xu, yu, 1.0};
+  if (Vec3d_normalize(gazeDir, unnormalized) == 0.0)
+  {
+    err = "Failed to normalize the camera gaze direction.";
+    return false;
+  }
+
+  err.clear();
+  return true;
 }
 
 
