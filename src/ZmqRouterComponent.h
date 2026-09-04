@@ -42,6 +42,7 @@
 #include <queue>
 #include <tuple>
 #include <fstream>
+#include <unordered_map>
 
 
 namespace aff
@@ -63,6 +64,7 @@ private:
   void stopZmqThread();
   void onSetPerceptionCommand(std::string command, int repetitions);
   void onTriggerPerception(std::string target_id, int repetitions, std::string jsonString);
+  void onSetPerceptionState(std::string target_id, std::string jsonString);
   void onStartLogging();
   void onStopLogging();
   void onLogToFile(std::string logStr);
@@ -73,6 +75,8 @@ private:
   std::thread zmqThread;
   std::mutex commandMtx;
   std::queue<std::tuple<std::string,int,std::string>> commandQueue;
+  std::mutex stateMtx;
+  std::unordered_map<std::string, std::string> latestStates;
   std::ofstream logFile;
 };
 

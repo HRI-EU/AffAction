@@ -40,23 +40,20 @@
     <Shape type="FRAME" scale="0.2" />
   </Body>
   
-  <Body name="Head_" xprev="Agent_" rigid_body_joints="0 0 0.7 90 -90 0" prev="Seat_" xrigid_body_joints="0 0 0.7 90 170 90">
-    <Shape type="SSL" distance="false" radius="0.1" length="0.1" graphics="true" physics="false" transform="0 0.1 0.05 90 0 0" />
-    <Shape type="BOX" distance="untrue" extents="0.2 0.05 0.25" graphics="true" physics="false" transform="0 0.2 0 0 0 0" color="BRASS" />
-    <Shape type="CYLINDER" distance="false" radius="0.1" length="0.05" graphics="true" physics="false" transform="0 0.25 0 90 0 0" color="BRASS" />
-    <Shape type="SSL" distance="false" graphics="true" length="1.2" physics="false" radius="0.005" transform="0 0.1 0 0 180 0" />
+  <Body name="Head_" prev="Agent_" rigid_body_joints="0.7 0 0 180 0 0" xprev="Seat_" xrigid_body_joints="0 0 0.7 90 0 90">
+    <xShape type="SSL" distance="false" radius="0.1" length="0.1" graphics="true" physics="false" transform="0 0.1 0.05 90 0 0" />
+    <xShape type="BOX" distance="untrue" extents="0.2 0.05 0.25" graphics="true" physics="false" transform="0 0.2 0 0 0 0" color="BRASS" />
+    <xShape type="BOX" distance="untrue" extents="0.2 0.15 0.25" graphics="true" physics="false" />
+    <Shape type="SSL" distance="false" radius="0.1" length="0.1" graphics="true" physics="false" transform="0.15 0.02 0 0 -90 0" />
+    <Shape type="CYLINDER" distance="false" radius="0.12" length="0.05" graphics="true" physics="false" transform="0.23 0.04 0 0 -90 0" color="BRASS" />
+    <Shape type="SSL" distance="false" graphics="true" length="0.5" physics="false" radius="0.005" transform="0.15 0 0 -90 0 0" />
     <Shape type="FRAME" scale="0.2" />
   </Body>
   
-  <Body name="Face_" prev="Head_" rigid_body_joints="0 0.2 0.2 0 0 0" >
-    <Shape type="FRAME" scale="0.15" graphics="true" />
-    <!-- <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="true" distance="false" physics="false" transform="0 0 0 -90 0 -90" /> -->
-    <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="true" distance="false" physics="false" transform="0 -0.1 -0.3 -90 0 90" />
+  <Body name="Face_" prev="Head_" rigid_body_joints="0.15 0.15 0 90 90 0" xxrigid_body_joints="0 -0.15 0 0 90 -90">
+    <Shape type="FRAME" scale="0.5" graphics="true" />
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="true" distance="false" physics="false" />
   </Body>
-  
-  <!-- <Body name="Gaze_" prev="Head_" rigid_body_joints="0.15 0.15 0 -90 0 0" > -->
-  <!--   <Shape type="FRAME" scale="0.5" graphics="true" /> -->
-  <!-- </Body> -->
   
   <Body  name="Shoulder_left_" prev="Seat_" rigid_body_joints="0 0.2 0.5 -90 0 90" color="RED" >
     <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
@@ -85,10 +82,10 @@
     <Shape type="FRAME" scale="0.3" />
   </Body>
   
-  <Body name="Hand_right_" prev="Seat_" rigid_body_joints="0.3 -0.3 0.35 180 0 0" transform="0 0 0 -90 0 0">
+  <Body name="Hand_right_" prev="Seat_" rigid_body_joints="0.3 -0.3 0.35 180 0 0" transform="0 0 0 -90 0 180">
     <Shape type="SPHERE" radius="0.05" distance="false" graphics="true" physics="false" />
-    <Shape type="BOX" extents="0.2 0.05 0.1" transform="0.1 0 0 0 0 0" distance="false" graphics="true" physics="false" />
-    <Shape type="BOX" extents="0.04 0.05 0.1" transform="0.02 0 0.1 0 0 0" distance="false" graphics="true" physics="false" />
+    <!-- <Shape type="BOX" extents="0.2 0.05 0.1" transform="0.1 0 0 0 0 0" distance="false" graphics="true" physics="false" /> -->
+    <!-- <Shape type="BOX" extents="0.04 0.05 0.1" transform="0.02 0 0.1 0 0 0" distance="false" graphics="true" physics="false" /> -->
     <Shape type="FRAME" scale="0.3" />
   </Body>
   

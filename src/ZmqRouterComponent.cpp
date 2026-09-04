@@ -50,6 +50,8 @@
 #include <unordered_map>
 #include <iostream>
 #include <iomanip>
+#include <utility>
+#include <vector>
 
 
 namespace aff
@@ -57,7 +59,7 @@ namespace aff
 using Clock = std::chrono::steady_clock;
 using ms    = std::chrono::milliseconds;
 
-constexpr int  POLL_TIMEOUT_MS      = 100;   // main‑loop poll period
+constexpr int  POLL_TIMEOUT_MS      = 10;    // main‑loop poll period
 constexpr int  HEARTBEAT_LIVENESS   = 6000;  // ms without heartbeat: drop worker
 constexpr int  COMMAND_INTERVAL_MS  = 50;    // broadcast command every n ms
 
@@ -70,6 +72,7 @@ ZmqRouterComponent::ZmqRouterComponent(EntityBase* parent, std::string connectio
   subscribe("Stop", &ZmqRouterComponent::stopZmqThread);
   subscribe("SetPerceptionCommand", &ZmqRouterComponent::onSetPerceptionCommand);
   subscribe("TriggerPerception", &ZmqRouterComponent::onTriggerPerception);
+  subscribe("SetPerceptionState", &ZmqRouterComponent::onSetPerceptionState);
 
   subscribe("UpdateScene", &LandmarkBase::onUpdateScene);
   subscribe("FreezePerception", &LandmarkBase::onFreezePerception);
@@ -116,6 +119,12 @@ void ZmqRouterComponent::onTriggerPerception(std::string target_id, int repetiti
   RLOG_CPP(1, "target_id: " << target_id << " repetitions: " << repetitions << " json: '" << jsonString << "'");
   std::lock_guard<std::mutex> lock(commandMtx);
   commandQueue.push({ target_id, repetitions, jsonString });
+}
+
+void ZmqRouterComponent::onSetPerceptionState(std::string target_id, std::string jsonString)
+{
+  std::lock_guard<std::mutex> lock(stateMtx);
+  latestStates[target_id] = std::move(jsonString);
 }
 
 std::string ZmqRouterComponent::getName() const
@@ -439,6 +448,50 @@ void ZmqRouterComponent::zmqThreadFunc(const std::string& connection)
       }
 
       lastCmd = now;
+    }
+
+    // Continuous state is independent from the command FIFO. Keep only the
+    // newest value per target and send it after request/response commands.
+    std::vector<std::pair<std::string, std::string>> statesToSend;
+    {
+      std::lock_guard<std::mutex> lock(stateMtx);
+      for (auto it = latestStates.begin(); it != latestStates.end();)
+      {
+        if (workers.find(it->first) != workers.end())
+        {
+          statesToSend.emplace_back(it->first, std::move(it->second));
+          it = latestStates.erase(it);
+        }
+        else
+        {
+          ++it;
+        }
+      }
+    }
+
+    for (const auto& state : statesToSend)
+    {
+      const std::string& id = state.first;
+      const std::string& payload = state.second;
+      zmq::message_t idMsg(id.data(), id.size());
+      zmq::message_t empty;
+      zmq::message_t body(payload.data(), payload.size());
+
+      try
+      {
+        auto ok1 = router.send(idMsg, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+        auto ok2 = router.send(empty, zmq::send_flags::sndmore | zmq::send_flags::dontwait);
+        auto ok3 = router.send(body, zmq::send_flags::dontwait);
+
+        if (!ok1 || !ok2 || !ok3)
+        {
+          RLOG_CPP(1, "[DROP] state back-pressure for " << id);
+        }
+      }
+      catch (const zmq::error_t& e)
+      {
+        RLOG_CPP(1, "[DROP] state send failed for " << id << ": " << e.what());
+      }
     }
 
     // Liveness sweep

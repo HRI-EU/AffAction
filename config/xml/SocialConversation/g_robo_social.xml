@@ -40,8 +40,8 @@
     <Shape scale="0.5" type="FRAME"/>
   </Body>
 
-  <!-- The camera's reference frame. 4.140397   -56.741298   -85.207425 -->
-  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic"  rigid_body_joints="0.860 0.241 1.813  -0 -110 -90" >
+  <!-- The camera's reference frame. 4.140397   -56.741298   -85.207425      -0.827 -0.095 1.782  161.369 53.676 101.974-->
+  <Body name="camera_0" prev="aruco_base" color="WHITE" mass="0.5" physics="dynamic"  high_rigid_body_joints="-0.827 -0.095 1.782  161.369 53.676 101.974" rigid_body_joints="-0.8 0 1.1  180 90 90" >
     <Shape type="FRAME" scale="0.1" graphics="true" />
   </Body>
   
@@ -51,7 +51,7 @@
   </Group>
 
   
-  <Group prev="aruco_base" name="Person0" color="RED" transform="1 0 0.5 0 0 180" >
+  <Group prev="aruco_base" name="conversation_partner" color="RED" transform="1 0 0.5 0 0 180" >
     <xi:include href="g_person.xml"/>
   </Group>
 
