@@ -874,6 +874,10 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
           human->bb_head[1] = skeletons[i]->bb_head.y_min;
           human->bb_head[2] = skeletons[i]->bb_head.x_max;
           human->bb_head[3] = skeletons[i]->bb_head.y_max;
+          // The skeleton has carried the camera since parse() stamped it from the
+          // message's frame_id; this copy used to drop it, which left the box
+          // uncomparable to anything observed in a particular camera.
+          human->bb_head_camera = skeletons[i]->bb_head.camera;
           human->fingersLeft = skeletons[i]->fingerAnglesLeft;
           human->fingersRight = skeletons[i]->fingerAnglesRight;
           human->gripperLeft = skeletons[i]->gripperAngleLeft;
@@ -882,6 +886,7 @@ void AzureSkeletonTracker::updateAgents(ActionScene* scene, RcsGraph* graph)
         else
         {
           human->bb_head.clear();
+          human->bb_head_camera.clear();
         }
 
         human->setVisibility(skeletons[i]->isVisible);

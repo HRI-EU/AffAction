@@ -115,6 +115,14 @@ public:
   bool getTrackedFrameTransform(HTr* A_BI, const RcsGraph* graph,
                                 const std::string& body_type_str) const;
 
+  /*! \brief Body name for one TrackedFrames id ("Head", "HandLeft", …), or "".
+   *
+   *  The names already carry this agent's group suffix, so a caller gets
+   *  `Head_conversation_partner` and never has to glue one together -- which is
+   *  what lets a gaze target be asked for by role instead of by name.
+   */
+  std::string getTrackedFrameName(const std::string& body_type_str) const;
+
   // Remembers old one in gazeTargetPrev
   void setGazeTarget(const std::string& newGazeTarget);
   bool gazeTargetChanged() const;
@@ -135,7 +143,13 @@ public:
   bool computeAABB(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
   bool computeAABBHead(double xyzMin[3], double xyzMax[3], MatNd* vertices) const;
   bool check(const ActionScene* scene, const RcsGraph* graph) const;
+  // Head bounding box as [x_min, y_min, x_max, y_max] -- i.e. left, top,
+  // right, bottom -- in the pixels of `bb_head_camera`, and empty when the
+  // agent is not currently seen. The camera is carried beside it because a
+  // box without one cannot be compared against anything: a second camera
+  // observes the same person at entirely different pixels.
   std::vector<int> bb_head;
+  std::string bb_head_camera;
   std::vector<double> fingersLeft, fingersRight;
   double gripperLeft, gripperRight;
   std::map<HumanAgent::BodyType,std::string> trackedFrames;

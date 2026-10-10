@@ -611,6 +611,91 @@ nlohmann::json ConcurrentSceneQuery::getHumanAgents(bool onlyVisibleAgents)
   return json;
 }
 
+nlohmann::json ConcurrentSceneQuery::getHumanHeadBoundingBoxes()
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+  nlohmann::json json = nlohmann::json::object();
+
+  for (const auto& a : scene.agents)
+  {
+    const HumanAgent* human = dynamic_cast<HumanAgent*>(a);
+
+    // Only humans have a head box, and only while they are being seen. The
+    // size check is not belt and braces: bb_head is cleared when the agent goes
+    // invisible, so indexing it unconditionally reads out of bounds.
+    if (!human || (human->bb_head.size() < 4))
+    {
+      continue;
+    }
+
+    json[human->name] =
+    {
+      { "camera", human->bb_head_camera },
+      {
+        "bounding_box",
+        {
+          { "left",   human->bb_head[0] },
+          { "top",    human->bb_head[1] },
+          { "right",  human->bb_head[2] },
+          { "bottom", human->bb_head[3] }
+        }
+      }
+    };
+  }
+
+  return json;
+}
+
+nlohmann::json ConcurrentSceneQuery::getAgentTrackedFrame(
+  const std::string& agentName, const std::string& bodyType)
+{
+  std::lock_guard<std::mutex> lock(reentrancyLock);
+  update();
+
+  std::vector<const HumanAgent*> humans;
+  for (const auto& a : scene.agents)
+  {
+    const HumanAgent* human = dynamic_cast<HumanAgent*>(a);
+    if (human && (agentName.empty() || human->name == agentName))
+    {
+      humans.push_back(human);
+    }
+  }
+
+  if (humans.empty())
+  {
+    return nlohmann::json{{"error", agentName.empty()
+                           ? "the scene has no human agents"
+                           : "no human agent named '" + agentName + "'"}};
+  }
+
+  // Several humans and no name: refuse. Picking the first would look at a
+  // confidently chosen wrong person, which is worse than not moving at all.
+  if (humans.size() > 1)
+  {
+    std::string names;
+    for (const auto* h : humans)
+    {
+      names += (names.empty() ? "" : ", ") + h->name;
+    }
+    return nlohmann::json{{"error", "the scene has several human agents (" +
+                           names + "); name the one to look at"}};
+  }
+
+  const HumanAgent* human = humans.front();
+  // Asked through the agent's own accessor, so the body-type vocabulary stays in
+  // one place and the returned name already carries the group suffix.
+  const std::string frame = human->getTrackedFrameName(bodyType);
+  if (frame.empty())
+  {
+    return nlohmann::json{{"error", "agent '" + human->name +
+                           "' has no tracked frame '" + bodyType + "'"}};
+  }
+
+  return nlohmann::json{{"agent", human->name}, {"frame", frame}};
+}
+
 std::string ConcurrentSceneQuery::getHoldingHand(const std::string& objectName)
 {
   std::lock_guard<std::mutex> lock(reentrancyLock);

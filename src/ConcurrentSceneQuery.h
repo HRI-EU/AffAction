@@ -109,6 +109,39 @@ public:
    */
   nlohmann::json getHumanAgents(bool onlyVisibleAgents=false);
 
+  /*! \brief Head bounding box per human agent, with the camera it is in.
+   *
+   *  Returned as a map keyed by agent name, so a caller holding a name or a
+   *  rectangle can look up either without searching:
+   *
+   *      { "conversation_partner": {
+   *          "camera": "camera_0",
+   *          "bounding_box": {"left": 1, "top": 2, "right": 3, "bottom": 4} } }
+   *
+   *  An agent with no current box is OMITTED rather than reported with an empty
+   *  one: the box is only present while the agent is actually being seen, and a
+   *  caller must be able to tell "not visible" from "visible at 0,0,0,0".
+   */
+  nlohmann::json getHumanHeadBoundingBoxes();
+
+  /*! \brief The body a gaze should aim at for one human agent.
+   *
+   *  `agentName` empty means "the only human in the scene": a caller that wants
+   *  to look at the person it is talking to should not have to know what the
+   *  scene calls them, which is the whole reason this exists. With several
+   *  humans and no name it REFUSES rather than picking one -- staring
+   *  confidently at the wrong person is worse than not moving.
+   *
+   *  `bodyType` is one of the TrackedFrames ids ("Head", "HandLeft", …). The
+   *  frames already carry the group suffix (Agent.cpp fills them as
+   *  `trackedBody + groupSuffix`), so the caller never glues names together.
+   *
+   *      {"agent": "conversation_partner", "frame": "Head_conversation_partner"}
+   *      {"error": "..."}
+   */
+  nlohmann::json getAgentTrackedFrame(const std::string& agentName,
+                                      const std::string& bodyType);
+
   /*! \brief Legacy function that returns a really large json with the overal
    *         scene information. See SceneJsonHelpers.cpp for details.
    */

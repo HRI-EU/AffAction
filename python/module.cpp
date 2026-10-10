@@ -811,6 +811,59 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   py::arg("onlyVisibleAgents") = false)
 
   //////////////////////////////////////////////////////////////////////////////
+  // Returns the head bounding box of each human agent that is currently being
+  // seen, keyed by agent name, with the camera the box is expressed in:
+  //
+  // {"conversation_partner": {"camera": "camera_0",
+  //                           "bounding_box": {"left": 1, "top": 2,
+  //                                            "right": 3, "bottom": 4}}}
+  //
+  // Empty json when nobody is seen. An agent without a current box is omitted
+  // rather than listed with an empty one, so a caller can tell "not visible"
+  // from "visible at the origin".
+  //
+  // The boxes arrive on the incoming landmark stream (the `bounding_box` of the
+  // `head` joint) and are already matched to a scene agent by the skeleton
+  // tracker's correspondence step, so this is a read and not a computation --
+  // no camera model and no projection is involved.
+  //
+  // Used by home_ai's `tools_affaction.as_scene_person` to turn a recognised
+  // person's name into the scene entity standing for them: perception reports
+  // the face rectangle it recognised somebody at, and the nearest of these
+  // boxes says which agent that is.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_agent_head_boxes", [](aff::ExampleActionsECS& ex) -> nlohmann::json
+  {
+    return ex.getQuery()->getHumanHeadBoundingBoxes();
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Which body a gaze should aim at, for one human agent, asked by ROLE rather
+  // than by name:
+  //
+  //   get_agent_tracked_frame("", "Head")
+  //     -> {"agent": "conversation_partner",
+  //         "frame": "Head_conversation_partner"}
+  //
+  // An empty agent_name means "the only human in the scene". With several
+  // humans and no name it returns {"error": ...} instead of choosing: staring
+  // confidently at the wrong person is worse than not moving.
+  //
+  // body_type is a TrackedFrames id from the scene XML -- "Head", "HandLeft",
+  // "HandRight", "ShoulderLeft", "ElbowRight" and so on. The frames already
+  // carry the agent's group suffix, so a caller never builds a body name by
+  // gluing strings, which is what let home_ai's gaze rules stop hardcoding
+  // `conversation_partner` and `Hand_<side>_conversation_partner`.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_agent_tracked_frame", [](aff::ExampleActionsECS& ex,
+                                     std::string agent_name,
+                                     std::string body_type) -> nlohmann::json
+  {
+    return ex.getQuery()->getAgentTrackedFrame(agent_name, body_type);
+  },
+  py::arg("agent_name") = "", py::arg("body_type") = "Head")
+
+  //////////////////////////////////////////////////////////////////////////////
   // Returns gaze data as a JSON object. If no gaze data is available,
   // it returns an empty JSON object. The JSON is structured as:
   // {
