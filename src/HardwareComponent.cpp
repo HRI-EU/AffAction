@@ -54,6 +54,7 @@
 #include "AgentWelcomeComponent.hpp"
 #include "ImageTracker.h"
 #include "EyeModelIKComponent.h"
+#include "EyeControlComponent.hpp"
 #include "GazeAttention.hpp"
 
 //#define ASIO_NO_DEPRECATED
@@ -775,16 +776,26 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
 
+  EyeModelIKComponent* eyeModel = nullptr;
+
   if (dryRun)
   {
     argP.hasArgument("-eye_ik", "Start with eye model");
     argP.hasArgument("-eye_ik.camera_name", "Name of camera body for eye model");
+    argP.hasArgument("-eye_control", "Publish eye model state to the mirror_eyes ZMQ client");
   }
   else if (getKey(argvStrVec, "-eye_ik"))
   {
     std::string camera_name = "camera_0";
     getKeyValuePair<std::string>(argvStrVec, "-eye_ik.camera_name", camera_name);
-    components.push_back(new EyeModelIKComponent(&entity, graph, camera_name));
+    eyeModel = new EyeModelIKComponent(&entity, graph, camera_name);
+    components.push_back(eyeModel);
+  }
+
+  if (!dryRun && getKey(argvStrVec, "-eye_control"))
+  {
+    RCHECK_MSG(eyeModel, "-eye_control requires -eye_ik");
+    components.push_back(new EyeControlComponent(&entity, eyeModel));
   }
 
   if (dryRun)

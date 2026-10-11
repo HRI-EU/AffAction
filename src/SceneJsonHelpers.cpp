@@ -528,6 +528,18 @@ nlohmann::json getObjectInCamera(const std::string& objectName,
 {
   nlohmann::json json;
 
+  if (!scene)
+  {
+    RLOG_CPP(1, "scene is a nullptr! Cannot lookup camera: " << cameraName);
+    return json;
+  }
+
+  if (!graph)
+  {
+    RLOG_CPP(1, "graph is a nullptr!");
+    return json;
+  }
+
   // Check for exactly one camera with the given name
   const RcsBody* cameraBdy = nullptr;
   std::vector<const AffordanceEntity*> cameraEntities = scene->getAffordanceEntities(cameraName);
