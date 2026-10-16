@@ -41,6 +41,7 @@
 #include <IKTeleOp.h>
 #include <ActionScene.h>
 #include <VirtualCamera.h>
+#include <LeRobotComponent.h>
 
 #include <ExampleBase.h>
 #include <ControllerBase.h>
@@ -60,6 +61,7 @@ public:
   ExampleTeleOp();
   ExampleTeleOp(int argc, char** argv);
   virtual ~ExampleTeleOp();
+  void cleanup();
 
   // From ExampleBase
   virtual bool initParameters();
@@ -81,48 +83,27 @@ public:
   const RcsGraph* getGraph() const;
   RcsGraph* getCurrentGraph();
   const RcsGraph* getCurrentGraph() const;
+  ActionScene* getScene();
+  const ActionScene* getScene() const;
   void addComponentArgument(const std::string& arg);
-  void onSetTwist(double vel_x, double vel_y, double vel_z,
-                  double vel_thx, double vel_thy, double vel_thz,
-                  bool inWorldFrame);
-  void onSetWrench(double pos_x, double pos_y, double pos_z,
-                   double eul_thx, double eul_thy, double eul_thz,
-                   bool inWorldFrame);
-  void onSetBiManualPoseCommand(std::vector<double> leftHandPose,
-                                std::vector<double> rightHandPose,
-                                std::string rightFingersPose0,
-                                std::string rightFingersPose1,
-                                double s_right_01,
-                                std::string leftFingersPose0,
-                                std::string leftFingersPose1,
-                                double s_left_01);
-  void onSetFingerPose(std::string modelStateName);
   void setBuildPath(const std::string& path);
-  std::vector<double> getBodyPose(std::string bodyName,
-                                  bool fromCurrentGraph) const;
-
-
-  std::vector<std::vector<double>> getCollectedData() const;
-  void printCollectedData() const;
-  void cleanup();
-  std::vector<double> getEndEffectorWrench() const;
-  std::vector<std::vector<double>> getBiManualPoseData() const;
-
-  bool withScene = false;
-  std::string xmlFileName;
-  std::string configDirectory;
-  std::string inputType;   // "Twist", "Wrench", "Retarget Polar"
-  bool noLimits = false;
-  bool enableRealGraphVisualization = true;
-  double dt = 0.01;
-
-
-
-
-
+  std::vector<double> getBodyPose(std::string bodyName, bool fromCurrentGraph) const;
   std::vector<std::pair<std::string,VirtualCamera*>> getVirtualCameras();
   bool addVirtualCamera(std::string camera_name, std::string camera_type, int width, int height);
   std::vector<std::pair<std::string,std::unique_ptr<VirtualCamera>>> virtualCameras;
+
+  std::map<std::string, double> getObservation(bool current);
+  bool sendAction(const nlohmann::json& command);
+
+  bool withScene = false;
+  std::string xmlFileName;
+  std::string dataCollectionXmlFileName;
+  std::string configDirectory;
+  std::string inputType;   // see IKTeleOp::ActionType
+  std::string eye_ik_camera;
+  bool noLimits = false;
+  bool enableRealGraphVisualization = true;
+  double dt = 0.01;
 
 protected:
 
@@ -130,10 +111,6 @@ protected:
   void onQuit();
   void onPrint();
   void onPostUpdateGraph(RcsGraph* desired, RcsGraph* current);
-
-
-  void collectData(RcsGraph* desired, RcsGraph* current);
-
 
   EntityBase entity;
   std::string build_path;
@@ -153,127 +130,12 @@ protected:
   GraphicsWindow* viewer = nullptr;
   GraphComponent* graphC = nullptr;
   IKTeleOp* ikc = nullptr;
+  LeRobotComponent* lerobotC = nullptr;
 
   std::unique_ptr<Rcs::ControllerBase> controller;
   std::unique_ptr<ActionScene> scene;
-
-
-  ES::SubscriberCollectionDecay<RcsGraph*>* updateGraph = nullptr;
-  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*>* postUpdateGraph = nullptr;
-  ES::SubscriberCollectionDecay<RcsGraph*>* computeKinematics = nullptr;
-  ES::SubscriberCollectionDecay<double,double,double,double,double,double,bool>* setTwist;
-  ES::SubscriberCollectionDecay<std::array<double, 6>, bool>* setTwistCommand;
-  ES::SubscriberCollectionDecay<const MatNd*>* setJointCommand = nullptr;
-  ES::SubscriberCollectionDecay<>* setRenderCommand = nullptr;
-  ES::SubscriberCollectionDecay<RcsGraph*, RcsGraph*, ActionScene*>* updateScene = nullptr;
-
   std::vector<ComponentBase*> hwc;
   std::vector<ComponentBase*> components;
-
-  std::array<double, 6> twist_des{};
-  bool twist_in_world = true;
-  std::array<double, 6> wrench_des{};
-  bool wrench_in_world = true;
-  std::array<double, 16> fingers_des{};
-  std::string fingerPoseName;
-  std::map<std::string, std::vector<std::pair<int, double>>> modelStates;
-
-  mutable std::mutex eeMtx;
-  std::string endEffectorName;
-  HTr eeTrf;
-
-
-  struct BiManualPoseCommand
-  {
-    std::vector<double> leftHandPose, rightHandPose;
-    std::string rightFingersPose0, rightFingersPose1;
-    double s_right_01;
-    std::string leftFingersPose0, leftFingersPose1;
-    double s_left_01;
-  };
-
-  BiManualPoseCommand biManualPoseCommand;
-  mutable std::mutex biManualPoseCommandMtx;
-
-  struct CollectedData
-  {
-
-    CollectedData()
-    {
-      data.resize(8);
-      data[0].resize(3);
-      data[1].resize(9);
-      data[2].resize(6);
-      data[3].resize(6);
-      data[6].resize(6);
-      data[7].resize(6);
-    }
-
-    CollectedData(size_t dof) : CollectedData()
-    {
-      data[4].resize(dof);
-      data[5].resize(dof);
-    }
-
-    void set(const std::vector<double>& pos_in_world,
-             const std::vector<double>& rotmat_world_to_endeffector,
-             const std::vector<double>& twist_in_world,
-             const std::vector<double>& twist_in_endeffector,
-             const std::vector<double>& q_curr,
-             const std::vector<double>& q_des,
-             const std::vector<double>& fts_base,
-             const std::vector<double>& fts_ee)
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      data[0] = pos_in_world;                 // 0-2
-      data[1] = rotmat_world_to_endeffector;  // 3-11
-      data[2] = twist_in_world;               // 12-17
-      data[3] = twist_in_endeffector;         // 18-23
-      data[4] = q_curr;                       // 24-75: 53, 24-112: 66
-      data[5] = q_des;                        // 76-127: 105, 113-201: 155
-      data[6] = fts_base;
-      data[7] = fts_ee;
-    }
-
-    std::vector<std::vector<double>> get() const
-    {
-      std::lock_guard<std::mutex> lock(mtx);
-      return data;
-    }
-
-    void print() const
-    {
-      auto print_data = get();   // Thread-safe
-      std::cout << "Collected data:" << std::endl;
-
-      for (size_t i=0; i<print_data.size(); ++i)
-      {
-        std::cout << "Data " << i << " has dimension " << print_data[i].size() << std::endl;
-        for (size_t j=0; j<print_data[i].size(); ++j)
-        {
-          std::cout << print_data[i][j] << " ";
-        }
-        std::cout << std::endl;
-      }
-
-    }
-
-    std::vector<std::vector<double>> data;
-    mutable std::mutex mtx;
-  };
-
-  CollectedData collectedData;
-};
-
-
-
-class ExampleTeleOpFrankaRight : public ExampleTeleOp
-{
-public:
-
-  ExampleTeleOpFrankaRight();
-  ExampleTeleOpFrankaRight(int argc, char** argv);
-  virtual ~ExampleTeleOpFrankaRight() = default;
 };
 
 

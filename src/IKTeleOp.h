@@ -36,6 +36,7 @@
 
 #include "ComponentBase.h"
 #include "ActionScene.h"
+#include "json.hpp"
 
 #include <IkSolverRMR.h>
 #include <Rcs_filters.h>
@@ -51,6 +52,15 @@ namespace aff
 class IKTeleOp : public ComponentBase
 {
 public:
+
+  enum class ActionType
+  {
+    None,
+    PolarRetarget,
+    BiManualPose,
+    JointPosition,
+    LeRobot
+  };
 
   /*! \brief Constructs IKTeleOp with the task vector and collision model
    *         from the argument controller.
@@ -144,21 +154,59 @@ public:
    */
   double getLambda() const;
 
-  void onTwistCommand(std::array<double, 6> twist, bool inWorldFrame);
-  void onWrenchCommand(std::array<double, 6> wrench, bool inWorldFrame);
-  void onRetargetCommand(RcsGraph* desired, RcsGraph* current, ActionScene* scene);
   double getJointSpeedScaling() const;
   bool getTasksActive() const;
-  void computeBiManualPoseCommand(std::vector<double> poseLeft,
-                                  std::vector<double> poseRight,
-                                  std::string rightFingersPose0,
-                                  std::string rightFingersPose1,
-                                  double s_right_01,
-                                  std::string leftFingersPose0,
-                                  std::string leftFingersPose1,
-                                  double s_left_01);
+
+  bool sendAction(const nlohmann::json& command,
+                  RcsGraph* desired,
+                  ActionScene* scene);
 
 private:
+
+  /*
+    {
+    "left_hand_pose": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], // x, y, z positions, thx, thy, thz angles
+    "left_fingers_pose_0": "pose_0",                  // Model state left fingers pose 0
+    "left_fingers_pose_1": "pose_1",
+    "s_left_01": 0.5, // blending between left_fingers_pose_0 and left_fingers_pose_1 (0...1)
+    "right_hand_pose": [7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+    "right_fingers_pose_0": "pose_2",
+    "right_fingers_pose_1": "pose_3",
+    "s_right_01": 0.8
+    }
+  */
+  void sendActionBiManualPose(std::vector<double> poseRight,
+                              std::vector<double> poseLeft);
+
+  /*
+    {
+    "input_type": ActionType::PolarRetarget,
+    "upperarm_right_dir": [1.0, 2.0, 3.0],
+    "forearm_right_dir": [1.0, 2.0, 3.0],
+    "upperarm_leftt_dir": [1.0, 2.0, 3.0],
+    "forearm_left_dir": [1.0, 2.0, 3.0],
+    "hand_right_dir": [1.0, 2.0, 3.0],
+    "hand_left_dir": [1.0, 2.0, 3.0],
+    "finger_angles_right": [1.0, ... 16.0],
+    "finger_angles_left": [1.0, ... 16.0]
+    }
+    or
+    {
+    "input_type": ActionType::PolarRetargetHandsEuler,
+    "upperarm_right_dir": [1.0, 2.0, 3.0],
+    "forearm_right_dir": [1.0, 2.0, 3.0],
+    "upperarm_leftt_dir": [1.0, 2.0, 3.0],
+    "forearm_left_dir": [1.0, 2.0, 3.0],
+    "hand_right_truncated_rm": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    "hand_left_truncated_rm": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    "finger_angles_right": [1.0, ... 16.0],
+    "finger_angles_left": [1.0, ... 16.0]
+  }
+
+
+   */
+  bool sendActionHumanPose(const nlohmann::json& command,
+                           std::vector<std::string> taskNames);
 
   void onEmergencyStop();
   void onEmergencyRecover();
@@ -168,6 +216,24 @@ private:
   void onEnableTasks(bool enable);
   void print() const;
   void computeIK(const MatNd* a_des, const MatNd* x_des, const MatNd* lambdaArr);
+
+  // Retargetting modes
+  void onTwistCommand(std::array<double, 6> twist, bool inWorldFrame);
+  void onWrenchCommand(std::array<double, 6> wrench, bool inWorldFrame);
+
+  std::vector<std::pair<int, double>> blendAnglesFromModelStates(const RcsGraph* desired,
+                                                                 std::string modelState0,
+                                                                 std::string modelState1,
+                                                                 double s_01) const;
+
+  std::vector<std::pair<int, double>> fingerAnglesFromMetaQuest16(const RcsGraph* desired,
+                                                                  const std::vector<double>& finger_angles_right,
+                                                                  const std::vector<double>& finger_angles_left) const;
+
+  std::vector<std::pair<int, double>> getFingerAngles(const nlohmann::json& command,
+                                                      const RcsGraph* desired) const;
+
+
 
   Rcs::IkSolverRMR ikSolver;
   bool eStop;
@@ -179,6 +245,7 @@ private:
   bool applySpeedAndAccLimits;    ///< Default is on
   bool activateTasks;
   Rcs::Ramp1D jointSpeedScaling;
+
 
   /*! \brief We disallow copying and assigning this class.
    */

@@ -882,6 +882,7 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   else if (getKey(argvStrVec, "-gaze_attention"))
   {
     std::string agentName;
+    RCHECK(scene);
     const auto humanAgents = scene->getAgents<HumanAgent>();
     if (humanAgents.size() == 1)
     {

@@ -25,6 +25,7 @@
 
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <pybind11_json.hpp>
 
 #if !defined(_MSC_VER) && !defined(__APPLE__)
 #include <X11/Xlib.h>
@@ -73,7 +74,7 @@ static py::array_t<float> convert_policy(py::array_t<float, py::array::c_style> 
     throw std::runtime_error("num_steps must be larger than 2");
   }
 
-  if (num_steps > trajectory.shape(0))   // usually 16 or 32
+  if (num_steps > (size_t)trajectory.shape(0))   // usually 16 or 32
   {
     throw std::runtime_error("num_steps must be smaller or equal number of trajectory steps");
   }
@@ -238,7 +239,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   //////////////////////////////////////////////////////////////////////////////
   // Constructor
   //////////////////////////////////////////////////////////////////////////////
-  auto cls = py::class_<aff::ExampleTeleOpFrankaRight>(m, "TeleOp")
+  auto cls = py::class_<aff::ExampleTeleOp>(m, "TeleOp")
              .def(py::init<>([]()
   {
 #if !defined(_MSC_VER) && !defined(__APPLE__)// Avoid crashes when running remotely.
@@ -250,7 +251,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     }
 #endif
 
-    auto ex = std::unique_ptr<aff::ExampleTeleOpFrankaRight>(new aff::ExampleTeleOpFrankaRight());
+    auto ex = std::unique_ptr<aff::ExampleTeleOp>(new aff::ExampleTeleOp());
     //ex->setBuildPath(build_path);
     ex->initParameters();
     return std::move(ex);
@@ -261,7 +262,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("init", [](aff::ExampleTeleOpFrankaRight& ex, bool debug=false) -> bool
+  .def("init", [](aff::ExampleTeleOp& ex, bool debug=false) -> bool
   {
     bool success = ex.initAlgo();
 
@@ -291,7 +292,12 @@ PYBIND11_MODULE(pyTeleOp, m)
   // Initialization function, to be called after member variables have been
   // configured.
   //////////////////////////////////////////////////////////////////////////////
-  .def("initBlocking", [](aff::ExampleTeleOpFrankaRight& ex, bool headless, bool catch_keyboard_interrupt) -> int
+  .def("initBlocking", [](aff::ExampleTeleOp& ex, bool headless, bool catch_keyboard_interrupt) -> int
+  {
+    RFATAL("Use initializeBlocking() instead of initBlocking()");
+  })
+
+  .def("initializeBlocking", [](aff::ExampleTeleOp& ex, bool headless, bool catch_keyboard_interrupt) -> int
   {
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
@@ -313,7 +319,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     }
 
     Timer_waitDT(0.5);
-    std::thread t(&aff::ExampleTeleOpFrankaRight::start, &ex);
+    std::thread t(&aff::ExampleTeleOp::start, &ex);
     t.detach();
 
     std::atomic<bool> kb_int{false};   // To be sure
@@ -367,12 +373,12 @@ PYBIND11_MODULE(pyTeleOp, m)
   // Calls the run method in a new thread, releases the GIL and returns to the
   // python context (e.g. console).
   //////////////////////////////////////////////////////////////////////////////
-  .def("run", &aff::ExampleTeleOpFrankaRight::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
+  .def("run", &aff::ExampleTeleOp::startThreaded, py::call_guard<py::gil_scoped_release>(), "Starts endless loop")
 
   //////////////////////////////////////////////////////////////////////////////
   // Sets the position of a rigid body, outside the step function.
   //////////////////////////////////////////////////////////////////////////////
-  .def("setBodyPosition", [](aff::ExampleTeleOpFrankaRight& ex, std::string bdyName, double x, double y, double z) -> bool
+  .def("setBodyPosition", [](aff::ExampleTeleOp& ex, std::string bdyName, double x, double y, double z) -> bool
   {
     const RcsBody* bdy = RcsGraph_getBodyByName(ex.getGraph(), bdyName.c_str());
     double* rbj = RcsBody_getStatePtr(ex.getGraph(), bdy);
@@ -391,107 +397,182 @@ PYBIND11_MODULE(pyTeleOp, m)
   // Calls an event without arguments. We must not call process() here, since
   // this method might run concurrently to the event queue thread.
   //////////////////////////////////////////////////////////////////////////////
-  .def("callEvent", [](aff::ExampleTeleOpFrankaRight& ex, std::string eventName)
+  .def("callEvent", [](aff::ExampleTeleOp& ex, std::string eventName)
   {
     ex.getEntity().publish(eventName);
   })
-  .def("process", [](aff::ExampleTeleOpFrankaRight& ex)
+  .def("process", [](aff::ExampleTeleOp& ex)
   {
     ex.getEntity().process();
   })
-  .def("enableRetargetting", [](aff::ExampleTeleOpFrankaRight& ex, bool enable)
+  .def("enableRetargetting", [](aff::ExampleTeleOp& ex, bool enable)
   {
     ex.getEntity().publish("EnableRetargetting", enable);
   })
-  .def("enableTasks", [](aff::ExampleTeleOpFrankaRight& ex, bool enable)
+  .def("enableTasks", [](aff::ExampleTeleOp& ex, bool enable)
   {
     ex.getEntity().publish("EnableTasks", enable);
   })
-  .def("setTwist", [](aff::ExampleTeleOpFrankaRight& ex, double vel_x, double vel_y, double vel_z,
-                      double vel_thx, double vel_thy, double vel_thz, bool inWorldFrame)
+  .def("setLeRobotAction", [](aff::ExampleTeleOp& ex, nlohmann::json command)
   {
-    ex.getEntity().publish("SetTwist", vel_x, vel_y, vel_z, vel_thx, vel_thy, vel_thz, inWorldFrame);
+    ex.getEntity().publish("SetPolicyCommand", command);
   },
-  "Set twist command for IK",
-  py::arg("vel_x"),
-  py::arg("vel_y"),
-  py::arg("vel_z"),
-  py::arg("vel_thx"),
-  py::arg("vel_thy"),
-  py::arg("vel_thz"),
-  py::arg("inWorldFrame") = true)
-  .def("setWrench", [](aff::ExampleTeleOpFrankaRight& ex, double pos_x, double pos_y, double pos_z,
-                       double eul_thx, double eul_thy, double eul_thz, bool inWorldFrame)
-  {
-    ex.getEntity().publish("SetWrench", pos_x, pos_y, pos_z, eul_thx, eul_thy, eul_thz, inWorldFrame);
-  },
-  "Set wrench command for IK",
-  py::arg("pos_x"),
-  py::arg("pos_y"),
-  py::arg("pos_z"),
-  py::arg("eul_thx"),
-  py::arg("eul_thy"),
-  py::arg("eul_thz"),
-  py::arg("inWorldFrame") = true)
-  .def("setBiManualPoseCommand", [](aff::ExampleTeleOpFrankaRight& ex,
-                                    std::vector<double> leftHandPose,
-                                    std::vector<double> rightHandPose,
-                                    std::string rightFingersPose0,
-                                    std::string rightFingersPose1,
-                                    double s_right_01,
-                                    std::string leftFingersPose0,
-                                    std::string leftFingersPose1,
-                                    double s_left_01)
-  {
-    ex.getEntity().publish("SetBiManualPoseCommand",
-                           leftHandPose, rightHandPose,
-                           rightFingersPose0, rightFingersPose1, s_right_01,
-                           leftFingersPose0, leftFingersPose1, s_left_01);
-  },
-  "Set bi-manual pose command for IK")
-  .def("setFingerPose", [](aff::ExampleTeleOpFrankaRight& ex, std::string fingerPose)
-  {
-    ex.getEntity().publish("SetFingerPose", fingerPose);
-  })
+  R"doc(
+  Create control commands from LeRobot json commands.
 
-  .def("step", &aff::ExampleTeleOpFrankaRight::step)
-  .def("stop", &aff::ExampleTeleOpFrankaRight::stop)
-  .def("addComponentArgument", &aff::ExampleTeleOpFrankaRight::addComponentArgument)
 
-  //////////////////////////////////////////////////////////////////////////////
-  // Collected data:
-  // pos_in_world (3 x 1)
-  // rotmat_world_to_endeffector (9 x 1, row-major)
-  // twist_in_world (6 x 1)
-  // twist_in_endeffector (6 x 1)
-  // q_current (dof x 1, for elements please check with printCollectedData())
-  // q_desired (joint command, same shape as q_current)
-  // wrench in base coordinates (6 x 1)
-  // wrench in endeffector coordinates (6 x 1)
-  //////////////////////////////////////////////////////////////////////////////
-  .def("printCollectedData", &aff::ExampleTeleOpFrankaRight::printCollectedData)
-  .def("getCollectedData", &aff::ExampleTeleOpFrankaRight::getCollectedData)
-  .def("cleanup", &aff::ExampleTeleOpFrankaRight::cleanup)
-  .def("getEndEffectorWrench", &aff::ExampleTeleOpFrankaRight::getEndEffectorWrench)
+  For bimanual hand pose retargetting:
+  ------------------------------------
+
+    command["input_type"] = 2 # IKTeleOp::ActionType::BiManualPose
+    command["left_hand_pose"] = [ x, y, z, rm_00, rm_01, rm_02, rm_10, rm_11, rm_12 ]
+    command["right_hand_pose"] = [ x, y, z, rm_00, rm_01, rm_02, rm_10, rm_11, rm_12 ]
+
+    command["left_fingers_pose_0"] = "open_fingers_left"
+    command["left_fingers_pose_1"] = "close_fingers_left"
+    command["s_left_01"] = <value between 0.0 ... 1.0>
+
+    command["right_fingers_pose_0"] = "open_fingers_right"
+    command["right_fingers_pose_1"] = "close_fingers_right"
+    command["s_right_01"] = <value between 0.0 ... 1.0>
+
+
+  For skeleton retargetting input (arm direction vectors):
+  --------------------------------------------------------
+
+    command["input_type"] = 1 # IKTeleOp::ActionType::PolarRetarget
+    command["right_upperarm_ori"] = [ x, y, z ] # right upper arm direction vector
+    command["right_forearm_ori"]  = [ x, y, z ] # right forearm direction vector
+    command["left_upperarm_ori"]  = [ x, y, z ] # left upper arm direction vector
+    command["left_forearm_ori"]   = [ x, y, z ] # left forearm direction vector
+
+    If trained with hand orientation as POLAR angles:
+      command["right_hand_ori"]     = [ x, y, z ] # direction vector
+      command["left_hand_ori"]      = [ x, y, z ]
+
+    If trained with hand orientation as ABC (Euler) angles:
+      command["right_hand_ori"]     = [ rm_00, rm_01, rm_02, rm_10, rm_11, rm_12 ] # truncated rotation matrix
+      command["left_hand_ori"]      = [ rm_00, rm_01, rm_02, rm_10, rm_11, rm_12 ]
+
+    Fingers:
+      command["left_fingers_pose_0"] = "open_fingers_left"
+      command["left_fingers_pose_1"] = "close_fingers_left"
+      command["s_left_01"] = <value between 0.0 ... 10.>
+
+      command["right_fingers_pose_0"] = "open_fingers_right"
+      command["right_fingers_pose_1"] = "close_fingers_right"
+      command["s_right_01"] = <value between 0.0 ... 10.>
+
+
+  For joint-level position commands:
+  ----------------------------------
+
+    We assume a controller xml file with joint-tasks for each joint to be controlled, like:
+
+        <Task name="fr3_joint1_right" controlVariable="Joint" jnt="fr3_joint1_right" />
+        <Task name="fr3_joint2_right" controlVariable="Joint" jnt="fr3_joint2_right" />
+        <Task name="fr3_joint3_right" controlVariable="Joint" jnt="fr3_joint3_right" />
+
+    The values are expected in SI units. The finger commands can be done
+    identically as in the other input types.
+
+    command["input_type"] = 3 # IKTeleOp::ActionType::JointPosition
+    command["joints"] = { "fr3_joint1_right": 1.1,
+                          "fr3_joint2_right": 2.2,
+                          "fr3_joint3_right": 3.3,
+                          ... }
+
+  )doc")
+  .def("getLeRobotObservation", &aff::ExampleTeleOp::getObservation,
+       R"doc(
+  joints: "joint_" + <joint_name>
+  tasks: "task_" + <task_name> + "_<coordinate index>
+  sensors: "sensor_" + <sensor_name> + "_<coordinate index>
+
+  )doc")
+  .def("step", &aff::ExampleTeleOp::step)
+  .def("stop", &aff::ExampleTeleOp::stop)
+  .def("addComponentArgument", &aff::ExampleTeleOp::addComponentArgument)
+  .def("cleanup", &aff::ExampleTeleOp::cleanup)
 
   //////////////////////////////////////////////////////////////////////////////
   // 6 x 1 vector with elements x, y, z, thx, thy, thz (Absolute Euler angles)
   //////////////////////////////////////////////////////////////////////////////
-  .def("getBodyPose", &aff::ExampleTeleOpFrankaRight::getBodyPose)
+  .def("getBodyPose", &aff::ExampleTeleOp::getBodyPose)
 
-  .def_readwrite("withScene", &aff::ExampleTeleOpFrankaRight::withScene)
-  .def_readwrite("xmlFileName", &aff::ExampleTeleOpFrankaRight::xmlFileName)
-  .def_readwrite("configDirectory", &aff::ExampleTeleOpFrankaRight::configDirectory)
-  .def_readwrite("noLimits", &aff::ExampleTeleOpFrankaRight::noLimits)
-  .def_readwrite("enableRealGraphVisualization", &aff::ExampleTeleOpFrankaRight::enableRealGraphVisualization)
-  .def_readwrite("inputType", &aff::ExampleTeleOpFrankaRight::inputType)
-  .def_readwrite("dt", &aff::ExampleTeleOpFrankaRight::dt)
+  .def_readwrite("withScene", &aff::ExampleTeleOp::withScene)
+  .def_readwrite("xmlFileName", &aff::ExampleTeleOp::xmlFileName)
+  .def_readwrite("dataCollectionXmlFileName", &aff::ExampleTeleOp::dataCollectionXmlFileName,
+                 "The XML file name for data collection.")
+  .def_readwrite("configDirectory", &aff::ExampleTeleOp::configDirectory)
+  .def_readwrite("noLimits", &aff::ExampleTeleOp::noLimits)
+  .def_readwrite("enableRealGraphVisualization", &aff::ExampleTeleOp::enableRealGraphVisualization)
+  .def_readwrite("inputType", &aff::ExampleTeleOp::inputType)
+  .def_readwrite("dt", &aff::ExampleTeleOp::dt)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Head gestures: "yes", "no"
+  // "StartGesture": std::string gestureName, double gestureAmplitude, int numTurns
+  // "GestureThreeRepetitions": std::string gestureName, double gestureAmplitude
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setHeadGesture", [](aff::ExampleTeleOp& ex, std::string gestureName, double gestureAmplitude, int numTurns)
+  {
+    ex.getEntity().publish("StartGesture", gestureName, gestureAmplitude, numTurns);
+  },
+  py::arg("gestureName"),
+  py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
+  py::arg("numTurns") = 3)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Sets the gaze target body for the eye gaze model. This only takes effect
+  // if the class has been initialized with the eyeIkEnabled flag set to true.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setGazeTarget", [](aff::ExampleTeleOp& ex, std::string targetBody) -> std::string
+  {
+    std::vector<const aff::AffordanceEntity*> ntts = ex.getScene()->getAffordanceEntities(targetBody);
+
+    if (!ntts.empty())
+    {
+      if (ntts.size() != 1)
+      {
+        RLOG_CPP(1, "Found several object with the name " << targetBody << " - taking first one.");
+      }
+
+      targetBody = ntts[0]->bdyName;
+    }
+    else
+    {
+      const aff::Agent* agent = ex.getScene()->getAgent(targetBody);
+
+      if (agent)
+      {
+        // From here on, we have a valid agent. We look at its (first) head
+        auto m = agent->getManipulatorsOfType(ex.getScene(), "head");
+
+        if (m.empty())
+        {
+          RLOG_CPP(1, "Agent " << targetBody << " has no head to look at. Looking at body.");
+          targetBody = agent->bdyName;
+        }
+        else
+        {
+          targetBody = m[0]->bdyName;
+        }
+
+      }
+
+    }
+
+    ex.getEntity().publish("SetGazeTarget", targetBody);
+
+    return targetBody;
+  })
 
   //////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////
   .def("addVirtualCamera",
-       py::overload_cast<std::string, std::string, int, int>(&aff::ExampleTeleOpFrankaRight::addVirtualCamera),
+       py::overload_cast<std::string, std::string, int, int>(&aff::ExampleTeleOp::addVirtualCamera),
        py::arg("camera_name"),
        py::arg("camera_type"),
        py::arg("width"),
@@ -500,7 +581,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   //////////////////////////////////////////////////////////////////////////////
   // Returns a rendered image from the given coordinates
   //////////////////////////////////////////////////////////////////////////////
-  .def("captureColorImageFromFrame", [](aff::ExampleTeleOpFrankaRight& ex, std::string cameraName)
+  .def("captureColorImageFromFrame", [](aff::ExampleTeleOp& ex, std::string cameraName)
        -> py::array_t<uint8_t>
   {
     const RcsBody* cam = RcsGraph_getBodyByName(ex.getGraph(), cameraName.c_str());
