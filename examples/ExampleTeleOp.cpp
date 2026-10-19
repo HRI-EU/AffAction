@@ -475,7 +475,10 @@ bool ExampleTeleOp::initGraphics()
     c->createDebugGraphics(viewer, getGraph());
   }
 
-  viewer->start();
+  if (!blockingMainThread)
+  {
+    viewer->start();
+  }
   entity.publish("Render");
   entity.process();
   entity.publish("RenderCommand", std::string("ShowLines"), std::string("false"));

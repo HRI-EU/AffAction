@@ -302,15 +302,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
 
-    //ex.blockingMainThread = true;
     bool success = ex.initAlgo();
-
-    int argc = 1;
-    char* argv[] = { (char*)"AppName" };
-    QApplication app(argc, argv);
-
-    std::setlocale(LC_ALL, "C");
-    QApplication::setQuitOnLastWindowClosed(false);
 
     if (!headless)
     {
