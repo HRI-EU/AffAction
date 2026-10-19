@@ -297,7 +297,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     RFATAL("Use initializeBlocking() instead of initBlocking()");
   })
 
-  .def("initializeBlocking", [](aff::ExampleTeleOp& ex, bool headless, bool catch_keyboard_interrupt) -> int
+  .def("initializeBlocking", [](aff::ExampleTeleOp& ex, bool headless) -> int
   {
     // Release the GIL for the function's duration
     pybind11::gil_scoped_release release_gil;
@@ -318,7 +318,27 @@ PYBIND11_MODULE(pyTeleOp, m)
       success = ex.initGuis() && success;
     }
 
-    Timer_waitDT(0.5);
+    return success;
+  },
+  "Initializes algorithm, guis and graphics",
+  py::arg("headless") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Initialization function, to be called after member variables have been
+  // configured.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("startBlocking", [](aff::ExampleTeleOp& ex, bool catch_keyboard_interrupt) -> int
+  {
+    // Release the GIL for the function's duration
+    pybind11::gil_scoped_release release_gil;
+
+    int argc = 1;
+    char* argv[] = { (char*)"AppName" };
+    QApplication app(argc, argv);
+
+    std::setlocale(LC_ALL, "C");
+    QApplication::setQuitOnLastWindowClosed(false);
+
     std::thread t(&aff::ExampleTeleOp::start, &ex);
     t.detach();
 
@@ -361,12 +381,9 @@ PYBIND11_MODULE(pyTeleOp, m)
       throw pybind11::error_already_set();      // safe to throw now
     }
 
-
     return res;
-
   },
-  "Initializes algorithm, guis and graphics",
-  py::arg("headless") = false,
+  "Start loop with correct threading",
   py::arg("catch_keyboard_interrupt") = false)
 
   //////////////////////////////////////////////////////////////////////////////
@@ -522,6 +539,128 @@ PYBIND11_MODULE(pyTeleOp, m)
   py::arg("gestureName"),
   py::arg("gestureAmplitude") = RCS_DEG2RAD(5.0),
   py::arg("numTurns") = 3)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Gaze model methods: 0: Neck only, 1: pupils only.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("setPupilSpeedWeight", [](aff::ExampleTeleOp& ex, double value)
+  {
+    ex.getEntity().publish("SetPupilWeight", value);
+  })
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns empty json if there are no agents or a json in the form:
+  // {"agents": ['Daniel', 'Felix', 'Robot'] }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_agents", [](aff::ExampleTeleOp& ex, bool onlyVisibleAgents) -> nlohmann::json
+  {
+    nlohmann::json json;
+    json["agents"] = std::vector<nlohmann::json>();
+
+    for (const auto& a : ex.getScene()->agents)
+    {
+      if ((onlyVisibleAgents && a->isVisible()) || (!onlyVisibleAgents))
+      {
+        json["agents"].push_back(a->name);
+      }
+    }
+
+    return json;
+  },
+  py::arg("onlyVisibleAgents") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Returns empty json if there are no human agents or a json in the form:
+  // {"agents": ['Daniel', 'Felix', 'Robot'] }
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_human_agents", [](aff::ExampleTeleOp& ex, bool onlyVisibleAgents) -> nlohmann::json
+  {
+    nlohmann::json json;
+    json["agents"] = std::vector<nlohmann::json>();
+
+    for (const auto& a : ex.getScene()->agents)
+    {
+      if ((onlyVisibleAgents && a->isVisible()) || (!onlyVisibleAgents))
+      {
+        if (dynamic_cast<aff::HumanAgent*>(a))
+        {
+          json["agents"].push_back(a->name);
+        }
+      }
+    }
+
+    return json;
+  },
+  py::arg("onlyVisibleAgents") = false)
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Which body a gaze should aim at, for one human agent, asked by ROLE rather
+  // than by name:
+  //
+  //   get_agent_tracked_frame("", "Head")
+  //     -> {"agent": "conversation_partner",
+  //         "frame": "Head_conversation_partner"}
+  //
+  // An empty agent_name means "the only human in the scene". With several
+  // humans and no name it returns {"error": ...} instead of choosing: staring
+  // confidently at the wrong person is worse than not moving.
+  //
+  // body_type is a TrackedFrames id from the scene XML -- "Head", "HandLeft",
+  // "HandRight", "ShoulderLeft", "ElbowRight" and so on. The frames already
+  // carry the agent's group suffix, so a caller never builds a body name by
+  // gluing strings, which is what let home_ai's gaze rules stop hardcoding
+  // `conversation_partner` and `Hand_<side>_conversation_partner`.
+  //////////////////////////////////////////////////////////////////////////////
+  .def("get_agent_tracked_frame", [](aff::ExampleTeleOp& ex,
+                                     std::string agent_name,
+                                     std::string body_type) -> nlohmann::json
+  {
+    std::vector<const aff::HumanAgent*> humans;
+    for (const auto& a : ex.getScene()->agents)
+    {
+      const aff::HumanAgent* human = dynamic_cast<aff::HumanAgent*>(a);
+      if (human && (agent_name.empty() || human->name == agent_name))
+      {
+        humans.push_back(human);
+      }
+    }
+
+    if (humans.empty())
+    {
+      return nlohmann::json{{"error", agent_name.empty()
+          ? "the scene has no human agents"
+          : "no human agent named '" + agent_name + "'"
+        }};
+    }
+
+    // Several humans and no name: refuse. Picking the first would look at a
+    // confidently chosen wrong person, which is worse than not moving at all.
+    if (humans.size() > 1)
+    {
+      std::string names;
+      for (const auto* h : humans)
+      {
+        names += (names.empty() ? "" : ", ") + h->name;
+      }
+      return nlohmann::json{{"error", "the scene has several human agents (" +
+          names + "); name the one to look at"
+        }};
+    }
+
+    const aff::HumanAgent* human = humans.front();
+    // Asked through the agent's own accessor, so the body-type vocabulary stays in
+    // one place and the returned name already carries the group suffix.
+    const std::string frame = human->getTrackedFrameName(body_type);
+    if (frame.empty())
+    {
+      return nlohmann::json{{"error", "agent '" + human->name +
+          "' has no tracked frame '" + body_type + "'"
+        }};
+    }
+
+    return nlohmann::json{{"agent", human->name}, {"frame", frame}};
+  },
+  py::arg("agent_name") = "", py::arg("body_type") = "Head")
 
   //////////////////////////////////////////////////////////////////////////////
   // Sets the gaze target body for the eye gaze model. This only takes effect
