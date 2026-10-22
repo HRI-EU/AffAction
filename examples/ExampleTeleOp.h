@@ -104,6 +104,7 @@ public:
   bool noLimits = false;
   bool enableRealGraphVisualization = true;
   double dt = 0.01;
+  unsigned int loopCount = 0;
 
 protected:
 
@@ -125,7 +126,6 @@ protected:
   double alpha = 0.1;
 
   double dt_max = 0.0, dtProcess = 0.0;
-  unsigned int loopCount = 0;
 
   GraphicsWindow* viewer = nullptr;
   GraphComponent* graphC = nullptr;

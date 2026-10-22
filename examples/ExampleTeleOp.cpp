@@ -205,7 +205,10 @@ bool ExampleTeleOp::initAlgo()
   {
     std::string sceneFile = Rcs::getAbsoluteFileName(xmlFileName);
     this->scene = std::make_unique<ActionScene>(sceneFile.c_str());
-    scene->print();
+    REXEC(1)
+    {
+      scene->print();
+    }
   }
 
   // Graph component contains "sensed" graph

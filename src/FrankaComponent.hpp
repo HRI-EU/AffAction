@@ -36,11 +36,13 @@
 #include "json.hpp"
 
 #include <Rcs_typedef.h>
+#include <Rcs_joint.h>
 #include <Rcs_macros.h>
 #include <Rcs_timer.h>
 #include <Rcs_math.h>
 #include <Rcs_dynamics.h>
 #include <Rcs_utilsCPP.h>
+#include <Rcs_filters.h>
 
 #include <mutex>
 
@@ -59,7 +61,9 @@ public:
                   std::string otherRecv,
                   std::string otherSend,
                   bool quitDriverOnExit_=true)
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_)
+    : ComponentBase(parent),
+      RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_),
+      torqueFilt(0.0, 0.1, parent->getDt())
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint1"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint2"+suffix));
@@ -80,8 +84,6 @@ public:
     subscribe("EmergencyStop", &FrankaComponent::onEmergencyStop);
     subscribe("EmergencyRecover", &FrankaComponent::onEmergencyRecover);
     subscribe("EnableCommands", &FrankaComponent::onEnableCommands);
-
-    RLOG(0, "Done constructor");
   }
 
   ~FrankaComponent()
@@ -91,7 +93,7 @@ public:
 
   void onUpdateGraph(RcsGraph* graph)
   {
-    std::vector<double> jntPosTmp, jntVelTmp, wrench_base, wrench_ee;
+    std::vector<double> jntPosTmp, jntVelTmp, wrench_base, wrench_ee, tau_ext_hat_filtered;
 
     {
       std::lock_guard<std::mutex> lock(this->recvMtx);
@@ -99,6 +101,7 @@ public:
       jntVelTmp = this->jointVelocity;
       wrench_base = this->wrench_in_base;
       wrench_ee = this->wrench_in_ee;
+      tau_ext_hat_filtered = this->tau_ext_hat_filtered;
     }
 
     if (jntPosTmp.size()!=jntNameIdPairs.size() || jntVelTmp.size()!=jntNameIdPairs.size())
@@ -136,9 +139,76 @@ public:
       }
     }
 
+    // Joint torque sensors have the same name as joints
+    if (tau_ext_hat_filtered.size()==jntNameIdPairs.size())
+    {
+      for (size_t i=0; i<jntNameIdPairs.size(); ++i)
+      {
+        RcsSensor* jts = RcsGraph_getSensorByName(graph, jntNameIdPairs[i].jointName.c_str());
+        if (jts)
+        {
+          MatNd_set(jts->rawData, 0, 0, tau_ext_hat_filtered[i]);
+        }
+      }
+
+      const double eps_high = 6.0;
+      const double eps_low = 3.0;
+      detectExternalForceEvent(graph, tau_ext_hat_filtered, eps_low, eps_high);
+    }
+
+
   }
 
 private:
+
+  void detectExternalForceEvent(const RcsGraph* graph,
+                                std::vector<double> jointTorques,
+                                double eps_low, double eps_high)
+  {
+    const double t_norm_prev = std::abs(torqueFilt.getPosition());
+    torqueFilt.iterate(VecNd_getLength(jointTorques.data(), jointTorques.size()));
+    const double t_norm_filt = std::abs(torqueFilt.getPosition());
+
+    nlohmann::json detail =
+    {
+      {"torques", jointTorques}
+    };
+
+    if (!jntNameIdPairs.empty())
+    {
+      int bdyId = RcsJoint_getConnectedBodyId(graph, &graph->joints[jntNameIdPairs.back().jointId]);
+      if (bdyId!=-1)
+      {
+        detail["distal_link"] = graph->bodies[bdyId].name;
+      }
+    }
+
+    for (const auto& j : jntNameIdPairs)
+    {
+      detail["links"] += j.jointName;
+    }
+
+    if (Rcs::String_endsWith(jntNameIdPairs[0].jointName, "left"))
+    {
+      detail["side"] = "left";
+    }
+    else if (Rcs::String_endsWith(jntNameIdPairs[0].jointName, "right"))
+    {
+      detail["side"] = "right";
+    }
+
+    if (t_norm_filt > eps_high && t_norm_prev <= eps_high)
+    {
+      getEntity()->publish<std::string, std::string, std::string>(
+        "PublishEvent", "scene", "force_start", detail.dump());
+    }
+    else if (t_norm_filt < eps_low && t_norm_prev >= eps_low)
+    {
+      getEntity()->publish<std::string, std::string, std::string>(
+        "PublishEvent", "scene", "force_end", detail.dump());
+    }
+
+  }
 
   void onSetJointPosition(const MatNd* q_des)
   {
@@ -210,7 +280,7 @@ private:
       // If successful, process the parsed JSON data
       RLOG_CPP(5, "Parsed joint angles: " << recv_json.dump(4));
 
-      std::vector<double> q, qd, tor, wrench_base, wrench_ee;
+      std::vector<double> q, qd, tor, wrench_base, wrench_ee, tau_ext_hat_filtered;
 
       if (recv_json.contains("position"))
       {
@@ -237,6 +307,11 @@ private:
         wrench_ee = recv_json["wrench_in_ee"].get<std::vector<double>>();
       }
 
+      if (recv_json.contains("tau_ext_hat_filtered"))
+      {
+        tau_ext_hat_filtered = recv_json["tau_ext_hat_filtered"].get<std::vector<double>>();
+      }
+
       if ((q.size()==7) && (qd.size()==7) && (tor.size()==7))
       {
         std::lock_guard<std::mutex> lock(this->recvMtx);
@@ -245,6 +320,7 @@ private:
         this->jointTorque = tor;
         this->wrench_in_base = wrench_base;
         this->wrench_in_ee = wrench_ee;
+        this->tau_ext_hat_filtered = tau_ext_hat_filtered;
         membersInitialized = true;
       }
 
@@ -310,8 +386,9 @@ private:
   std::vector<Rcs::JointNameIndexPair> jntNameIdPairs;
   std::string baseFtsName, eeFtsName;
   std::vector<double> jointPosition, jointVelocity, jointTorque;
-  std::vector<double> wrench_in_base, wrench_in_ee;
+  std::vector<double> wrench_in_base, wrench_in_ee, tau_ext_hat_filtered;
   std::vector<double> jointCommands, jointCommandsPrev;
+  Rcs::SecondOrderLPF1D torqueFilt;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
 };

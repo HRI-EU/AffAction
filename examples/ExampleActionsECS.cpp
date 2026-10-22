@@ -676,7 +676,7 @@ bool ExampleActionsECS::initAlgo()
   // "Start" event, starting all component threads.
   entity.initialize(getCurrentGraph());
 
-  RcsGraph_fprintModelState(stdout, getGraph(), getGraph()->q, "init", 0);
+  // RcsGraph_fprintModelState(stdout, getGraph(), getGraph()->q, "init", 0);
 
   this->sceneQuery = std::make_unique<SceneQueryPool>(this, NUM_SCENEQUERIES);
 
@@ -1148,8 +1148,7 @@ bool ExampleActionsECS::initGraphics()
   viewer->setKeyCallback('Y', [this](char k)
   {
     RLOG(0, "Yes-gesture");
-    //getEntity().publish("StartGesture", std::string("yes"), RCS_DEG2RAD(10.0), 5);
-    getEntity().publish("StartGesture", std::string("tilt"), RCS_DEG2RAD(-40.0), 5);
+    getEntity().publish("StartGesture", std::string("yes"), RCS_DEG2RAD(10.0), 5);
   }, "Yes-gesture");
 
 
@@ -3056,5 +3055,77 @@ public:
 };
 
 RCS_REGISTER_EXAMPLE(ExampleCharmSim, "Charm", "Franka setup (sim)");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleCharmNewPtuSim : public ExampleActionsECS
+{
+public:
+
+  ExampleCharmNewPtuSim(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  virtual ~ExampleCharmNewPtuSim()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    xmlFileName = "g_robo_new_ptu.xml";
+    configDirectory = "config/xml/Franka";
+    speedUp = 1;
+    landmarksCamera = "azure_kinect_rgb_frame";
+    return true;
+  }
+
+  bool initAlgo()
+  {
+    bool success = ExampleActionsECS::initAlgo();
+    entity.publish("SetPupilWeight", 0.0);
+    return success;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleCharmNewPtuSim, "Charm", "Franka setup (new head sim)");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleRoboSocial : public ExampleActionsECS
+{
+public:
+
+  ExampleRoboSocial() : ExampleRoboSocial(0, NULL)
+  {
+  }
+
+  ExampleRoboSocial(int argc, char** argv) : ExampleActionsECS(argc, argv)
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleActionsECS::initParameters();
+    enableRealGraphVisualization = false;
+    noLimits = false;
+    xmlFileName = "g_social_conversation.xml";
+    configDirectory = "config/xml/SocialConversation";
+    addComponentArgument("-landmarks_router -landmarks_connection config/data/tacito_timed_data.json -landmarks_camera camera_0");
+    addComponentArgument("-skeleton_tracking -skeleton_radius 1000");
+    addComponentArgument("-face_tracking -face_tracking.face_body_name Face_Person0 -face_tracking.agent Agent_Person0");
+    addComponentArgument("-face_tracking1 -face_tracking1.face_body_name Face_Person1 -face_tracking1.agent Agent_Person1");
+
+    return true;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleRoboSocial, "A TeleOp", "AA social conversation");
 
 }   // namespace aff

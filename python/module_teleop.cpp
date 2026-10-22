@@ -518,6 +518,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def_readwrite("enableRealGraphVisualization", &aff::ExampleTeleOp::enableRealGraphVisualization)
   .def_readwrite("inputType", &aff::ExampleTeleOp::inputType)
   .def_readwrite("dt", &aff::ExampleTeleOp::dt)
+  .def_readwrite("loopCount", &aff::ExampleTeleOp::loopCount)
 
   //////////////////////////////////////////////////////////////////////////////
   // Head gestures: "yes", "no"
@@ -775,6 +776,18 @@ PYBIND11_MODULE(pyTeleOp, m)
   color_bgr = cv2.cvtColor(color_np, cv2.COLOR_RGB2BGR)
   cv2.imwrite("color_image.jpg", color_bgr)
   )pbdoc")
+
+  // Sets the rcs log level
+  .def("setRcsLogLevel", [](aff::ExampleTeleOp& ex, int level)
+  {
+    RcsLogLevel = level;
+  })
+
+  // Return the rcs log level
+  .def("getRcsLogLevel", [](aff::ExampleTeleOp& ex) -> int
+  {
+    return RcsLogLevel;
+  })
 
   ;
 

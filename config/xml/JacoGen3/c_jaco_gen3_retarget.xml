@@ -1,0 +1,23 @@
+<Controller xmlns:xi="http://www.w3.org/2001/XInclude" >
+
+  <xi:include href="g_jaco_gen3_retarget.xml"/>
+
+  <Task name="right_upperarm_ori"  controlVariable="POLAR"   effector="upperarm_retarget_right"    />
+  <Task name="right_forearm_ori"   controlVariable="POLAR"   effector="forearm_retarget_right"      />
+  <Task name="right_hand_ori"      controlVariable="POLAR"   effector="hand_robot_retarget_right" axisDirection="Y" />
+  
+  <Task name="left_upperarm_ori"   controlVariable="POLAR"   effector="upperarm_retarget_left"     />
+  <Task name="left_forearm_ori"    controlVariable="POLAR"   effector="forearm_retarget_left"       />
+  <Task name="left_hand_ori"       controlVariable="POLAR"   effector="hand_robot_retarget_left"  axisDirection="Y" />
+  
+  <Task name="head_ori"            controlVariable="ABC"     effector="head_retarget"             />
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="upperarm_left"/>
+    <Tree root="upperarm_right"/>
+    <Body name="center_post_link"/>
+    <Body name="adapter_shoulder"/>
+    <Body name="stand"/>
+  </BroadPhase>
+	
+</Controller>

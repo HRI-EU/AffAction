@@ -103,8 +103,9 @@
 
   
 
-  <Group prev="aruco_base" name="Felix" color="RED" transform="2 -1 0.5 0 0 180" >
-    <xi:include href="../examples/g_human_agent.xml"/>
+  <Group prev="aruco_base" name="conversation_partner" color="RED" transform="2 -1 0.5 0 0 180" >
+    <!-- <xi:include href="../examples/g_human_agent.xml"/> -->
+    <xi:include href="../SocialConversation/g_person.xml"/>
   </Group>
 
   <Hardware name="arm_left" component="-jacoGen3Zmq_left -jacoGen3Zmq_left.ip 192.168.1.101"/>

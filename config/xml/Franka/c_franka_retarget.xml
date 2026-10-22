@@ -1,0 +1,25 @@
+<Controller xmlns:xi="http://www.w3.org/2001/XInclude" >
+
+   <Graph name="default">
+    <xi:include href="g_franka_retarget.xml"/>
+    <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)"/>
+   </Graph>
+
+  <Task name="right_upperarm_ori"  controlVariable="POLAR"   effector="upperarm_retarget_right" />
+  <Task name="right_forearm_ori"   controlVariable="POLAR"   effector="forearm_retarget_right" />
+  <Task name="right_hand_ori"      controlVariable="POLAR"   effector="hand_robot_right" />
+
+  <Task name="left_upperarm_ori"  controlVariable="POLAR"   effector="upperarm_retarget_left" />
+  <Task name="left_forearm_ori"   controlVariable="POLAR"   effector="forearm_retarget_left" />
+  <Task name="left_hand_ori"      controlVariable="POLAR"   effector="hand_robot_left" />
+
+  <Task name="head_ori"            controlVariable="POLAR"   effector="head_kinect_lens" />
+
+  <BroadPhase DistanceThreshold="0.001">
+    <Tree root="left_fr3_link1"/>
+    <Tree root="right_fr3_link1"/>
+    <Body name="franka_mount_link"/>
+    <Body name="stand"/>
+  </BroadPhase>
+
+</Controller>

@@ -151,6 +151,7 @@ public:
   bool enableRealGraphVisualization;
   bool changeBackgroundColor;
   std::string landmarksCamera;
+  unsigned int loopCount;
 
 
   /*! \brief Retrieves the gaze data in JSON format.
@@ -175,7 +176,6 @@ protected:
   double dt_max, dt_max2, alpha, lambda, dtProcess, dtEvents;
   bool valgrind, withRobot, pause, withEventGui;
   bool zigzag, singleThreaded;
-  unsigned int loopCount;
   std::atomic<bool> processingAction;
   std::atomic<bool> runFunctionRunning;
 

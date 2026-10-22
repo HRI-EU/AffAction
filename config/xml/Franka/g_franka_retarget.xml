@@ -60,6 +60,28 @@
     <xi:include href="../scene/g_azure_kinect.xml"/>
   </Group> 
 
+  <!-- Retargetting frames -->
+  <Body name="upperarm_retarget_right" prev="right_fr3_link2" transform="0 0 0 90 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+  <Body name="forearm_retarget_right" prev="right_fr3_link4" transform="0 0 0 -90 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+  <Body name="upperarm_retarget_left" prev="left_fr3_link2" transform="0 0 0 90 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+  <Body name="forearm_retarget_left" prev="left_fr3_link4" transform="0 0 0 -90 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+  
+
+  <Body name="hand_robot_left_tip" prev="hand_robot_left" transform="0.1 0.03 0.0 0 0 0" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
+
   <Body name="hand_robot_right_tip" prev="hand_robot_right" transform="0.1 0.03 0.0 0 0 0" >
     <Shape scale="0.5" type="FRAME"/>
   </Body>
@@ -68,7 +90,9 @@
     <xi:include href="../examples/g_human_agent.xml"/>
   </Group>
 
-
+  <Body name="hand_target_frame"  rigid_body_joints="1.1 -0.25 1.15 30 0 30" >
+    <Shape scale="0.5" type="FRAME"/>
+  </Body>
 
   <xi:include href="g_franka_with_allegro_model_states.xml" xpointer="xpointer(//Group/model_state)"/>
 

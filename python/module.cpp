@@ -1092,6 +1092,7 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   .def_readwrite("enableRealGraphVisualization", &aff::ExampleActionsECS::enableRealGraphVisualization)
   .def_readwrite("landmarksCamera", &aff::ExampleActionsECS::landmarksCamera)
   .def_readwrite("changeBackgroundColor", &aff::ExampleActionsECS::changeBackgroundColor)
+  .def_readwrite("loopCount", &aff::ExampleActionsECS::loopCount)
 
   //////////////////////////////////////////////////////////////////////////////
   // GazeDisambiguation
@@ -1252,6 +1253,19 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
 
   },
   py::arg("inputFile") = "test_robot_traj.txt")
+
+  // Sets the rcs log level
+  .def("setRcsLogLevel", [](aff::ExampleActionsECS& ex, int level)
+  {
+    RcsLogLevel = level;
+  })
+
+  // Return the rcs log level
+  .def("getRcsLogLevel", [](aff::ExampleActionsECS& ex) -> int
+  {
+    return RcsLogLevel;
+  })
+
   ;
 
   bind_components(cls);
