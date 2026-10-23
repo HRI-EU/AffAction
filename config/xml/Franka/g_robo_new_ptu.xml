@@ -29,18 +29,19 @@
 -->
 <Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" >
   
-  <!-- The optional grapchics window camera perspective when starting up. -->
-  <Body name="default_camera_view" transform="3.922735 1.185923 2.488906   7.597 -22.898 -158.820"/>
+  <!-- The optional grapchics window camera perspective when starting up.
+  <Body name="default_camera_view" transform="3.922735 1.185923 2.488906   7.597 -22.898 -158.820"/> -->
 
-  <!-- The Aruco markers are 1cm away from the borders of the table. -->
+  <!-- The Aruco markers are 1cm away from the borders of the table.
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
     <Shape type="FRAME" extents="0.14 0.14 0"      marker="true"    markerName="aruco_1" scale="0.2" transform="0.16 0.61 0.70025 0 0 0" />
     <Shape type="BOX"   extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true"  transform="0.16 0.61 0.70025 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
     <Shape type="BOX"   extents="3.0 4.0 0.04"     distance="false" physics="true"  graphics="true"  transform="0 0 -0.02 0 0 0"         color="PEWTER" no_textureFile="textures/floor.jpg" />
     <Shape scale="0.5" type="FRAME"/>
   </Body>
-
-  <Body name="stand" xxxtransform="-1.5 0 0 0 0 0">
+  -->
+  
+  <Body name="stand" >
     <Shape type="MESH" meshFile="meshes/hri_description/meshes/stand_franka.stl" distance="false" physics="false" graphics="true"
 	   transform="0.384 0.32 0 0 0 -90" color="GRAY" scale="0.001" />
     <Shape type="BOX" extents="1.2 0.8 0.4" distance="true" physics="false"  graphics="false" transform="0.104 0 0.2 0 0 0" color="RANDOM" />

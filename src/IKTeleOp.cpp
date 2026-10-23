@@ -918,6 +918,7 @@ bool IKTeleOp::sendAction(const nlohmann::json& command,
   if (!command.is_object())
   {
     RLOG_CPP(1, "Expected top-level nlohmann::json object");
+    RcsGraph_setState(desired, nullptr, nullptr);
     return false;
   }
 
@@ -926,6 +927,7 @@ bool IKTeleOp::sendAction(const nlohmann::json& command,
   bool success = get_optional<ActionType>(command, "input_type", input_type);
   if (!success)
   {
+    RcsGraph_setState(desired, nullptr, nullptr);
     return false;
   }
 
@@ -1012,6 +1014,7 @@ bool IKTeleOp::sendAction(const nlohmann::json& command,
     default:
     {
       RLOG_CPP(1, "Unsupported input type: " << static_cast<int>(input_type));
+      RcsGraph_setState(desired, nullptr, nullptr);
       return false;
     }
 
