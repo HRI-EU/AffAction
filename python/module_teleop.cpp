@@ -508,6 +508,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   // 6 x 1 vector with elements x, y, z, thx, thy, thz (Absolute Euler angles)
   //////////////////////////////////////////////////////////////////////////////
   .def("getBodyPose", &aff::ExampleTeleOp::getBodyPose)
+  .def("updateUI", &aff::ExampleTeleOp::updateUI)
 
   .def_readwrite("withScene", &aff::ExampleTeleOp::withScene)
   .def_readwrite("xmlFileName", &aff::ExampleTeleOp::xmlFileName)
@@ -519,6 +520,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def_readwrite("inputType", &aff::ExampleTeleOp::inputType)
   .def_readwrite("dt", &aff::ExampleTeleOp::dt)
   .def_readwrite("loopCount", &aff::ExampleTeleOp::loopCount)
+  .def_readwrite("blockingMainThread", &aff::ExampleTeleOp::blockingMainThread)
 
   //////////////////////////////////////////////////////////////////////////////
   // Head gestures: "yes", "no"
@@ -850,7 +852,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   py::arg("N") = 8,
   py::arg("dx_max") = std::numeric_limits<double>::max(),
   py::arg("dphi_max") = std::numeric_limits<double>::max(),
-  py::arg("verbose") = false),
+  py::arg("verbose") = false,
   R"doc(
 policy_to_command(in, N=8) -> numpy.ndarray
 
@@ -906,7 +908,7 @@ Examples
 >>> out = my_module.policy_to_command(inp, wrench, N=8)
 >>> out.shape
 (8, 12)
-)doc";
+)doc");
 
 
 

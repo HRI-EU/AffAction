@@ -105,6 +105,7 @@ public:
   bool enableRealGraphVisualization = true;
   double dt = 0.01;
   unsigned int loopCount = 0;
+  bool blockingMainThread = true;
 
 protected:
 
@@ -119,7 +120,6 @@ protected:
   std::string renderStringHUD;
 
   bool noGraphics = false;
-  bool blockingMainThread = true;
   bool runFunctionRunning = false;
   bool withRobo = false;
   double lambda = 1.0e-4;
