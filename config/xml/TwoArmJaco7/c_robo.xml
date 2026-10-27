@@ -36,7 +36,7 @@
 
     <!-- The gaze model of the robot (testing). -->
     <Group prev="head_shell" transform="0 0 0 0 0 0">
-      <xi:include href="g_gazemodel.xml" />
+      <xi:include href="../HRI/g_gazemodel.xml" />
     </Group>
 
     <Body name="GazePoint" rigid_body_joints="1.05 0.0 0.35 0 0 0" >
