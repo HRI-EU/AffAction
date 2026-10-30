@@ -113,6 +113,8 @@ bool ExampleJointControl::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-dir", &configDirectory, "Configuration file directory "
                       "(default is %s)", configDirectory.c_str());
   parser->getArgument("-noGraphics", &noGraphics, "Run without graphics window (default: off)");
+  parser->getArgument("-tmc", &tmc, "Filter time constant 0...1, smaller is more responsive (default is %f)", tmc);
+  parser->getArgument("-vmax", &vmax, "Filter max speed (default is %f)", vmax);
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -277,7 +279,7 @@ bool ExampleJointControl::initGraphics()
 
 bool ExampleJointControl::initGuis()
 {
-  jguiC = new JointGuiComponent(&entity, getGraph(), tmc);
+  jguiC = new JointGuiComponent(&entity, getGraph(), this->tmc, this->vmax);
   components.push_back(jguiC);
   return true;
 }

@@ -91,7 +91,8 @@ protected:
   bool noGraphics = false;
   bool blockingMainThread = false;
   double dt = 0.01;
-  double tmc = 0.1;
+  double tmc = 0.1;    // smaller is more responsive
+  double vmax = 1.0;   // 60 deg/sec
 
   double dt_max = 0.0, dtProcess = 0.0;
   unsigned int loopCount = 0;
