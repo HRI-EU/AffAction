@@ -368,9 +368,9 @@
       <joint_state joint="joint_10_0_left" position="0"/>
       <joint_state joint="joint_11_0_left" position="0"/>
       <joint_state joint="joint_12_0_left" position="0"/>
-      <joint_state joint="joint_13_0_left" position="0"/>
-      <joint_state joint="joint_14_0_left" position="0"/>
-      <joint_state joint="joint_15_0_left" position="0"/>
+      <joint_state joint="joint_13_0_left" position="0"/> 
+      <joint_state joint="joint_14_0_left" position="0"/> 
+      <joint_state joint="joint_15_0_left" position="0"/> 
     </model_state>
 
     <model_state model="close_fingers_right" time_stamp="0">
@@ -405,10 +405,10 @@
       <joint_state joint="joint_9_0_left" position="52.5"/>
       <joint_state joint="joint_10_0_left" position="49.5"/>
       <joint_state joint="joint_11_0_left" position="50"/>
-      <joint_state joint="joint_12_0_left" position="52.5"/>
-      <joint_state joint="joint_13_0_left" position="50.5"/>
-      <joint_state joint="joint_14_0_left" position="50.5"/>
-      <joint_state joint="joint_15_0_left" position="50"/>
+      <joint_state joint="joint_12_0_left" position="52.5"/> 
+      <joint_state joint="joint_13_0_left" position="50.5"/> 
+      <joint_state joint="joint_14_0_left" position="50.5"/> 
+      <joint_state joint="joint_15_0_left" position="50"/> 
     </model_state>
 
     <model_state model="InitRetarget" time_stamp="0">

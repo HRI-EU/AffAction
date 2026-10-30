@@ -2,13 +2,13 @@
 
   <xi:include href="g_franka_teleop.xml"/>
 
-  <Task name="Right hand xyz"   controlVariable="XYZ"   effector="hand_robot_right_tip" />
-  <Task name="Right hand abc"   controlVariable="ABC"   effector="hand_robot_right_tip" />
-  <Task name="Right fingers 1d" controlVariable="Joint" jnt="joint_driving_right" />
+  <Task name="right_hand_xyz"   controlVariable="XYZ"   effector="hand_robot_right_tip" />
+  <Task name="right_hand_abc"   controlVariable="ABC"   effector="hand_robot_right_tip" />
+  <Task name="right_fingers_1d" controlVariable="Joint" jnt="joint_driving_right" />
 
-  <Task name="Left hand xyz"    controlVariable="XYZ"   effector="hand_robot_left_tip" />
-  <Task name="Left hand abc"    controlVariable="ABC"   effector="hand_robot_left_tip" />
-  <Task name="Left fingers 1d"  controlVariable="Joint" jnt="joint_driving_left" />
+  <Task name="left_hand_xyz"    controlVariable="XYZ"   effector="hand_robot_left_tip" />
+  <Task name="left_hand_abc"    controlVariable="ABC"   effector="hand_robot_left_tip" />
+  <Task name="left_fingers_1d"  controlVariable="Joint" jnt="joint_driving_left" />
 
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="left_fr3_link1"/>

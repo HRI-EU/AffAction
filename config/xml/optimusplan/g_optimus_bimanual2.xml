@@ -27,7 +27,7 @@
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" name="default" >
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" name="default" >
 
   <ActionSequence name="1" text="get bottle_of_vodka; pour bottle_of_vodka glass_green; put bottle_of_vodka table; get bottle_of_pineapple_juice; pour bottle_of_pineapple_juice glass_green; put bottle_of_pineapple_juice table; get bottle_of_rum; pour bottle_of_rum glass_green; put bottle_of_rum table; get bottle_of_vermouth; pour bottle_of_vermouth glass_green; put bottle_of_vermouth table; get bottle_of_gin; pour bottle_of_gin glass_green; put bottle_of_gin table; get bottle_of_soda_water; pour bottle_of_soda_water glass_green; put bottle_of_soda_water table; get bottle_of_cranberry_juice; pour bottle_of_cranberry_juice glass_green; put bottle_of_cranberry_juice table; get bottle_of_milk; pour bottle_of_milk glass_green; put bottle_of_milk table; pose default;" />
 
@@ -37,7 +37,7 @@
   <!-- The Aruco markers are 1cm away from the borders of the table. -->
   <Body color="PEWTER" name="aruco_base" rigid_body_joints="true">
     <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_0" scale="0.2" transform="0.31 0.61 0.70025 0 0 0" type="FRAME"/>
-    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="Smile/textures/floor.jpg"
+    <Shape type="BOX" extents="3.0 4.0 0.04" transform="0 0 -0.02 0 0 0" color="PEWTER" no_textureFile="textures/floor.jpg"
            graphics="true" physics="true" distance="false"/>
     <Shape scale="0.5" type="FRAME"/>
   </Body>
@@ -77,7 +77,7 @@
 
   <!-- Jaco Gen2 arms -->
   <Body name="adapter_shoulder_gen2" prev="center_post_link" transform="-0.04 0 0.571 0 0 0" was_transform="1.6 0 0.5 0 0 180" >
-    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
   <Group name="_right" prev="adapter_shoulder_gen2" transform="-0.048206 -0.043874 0.028528 70 0 90" >
@@ -110,7 +110,7 @@
 
   <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
   <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
-    <xi:include href="../TwoArmJaco7/g_head_v2.xml" />
+    <xi:include href="../HRI/g_head_v2.xml" />
   </Group>
 
   <Manipulator body="head_kinect_link" types="head">

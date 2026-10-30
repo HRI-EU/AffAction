@@ -27,7 +27,7 @@
   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" >
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" >
 
 
     <Body name="Antonio" prev="aruco_base" rigid_body_joints="0 -0.8 0.5 0 0 0" physics="kinematic" color="BLUE" >

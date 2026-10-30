@@ -60,7 +60,7 @@ Cocktail:
 
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
 
 

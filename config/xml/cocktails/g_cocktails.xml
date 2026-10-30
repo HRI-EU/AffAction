@@ -60,7 +60,7 @@ Cocktail:
 
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
   <Group prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" >

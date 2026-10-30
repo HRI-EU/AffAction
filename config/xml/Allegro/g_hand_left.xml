@@ -73,9 +73,9 @@ Thumb		3	0		50		50		 0  : 105
   <Body name="hand_base" transform="0 0 0.102 0 0 180" >
     <Shape type="FRAME" scale="0.1" />
   </Body>
-  
+    
   <Body name="hand_dummy" prev="hand_base" >
-    <Joint name="joint_driving" range="0 0.5 1" type="TransX" weightJL="0" />
+    <Joint name="joint_gripper" range="0 0.5 1" type="TransX" weightJL="0" />
   </Body>
 
   <Body name="palm_link" prev="hand_base" physics="fixed" mass="0.4154" inertia="0.0001 0 0   0 0.0001 0   0 0 0.0001" >

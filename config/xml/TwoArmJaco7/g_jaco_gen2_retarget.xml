@@ -49,6 +49,36 @@
   </Group>
 
 
+  <!-- Retargetting frames -->
+  <Body name="upperarm_retarget_right" prev="upperarm_right" transform="0 0 0 90 0 90" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="wrist_retarget_right" prev="wrist_right" transform="0 0 0 -90 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="hand_retarget_right" prev="hand_robot_right" transform="0 0 0 0 90 0" >
+    <Shape type="FRAME" scale="0.6"/>
+  </Body>
+  
+  <Body name="upperarm_retarget_left" prev="upperarm_left" transform="0 0 0 90 0 90" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="wrist_retarget_left" prev="wrist_left" transform="0 0 0 -90 0 180" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+  <Body name="hand_retarget_left" prev="hand_robot_left" transform="0 0 0 180 -90 0" >
+    <Shape type="FRAME" scale="0.6"/>
+  </Body>
+
+  <Body name="head_retarget" prev="head_shell" transform="0 0 0 90 90 0" >
+    <Shape type="FRAME" scale="0.3"/>
+  </Body>
+
+
   
   <!-- The model for a simple camera. -->
   <Group prev="aruco_base" rigid_body_joints="-0.125 0 1.78 0 40 0">

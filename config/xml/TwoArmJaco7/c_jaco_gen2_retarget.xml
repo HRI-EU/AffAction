@@ -2,13 +2,13 @@
 
   <xi:include href="g_jaco_gen2_retarget.xml"/>
 
-  <Task name="Right upperarm"  controlVariable="POLAR"   effector="forearm_right" refBdy="Seat_Felix" />
-  <Task name="Right forearm"   controlVariable="POLAR"   effector="wrist_right"  refBdy="Seat_Felix" />
-  <Task name="Right thumb"     controlVariable="ABC"   effector="hand_robot_right" refBdy="Seat_Felix" />
-  <Task name="Left upperarm"   controlVariable="POLAR"   effector="forearm_left"   refBdy="Seat_Felix" /> 
-  <Task name="Left forearm"    controlVariable="POLAR"   effector="wrist_left"   refBdy="Seat_Felix" />
-  <Task name="Left thumb"      controlVariable="ABC"   effector="hand_robot_left"  refBdy="Seat_Felix" /> 
-  <Task name="Head"            controlVariable="ABC"   effector="head_shell" refBdy="Seat_Felix" /> 
+  <Task name="right_upperarm_ori"  controlVariable="POLAR"   effector="upperarm_retarget_right"    refBdy="Seat_Felix" />
+  <Task name="right_forearm_ori"   controlVariable="POLAR"   effector="wrist_retarget_right"      refBdy="Seat_Felix" />
+  <Task name="right_hand_ori"      controlVariable="POLAR"   effector="hand_retarget_right" refBdy="Seat_Felix" />
+  <Task name="left_upperarm_ori"   controlVariable="POLAR"   effector="upperarm_retarget_left"     refBdy="Seat_Felix" />
+  <Task name="left_forearm_ori"    controlVariable="POLAR"   effector="wrist_retarget_left"       refBdy="Seat_Felix" />
+  <Task name="left_hand_ori"       controlVariable="POLAR"   effector="hand_retarget_left"  refBdy="Seat_Felix" />
+  <Task name="head_ori"            controlVariable="POLAR"   effector="head_retarget"             refBdy="Seat_Felix" />
 
   <BroadPhase DistanceThreshold="0.001">
     <Tree root="upperarm_left"/>

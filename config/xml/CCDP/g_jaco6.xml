@@ -5,7 +5,7 @@
   
   <Body name="aruco_base"  color="PEWTER" rigid_body_joints="true">
     <Shape extents="0.14 0.14 0" marker="true" markerName="aruco_1" scale="0.2" transform="-0.31 0.19 1.1 0 0 0" type="FRAME"/>
-    <Shape type="BOX" extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true" transform="-0.31 0.19 1.1 0 0 0" textureFile="textures/4x4marker_1.jpg" />
+    <Shape type="BOX" extents="0.14 0.14 0.0005" distance="false" physics="false" graphics="true" transform="-0.31 0.19 1.1 0 0 0" textureFile="textures/aruco/4x4marker_1.jpg" />
     <Shape scale="0.5" type="FRAME"/>
   </Body>
   

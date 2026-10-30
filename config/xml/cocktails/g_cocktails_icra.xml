@@ -32,7 +32,7 @@ chosen_recipes=['Martini', 'Pina_Colada', 'Purple_Rain', 'Screwdriver', 'Sex_on_
 ingredients_=['cranberry_juice', 'gin', 'ice_cubes', 'milk', 'pineapple_juice', 'rum', 'sliced_orange', 'soda_water', 'vermouth', 'vodka']
 -->
 
-<Graph xmlns:xi="http://www.w3.org/2003/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
+<Graph xmlns:xi="http://www.w3.org/2001/XInclude" resourcePath="config/xml/AffAction;install/config/xml/AffAction">
 
   <!-- Table with grid -->
   <Body name="table" prev="aruco_base" rigid_body_joints="-0.22 0 0.8 0 0 0" physics="kinematic" mass="10" >

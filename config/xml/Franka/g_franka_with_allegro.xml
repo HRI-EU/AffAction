@@ -34,16 +34,16 @@
                color="DARKGRAY"/>
     </Body>
 
-    <Hardware name="arm_left" component="-frankaZmq_left -frankaZmq_left.ip 192.168.1.101"/>
-    <Hardware name="arm_right" component="-frankaZmq_right -frankaZmq_right.ip 192.168.1.101"/>
+    <Hardware name="arm_left" component="-frankaZmq_left -frankaZmq_left.ip 192.168.1.101 -frankaZmq_left.keepDriverRunning"/>
+    <Hardware name="arm_right" component="-frankaZmq_right -frankaZmq_right.ip 192.168.1.101 -frankaZmq_right.keepDriverRunning"/>
 
     <!-- Dual arm FR3 setup -->
     <Group prev="stand" transform="0.284 0 0.875 0 0 0">
         <xi:include href="g_franka_duomount.xml"/>
     </Group>
     
-    <Hardware name="hand_left" component="-allegroZmq_left -allegroZmq_left.ip 192.168.0.101 -allegroZmq_wrongThumb"/>
-    <Hardware name="hand_right" component="-allegroZmq_right -allegroZmq_right.ip 192.168.0.101"/>
+    <Hardware name="hand_left" component="-allegroZmq_left -allegroZmq_left.ip 192.168.0.101 -allegroZmq_left.keepDriverRunning -allegroZmq_wrongThumb"/>
+    <Hardware name="hand_right" component="-allegroZmq_right -allegroZmq_right.ip 192.168.0.101 -allegroZmq_right.keepDriverRunning"/>
 
     <!-- Left Allegro hand -->
     <Group name="_left" prev="left_fr3_link8" transform="0 0 0.025 0 0 45">
@@ -95,18 +95,18 @@
         </Manipulator>
     </Group>
 
-    <Body name="respeaker" prev="stand" transform="0.43 0 1.15 0 0 -90" physics="none">
-        <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001"
-               color="BLACK_RUBBER"/>
-    </Body>
+    <!-- <Body name="respeaker" prev="stand" transform="0.43 0 1.15 0 0 -90" physics="none"> -->
+    <!--     <Shape type="MESH" meshFile="meshes/hri_description/meshes/Respeaker_mounting_simplified.stl" scale="0.001" -->
+    <!--            color="BLACK_RUBBER"/> -->
+    <!-- </Body> -->
 
     <!-- Graphics switched on in RespeakerComponent -->
-    <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none">
-        <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false"
-               color="BLUE_TRANS" transform="0 0 0.01 0 0 0"/>
-        <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false"
-               physics="false" transform="0.4 0 0 0 -90 0"/>
-    </Body>
+    <!-- <Body name="sound_beam" prev="respeaker" rigid_body_joints="0 0 0 0 0 90" physics="none"> -->
+    <!--     <Shape type="CYLINDER" radius="0.04" length="0.01" distance="false" graphics="false" physics="false" -->
+    <!--            color="BLUE_TRANS" transform="0 0 0.01 0 0 0"/> -->
+    <!--     <Shape type="CONE" radius="0.1" length="0.4" color="BLUE_TRANS" graphics="false" distance="false" -->
+    <!--            physics="false" transform="0.4 0 0 0 -90 0"/> -->
+    <!-- </Body> -->
 
     <!-- Schunk PW70 PTU with the 4mm base plate. -->
     <Group prev="stand" transform="0.36 0 1.437 0 0 0">

@@ -34,12 +34,12 @@
 
   <!-- The new head. Exchange g_head_v2.xml against g_head_v1.xml for old head (and remove gaze model) -->
   <Group prev="ptu_tool_link" transform="0 0 0 0 0 -90" >
-    <xi:include href="g_head_v2.xml" />
+    <xi:include href="../HRI/g_head_v2.xml" />
   </Group>
 
   <!-- Shoulder adaptors and arms with hands. -->
   <Body name="adapter_shoulder" prev="base_link" transform="-0.115 0 1.1052 0 0 0" >
-    <Shape type="MESH" meshFile="hri_scitos_description/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/Metralabs_ArmAdapter_V2.stl" scale="0.001" transform="0 0.04 -0.115 0 0 -90" />
   </Body>
 
 
@@ -76,13 +76,13 @@
   
   <!-- Face mesh (testing). -->
   <Body name="face" rigid_body_joints="true">
-    <Shape type="MESH" meshFile="hri_scitos_description/FaceMesh-holes-478.obj" resizeable="true" graphics="false" distance="false" physics="false"/>
+    <Shape type="MESH" meshFile="meshes/hri_description/meshes/FaceMesh-holes-478.obj" resizeable="true" graphics="false" distance="false" physics="false"/>
     <Shape type="FRAME" scale="1"/>
   </Body>
 
   <!-- The gaze model of the robot (testing).-->
   <Group prev="head_shell" >
-    <xi:include href="g_gazemodel.xml" />
+    <xi:include href="../HRI/g_gazemodel.xml" />
   </Group>
 
   <Body name="GazePoint" >
