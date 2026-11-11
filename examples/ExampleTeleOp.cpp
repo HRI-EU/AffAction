@@ -116,7 +116,6 @@ bool ExampleTeleOp::initParameters()
   xmlFileName = "c_franka_teleop_right.xml";
   dataCollectionXmlFileName = xmlFileName;
   configDirectory = "config/xml/Franka";
-  eye_ik_camera = "azure_kinect_rgb_frame";
 
   return true;
 }
@@ -137,7 +136,6 @@ bool ExampleTeleOp::parseArgs(Rcs::CmdLineParser* parser)
   parser->getArgument("-lambda", &lambda, "Regularization (default is %f)", lambda);
   parser->getArgument("-withRobo", &withRobo, "Use robot components");
   parser->getArgument("-inputType", &inputType, "LeRobot or SkeletonData");
-  parser->getArgument("-eye_ik_camera", &eye_ik_camera, "Camera for eye model");
 
   // This is just for pupulating the parsed command line arguments for the help
   // functions / help window.
@@ -243,18 +241,6 @@ bool ExampleTeleOp::initAlgo()
   {
     components.push_back(new PolicyTrackFrame(&entity, "haption"));
   }
-
-
-
-  if (EyeModelIKComponent::hasEyeModel(getGraph()))
-  {
-    componentArgs += " -eye_ik -eye_ik.camera_name " + eye_ik_camera;
-  }
-  else
-  {
-    RLOG(1, "No eye model");
-  }
-
 
   // Initialize robot components from command line and componentArgs
   auto cTmp = createHardwareComponents(entity, getGraph(), scene.get(), false, componentArgs);

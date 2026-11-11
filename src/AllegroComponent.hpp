@@ -265,7 +265,7 @@ public:
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
       MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
     }
@@ -299,10 +299,11 @@ private:
     std::vector<double> q(jntNameIdPairs.size());
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
-      RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                 jntNameIdPairs[i].jointName.c_str());
+      const int jointIndex = jntNameIdPairs[i].getJointIndex();
+      RCHECK_MSG(jointIndex!=-1, "Joint: '%s'",
+                 jntNameIdPairs[i].getJointName().c_str());
 
-      q[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
+      q[i] = MatNd_get(q_des, jointIndex, 0);
     }
 
     std::lock_guard<std::mutex> lock(cmdMtx);
@@ -319,7 +320,7 @@ private:
     {
       const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
       RCHECK_MSG(jnt, "Joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       RLOG(1, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
     }
   }

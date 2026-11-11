@@ -776,8 +776,6 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   argvStrVec.insert(argvStrVec.end(), extraArgsVec.begin(), extraArgsVec.end());
   auto argvString = Rcs::String_concatenate(argvStrVec, " ");
 
-  EyeModelIKComponent* eyeModel = nullptr;
-
   if (dryRun)
   {
     argP.hasArgument("-eye_ik", "Start with eye model");
@@ -786,16 +784,22 @@ std::vector<ComponentBase*> createComponents(EntityBase& entity,
   }
   else if (getKey(argvStrVec, "-eye_ik"))
   {
-    std::string camera_name = "camera_0";
-    getKeyValuePair<std::string>(argvStrVec, "-eye_ik.camera_name", camera_name);
-    eyeModel = new EyeModelIKComponent(&entity, graph, camera_name);
-    components.push_back(eyeModel);
-  }
+    if (EyeModelIKComponent::hasEyeModel(graph))
+    {
+      std::string camera_name = "camera_0";
+      getKeyValuePair<std::string>(argvStrVec, "-eye_ik.camera_name", camera_name);
+      EyeModelIKComponent* eyeModel = new EyeModelIKComponent(&entity, graph, camera_name);
+      components.push_back(eyeModel);
 
-  if (!dryRun && getKey(argvStrVec, "-eye_control"))
-  {
-    RCHECK_MSG(eyeModel, "-eye_control requires -eye_ik");
-    components.push_back(new EyeControlComponent(&entity, eyeModel));
+      if (!dryRun && getKey(argvStrVec, "-eye_control"))
+      {
+        components.push_back(new EyeControlComponent(&entity, eyeModel));
+      }
+    }
+    else
+    {
+      RLOG(1, "Eye model enabled, but not existent in the graph - skipping eye IK");
+    }
   }
 
   if (dryRun)

@@ -162,7 +162,7 @@ public:
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
       MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
     }
@@ -171,7 +171,7 @@ public:
     {
       RcsJoint* jnt = gripperNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Gripper joint '%s' not found in graph",
-                 gripperNameIdPairs[i].jointName.c_str());
+                 gripperNameIdPairs[i].getJointName().c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, gripper_angle);
     }
 
@@ -190,20 +190,20 @@ private:
     std::vector<double> q7(jntNameIdPairs.size());
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
-      RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                 jntNameIdPairs[i].jointName.c_str());
-      q7[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
+      const int jointIndex = jntNameIdPairs[i].getJointIndex();
+      RCHECK_MSG(jointIndex!=-1, "Joint: '%s'",
+                 jntNameIdPairs[i].getJointName().c_str());
+      q7[i] = MatNd_get(q_des, jointIndex, 0);
     }
 
     double gripper_des = 0.0;
     for (size_t i=0; i<gripperNameIdPairs.size(); ++i)
     {
-      RCHECK_MSG(gripperNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                 gripperNameIdPairs[i].jointName.c_str());
-      gripper_des = MatNd_get(q_des, gripperNameIdPairs[i].jointId, 0);
+      const int jointIndex = gripperNameIdPairs[i].getJointIndex();
+      RCHECK_MSG(jointIndex!=-1, "Joint: '%s'",
+                 gripperNameIdPairs[i].getJointName().c_str());
+      gripper_des = MatNd_get(q_des, jointIndex, 0);
     }
-
-
 
     std::lock_guard<std::mutex> lock(cmdMtx);
     jointCommands = q7;
@@ -221,7 +221,7 @@ private:
     {
       const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
       RCHECK_MSG(jnt, "Robot joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       RLOG(0, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
     }
   }

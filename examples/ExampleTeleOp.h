@@ -100,7 +100,6 @@ public:
   std::string dataCollectionXmlFileName;
   std::string configDirectory;
   std::string inputType;   // see IKTeleOp::ActionType
-  std::string eye_ik_camera;
   bool noLimits = false;
   bool enableRealGraphVisualization = true;
   double dt = 0.01;

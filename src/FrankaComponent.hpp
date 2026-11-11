@@ -115,7 +115,7 @@ public:
     {
       RcsJoint* jnt = jntNameIdPairs[i].getJoint(graph);
       RCHECK_MSG(jnt, "Robot arm joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       MatNd_set(graph->q, jnt->jointIndex, 0, jntPosTmp[i]);
       MatNd_set(graph->q_dot, jnt->jointIndex, 0, jntVelTmp[i]);
     }
@@ -144,7 +144,7 @@ public:
     {
       for (size_t i=0; i<jntNameIdPairs.size(); ++i)
       {
-        RcsSensor* jts = RcsGraph_getSensorByName(graph, jntNameIdPairs[i].jointName.c_str());
+        RcsSensor* jts = RcsGraph_getSensorByName(graph, jntNameIdPairs[i].getJointName().c_str());
         if (jts)
         {
           MatNd_set(jts->rawData, 0, 0, tau_ext_hat_filtered[i]);
@@ -176,23 +176,26 @@ private:
 
     if (!jntNameIdPairs.empty())
     {
-      int bdyId = RcsJoint_getConnectedBodyId(graph, &graph->joints[jntNameIdPairs.back().jointId]);
+      const RcsJoint* bdyJnt = jntNameIdPairs.back().getJoint(graph);
+      const int bdyId = RcsJoint_getConnectedBodyId(graph, bdyJnt);
+
       if (bdyId!=-1)
       {
         detail["distal_link"] = graph->bodies[bdyId].name;
       }
+
     }
 
     for (const auto& j : jntNameIdPairs)
     {
-      detail["links"] += j.jointName;
+      detail["links"] += j.getJointName();
     }
 
-    if (Rcs::String_endsWith(jntNameIdPairs[0].jointName, "left"))
+    if (Rcs::String_endsWith(jntNameIdPairs[0].getJointName(), "left"))
     {
       detail["side"] = "left";
     }
-    else if (Rcs::String_endsWith(jntNameIdPairs[0].jointName, "right"))
+    else if (Rcs::String_endsWith(jntNameIdPairs[0].getJointName(), "right"))
     {
       detail["side"] = "right";
     }
@@ -220,9 +223,10 @@ private:
     std::vector<double> q7(jntNameIdPairs.size());
     for (size_t i=0; i<jntNameIdPairs.size(); ++i)
     {
-      RCHECK_MSG(jntNameIdPairs[i].jointId!=-1, "Joint: '%s'",
-                 jntNameIdPairs[i].jointName.c_str());
-      q7[i] = MatNd_get(q_des, jntNameIdPairs[i].jointId, 0);
+      const int jointIndex = jntNameIdPairs[i].getJointIndex();
+      RCHECK_MSG(jointIndex!=-1, "Joint: '%s'",
+                 jntNameIdPairs[i].getJointName().c_str());
+      q7[i] = MatNd_get(q_des, jointIndex, 0);
     }
 
     std::lock_guard<std::mutex> lock(cmdMtx);
@@ -239,7 +243,7 @@ private:
     {
       const RcsJoint* jnt = jntNameIdPairs[i].getJoint(target);
       RCHECK_MSG(jnt, "Robot joint '%s' not found in graph",
-                 jntNameIdPairs[i].jointName.c_str());
+                 jntNameIdPairs[i].getJointName().c_str());
       RLOG(0, "Setting joint %zu to %f", i, target->q->ele[jnt->jointIndex]);
     }
   }
