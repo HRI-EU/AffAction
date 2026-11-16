@@ -796,7 +796,7 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   //////////////////////////////////////////////////////////////////////////////
   .def("get_agents", [](aff::ExampleActionsECS& ex, bool onlyVisibleAgents) -> nlohmann::json
   {
-    return ex.getQuery()->getAgents();
+    return ex.getQuery()->getAgents(onlyVisibleAgents);
   },
   py::arg("onlyVisibleAgents") = false)
 
@@ -806,7 +806,7 @@ quat: (N,4) float64 array [qw, qx, qy, qz]
   //////////////////////////////////////////////////////////////////////////////
   .def("get_human_agents", [](aff::ExampleActionsECS& ex, bool onlyVisibleAgents) -> nlohmann::json
   {
-    return ex.getQuery()->getHumanAgents();
+    return ex.getQuery()->getHumanAgents(onlyVisibleAgents);
   },
   py::arg("onlyVisibleAgents") = false)
 
