@@ -87,9 +87,9 @@ void GraphComponent::onForwardKinematics(RcsGraph* graph)
     RcsGraph_setState(graph, NULL, graph->q_dot);
   }
   else
-{
-  RcsGraph_setState(graph, NULL, NULL);
-}
+  {
+    RcsGraph_setState(graph, NULL, NULL);
+  }
 
 }
 

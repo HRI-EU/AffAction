@@ -2,7 +2,7 @@
 #define AFF_EVENTCLIENT_H
 
 #define ASIO_STANDALONE
-#include <websocketpp/config/asio_no_tls_client.hpp> 
+#include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
 #include <Rcs_macros.h>

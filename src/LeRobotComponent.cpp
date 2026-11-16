@@ -84,6 +84,36 @@ void LeRobotComponent::updateData(RcsGraph* desired, RcsGraph* current)
   std::lock_guard<std::mutex> lock(this->leRobotStateMtx);
   this->lerobot_state_curr = std::vector<double>(current->q->ele, current->q->ele+current->q->size);
   this->lerobot_state_des = std::vector<double>(desired->q->ele, desired->q->ele+desired->q->size);
+
+  // Sensors from curent graph
+  this->lerobot_sensors_curr.clear();
+  RCSGRAPH_FOREACH_SENSOR(current)
+  {
+    const size_t dataSize = SENSOR->rawData->m*SENSOR->rawData->n;
+    const double* data = SENSOR->rawData->ele;
+    this->lerobot_sensors_curr.push_back(std::vector<double>(data, data+dataSize));
+
+    if (SENSOR->texel)
+    {
+      RLOG(1, "Sensor %s: Texel copying not yet supported", SENSOR->name);
+    }
+  }
+
+  // Sensors from desired graph
+  this->lerobot_sensors_des.clear();
+  RCSGRAPH_FOREACH_SENSOR(desired)
+  {
+    const size_t dataSize = SENSOR->rawData->m*SENSOR->rawData->n;
+    const double* data = SENSOR->rawData->ele;
+    this->lerobot_sensors_des.push_back(std::vector<double>(data, data+dataSize));
+
+    if (SENSOR->texel)
+    {
+      RLOG(1, "Sensor %s: Texel copying not yet supported", SENSOR->name);
+    }
+  }
+
+
 }
 
 
@@ -91,12 +121,13 @@ std::map<std::string, double> LeRobotComponent::computeLeRobotData(bool current)
 {
   Rcs::ControllerBase* controller = current ? lerobot_ctrl_curr.get() : lerobot_ctrl_des.get();
   const double* q_ptr = current ? lerobot_state_curr.data() : lerobot_state_des.data();
-
+  std::vector<std::vector<double>> lerobot_sensors;
 
   // Short copy inside mutex. We assume all state is represented in the q-vector
   {
     std::lock_guard<std::mutex> lock(this->leRobotStateMtx);
     MatNd_fromArray(controller->getGraph()->q, q_ptr, controller->getGraph()->dof);
+    lerobot_sensors = current ? lerobot_sensors_curr : lerobot_sensors_des;
   }
 
 
@@ -167,16 +198,16 @@ std::map<std::string, double> LeRobotComponent::computeLeRobotData(bool current)
   }
 
   // Sensor state
-  for (size_t i = 0; i < controller->getGraph()->nSensors; ++i)
+  size_t s_idx = 0;
+  RCSGRAPH_FOREACH_SENSOR(controller->getGraph())
   {
-    const RcsSensor* s = &controller->getGraph()->sensors[i];
-
-    for (size_t j = 0; j < s->rawData->size; j++)
+    for (size_t j = 0; j < lerobot_sensors[s_idx].size(); j++)
     {
-      std::string key = "sensor." + std::string(s->name) + "_" + std::to_string(j);
-      data[key] = s->rawData->ele[j];
+      std::string key = "sensor." + std::string(SENSOR->name) + "_" + std::to_string(j);
+      data[key] = lerobot_sensors[s_idx][j];
     }
 
+    s_idx++;
   }
 
   return data;

@@ -73,7 +73,7 @@ bool extract_intrinsics(const nlohmann::json& data,
 bool computeCameraGazeDirection(const PinholeCamera& cam,
                                 int x, int y,
                                 double gazeDir[3],
-                        std::string& err);
+                                std::string& err);
 
 
 }   // namespace

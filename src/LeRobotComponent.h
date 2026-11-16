@@ -95,6 +95,7 @@ private:
    */
   mutable std::mutex leRobotStateMtx;
   std::vector<double> lerobot_state_curr, lerobot_state_des;
+  std::vector<std::vector<double>> lerobot_sensors_curr, lerobot_sensors_des;
   std::unique_ptr<Rcs::ControllerBase> lerobot_ctrl_curr, lerobot_ctrl_des;
 
 

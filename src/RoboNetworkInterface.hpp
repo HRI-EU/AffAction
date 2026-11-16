@@ -258,14 +258,14 @@ protected:
     // to the drivers so that they shut down gracefully
     if (quitDriverOnExit)
     {
-    try
-    {
-      pub_socket.send(zmq::buffer("{ \"quit\": true}"), zmq::send_flags::none);
-    }
-    catch (const zmq::error_t& e)
-    {
-      RLOG_CPP(0, "ZMQ send error on quit command: " << e.what());
-    }
+      try
+      {
+        pub_socket.send(zmq::buffer("{ \"quit\": true}"), zmq::send_flags::none);
+      }
+      catch (const zmq::error_t& e)
+      {
+        RLOG_CPP(0, "ZMQ send error on quit command: " << e.what());
+      }
     }
 
     RLOG(0, "Exiting sendThreadFunc()");

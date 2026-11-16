@@ -282,7 +282,7 @@ public:
         {
           if ((SENSOR->bodyId==b->id) && (SENSOR->type==RCSSENSOR_CONTACT_FORCE))
           {
-            MatNd_set(SENSOR->rawData, 0, 0, ftfTmp[i]);
+            MatNd_set(SENSOR->rawData, 0, 0, ftfTmp[i]/5000.0);   // That's the range of the pressure sensors
           }
         }
       }
