@@ -277,6 +277,14 @@ public:
       if (b && b->nShapes>0)
       {
         strcpy(b->shapes[0].color, col.c_str());
+
+        RCSGRAPH_FOREACH_SENSOR(graph)
+        {
+          if ((SENSOR->bodyId==b->id) && (SENSOR->type==RCSSENSOR_CONTACT_FORCE))
+          {
+            MatNd_set(SENSOR->rawData, 0, 0, ftfTmp[i]);
+          }
+        }
       }
     }
 

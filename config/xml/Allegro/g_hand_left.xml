@@ -107,6 +107,7 @@ Thumb		3	0		50		50		 0  : 105
     <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
+    <Sensor name="link_3_0_tip" type="CONTACTFORCE" />
   </Body>
 
   <Body name="link_4_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >
@@ -133,6 +134,7 @@ Thumb		3	0		50		50		 0  : 105
     <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
+    <Sensor name="link_7_0_tip" type="CONTACTFORCE" />
   </Body>
 
   <Body name="link_8_0" prev="palm_link" physics="dynamic" mass="0.0176" inertia="1.2854e-05 2.04e-08 1.89e-06   2.04e-08 1.225e-05 1.51e-07   1.89e-06 1.51e-07 2.999e-06" >
@@ -159,6 +161,7 @@ Thumb		3	0		50		50		 0  : 105
     <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.05482 -0.01493 -0.01795 0 0 -90" meshFile="meshes/allegro_hand_description/meshes/finger_tip.stl" color="#e5e5e5ff" />
     <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
+    <Sensor name="link_11_0_tip" type="CONTACTFORCE" />
   </Body>
 
   <Body name="link_12_0" prev="palm_link" transform="0 0 0 180 -90 180" physics="dynamic" mass="0.0446" inertia="5.44e-05 4e-07 -1.12e-07   4e-07 9.19e-06 1.07e-05   -1.12e-07 1.07e-05 4.8e-05"   >
@@ -186,6 +189,7 @@ Thumb		3	0		50		50		 0  : 105
     <Shape type="SPHERE"  distance="false" physics="false" graphics="true" radius="0.015" resizeable="true" transform="0 -0.001 -0.002 0 0 0" />
     <Shape type="MESH" distance="false" physics="false" graphics="true" scale="0.001 0.001 0.001" transform="-0.014 0.0545 -0.0172 0 0 180" meshFile="meshes/allegro_hand_description/meshes/finger_tip_silicon.stl" color="#e5e5e5ff" />
     <Shape type="SSL"  distance="true" physics="false" graphics="false" radius="0.02" length="0.07" transform="0 0 0 180 0 0" resizeable="true" color="RED" />
+    <Sensor name="link_15_0_tip" type="CONTACTFORCE" />
   </Body>
 
 </Graph>

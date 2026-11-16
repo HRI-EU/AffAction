@@ -30,51 +30,71 @@
 #
 ################################################################################
 
-SET(PYBIND11_CPP_STANDARD -std=c++14)
 SET(PYBIND_DIR_HINT "${CMAKE_CURRENT_SOURCE_DIR}/../../pybind11")
 
-IF (WIN32)
-  SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # Put module where dlls are located
-ENDIF(WIN32)
+# Only build Python modules if the pybind11 source exists.
+IF(NOT EXISTS "${PYBIND_DIR_HINT}/CMakeLists.txt")
 
-IF (EXISTS "${PYBIND_DIR_HINT}" AND IS_DIRECTORY "${PYBIND_DIR_HINT}")
+  MESSAGE(STATUS "pybind11 not found - skipping Python wrappers")
 
-  FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
+ELSE()
+
+  # Use CMake's modern FindPython mechanism.
+  SET(PYBIND11_FINDPYTHON ON)
+
+  # Use CMake's built-in Python discovery on Windows,
+  # bypassing the vcpkg Python wrapper.
+  IF(WIN32)
+    SET(Python3_FIND_COMPONENTS Interpreter Development.Module)
+    SET(Python3_FIND_REQUIRED TRUE)
+    SET(Python3_FIND_REQUIRED_Interpreter TRUE)
+    SET("Python3_FIND_REQUIRED_Development.Module" TRUE)
+    INCLUDE("${CMAKE_ROOT}/Modules/FindPython3.cmake")
+  ELSE()
+    FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+  ENDIF()
+
+  # Verify that Python module development is available
+  IF(NOT Python3_FOUND OR
+      NOT TARGET Python3::Module OR
+      NOT COMMAND Python3_add_library)
+    MESSAGE(FATAL_ERROR "Python module development not available for ${Python3_EXECUTABLE}")
+  ENDIF()
+
   MESSAGE(STATUS "pybind11 found - creating python wrapper")
+  MESSAGE(STATUS "Python executable: ${Python3_EXECUTABLE}")
+  MESSAGE(STATUS "Python includes: ${Python3_INCLUDE_DIRS}")
+  MESSAGE(STATUS "Python libraries: ${Python3_LIBRARIES}")
+
   ADD_SUBDIRECTORY("${CMAKE_CURRENT_SOURCE_DIR}/../../pybind11" "${CMAKE_BINARY_DIR}/pybind11")
-  SET(MODULE_SRCS module.cpp)
 
-  # The link-time optimization has an internal error when used from ToolBos, so disable it.
-  # Mark pybind11 include dirs as system to supress warnings in pybind11 code
-  PYBIND11_ADD_MODULE(pyAffaction ${MODULE_SRCS})# NO_EXTRAS)
-  TARGET_COMPILE_DEFINITIONS(pyAffaction PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-  TARGET_LINK_LIBRARIES(pyAffaction PUBLIC AffAction)
-  TARGET_INCLUDE_DIRECTORIES(pyAffaction SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
+  IF(WIN32)
+    SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+  ENDIF()
 
+  PYBIND11_ADD_MODULE(pyAffaction module.cpp)# NO_EXTRAS)
   PYBIND11_ADD_MODULE(pyPushT pyPushT.cpp)# NO_EXTRAS)
-  TARGET_COMPILE_DEFINITIONS(pyPushT PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-  TARGET_LINK_LIBRARIES(pyPushT PUBLIC AffAction)
-  TARGET_INCLUDE_DIRECTORIES(pyPushT SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
-
   PYBIND11_ADD_MODULE(pyTeleOp module_teleop.cpp)# NO_EXTRAS)
-  TARGET_COMPILE_DEFINITIONS(pyTeleOp PRIVATE -DRCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
-  TARGET_LINK_LIBRARIES(pyTeleOp PUBLIC AffAction)
-  TARGET_INCLUDE_DIRECTORIES(pyTeleOp SYSTEM BEFORE PUBLIC ${PYBIND11_INCLUDE_DIR} ../external)
 
-ELSE()
+  FOREACH(target IN ITEMS pyAffaction pyPushT pyTeleOp)
+    TARGET_COMPILE_FEATURES(${target} PRIVATE cxx_std_14)
+    TARGET_COMPILE_DEFINITIONS(${target} PRIVATE RCS_CONFIG_DIR="${RCS_CONFIG_DIR}")
+    TARGET_LINK_LIBRARIES(${target} PRIVATE AffAction)
+    TARGET_INCLUDE_DIRECTORIES(${target} SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../external")
+  ENDFOREACH()
 
-  MESSAGE(STATUS "pybind11 not found - skipping python wrapper")
-  
-ENDIF()
+  # Installation
+  IF(WIN32)
+    INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION bin
+        ARCHIVE DESTINATION lib/AffAction)
+  ELSE()
+    INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib/AffAction)
+  ENDIF()
 
-IF(UNIX)
-  INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
-          RUNTIME DESTINATION bin 
-          LIBRARY DESTINATION lib
-          ARCHIVE DESTINATION lib/AffAction)
-ELSE()
-  INSTALL(TARGETS pyAffaction pyPushT pyTeleOp
-          RUNTIME DESTINATION bin 
-          LIBRARY DESTINATION bin
-          ARCHIVE DESTINATION lib/AffAction)
 ENDIF()
