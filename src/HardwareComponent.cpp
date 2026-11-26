@@ -673,11 +673,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_right.ip", other_ip);
       bool keepDriverOnExit = getKey(argvStrVec, "-frankaZmq_right.keepDriverRunning");
+      bool withForceEvents = getKey(argvStrVec, "-frankaZmq_right.publishForceEvents");
       std::string otherRecv="tcp://" + other_ip + ":40008";
       std::string otherSend="tcp://" + other_ip + ":40009";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend, !keepDriverOnExit));
+                                                    otherRecv, otherSend,
+                                                    !keepDriverOnExit, withForceEvents));
     }
 
     if (getKey(argvStrVec, "-frankaZmq_left"))
@@ -686,11 +688,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-frankaZmq_left.ip", other_ip);
       bool keepDriverOnExit = getKey(argvStrVec, "-frankaZmq_left.keepDriverRunning");
+      bool withForceEvents = getKey(argvStrVec, "-frankaZmq_left.publishForceEvents");
       std::string otherRecv="tcp://" + other_ip + ":40010";
       std::string otherSend="tcp://" + other_ip + ":40011";
       const double dt_commands = 0.01;
       components.push_back(new aff::FrankaComponent(&entity, dt_commands, suffix,
-                                                    otherRecv, otherSend, !keepDriverOnExit));
+                                                    otherRecv, otherSend,
+                                                    !keepDriverOnExit, withForceEvents));
     }
 
     if (getKey(argvStrVec, "-allegroZmq_right"))
@@ -699,11 +703,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_right.ip", other_ip);
       bool keepDriverOnExit = getKey(argvStrVec, "-allegroZmq_right.keepDriverRunning");
+      bool withFingerTipEvents = getKey(argvStrVec, "-allegroZmq_right.publishFingerTipEvents");
       std::string otherRecv="tcp://" + other_ip + ":40012";
       std::string otherSend="tcp://" + other_ip + ":40013";
       const double dt_commands = 0.02;
       auto ac = new aff::AllegroComponent(&entity, dt_commands, suffix,
-                                          otherRecv, otherSend, !keepDriverOnExit);
+                                          otherRecv, otherSend,
+                                          !keepDriverOnExit, withFingerTipEvents);
       components.push_back(ac);
     }
 
@@ -713,11 +719,13 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
       std::string other_ip = "localhost";
       getKeyValuePair<std::string>(argvStrVec, "-allegroZmq_left.ip", other_ip);
       bool keepDriverOnExit = getKey(argvStrVec, "-allegroZmq_left.keepDriverRunning");
+      bool withFingerTipEvents = getKey(argvStrVec, "-allegroZmq_left.publishFingerTipEvents");
       std::string otherRecv="tcp://" + other_ip + ":40014";
       std::string otherSend="tcp://" + other_ip + ":40015";
       const double dt_commands = 0.02;
       auto ac = new aff::AllegroComponent(&entity, dt_commands, suffix,
-                                          otherRecv, otherSend, !keepDriverOnExit);
+                                          otherRecv, otherSend,
+                                          !keepDriverOnExit, withFingerTipEvents);
       bool wrongThumbMode = getKey(argvStrVec, "-allegroZmq_wrongThumb");
       ac->setWrongThumbMode(wrongThumbMode);
       components.push_back(ac);

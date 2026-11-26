@@ -41,8 +41,7 @@
 #include <Rcs_math.h>
 #include <Rcs_dynamics.h>
 #include <Rcs_utilsCPP.h>
-
-#include <mutex>
+#include <Rcs_filters.h>
 
 /*
 Here's the command data for the hands. The tmc and vmax values can be skipped if not needed.
@@ -200,8 +199,12 @@ public:
                    std::string suffix,
                    std::string otherRecv,
                    std::string otherSend,
-                   bool quitDriverOnExit_=true)
-    : ComponentBase(parent), RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_)
+                   bool quitDriverOnExit_,
+                   bool publishFingerTipEvents_)
+    : ComponentBase(parent),
+      RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_),
+      fingerTipPressureFilt(0.1, parent->getDt(), 4),
+      publishFingerTipEvents(publishFingerTipEvents_)
   {
     RLOG_CPP(1, "suffix: " << suffix << " otherRecv: " << otherRecv << " otherSend: " << otherSend);
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("joint_0_0"+suffix));
@@ -286,6 +289,90 @@ public:
           }
         }
       }
+    }
+
+    if (publishFingerTipEvents)
+    {
+      const double eps_high = 200.0;
+      const double eps_low = 50.0;
+      detectExternalFingerTipEvent(graph, ftfTmp, eps_low, eps_high);
+    }
+  }
+
+  void detectExternalFingerTipEvent(const RcsGraph* graph,
+                                    std::vector<double> ftfTmp,
+                                    double eps_low, double eps_high)
+  {
+    std::vector<double> ft_pressure_prev = fingerTipPressureFilt.getPosition();
+    fingerTipPressureFilt.setTarget(ftfTmp.data());
+    fingerTipPressureFilt.iterate();
+    std::vector<double> ft_pressure = fingerTipPressureFilt.getPosition();
+
+    nlohmann::json detail =
+    {
+      {"pressure", ft_pressure}
+    };
+
+    if (!jntNameIdPairs.empty())
+    {
+      const RcsJoint* bdyJnt = jntNameIdPairs.back().getJoint(graph);
+      const int bdyId = RcsJoint_getConnectedBodyId(graph, bdyJnt);
+
+      if (bdyId!=-1)
+      {
+        detail["distal_link"] = graph->bodies[bdyId].name;
+      }
+
+    }
+
+    if (Rcs::String_endsWith(jntNameIdPairs[0].getJointName(), "left"))
+    {
+      detail["side"] = "left";
+    }
+    else if (Rcs::String_endsWith(jntNameIdPairs[0].getJointName(), "right"))
+    {
+      detail["side"] = "right";
+    }
+
+    int dir = 0;
+    for (size_t i=0; i<ftfTmp.size(); ++i)
+    {
+      if (fingerTipPressureTriggered)
+      {
+        if (ft_pressure[i] < eps_low && ft_pressure_prev[i] >= eps_low)
+        {
+          dir = -1;
+        }
+      }
+      else
+      {
+        if (ft_pressure[i] > eps_high && ft_pressure_prev[i] <= eps_high)
+        {
+          dir = +1;
+        }
+      }
+    }
+
+
+
+    switch (dir)
+    {
+      case -1:
+        getEntity()->publish<std::string, std::string, std::string>(
+          "PublishEvent", "scene", "finger_tip_pressure_end", detail.dump());
+        NLOG(0, "finger_tip_pressure_end");
+        this->fingerTipPressureTriggered = false;
+        break;
+
+      case +1:
+        getEntity()->publish<std::string, std::string, std::string>(
+          "PublishEvent", "scene", "finger_tip_pressure_start", detail.dump());
+        NLOG(0, "finger_tip_pressure_start");
+        this->fingerTipPressureTriggered = true;
+        break;
+
+      default:
+        break;
     }
 
   }
@@ -552,6 +639,9 @@ private:
   std::vector<double> jointPosition, jointVelocity, jointTorque;
   std::vector<double> jointCommands, jointCommandsPrev;
   std::vector<double> fingerTipPressure;
+  Rcs::SecondOrderLPFND fingerTipPressureFilt;
+  bool fingerTipPressureTriggered = false;
+  bool publishFingerTipEvents = false;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
 };

@@ -60,10 +60,12 @@ public:
                   std::string suffix,
                   std::string otherRecv,
                   std::string otherSend,
-                  bool quitDriverOnExit_=true)
+                  bool quitDriverOnExit_,
+                  bool publishTorqueEvents_)
     : ComponentBase(parent),
       RoboNetworkInterface(otherRecv, otherSend, dt_commands, quitDriverOnExit_),
-      torqueFilt(0.0, 0.1, parent->getDt())
+      torqueFilt(0.0, 0.1, parent->getDt()),
+      publishTorqueEvents(publishTorqueEvents_)
   {
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint1"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint2"+suffix));
@@ -73,8 +75,8 @@ public:
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint6"+suffix));
     jntNameIdPairs.push_back(Rcs::JointNameIndexPair("fr3_joint7"+suffix));
 
-    baseFtsName = "fts_base_" + suffix;
-    eeFtsName = "fts_ee_" + suffix;
+    baseFtsName = "fts_base" + suffix;
+    eeFtsName = "fts_ee" + suffix;
 
     subscribe("Start", &RoboNetworkInterface::start);
     subscribe("Stop", &RoboNetworkInterface::stop);
@@ -151,9 +153,13 @@ public:
         }
       }
 
-      const double eps_high = 6.0;
-      const double eps_low = 3.0;
-      detectExternalForceEvent(graph, tau_ext_hat_filtered, eps_low, eps_high);
+      if (this->publishTorqueEvents)
+      {
+        const double eps_high = 6.0;
+        const double eps_low = 3.0;
+        detectExternalForceEvent(graph, tau_ext_hat_filtered, eps_low, eps_high);
+      }
+
     }
 
 
@@ -393,6 +399,7 @@ private:
   std::vector<double> wrench_in_base, wrench_in_ee, tau_ext_hat_filtered;
   std::vector<double> jointCommands, jointCommandsPrev;
   Rcs::SecondOrderLPF1D torqueFilt;
+  bool publishTorqueEvents = false;
   mutable std::mutex recvMtx;
   mutable std::mutex cmdMtx;
 };
