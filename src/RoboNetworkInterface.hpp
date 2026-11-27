@@ -41,6 +41,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -260,7 +261,8 @@ protected:
     {
       try
       {
-        pub_socket.send(zmq::buffer("{ \"quit\": true}"), zmq::send_flags::none);
+        const std::string quitCommand = "{ \"quit\": true}";
+        pub_socket.send(zmq::buffer(quitCommand), zmq::send_flags::none);
       }
       catch (const zmq::error_t& e)
       {

@@ -642,5 +642,75 @@ public:
 RCS_REGISTER_EXAMPLE(ExampleFrankaBimanualGui, "RoboDrivers", "Franka both arms with Joint-Gui");
 
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleCubemarsGui : public ExampleJointControl
+{
+public:
+
+  ExampleCubemarsGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  virtual ~ExampleCubemarsGui()
+  {
+  }
+
+  bool initParameters()
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_head_v4.xml";
+    configDirectory = "config/xml/HRI";
+    componentArgs = "-cubemars ";
+    return true;
+  }
+
+  std::string help()
+  {
+    std::string str = "Start:\n";
+    str = "  bin/CubemarsDriver -m 1 -robo_name cubemars\n\n";
+    str += ExampleJointControl::help();
+    return str;
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleCubemarsGui, "RoboDrivers", "Cubemars PTU with Joint-Gui");
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class ExampleReachyGui : public ExampleJointControl
+{
+public:
+
+  ExampleReachyGui(int argc, char** argv) : ExampleJointControl(argc, argv)
+  {
+  }
+
+  bool initParameters() override
+  {
+    ExampleJointControl::initParameters();
+    xmlFileName = "g_reachy_mini.xml";
+    configDirectory = "config/xml/ReachyMini";
+    addComponentArgument("-reachy");
+    return true;
+  }
+
+  std::string help() override
+  {
+    std::string str = "Start the Reachy driver in a separate terminal.\n"
+                      "  Hardware:   python3 src/ReachyDriver.py\n"
+                      "  Simulation: python3 src/ReachyDriver.py --simulate\n\n";
+    return str + ExampleJointControl::help();
+  }
+
+};
+
+RCS_REGISTER_EXAMPLE(ExampleReachyGui, "RoboDrivers", "Reachy Mini head with Joint-Gui");
+
+
 
 }   // namespace aff

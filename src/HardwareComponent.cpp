@@ -43,6 +43,7 @@
 #include "PW70Component.h"
 #include "PW70ZmqComponent.hpp"
 #include "CubemarsZmqComponent.hpp"
+#include "ReachyComponent.hpp"
 #include "FaceTracker.h"
 #include "KortexComponent.hpp"
 #include "FrankaComponent.hpp"
@@ -748,6 +749,23 @@ std::vector<ComponentBase*> createHardwareComponents(EntityBase& entity,
     std::string otherSend="tcp://" + other_ip + ":40029";
     bool keepDriverOnExit = getKey(argvStrVec, "-cubemars.keepDriverRunning");
     components.push_back(new CubemarsComponent(&entity, dt_commands, "", otherRecv, otherSend, !keepDriverOnExit));
+  }
+
+  if (dryRun)
+  {
+    argP.addDescription("-reachy", "Connect to the Reachy Mini head driver over ZMQ");
+    argP.addDescription("-reachy.ip", "Reachy driver host (default: localhost)");
+    argP.addDescription("-reachy.keepDriverRunning", "Keep driver process running after shutdown");
+  }
+  else if (getKey(argvStrVec, "-reachy"))
+  {
+    const double dt_commands = 0.02;
+    std::string other_ip = "localhost";
+    getKeyValuePair<std::string>(argvStrVec, "-reachy.ip", other_ip);
+    std::string otherRecv = "tcp://" + other_ip + ":40028";
+    std::string otherSend = "tcp://" + other_ip + ":40029";
+    bool keepDriverOnExit = getKey(argvStrVec, "-reachy.keepDriverRunning");
+    components.push_back(new ReachyComponent(&entity, dt_commands, "", otherRecv, otherSend, !keepDriverOnExit));
   }
 
 #if defined USE_ROS

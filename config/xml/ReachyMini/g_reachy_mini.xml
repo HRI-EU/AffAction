@@ -1,0 +1,46 @@
+<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data/reachy_mini/urdf/assets" name="default" >
+
+  <Body name="body_foot_3dprint" color="PUREWHITE" >
+    <Shape type="FRAME" graphics="true" scale="0.2" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.2298 0 0 90" meshFile="body_foot_3dprint.stl" />
+  </Body>
+
+  <Body name="body_down_3dprint" prev="body_foot_3dprint" color="PUREWHITE" >
+    <Joint name="yaw_body" range="-160 0 160" constraint="true" type="RotZ" transform="0 0 0.0348 0 0 0" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="FRAME" graphics="true" scale="0.2" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="body_down_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_back_0.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_back_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_back_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_back_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_front_0.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_front_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -90.180" meshFile="collision/fine/body_top_3dprint_collider_front_2.stl" />
+  </Body>
+
+  <Body name="head" prev="body_down_3dprint" color="PUREWHITE" >
+    <Joint name="x" range="-1 0 1" type="TransX" transform="0 0 0.144 0 0 -0.180" />
+    <Joint name="y" range="-1 0 1" type="TransY"  />
+    <Joint name="z" range="-1 0 1" type="TransZ"  />
+    <Joint name="ptu_pan_joint" range="-60 0 60" type="RotZ"  />
+    <Joint name="ptu_roll_joint" range="-60 0 60" type="RotX" transform="0 0 0 0 0 180" />
+    <Joint name="ptu_tilt_joint" range="-60 0 60" type="RotY" transform="0 0 0 0 0 180"  />
+    <Shape type="FRAME" graphics="true" scale="0.3" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.05 0 0 90" meshFile="collision/fine/head_one_3dprint_collider_0.stl" />
+  </Body>
+
+  <Body name="right_antenna" prev="head" color="BLACK_PLASTIC" >
+    <Joint name="right_antenna" range="-180 0 180" type="RotZ" transform="-0.03 0.052 0.07  90 -120 180" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="FRAME" graphics="true" scale="0.05" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 -0.0588 0.0103 0 180 0" meshFile="antenna.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0028 90 0 0" meshFile="antenna_body_3dprint.stl" />
+  </Body>
+
+  <Body name="left_antenna" prev="head" color="BLACK_PLASTIC" >
+    <Joint name="left_antenna" range="-180 0 180" type="RotZ" transform="-0.03 -0.052 0.07 90 -40 180" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="FRAME" graphics="true" scale="0.05" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 -0.0588 0.0103 0 180 0" meshFile="antenna.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0028 90 0 0" meshFile="antenna_body_3dprint.stl" />
+  </Body>
+  
+</Graph>

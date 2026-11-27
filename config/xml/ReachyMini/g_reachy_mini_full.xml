@@ -1,0 +1,494 @@
+<Graph resourcePath="${SIT}/Data/RobotMeshes/1.0/data" name="default" >
+
+  <Body name="body_foot_3dprint" physics="dynamic" mass="0.061788" cogVector="0.002902 0.000113 0.013261" inertia="6.91521e-05 -1.98794e-07 -4.91678e-08   -1.98794e-07 6.07324e-05 -3.02441e-08   -4.91678e-08 -3.02441e-08 0.000110345" >
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.2298 0 0 90.00021" meshFile="reachy_mini/urdf/assets/body_foot_3dprint.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.2298 0 0 90.00021" meshFile="reachy_mini/urdf/assets/body_foot_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0413 135 89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0413 135 89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.2298 0 0 90.00021" meshFile="reachy_mini/urdf/assets/body_turning_3dprint.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.2298 0 0 90.00021" meshFile="reachy_mini/urdf/assets/body_turning_3dprint.stl" />
+  </Body>
+
+  <Body name="body_down_3dprint" prev="body_foot_3dprint" physics="dynamic" mass="0.78209" cogVector="0.000002 0.000621 0.020169" inertia="0.00233791 1.10376e-07 -1.41892e-07   1.10376e-07 0.00224458 -4.46122e-05   -1.41892e-07 -4.46122e-05 0.00254424" >
+    <Joint name="yaw_body" range="-160.000183 0 160.000183" constraint="true" type="RotZ" transform="0 0 0.0348 0 0 -90.00021" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/body_down_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/body_down_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 179.999848" meshFile="reachy_mini/urdf/assets/stewart_tricap_3dprint.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.195 0 0 179.999848" meshFile="reachy_mini/urdf/assets/stewart_tricap_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 -0.005 0.053583 -90.00021 0.000152 -180" meshFile="reachy_mini/urdf/assets/5w_speaker.stl" color="#313131ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 -0.005 0.053583 -90.00021 0.000152 -180" meshFile="reachy_mini/urdf/assets/5w_speaker.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0115 -135 89.999702 -135" meshFile="reachy_mini/urdf/assets/bearing_85x110x13.stl" color="#c3e2f2ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0115 -135 89.999702 -135" meshFile="reachy_mini/urdf/assets/bearing_85x110x13.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/body_top_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/body_top_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_main_plate_3dprint.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.195 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_main_plate_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.050161 0.041833 179.999848 0 -179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.03844 0.033741 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.03844 0.033741 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.01 -0.050161 0.041833 179.999848 0 179.999848" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.04844 0.01642 0.041833 -179.999924 -0.000132 -60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04844 0.01642 0.041833 -179.999924 0.000132 60.00014" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.81822e-13 -1.93125e-07   1.81822e-13 1.28019e-06 1.09002e-14   -1.93125e-07 1.09002e-14 1.26546e-06" >
+    <Joint name="stewart_1" range="-47.999998 15.999904 79.999805" constraint="true" type="RotZ" transform="-0.032811 0.030491 0.041833 90.000421 60.00014 -0.000365" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.0825 0 0.007 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.0825 0 0.007 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+  </Body>
+
+  <Body name="passive_1_link_x" prev="dc15_a01_horn_dummy" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_1_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 8.349074 -4.231666 120.481739" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_1_link_y" prev="passive_1_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_1_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod" prev="passive_1_link_y" physics="dynamic" mass="0.005034" cogVector="0.0425 0 0" inertia="2.63976e-08 -3.69517e-13 7.12534e-14   -3.69517e-13 3.65211e-06 5.21041e-14   7.12534e-14 5.21041e-14 3.66473e-06" >
+    <Joint name="passive_1_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="closing_1_1" prev="stewart_link_rod" transform="0.085 0 0 0 0 0" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_2" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.79436e-13 -1.93125e-07   1.79436e-13 1.28019e-06 1.03818e-14   -1.93125e-07 1.03818e-14 1.26546e-06" >
+    <Joint name="stewart_2" range="-79.999805 -4.999916 69.999973" constraint="true" type="RotZ" transform="-0.042811 0.01317 0.041833 90.000421 59.999719 179.999635" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0025 0 0.007 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0025 0 0.007 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+  </Body>
+
+  <Body name="passive_2_link_x" prev="dc15_a01_horn_dummy_2" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_2_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 179.999848 0 179.999848" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_2_link_y" prev="passive_2_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_2_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod_2" prev="passive_2_link_y" physics="dynamic" mass="0.005034" cogVector="0.0215 -0.036469 -0.003744" inertia="2.72424e-06 1.57393e-06 1.6134e-07   1.57393e-06 9.82586e-07 -2.75528e-07   1.6134e-07 -2.75528e-07 3.63642e-06" >
+    <Joint name="passive_2_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.0215 -0.036469 -0.003744 -173.455818 1.162907 -120.396765" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.0215 -0.036469 -0.003744 -173.455818 1.162907 -120.396765" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="closing_2_1" prev="stewart_link_rod_2" transform="0.043 -0.072938 -0.007489 -173.455818 1.162907 -120.396765" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_3" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.79436e-13 -1.93125e-07   1.79436e-13 1.28019e-06 1.03818e-14   -1.93125e-07 1.03818e-14 1.26546e-06" >
+    <Joint name="stewart_3" range="-47.999998 15.999904 79.999805" constraint="true" type="RotZ" transform="-0.01 -0.043661 0.041833 -90.00021 0.000152 -180" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04 -0.0425 0.007 0 0 -90.00021" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04 -0.0425 0.007 0 0 -90.00021" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+  </Body>
+
+  <Body name="passive_3_link_x" prev="dc15_a01_horn_dummy_3" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_3_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 15.43136 -15.826051 -58.276902" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_3_link_y" prev="passive_3_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_3_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod_3" prev="passive_3_link_y" physics="dynamic" mass="0.005034" cogVector="-0.0425 0 0" inertia="2.63976e-08 -3.69517e-13 7.12534e-14   -3.69517e-13 3.65211e-06 5.21041e-14   7.12534e-14 5.21041e-14 3.66473e-06" >
+    <Joint name="passive_3_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="closing_3_1" prev="stewart_link_rod_3" transform="-0.085 0 0 0 0 0" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_4" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.79436e-13 -1.93125e-07   1.79436e-13 1.28019e-06 1.03818e-14   -1.93125e-07 1.03818e-14 1.26546e-06" >
+    <Joint name="stewart_4" range="-79.999805 -15.999904 47.999998" constraint="true" type="RotZ" transform="0.01 -0.043661 0.041833 -90.00021 0 0" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.04 0.0425 0.007 0 0 90.00021" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.04 0.0425 0.007 0 0 90.00021" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+  </Body>
+
+  <Body name="passive_4_link_x" prev="dc15_a01_horn_dummy_4" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_4_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 -6.853415 -1.689784 59.595387" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_4_link_y" prev="passive_4_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_4_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod_4" prev="passive_4_link_y" physics="dynamic" mass="0.005034" cogVector="-0.0425 0 0" inertia="2.63976e-08 -3.69517e-13 7.12534e-14   -3.69517e-13 3.65211e-06 5.21041e-14   7.12534e-14 5.21041e-14 3.66473e-06" >
+    <Joint name="passive_4_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="closing_4_1" prev="stewart_link_rod_4" transform="-0.085 0 0 0 0 0" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_5" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.79436e-13 -1.93125e-07   1.79436e-13 1.28019e-06 1.03818e-14   -1.93125e-07 1.03818e-14 1.26546e-06" >
+    <Joint name="stewart_5" range="-69.999973 4.999916 79.999805" constraint="true" type="RotZ" transform="0.042811 0.01317 0.041833 90.000421 -60.00014 0.000365" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0025 0 0.007 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0025 0 0.007 0 0 -179.999848" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+  </Body>
+
+  <Body name="passive_5_link_x" prev="dc15_a01_horn_dummy_5" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_5_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 7.954134 -3.56185 -59.544951" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_5_link_y" prev="passive_5_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_5_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod_5" prev="passive_5_link_y" physics="dynamic" mass="0.005034" cogVector="-0.0425 0 0" inertia="2.63976e-08 -3.69517e-13 7.12534e-14   -3.69517e-13 3.65211e-06 5.21041e-14   7.12534e-14 5.21041e-14 3.66473e-06" >
+    <Joint name="passive_5_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="closing_5_1" prev="stewart_link_rod_5" transform="-0.085 0 0 0 0 0" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_6" prev="body_down_3dprint" physics="dynamic" mass="0.003667" cogVector="0.023751 0 0.003358" inertia="8.57063e-08 1.79436e-13 -1.93125e-07   1.79436e-13 1.28019e-06 1.03818e-14   -1.93125e-07 1.03818e-14 1.26546e-06" >
+    <Joint name="stewart_6" range="-79.999805 -15.999904 47.999998" constraint="true" type="RotZ" transform="0.032811 0.030491 0.041833 90.000421 -59.999719 -179.999635" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0065 -135 -89.999702 135" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.0825 0 0.007 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.0825 0 0.007 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_ball.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.01 -0.153167 0.043661 90.000105 0.000182 60.00014" meshFile="reachy_mini/urdf/assets/mp01062_stewart_arm_3.stl" />
+  </Body>
+
+  <Body name="passive_6_link_x" prev="dc15_a01_horn_dummy_6" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_6_x" range="-180 0 180" constraint="true" type="RotX" transform="0.04 0 0.007 173.314587 1.403562 -59.599922" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_6_link_y" prev="passive_6_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_6_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="stewart_link_rod_6" prev="passive_6_link_y" physics="dynamic" mass="0.005034" cogVector="-0.0425 0 0" inertia="2.63976e-08 -3.69517e-13 7.12534e-14   -3.69517e-13 3.65211e-06 5.21041e-14   7.12534e-14 5.21041e-14 3.66473e-06" >
+    <Joint name="passive_6_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" color="#cfdbe4ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0425 0 0 0 0 0" meshFile="reachy_mini/urdf/assets/stewart_link_rod.stl" />
+  </Body>
+
+  <Body name="passive_7_link_x" prev="stewart_link_rod_6" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_7_x" range="-180 0 180" constraint="true" type="RotX" transform="-0.085 0 0 179.999848 0 0" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="passive_7_link_y" prev="passive_7_link_x" mass="0" inertia="1e-09 0 0   0 1e-09 0   0 0 1e-09" >
+    <Joint name="passive_7_y" range="-180 0 180" constraint="true" type="RotY" torqueLimit="10" speedLimit="5729577951.308232" />
+  </Body>
+
+  <Body name="xl_330" prev="passive_7_link_y" physics="dynamic" mass="0.259259" cogVector="-0.048705 -0.023765 0.020658" inertia="0.000634651 3.65691e-05 -2.18087e-05   3.65691e-05 0.000587786 9.29467e-05   -2.18087e-05 9.29467e-05 0.000460283" >
+    <Joint name="passive_7_z" range="-180 0 180" constraint="true" type="RotZ" torqueLimit="10" speedLimit="5729577951.308232" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.038719 -0.032945 -0.024043 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/m12_fisheye_lens_1_8mm.stl" color="#7e7e7eff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.038719 -0.032945 -0.024043 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/m12_fisheye_lens_1_8mm.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.017529 0.042077 0.055117 126.219804 28.826488 168.367578" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.017529 0.042077 0.055117 126.219804 28.826488 168.367578" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.026297 -0.051155 -0.03738 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/big_lens_d40.stl" color="#7079804d" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.026297 -0.051155 -0.03738 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/big_lens_d40.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/neck_reference_3dprint.stl" color="#e6e6e6ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/neck_reference_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_back_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_back_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.045905 -0.044863 -0.003625 103.09951 -59.102896 -110.120818" meshFile="reachy_mini/urdf/assets/arducam.stl" color="#7e7e7eff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.045905 -0.044863 -0.003625 103.09951 -59.102896 -110.120818" meshFile="reachy_mini/urdf/assets/arducam.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.031151 -0.051884 0.001543 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/pp01102_arducam_carter.stl" color="#4d4d4dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.031151 -0.051884 0.001543 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/pp01102_arducam_carter.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053668 -0.018877 0.025718 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/antenna_holder_l_3dprint.stl" color="#7e7e7eff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053668 -0.018877 0.025718 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/antenna_holder_l_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.006304 -0.006395 0.073961 -121.136449 -23.207119 69.008916" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.006304 -0.006395 0.073961 -121.136449 -23.207119 69.008916" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053656 -0.018894 0.025705 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/lens_cap_d30_3dprint.stl" color="#181818ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053656 -0.018894 0.025705 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/lens_cap_d30_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053639 -0.018919 0.025687 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/lens_cap_d40_3dprint.stl" color="#181818ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053639 -0.018919 0.025687 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/lens_cap_d40_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053668 -0.018877 0.025718 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/antenna_holder_r_3dprint.stl" color="#7e7e7eff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053668 -0.018877 0.025718 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/antenna_holder_r_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0.015056 0.049082 0.04325 126.219804 28.826488 168.367578" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0.015056 0.049082 0.04325 126.219804 28.826488 168.367578" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.024405 -0.069617 0.028012 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/small_lens_d30.stl" color="#7079804d" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.024405 -0.069617 0.028012 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/small_lens_d30.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.010913 -0.001328 0.08617 -121.136449 -23.207119 69.008916" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.010913 -0.001328 0.08617 -121.136449 -23.207119 69.008916" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.0215 0.036646 0.001041 4.600166 -5.054381 -59.479042" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.0215 0.036646 0.001041 4.600166 -5.054381 -59.479042" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/glasses_dolder_3dprint.stl" color="#313131ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/glasses_dolder_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_front_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_front_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_mic_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.053572 -0.019018 0.025615 103.099452 -59.102748 69.879115" meshFile="reachy_mini/urdf/assets/head_mic_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.027207 -0.065511 0.03102 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/m12_fisheye_lens_1_8mm.stl" color="#7e7e7eff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.027207 -0.065511 0.03102 -76.900541 59.103077 -159.879106" meshFile="reachy_mini/urdf/assets/m12_fisheye_lens_1_8mm.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.028582 0.048717 0.001384 4.600166 -5.054381 -59.479042" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" color="#707980ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.028582 0.048717 0.001384 4.600166 -5.054381 -59.479042" meshFile="reachy_mini/urdf/assets/stewart_link_ball__2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.073702 -0.034447 0.078464 -72.992934 52.537427 136.701462" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_2.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_b_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_m_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" color="#df7250ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_led_cap2_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/bts2_m2_6x8.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/dc15_a01_case_f_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/b3b_eh_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/b3b_eh.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_3.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10_1.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="-0.090999 0.014544 -0.004537 -72.993382 52.537416 77.063938" meshFile="reachy_mini/urdf/assets/phs_1_7x20_5_dc10.stl" />
+  </Body>
+
+  <Body name="closing_1_2" prev="xl_330" transform="0.007689 -0.021777 0.036895 -121.136449 -23.207119 69.008916" mass="0" >
+  </Body>
+
+  <Body name="closing_2_2" prev="xl_330" transform="0.003079 -0.01671 0.049105 -121.136449 -23.207119 69.008916" mass="0" >
+  </Body>
+
+  <Body name="closing_3_2" prev="xl_330" transform="-0.01894 0.020821 0.050171 126.219504 28.826555 78.367681" mass="0" >
+  </Body>
+
+  <Body name="closing_4_2" prev="xl_330" transform="-0.021413 0.027826 0.038304 126.219504 28.826555 78.367681" mass="0" >
+  </Body>
+
+  <Body name="closing_5_2" prev="xl_330" transform="-0.007082 0.012072 0.000343 -175.399726 5.054321 -30.521213" mass="0" >
+  </Body>
+
+  <Body name="camera_optical" prev="xl_330" transform="-0.032116 -0.05047 0.002579 126.219454 28.826432 -101.632216" mass="0" >
+  </Body>
+
+  <Body name="camera" prev="xl_330" transform="-0.032116 -0.05047 0.002579 103.099123 -59.102876 -20.121199" mass="0" >
+  </Body>
+
+  <Body name="head" prev="xl_330" transform="-0.006111 0.003705 0.029136 103.099123 -59.102876 -20.121199" mass="0" >
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_7" prev="xl_330" physics="dynamic" mass="0.010593" cogVector="0.000021 -0.037846 -0.008665" inertia="2.69314e-05 2.22219e-09 3.62599e-10   2.22219e-09 2.98203e-07 -6.63107e-07   3.62599e-10 -6.63107e-07 2.68876e-05" >
+    <Joint name="right_antenna" range="-180 0 180" constraint="true" type="RotZ" transform="-0.094852 0.019778 -0.004458 90.867399 36.356401 -80.265974" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 -0.0588 -0.0103 0 0 0" meshFile="reachy_mini/urdf/assets/antenna.stl" color="#000000ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 -0.0588 -0.0103 0 0 0" meshFile="reachy_mini/urdf/assets/antenna.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_interface_3dprint.stl" color="#b5c1ccff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_interface_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0028 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_body_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0028 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_body_3dprint.stl" />
+  </Body>
+
+  <Body name="dc15_a01_horn_dummy_8" prev="xl_330" physics="dynamic" mass="0.010593" cogVector="0.000021 -0.037846 -0.008665" inertia="2.69314e-05 2.22219e-09 3.62599e-10   2.22219e-09 2.98203e-07 -6.63107e-07   3.62599e-10 -6.63107e-07 2.68876e-05" >
+    <Joint name="left_antenna" range="-180 0 180" constraint="true" type="RotZ" transform="-0.076413 -0.032447 0.084022 160.212128 24.653527 -119.14828" torqueLimit="10" speedLimit="458.366236" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" color="#42484dff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0.0065 -90.00021 0 0" meshFile="reachy_mini/urdf/assets/dc15_a01_horn_dummy.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 -0.0028 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_body_3dprint.stl" color="#ffffffff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 -0.0028 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_body_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 0 0 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_interface_3dprint.stl" color="#b5c1ccff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 0 0 90.00021 0.000152 180" meshFile="reachy_mini/urdf/assets/antenna_interface_3dprint.stl" />
+    <Shape type="MESH" distance="false" physics="false" graphics="true" transform="0 -0.0588 -0.0103 0 0 0" meshFile="reachy_mini/urdf/assets/antenna.stl" color="#000000ff" />
+    <Shape type="MESH" distance="true" physics="true" graphics="false" transform="0 -0.0588 -0.0103 0 0 0" meshFile="reachy_mini/urdf/assets/antenna.stl" />
+  </Body>
+
+  <Body name="dummy_torso_yaw" prev="body_down_3dprint" transform="0 0 0 179.999927 0.091252 -89.954374" >
+    <Shape type="BOX" extents="0 0 0" distance="false" physics="false" graphics="true" />
+  </Body>
+
+<model_state model="DefaultPose" time_stamp="0">
+</model_state>
+
+</Graph>

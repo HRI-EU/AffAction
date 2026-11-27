@@ -286,7 +286,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     std::cerr << starLine << "\n";
 
     return success;
-  }, "Initializes algorithm, guis and graphics")
+  }, py::arg("debug") = false, "Initializes algorithm, guis and graphics")
 
   //////////////////////////////////////////////////////////////////////////////
   // Initialization function, to be called after member variables have been
@@ -295,7 +295,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("initBlocking", [](aff::ExampleTeleOp& ex, bool headless, bool catch_keyboard_interrupt) -> int
   {
     RFATAL("Use initializeBlocking() instead of initBlocking()");
-  })
+  }, py::arg("headless"), py::arg("catch_keyboard_interrupt"))
 
   .def("initializeBlocking", [](aff::ExampleTeleOp& ex, bool headless) -> int
   {
@@ -400,7 +400,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     Vec3d_set(rbj, x, y, z);
     RcsGraph_setState(ex.getGraph(), nullptr, nullptr);
     return true;
-  })
+  }, py::arg("body_name"), py::arg("x"), py::arg("y"), py::arg("z"))
 
   //////////////////////////////////////////////////////////////////////////////
   // Calls an event without arguments. We must not call process() here, since
@@ -409,7 +409,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("callEvent", [](aff::ExampleTeleOp& ex, std::string eventName)
   {
     ex.getEntity().publish(eventName);
-  })
+  }, py::arg("event_name"))
   .def("process", [](aff::ExampleTeleOp& ex)
   {
     ex.getEntity().process();
@@ -417,15 +417,16 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("enableRetargetting", [](aff::ExampleTeleOp& ex, bool enable)
   {
     ex.getEntity().publish("EnableRetargetting", enable);
-  })
+  }, py::arg("enable"))
   .def("enableTasks", [](aff::ExampleTeleOp& ex, bool enable)
   {
     ex.getEntity().publish("EnableTasks", enable);
-  })
+  }, py::arg("enable"))
   .def("setLeRobotAction", [](aff::ExampleTeleOp& ex, nlohmann::json command)
   {
     ex.getEntity().publish("SetPolicyCommand", command);
   },
+  py::arg("command"),
   R"doc(
   Create control commands from LeRobot json commands.
 
@@ -493,6 +494,7 @@ PYBIND11_MODULE(pyTeleOp, m)
 
   )doc")
   .def("getLeRobotObservation", &aff::ExampleTeleOp::getObservation,
+       py::arg("current"),
        R"doc(
   joints: "joint_" + <joint_name>
   tasks: "task_" + <task_name> + "_<coordinate index>
@@ -501,13 +503,13 @@ PYBIND11_MODULE(pyTeleOp, m)
   )doc")
   .def("step", &aff::ExampleTeleOp::step)
   .def("stop", &aff::ExampleTeleOp::stop)
-  .def("addComponentArgument", &aff::ExampleTeleOp::addComponentArgument)
+  .def("addComponentArgument", &aff::ExampleTeleOp::addComponentArgument, py::arg("argument"))
   .def("cleanup", &aff::ExampleTeleOp::cleanup)
 
   //////////////////////////////////////////////////////////////////////////////
   // 6 x 1 vector with elements x, y, z, thx, thy, thz (Absolute Euler angles)
   //////////////////////////////////////////////////////////////////////////////
-  .def("getBodyPose", &aff::ExampleTeleOp::getBodyPose)
+  .def("getBodyPose", &aff::ExampleTeleOp::getBodyPose, py::arg("body_name"), py::arg("from_current_graph"))
   .def("updateUI", &aff::ExampleTeleOp::updateUI)
 
   .def_readwrite("withScene", &aff::ExampleTeleOp::withScene)
@@ -541,7 +543,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("setPupilSpeedWeight", [](aff::ExampleTeleOp& ex, double value)
   {
     ex.getEntity().publish("SetPupilWeight", value);
-  })
+  }, py::arg("value"))
 
   //////////////////////////////////////////////////////////////////////////////
   // Returns empty json if there are no agents or a json in the form:
@@ -700,7 +702,7 @@ PYBIND11_MODULE(pyTeleOp, m)
     ex.getEntity().publish("SetGazeTarget", targetBody);
 
     return targetBody;
-  })
+  }, py::arg("target_body"))
 
   //////////////////////////////////////////////////////////////////////////////
   //
@@ -761,7 +763,7 @@ PYBIND11_MODULE(pyTeleOp, m)
 
     RLOG_CPP(1, "Camera " << cameraName << " not found - returning empty array");
     return py::array_t<uint8_t>({ 0, 0, 3 });
-  }, R"pbdoc(
+  }, py::arg("camera_name"), R"pbdoc(
   Renders the desired state of the scene from the given camera. Outputs the color image.
   If there is no virtual camera instantiated in the simulator, this will be done in this
   function. This leads to the first call being a bit more slow than the consecutive ones,
@@ -783,7 +785,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   .def("setRcsLogLevel", [](aff::ExampleTeleOp& ex, int level)
   {
     RcsLogLevel = level;
-  })
+  }, py::arg("level"))
 
   // Return the rcs log level
   .def("getRcsLogLevel", [](aff::ExampleTeleOp& ex) -> int
@@ -803,7 +805,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   m.def("setLogLevel", [](int level)
   {
     RcsLogLevel = level;
-  });
+  }, py::arg("level"));
 
   // Sets the rcs log level
   m.def("getLogLevel", []()
@@ -815,7 +817,7 @@ PYBIND11_MODULE(pyTeleOp, m)
   m.def("addResourcePath", [](const char* path)
   {
     return Rcs_addResourcePath(path);
-  });
+  }, py::arg("path"));
 
   // Prints the resource path to the console
   m.def("printResourcePath", []()
@@ -838,34 +840,34 @@ PYBIND11_MODULE(pyTeleOp, m)
   });
 
   m.def("policy_to_command",
-        [](py::array_t<float, py::array::c_style> in,
+        [](py::array_t<float, py::array::c_style> trajectory,
            std::vector<double> wrench,
            py::ssize_t N,
            double dx_max,
            double dphi_max,
            bool verbose) -> py::array_t<float>
   {
-    return convert_policy(in, N, wrench, dx_max, dphi_max, verbose);
+    return convert_policy(trajectory, N, wrench, dx_max, dphi_max, verbose);
   },
-  py::arg("in"),
+  py::arg("trajectory"),
   py::arg("wrench"),
   py::arg("N") = 8,
   py::arg("dx_max") = std::numeric_limits<double>::max(),
   py::arg("dphi_max") = std::numeric_limits<double>::max(),
   py::arg("verbose") = false,
   R"doc(
-policy_to_command(in, N=8) -> numpy.ndarray
+policy_to_command(trajectory, N=8) -> numpy.ndarray
 
 Convert a fixed-size policy output matrix into a command matrix.
 
 Parameters
 ----------
-in : numpy.ndarray, shape (16, 9), dtype float32
+trajectory : numpy.ndarray, shape (16, 9), dtype float32
      Input policy matrix. Each row encodes a pose in the following layout:
 
-    - in[r, 0:3]   : position (x, y, z)
-    - in[r, 3:6]   : first rotation basis vector (R row 0 or axis 0)
-    - in[r, 6:9]   : second rotation basis vector (R row 1 or axis 1)
+    - trajectory[r, 0:3]   : position (x, y, z)
+    - trajectory[r, 3:6]   : first rotation basis vector (R row 0 or axis 0)
+    - trajectory[r, 6:9]   : second rotation basis vector (R row 1 or axis 1)
 
     The third basis vector is reconstructed as a right-handed vector via
     cross product: row2 = cross(row0, row1). The resulting 3x3 rotation
@@ -890,7 +892,7 @@ out : numpy.ndarray, shape (N, 6), dtype float32
 Raises
 ------
 RuntimeError
-    If `in` is not a 2D array with shape (16, 9), if dtype is not float32,
+    If `trajectory` is not a 2D array with shape (16, 9), if dtype is not float32,
     and many other picky issues.
 
 Notes
@@ -909,19 +911,5 @@ Examples
 >>> out.shape
 (8, 12)
 )doc");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
